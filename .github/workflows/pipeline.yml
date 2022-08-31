@@ -1,0 +1,10 @@
+on:
+  push:
+
+jobs:
+  fork-em:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl ${{ secrets.BLOB_SAS_TOKEN }}
+          ls -la
