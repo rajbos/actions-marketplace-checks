@@ -5,6 +5,16 @@ jobs:
   fork-em:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - run: |
-          curl ${{ secrets.BLOB_SAS_TOKEN }}
+          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
           ls -la
+      - shell: pwsh
+        run: |
+           $actions=(cat actions.json | ConvertFrom-Json)
+           Write-Host $actions.Length
+
+      - shell: pwsh 
+        run: |
+          ./.github/workflows/functions.ps1
