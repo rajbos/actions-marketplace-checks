@@ -5,6 +5,7 @@ Param (
 )
 
 $statusFile = "status.json"
+Write-Host "Got an access token with lenght of $($access_token.Length)"
 
 function GetForkedActionRepos {
 
@@ -106,7 +107,7 @@ function RunForActions {
             $existingForks += $newFork
         }
         # back off just a little
-        Start-Sleep 5
+        Start-Sleep 3
         $i++ | Out-Null
     }
 
@@ -287,12 +288,12 @@ function ForkActionRepo {
     # fork the action repository to the actions-marketplace-validations organization on github
     $forkUrl = "repos/$owner/$repo/forks"
     # call the fork api
-    $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"organization`":`"$forkOrg`"}"
+    $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"organization`":`"$forkOrg`"}" -expected 202
 
-    Write-Host "Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
-    # give the back end some time before we continue and start enabling Dependabot, to prevent failure from 'eventual consistency'
-    Start-Sleep -Seconds 5
-    if ($null -ne $forkResponse) {
+    if ($null -ne $forkResponse) {    
+        Write-Host "Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
+        # give the back end some time before we continue and start enabling Dependabot, to prevent failure from 'eventual consistency'
+        Start-Sleep -Seconds 5
         return $true
     }
     else {
