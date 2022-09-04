@@ -107,7 +107,7 @@ function RunForActions {
             $existingForks += $newFork
         }
         # back off just a little
-        Start-Sleep 3
+        Start-Sleep 5
         $i++ | Out-Null
     }
 
@@ -243,6 +243,7 @@ function ApiCall {
         if ($messageData.message -eq "was submitted too quickly") {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
+            GetRateLimitInfo
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
         }
         else {
