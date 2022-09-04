@@ -290,6 +290,8 @@ function ForkActionRepo {
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"organization`":`"$forkOrg`"}"
 
     Write-Host "Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
+    # give the back end some time before we continue and start enabling Dependabot, to prevent failure from 'eventual consistency'
+    Start-Sleep -Seconds 5
     if ($null -ne $forkResponse) {
         return $true
     }
