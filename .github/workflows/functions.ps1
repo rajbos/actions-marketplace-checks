@@ -1,6 +1,7 @@
 Param (
   $actions,
-  $numberOfReposToDo = 10
+  $numberOfReposToDo = 10,
+  $access_token = $env:GITHUB_TOKEN
 )
 
 $statusFile = "status.json"
@@ -148,7 +149,7 @@ function SplitUrl {
 }
 
 function GetBasicAuthenticationHeader(){
-    $CredPair = "x:$($env:GITHUB_TOKEN)"
+    $CredPair = "x:$access_token"
     $EncodedCredentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($CredPair))
     
     return "Basic $EncodedCredentials";
