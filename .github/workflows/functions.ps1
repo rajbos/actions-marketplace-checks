@@ -1,5 +1,6 @@
 Param (
-  $actions 
+  $actions,
+  $numberOfReposToDo = 10
 )
 
 $statusFile = "status.json"
@@ -74,7 +75,7 @@ function RunForActions {
             continue
         }
 
-        if ($i -gt $max + 4) {
+        if ($i -gt $max + $numberOfReposToDo) {
             # do not run to long
             return $existingForks
         }
@@ -95,14 +96,16 @@ function RunForActions {
         $forkResult = ForkActionRepo -owner $owner -repo $repo
         if ($forkResult) {
             # add the repo to the list of existing forks
-            Write-Host "Repo forked"
+            Write-Debug "Repo forked"
             $newFork = @{ name = $repo; dependabot = $null }
             if (EnableDependabot $newFork) {
-                Write-Host "Dependabot enabled"
+                Write-Debug "Dependabot enabled"
                 $newFork.dependabot = $true
             }
             $existingForks += $newFork
         }
+        # back off just a little
+        Start-Sleep 5
         $i++ | Out-Null
     }
 
@@ -116,7 +119,7 @@ function EnableDependabot {
 
     # enable dependabot if not enabled yet
     if ($null -eq $existingFork.dependabot) {
-        Write-Host "Enabling Dependabot for [$($existingFork.name)]"
+        Write-Debug "Enabling Dependabot for [$($existingFork.name)]"
         $url = "repos/$forkOrg/$($existingFork.name)/vulnerability-alerts"
         $status = ApiCall -method PUT -url $url -body $null -expected 204
         if ($status -eq $true) {
@@ -156,7 +159,8 @@ function ApiCall {
         $method,
         $url,
         $body,
-        $expected
+        $expected,
+        [int] $backOff = 5
     )
     $headers = @{
         Authorization = GetBasicAuthenticationHeader
@@ -190,7 +194,7 @@ function ApiCall {
         Write-Debug "  RateLimit-Limit: $($result.Headers["X-RateLimit-Limit"])"
         Write-Debug "  RateLimit-Remaining: $($result.Headers["X-RateLimit-Remaining"])"
         Write-Debug "  RateLimit-Reset: $($result.Headers["X-RateLimit-Reset"])"
-        Write-Debug "  RateLimit-Used: $($result.Headers["x-ratelimit-used"])"
+        Write-Debug "  RateLimit-Used: $($result.Headers["X-Ratelimit-used"])"
         
         if ($result.Headers["Link"]) {
             #Write-Host "Found pagination link: $($result.Headers["Link"])"
@@ -232,7 +236,17 @@ function ApiCall {
     }
     catch
     {
-        $messageData = $_.ErrorDetails.Message
+        $messageData = $_.ErrorDetails.Message | ConvertFrom-Json
+        
+        if ($messageData.message -eq "was submitted too quickly") {
+            Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
+            Start-Sleep -Seconds $backOff
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
+        }
+        else {
+            Write-Host "Log message: $($messageData.message)"
+        }
+
         if ($null -ne $expected)
         {
             Write-Host "Expected status code [$expected] but got [$($_.Exception.Response.StatusCode)] for [$url]"
@@ -283,6 +297,13 @@ function ForkActionRepo {
     }
 }
 
+function GetRateLimitInfo {
+    $url = "rate_limit"	
+    $response = ApiCall -method GET -url $url
+
+    Write-Host "Ratelimit info: $($response | ConvertTo-Json)"
+}
+
 Write-Host "Got $($actions.Length) actions"
 
 # default variables
@@ -298,4 +319,6 @@ Write-Host "Ended up with $($existingForks.Count) forked repos"
 # save the status
 $existingForks | ConvertTo-Json | Out-File $statusFile
 
-Write-Host "End of script"
+GetRateLimitInfo
+
+Write-Host "End of script, added [$numberOfReposToDo] forked repos"
