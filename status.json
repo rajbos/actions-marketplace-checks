@@ -446,5 +446,1673 @@
   {
     "name": "github-version-generate",
     "dependabot": true
+  },
+  {
+    "name": "prow-github-actions",
+    "dependabot": true
+  },
+  {
+    "name": "walking-tag-action",
+    "dependabot": true
+  },
+  {
+    "name": "auto-changelog-action",
+    "dependabot": true
+  },
+  {
+    "name": "chess-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-project-connect-action",
+    "dependabot": true
+  },
+  {
+    "name": "get-tag",
+    "dependabot": true
+  },
+  {
+    "name": "scala-steward-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-project-automation-plus",
+    "dependabot": true
+  },
+  {
+    "name": "universal-changelog-action",
+    "dependabot": true
+  },
+  {
+    "name": "gitflow-action",
+    "dependabot": true
+  },
+  {
+    "name": "webdeploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "wakatime-charts",
+    "dependabot": true
+  },
+  {
+    "name": "action-github-workflow-sync",
+    "dependabot": true
+  },
+  {
+    "name": "ghaction-Generate-Release-Hashes",
+    "dependabot": true
+  },
+  {
+    "name": "github-tag-action",
+    "dependabot": true
+  },
+  {
+    "name": "xvfb-action",
+    "dependabot": true
+  },
+  {
+    "name": "hugo-build-action",
+    "dependabot": true
+  },
+  {
+    "name": "hugo-deploy-to-pages",
+    "dependabot": true
+  },
+  {
+    "name": "jenkins-build-tag-action",
+    "dependabot": true
+  },
+  {
+    "name": "javadoc-cleanup",
+    "dependabot": true
+  },
+  {
+    "name": "configure-kubectl-with-strongdm",
+    "dependabot": true
+  },
+  {
+    "name": "upload-to-kobiton",
+    "dependabot": true
+  },
+  {
+    "name": "link-checker",
+    "dependabot": true
+  },
+  {
+    "name": "action-update-license-year",
+    "dependabot": true
+  },
+  {
+    "name": "lint-action",
+    "dependabot": true
+  },
+  {
+    "name": "python-wheels-manylinux-build",
+    "dependabot": true
+  },
+  {
+    "name": "branch-merge",
+    "dependabot": true
+  },
+  {
+    "name": "molecule-action",
+    "dependabot": true
+  },
+  {
+    "name": "update-dotnet-sdk",
+    "dependabot": true
+  },
+  {
+    "name": "setup-nasm",
+    "dependabot": true
+  },
+  {
+    "name": "niv-updater-action",
+    "dependabot": true
+  },
+  {
+    "name": "terraform-new-workspace",
+    "dependabot": true
+  },
+  {
+    "name": "upload-to-netlify-action",
+    "dependabot": true
+  },
+  {
+    "name": "output",
+    "dependabot": true
+  },
+  {
+    "name": "github-action",
+    "dependabot": true
+  },
+  {
+    "name": "conformity-template-scanner-pipeline",
+    "dependabot": true
+  },
+  {
+    "name": "aliyun-oss-website-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-pdk-test-unit",
+    "dependabot": true
+  },
+  {
+    "name": "python-blacken",
+    "dependabot": true
+  },
+  {
+    "name": "actions-poetry",
+    "dependabot": true
+  },
+  {
+    "name": "balena-push",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "python-black-check"
+  },
+  {
+    "name": "pr-reviews-reminder-action",
+    "dependabot": true
+  },
+  {
+    "name": "rust-build.action",
+    "dependabot": true
+  },
+  {
+    "name": "action-vint",
+    "dependabot": true
+  },
+  {
+    "name": "action-phpcs",
+    "dependabot": true
+  },
+  {
+    "name": "ReportGenerator-GitHub-Action",
+    "dependabot": true
+  },
+  {
+    "name": "action-rubocop",
+    "dependabot": true
+  },
+  {
+    "name": "smartsheet-update-row",
+    "dependabot": true
+  },
+  {
+    "name": "Detekt-Action",
+    "dependabot": true
+  },
+  {
+    "name": "s3-backup",
+    "dependabot": true
+  },
+  {
+    "name": "ipfs-action",
+    "dependabot": true
+  },
+  {
+    "name": "swagger-ui-action",
+    "dependabot": true
+  },
+  {
+    "name": "UnityAutomatedSemver",
+    "dependabot": true
+  },
+  {
+    "name": "setup-cljstyle",
+    "dependabot": true
+  },
+  {
+    "name": "action-wordpress-plugin-asset-update",
+    "dependabot": true
+  },
+  {
+    "name": "action",
+    "dependabot": true
+  },
+  {
+    "name": "branch-env-vars",
+    "dependabot": true
+  },
+  {
+    "name": "workflow-status",
+    "dependabot": true
+  },
+  {
+    "name": "setup-wsl",
+    "dependabot": true
+  },
+  {
+    "name": "action-slack-incoming-webhook",
+    "dependabot": true
+  },
+  {
+    "name": "dynamic-badges-action",
+    "dependabot": true
+  },
+  {
+    "name": "ios-build-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-actions-build",
+    "dependabot": true
+  },
+  {
+    "name": "setup-packer",
+    "dependabot": true
+  },
+  {
+    "name": "terraform-action",
+    "dependabot": true
+  },
+  {
+    "name": "buildah-build",
+    "dependabot": true
+  },
+  {
+    "name": "provision-with-micromamba",
+    "dependabot": true
+  },
+  {
+    "name": "testhub-io.action",
+    "dependabot": true
+  },
+  {
+    "name": "add-pr-owner-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-flake8",
+    "dependabot": true
+  },
+  {
+    "name": "branch-names",
+    "dependabot": true
+  },
+  {
+    "name": "minio-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "issues-helper",
+    "dependabot": true
+  },
+  {
+    "name": "setup-bin",
+    "dependabot": true
+  },
+  {
+    "name": "commit-with-deploy-key",
+    "dependabot": true
+  },
+  {
+    "name": "conditional-build-matrix",
+    "dependabot": true
+  },
+  {
+    "name": "copy-to-branches",
+    "dependabot": true
+  },
+  {
+    "name": "jest-coverage-report-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-create-tag",
+    "dependabot": true
+  },
+  {
+    "name": "hyperlink",
+    "dependabot": true
+  },
+  {
+    "name": "unity-test-publisher",
+    "dependabot": true
+  },
+  {
+    "name": "gh-project-context",
+    "dependabot": true
+  },
+  {
+    "name": "linkcheck",
+    "dependabot": true
+  },
+  {
+    "name": "team-sync",
+    "dependabot": true
+  },
+  {
+    "name": "airflow-dag-action",
+    "dependabot": true
+  },
+  {
+    "name": "Wechat-Timed-Message",
+    "dependabot": true
+  },
+  {
+    "name": "github-actions-slack",
+    "dependabot": true
+  },
+  {
+    "name": "pr_size_checker",
+    "dependabot": true
+  },
+  {
+    "name": "upload-rust-binary-action",
+    "dependabot": true
+  },
+  {
+    "name": "setup-browser",
+    "dependabot": true
+  },
+  {
+    "name": "enable-github-automerge-action",
+    "dependabot": true
+  },
+  {
+    "name": "dobby",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-vagrant--vagrantfile-from-repository",
+    "dependabot": true
+  },
+  {
+    "name": "gh_pages-sitemap-ping",
+    "dependabot": true
+  },
+  {
+    "name": "actions-opsgenie",
+    "dependabot": true
+  },
+  {
+    "name": "check-pr-ci",
+    "dependabot": true
+  },
+  {
+    "name": "markdown-image-uploader",
+    "dependabot": true
+  },
+  {
+    "name": "skeleton-builder",
+    "dependabot": true
+  },
+  {
+    "name": "auto-cancel-redundant-workflow-runs-action",
+    "dependabot": true
+  },
+  {
+    "name": "git-clone-action",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "push-to-balenacloud"
+  },
+  {
+    "name": "github-project-automation",
+    "dependabot": true
+  },
+  {
+    "name": "check-user-permission",
+    "dependabot": true
+  },
+  {
+    "name": "google-repo-action",
+    "dependabot": true
+  },
+  {
+    "name": "ziti-webhook-action",
+    "dependabot": true
+  },
+  {
+    "name": "package-deployer",
+    "dependabot": true
+  },
+  {
+    "name": "slack-action",
+    "dependabot": true
+  },
+  {
+    "name": "api-client-gen",
+    "dependabot": true
+  },
+  {
+    "name": "buf-breaking-action",
+    "dependabot": true
+  },
+  {
+    "name": "buf-setup-action",
+    "dependabot": true
+  },
+  {
+    "name": "ipfs-upload-action",
+    "dependabot": true
+  },
+  {
+    "name": "terraform-io-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "buf-lint-action",
+    "dependabot": true
+  },
+  {
+    "name": "auto-changelog",
+    "dependabot": true
+  },
+  {
+    "name": "tencent-cos-action",
+    "dependabot": true
+  },
+  {
+    "name": "get-chagelog-diff",
+    "dependabot": true
+  },
+  {
+    "name": "hexo-gulp-action",
+    "dependabot": true
+  },
+  {
+    "name": "rust-action",
+    "dependabot": true
+  },
+  {
+    "name": "sync-up-to-codecommit-action",
+    "dependabot": true
+  },
+  {
+    "name": "branch-pruner-action",
+    "dependabot": true
+  },
+  {
+    "name": "gigalixir-action",
+    "dependabot": true
+  },
+  {
+    "name": "delete-artifact",
+    "dependabot": true
+  },
+  {
+    "name": "changed-files",
+    "dependabot": true
+  },
+  {
+    "name": "artifacts-url-comments",
+    "dependabot": true
+  },
+  {
+    "name": "workflow-run-conclusion-dispatch-action",
+    "dependabot": true
+  },
+  {
+    "name": "deploy-gcp-workflow",
+    "dependabot": true
+  },
+  {
+    "name": "fvtt-autopublish",
+    "dependabot": true
+  },
+  {
+    "name": "upload-github-workflow-logs-to-elastic",
+    "dependabot": true
+  },
+  {
+    "name": "github-stats-pages",
+    "dependabot": true
+  },
+  {
+    "name": "markdown-to-html-with-github-style-action",
+    "dependabot": true
+  },
+  {
+    "name": "wheels",
+    "dependabot": true
+  },
+  {
+    "name": "buildpacks-action",
+    "dependabot": true
+  },
+  {
+    "name": "compas-actions.ghpython_components",
+    "dependabot": true
+  },
+  {
+    "name": "dispatch-workflow-action",
+    "dependabot": true
+  },
+  {
+    "name": "slack-webhook-payload",
+    "dependabot": true
+  },
+  {
+    "name": "action-upload-artifacts-and-release-assets",
+    "dependabot": true
+  },
+  {
+    "name": "create-dns-record",
+    "dependabot": true
+  },
+  {
+    "name": "ToCVersions",
+    "dependabot": true
+  },
+  {
+    "name": "helm-chart-releaser",
+    "dependabot": true
+  },
+  {
+    "name": "faros-cicd-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "hexo-deploy-with-hook",
+    "dependabot": true
+  },
+  {
+    "name": "eks-helm-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "aws-s3-website-action",
+    "dependabot": true
+  },
+  {
+    "name": "get-releases-by-semver",
+    "dependabot": true
+  },
+  {
+    "name": "pr-updater",
+    "dependabot": true
+  },
+  {
+    "name": "report-action-usage",
+    "dependabot": true
+  },
+  {
+    "name": "update-android-manifest-package-action",
+    "dependabot": true
+  },
+  {
+    "name": "automl-actions",
+    "dependabot": true
+  },
+  {
+    "name": "ghactions-mplabx-xc32",
+    "dependabot": true
+  },
+  {
+    "name": "Discord-Message-Updater",
+    "dependabot": true
+  },
+  {
+    "name": "direktiv-actions-ghexec",
+    "dependabot": true
+  },
+  {
+    "name": "action-pyright",
+    "dependabot": true
+  },
+  {
+    "name": "surge-preview",
+    "dependabot": true
+  },
+  {
+    "name": "block-merge-based-on-time",
+    "dependabot": true
+  },
+  {
+    "name": "next-build-export-action",
+    "dependabot": true
+  },
+  {
+    "name": "aserto-build-action",
+    "dependabot": true
+  },
+  {
+    "name": "browserslist-update-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-build-and-upload-conda-packages",
+    "dependabot": true
+  },
+  {
+    "name": "chess-stats-readme",
+    "dependabot": true
+  },
+  {
+    "name": "action-upload-release-asset",
+    "dependabot": true
+  },
+  {
+    "name": "Algolia-Upload-Records",
+    "dependabot": true
+  },
+  {
+    "name": "mega-upload",
+    "dependabot": true
+  },
+  {
+    "name": "cloudflare-preview-url",
+    "dependabot": true
+  },
+  {
+    "name": "resharper-unity-ci",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "balena-cli-action"
+  },
+  {
+    "name": "multistage-docker-build-action",
+    "dependabot": true
+  },
+  {
+    "name": "hugo-article-from-issue-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-pylint",
+    "dependabot": true
+  },
+  {
+    "name": "setup-winlibs-action",
+    "dependabot": true
+  },
+  {
+    "dependabot": true,
+    "name": "action-alex-nightly"
+  },
+  {
+    "name": "action-actionlint",
+    "dependabot": true
+  },
+  {
+    "name": "action-release-releaseapk",
+    "dependabot": true
+  },
+  {
+    "name": "add-to-web3",
+    "dependabot": true
+  },
+  {
+    "name": "discord-activity-badge",
+    "dependabot": true
+  },
+  {
+    "name": "gradle-build-action",
+    "dependabot": true
+  },
+  {
+    "name": "arweave-upload-file",
+    "dependabot": true
+  },
+  {
+    "name": "scan-unverified-actions",
+    "dependabot": true
+  },
+  {
+    "name": "upload-packagecloud",
+    "dependabot": true
+  },
+  {
+    "name": "npm-package-update-sync",
+    "dependabot": true
+  },
+  {
+    "name": "trigger-ifttt-webhook-applet-ghaction",
+    "dependabot": true
+  },
+  {
+    "name": "docusaurus-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "arweave-upload-directory",
+    "dependabot": true
+  },
+  {
+    "name": "single-pr-updater",
+    "dependabot": true
+  },
+  {
+    "name": "sile",
+    "dependabot": true
+  },
+  {
+    "name": "pr-info-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-build",
+    "dependabot": true
+  },
+  {
+    "name": "BlazeAction",
+    "dependabot": true
+  },
+  {
+    "name": "action-hubble-push",
+    "dependabot": true
+  },
+  {
+    "name": "dependency-update-action",
+    "dependabot": true
+  },
+  {
+    "name": "clubhouse-workflow-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-golang-cache",
+    "dependabot": true
+  },
+  {
+    "name": "points-bar",
+    "dependabot": true
+  },
+  {
+    "name": "action-setup-python",
+    "dependabot": true
+  },
+  {
+    "name": "tableau-workbook-action",
+    "dependabot": true
+  },
+  {
+    "name": "helm-kubeconform-action",
+    "dependabot": true
+  },
+  {
+    "name": "gh-action-huawei-swr-policy",
+    "dependabot": true
+  },
+  {
+    "name": "random-advice-workflow",
+    "dependabot": true
+  },
+  {
+    "name": "meshery-smp-action",
+    "dependabot": true
+  },
+  {
+    "name": "d365fo-lcs-asset-upload",
+    "dependabot": true
+  },
+  {
+    "name": "auth",
+    "dependabot": true
+  },
+  {
+    "name": "f-droid-nightly-action",
+    "dependabot": true
+  },
+  {
+    "name": "octocov-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-aws-cdk-update",
+    "dependabot": true
+  },
+  {
+    "name": "action-conventional-release",
+    "dependabot": true
+  },
+  {
+    "name": "run-with-secrets",
+    "dependabot": true
+  },
+  {
+    "name": "GitHub-Issues-to-Wechat",
+    "dependabot": true
+  },
+  {
+    "name": "update-team-avatars",
+    "dependabot": true
+  },
+  {
+    "name": "bitbucket-server-pat-generator",
+    "dependabot": true
+  },
+  {
+    "name": "trigger-pipedream-workflow-ghaction",
+    "dependabot": true
+  },
+  {
+    "name": "setup-godot",
+    "dependabot": true
+  },
+  {
+    "name": "cloudinary-upload-action",
+    "dependabot": true
+  },
+  {
+    "name": "percy-upload",
+    "dependabot": true
+  },
+  {
+    "name": "upload-to-roblox",
+    "dependabot": true
+  },
+  {
+    "name": "dataverse-uploader",
+    "dependabot": true
+  },
+  {
+    "name": "action-ghcr-batch-delete-versions",
+    "dependabot": true
+  },
+  {
+    "name": "bioc-check-action",
+    "dependabot": true
+  },
+  {
+    "name": "bump-node-package-version",
+    "dependabot": true
+  },
+  {
+    "name": "bump-csproj-version",
+    "dependabot": true
+  },
+  {
+    "name": "r-pkgdown-multiversion",
+    "dependabot": true
+  },
+  {
+    "name": "probot",
+    "dependabot": true
+  },
+  {
+    "name": "bump-unity-bundle-version",
+    "dependabot": true
+  },
+  {
+    "name": "contributors-update",
+    "dependabot": true
+  },
+  {
+    "name": "ifttt-webhook-action",
+    "dependabot": true
+  },
+  {
+    "name": "MAL-autoreadme",
+    "dependabot": true
+  },
+  {
+    "name": "WordPress-Site-Deploy",
+    "dependabot": true
+  },
+  {
+    "name": "article-badge-counter-workflow",
+    "dependabot": true
+  },
+  {
+    "name": "Azure-CLI-Wrapper-Action",
+    "dependabot": true
+  },
+  {
+    "name": "unity-project-settings-info",
+    "dependabot": true
+  },
+  {
+    "name": "wait-for-netlify-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "workflows2md-action",
+    "dependabot": true
+  },
+  {
+    "name": "Power-BI-Pipeline-Deploy",
+    "dependabot": true
+  },
+  {
+    "name": "fast-r-action",
+    "dependabot": true
+  },
+  {
+    "name": "pomxml-dep-update",
+    "dependabot": true
+  },
+  {
+    "name": "action-clippy",
+    "dependabot": true
+  },
+  {
+    "name": "Heroku-Auto-Deployment",
+    "dependabot": true
+  },
+  {
+    "name": "lost-pixel",
+    "dependabot": true
+  },
+  {
+    "name": "nanodu",
+    "dependabot": true
+  },
+  {
+    "name": "unity-action",
+    "dependabot": true
+  },
+  {
+    "name": "unity-validate",
+    "dependabot": true
+  },
+  {
+    "name": "upm-release",
+    "dependabot": true
+  },
+  {
+    "name": "setup-nix-cache-action",
+    "dependabot": true
+  },
+  {
+    "name": "sn-devops-change-update",
+    "dependabot": true
+  },
+  {
+    "name": "s3-upload-sha256-action",
+    "dependabot": true
+  },
+  {
+    "name": "dbt-cloud-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-send-mail",
+    "dependabot": true
+  },
+  {
+    "name": "stale",
+    "dependabot": true
+  },
+  {
+    "name": "clean-workflow-runs",
+    "dependabot": true
+  },
+  {
+    "name": "serialize-workflow-action",
+    "dependabot": true
+  },
+  {
+    "name": "repo-trending-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-delete-artifacts",
+    "dependabot": true
+  },
+  {
+    "name": "get-changed-workspaces-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-dart-analyzer",
+    "dependabot": true
+  },
+  {
+    "name": "turborepo-gh-artifacts",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "cloudflare-workers-preview"
+  },
+  {
+    "name": "vn-discord-webhook",
+    "dependabot": true
+  },
+  {
+    "name": "check-url-action",
+    "dependabot": true
+  },
+  {
+    "name": "zapier-webhook-action",
+    "dependabot": true
+  },
+  {
+    "name": "standard-version-release-branch",
+    "dependabot": true
+  },
+  {
+    "name": "ci-action",
+    "dependabot": true
+  },
+  {
+    "name": "satellite-config-upload-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-appetize",
+    "dependabot": true
+  },
+  {
+    "name": "waka-readme-stats",
+    "dependabot": true
+  },
+  {
+    "name": "action-xcodeproj-spm-update",
+    "dependabot": true
+  },
+  {
+    "name": "python3-cisctl",
+    "dependabot": true
+  },
+  {
+    "name": "unit-test-action",
+    "dependabot": true
+  },
+  {
+    "name": "pr-is-wip-action",
+    "dependabot": true
+  },
+  {
+    "name": "auto-ml-classifier",
+    "dependabot": true
+  },
+  {
+    "name": "catalog-push-action",
+    "dependabot": true
+  },
+  {
+    "name": "playground-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "catalog-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-deploy-to-wpe",
+    "dependabot": true
+  },
+  {
+    "name": "vault-action",
+    "dependabot": true
+  },
+  {
+    "name": "schedule-update-action",
+    "dependabot": true
+  },
+  {
+    "name": "notion-update-page",
+    "dependabot": true
+  },
+  {
+    "name": "wayback-machine-query-action",
+    "dependabot": true
+  },
+  {
+    "name": "setup-butler",
+    "dependabot": true
+  },
+  {
+    "name": "trufflehog",
+    "dependabot": true
+  },
+  {
+    "name": "tailscale-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "setup-build2-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "better-discord-notification",
+    "dependabot": true
+  },
+  {
+    "name": "winget-push-test",
+    "dependabot": true
+  },
+  {
+    "name": "sign-files-with-pfx",
+    "dependabot": true
+  },
+  {
+    "name": "setup-beaker",
+    "dependabot": true
+  },
+  {
+    "name": "hass-py-lint",
+    "dependabot": true
+  },
+  {
+    "name": "pinata-publish-action",
+    "dependabot": true
+  },
+  {
+    "name": "resharper-inspect-action",
+    "dependabot": true
+  },
+  {
+    "name": "helm-github-actions",
+    "dependabot": true
+  },
+  {
+    "name": "github-actions-deploy-eks-helm",
+    "dependabot": true
+  },
+  {
+    "name": "PR-Metrics",
+    "dependabot": true
+  },
+  {
+    "name": "telegram-notification",
+    "dependabot": true
+  },
+  {
+    "name": "pre-commit-action",
+    "dependabot": true
+  },
+  {
+    "name": "pyaction",
+    "dependabot": true
+  },
+  {
+    "name": "zenodo-publish",
+    "dependabot": true
+  },
+  {
+    "name": "zenodo-new-version",
+    "dependabot": true
+  },
+  {
+    "name": "actions-poetry-deps",
+    "dependabot": true
+  },
+  {
+    "name": "update-existing-release",
+    "dependabot": true
+  },
+  {
+    "name": "clean-workspace-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "gha-chglog",
+    "dependabot": true
+  },
+  {
+    "name": "wheres_my_review",
+    "dependabot": true
+  },
+  {
+    "name": "SmarterASP.NET-web-deploy",
+    "dependabot": true
+  },
+  {
+    "name": "rust-musl-action",
+    "dependabot": true
+  },
+  {
+    "name": "setup-nu",
+    "dependabot": true
+  },
+  {
+    "name": "setup-alpine",
+    "dependabot": true
+  },
+  {
+    "name": "goragit",
+    "dependabot": true
+  },
+  {
+    "name": "oct-github-actions",
+    "dependabot": true
+  },
+  {
+    "name": "z-electron-builder",
+    "dependabot": true
+  },
+  {
+    "name": "first_custom_action",
+    "dependabot": true
+  },
+  {
+    "name": "bump-version",
+    "dependabot": true
+  },
+  {
+    "name": "VueBuildToBranchAction",
+    "dependabot": true
+  },
+  {
+    "name": "dynamic-input-stringifier-action",
+    "dependabot": true
+  },
+  {
+    "name": "cleanup-disabled-workflows",
+    "dependabot": true
+  },
+  {
+    "name": "second_custom_action",
+    "dependabot": true
+  },
+  {
+    "name": "graphql-pluck-action",
+    "dependabot": true
+  },
+  {
+    "name": "s3-sync-action",
+    "dependabot": true
+  },
+  {
+    "name": "branch-auto-versioning",
+    "dependabot": true
+  },
+  {
+    "name": "uipath-check-prerelease-dependencies",
+    "dependabot": true
+  },
+  {
+    "name": "metagen-gha",
+    "dependabot": true
+  },
+  {
+    "name": "tauri-build",
+    "dependabot": true
+  },
+  {
+    "name": "cargo-use-git",
+    "dependabot": true
+  },
+  {
+    "name": "add-gitconfig-url",
+    "dependabot": true
+  },
+  {
+    "name": "bacon-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "gt2v",
+    "dependabot": true
+  },
+  {
+    "name": "manual-approval",
+    "dependabot": true
+  },
+  {
+    "name": "ec2-github-runner",
+    "dependabot": true
+  },
+  {
+    "name": "s3-upload-action",
+    "dependabot": true
+  },
+  {
+    "name": "rustsecbot",
+    "dependabot": true
+  },
+  {
+    "name": "changie_bot",
+    "dependabot": true
+  },
+  {
+    "name": "wait-for-vercel-preview",
+    "dependabot": true
+  },
+  {
+    "name": "import-map-updater-action",
+    "dependabot": true
+  },
+  {
+    "name": "update-eik-alias-action",
+    "dependabot": true
+  },
+  {
+    "name": "upload-to-s3-action",
+    "dependabot": true
+  },
+  {
+    "name": "datadog-actions-wf-usage",
+    "dependabot": true
+  },
+  {
+    "name": "aws-update-lambda-imageuri-action",
+    "dependabot": true
+  },
+  {
+    "name": "deploy-k8s-action",
+    "dependabot": true
+  },
+  {
+    "name": "get-ecr-image-action",
+    "dependabot": true
+  },
+  {
+    "name": "leetcode-editor-action",
+    "dependabot": true
+  },
+  {
+    "name": "build-push-action",
+    "dependabot": true
+  },
+  {
+    "name": "get-aptos",
+    "dependabot": true
+  },
+  {
+    "name": "actions-setup-knative",
+    "dependabot": true
+  },
+  {
+    "name": "upload-to-zenodo",
+    "dependabot": true
+  },
+  {
+    "name": "tutor-k8s-init",
+    "dependabot": true
+  },
+  {
+    "name": "branch-name-action",
+    "dependabot": true
+  },
+  {
+    "name": "gh-action-advanced-bump-version",
+    "dependabot": true
+  },
+  {
+    "name": "build-and-lint-code",
+    "dependabot": true
+  },
+  {
+    "name": "deploy-to-balena-action",
+    "dependabot": true
+  },
+  {
+    "name": "universal-apk",
+    "dependabot": true
+  },
+  {
+    "name": "setup-wordpress-test-library",
+    "dependabot": true
+  },
+  {
+    "name": "package-helm-ecr-action",
+    "dependabot": true
+  },
+  {
+    "name": "bump-helm-chart-action",
+    "dependabot": true
+  },
+  {
+    "name": "google-chat-job-failed",
+    "dependabot": true
+  },
+  {
+    "name": "allure-html-reporter-github-pages",
+    "dependabot": true
+  },
+  {
+    "name": "github-actions",
+    "dependabot": true
+  },
+  {
+    "name": "setup-cloudquery",
+    "dependabot": true
+  },
+  {
+    "name": "prefix-or-suffix-text-files-action",
+    "dependabot": true
+  },
+  {
+    "name": "aws-helm-multi-deploy-prebuilt",
+    "dependabot": true
+  },
+  {
+    "name": "flattern-markdown-folder-structure-action",
+    "dependabot": true
+  },
+  {
+    "name": "allure-html-reporter-azure-website",
+    "dependabot": true
+  },
+  {
+    "name": "PipeScript",
+    "dependabot": true
+  },
+  {
+    "name": "cargo_semver_update_and_tag",
+    "dependabot": true
+  },
+  {
+    "name": "mongodb-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "spin-up-docker-compose-action",
+    "dependabot": true
+  },
+  {
+    "name": "status-badges",
+    "dependabot": true
+  },
+  {
+    "name": "my-first-action",
+    "dependabot": true
+  },
+  {
+    "name": "codeql-bundle-action",
+    "dependabot": true
+  },
+  {
+    "name": "taqueria-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "azure-create-new-container",
+    "dependabot": true
+  },
+  {
+    "name": "find-create-or-update-comment",
+    "dependabot": true
+  },
+  {
+    "name": "delete-untagged-ghcr-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-umami-report",
+    "dependabot": true
+  },
+  {
+    "name": "action-protolint",
+    "dependabot": true
+  },
+  {
+    "name": "ticket-check-action",
+    "dependabot": true
+  },
+  {
+    "name": "pytest-action",
+    "dependabot": true
+  },
+  {
+    "name": "package-helm-ghcr-action",
+    "dependabot": true
+  },
+  {
+    "name": "bump-helm-dependencies-action",
+    "dependabot": true
+  },
+  {
+    "name": "updatecli-action",
+    "dependabot": true
+  },
+  {
+    "name": "upload-thunderstore-package",
+    "dependabot": true
+  },
+  {
+    "name": "url-check-with-AUTH",
+    "dependabot": true
+  },
+  {
+    "name": "dcml_corpus_workflow",
+    "dependabot": true
+  },
+  {
+    "name": "action-forward-merge-pr",
+    "dependabot": true
+  },
+  {
+    "name": "action-toolbelt",
+    "dependabot": true
+  },
+  {
+    "name": "action-clean-runner-workspace",
+    "dependabot": true
+  },
+  {
+    "name": "update-deps-action",
+    "dependabot": true
+  },
+  {
+    "name": "webpack-bundlesize-compare-action",
+    "dependabot": true
+  },
+  {
+    "name": "test-bpf-action",
+    "dependabot": true
+  },
+  {
+    "name": "anchor-build-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-build-publish-anaconda",
+    "dependabot": true
+  },
+  {
+    "name": "eod-actions",
+    "dependabot": true
+  },
+  {
+    "name": "stacker-build-push-action",
+    "dependabot": true
+  },
+  {
+    "name": "batch-dependabot",
+    "dependabot": true
+  },
+  {
+    "name": "github-bumpversion-action",
+    "dependabot": true
+  },
+  {
+    "name": "check-pr-body-action",
+    "dependabot": true
+  },
+  {
+    "name": "build-mbed-app-action",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "action-electron-builder"
+  },
+  {
+    "name": "create-branch-from-tag",
+    "dependabot": true
+  },
+  {
+    "name": "cm-backport-pr",
+    "dependabot": true
+  },
+  {
+    "name": "GithubDeployBot",
+    "dependabot": true
+  },
+  {
+    "name": "exporter-builder-test",
+    "dependabot": true
+  },
+  {
+    "name": "build-raycast-extension",
+    "dependabot": true
+  },
+  {
+    "name": "gh-action-manage-branch",
+    "dependabot": true
+  },
+  {
+    "name": "gh-action-merge-branch",
+    "dependabot": true
+  },
+  {
+    "name": "action-check-base-image",
+    "dependabot": true
+  },
+  {
+    "name": "setup-bpkg-action",
+    "dependabot": true
+  },
+  {
+    "name": "gh-ci-bot",
+    "dependabot": true
+  },
+  {
+    "name": "github-backup-action",
+    "dependabot": true
+  },
+  {
+    "name": "yaml-schema-validator",
+    "dependabot": true
+  },
+  {
+    "name": "caprover-action",
+    "dependabot": true
+  },
+  {
+    "name": "branch-filestorage-action",
+    "dependabot": true
+  },
+  {
+    "name": "slack-quotes-bot",
+    "dependabot": true
+  },
+  {
+    "name": "setup-terraform-backend-git",
+    "dependabot": true
+  },
+  {
+    "name": "bob-setup-action",
+    "dependabot": true
+  },
+  {
+    "name": "pact-create-environment",
+    "dependabot": true
+  },
+  {
+    "name": "trigger-astronomer-action",
+    "dependabot": true
+  },
+  {
+    "name": "seacrest",
+    "dependabot": true
+  },
+  {
+    "name": "wait-github-status-action",
+    "dependabot": true
+  },
+  {
+    "name": "SSHDockerPipeline",
+    "dependabot": true
+  },
+  {
+    "name": "dependabot-batcher",
+    "dependabot": true
   }
 ]

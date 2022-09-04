@@ -18,4 +18,10 @@ jobs:
 
       - shell: pwsh 
         run: |
-          ./.github/workflows/functions.ps1 -actions $actions
+          ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 100
+
+      - name: Commit changes
+        run: |
+          git add status.json
+          git commit -m "Update status.json"
+          git push
