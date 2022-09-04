@@ -14,11 +14,9 @@ jobs:
       - shell: pwsh
         run: |
            $actions=(cat actions.json | ConvertFrom-Json)
-           Write-Host $actions.Length
+           Write-Host "Found [$actions.Length] actions in the datafile"
 
-      - shell: pwsh 
-        run: |
-          ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 100
+           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 100
 
       - name: Commit changes
         run: |
