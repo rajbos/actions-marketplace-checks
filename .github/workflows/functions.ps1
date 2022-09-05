@@ -100,16 +100,40 @@ function RunForActions {
             # add the repo to the list of existing forks
             Write-Debug "Repo forked"
             $newFork = @{ name = $repo; dependabot = $null }
-            if (EnableDependabot $newFork) {
-                Write-Debug "Dependabot enabled"
-                $newFork.dependabot = $true
-            }
             $existingForks += $newFork
         }
         # back off just a little
         Start-Sleep 5
         $i++ | Out-Null
     }
+
+    # enable dependabot for all repos
+    foreach ($action in $actions) {
+        if (($null -eq $action.RepoUrl) -or ($action.RepoUrl -eq ""))
+        {
+            # skip actions without a url
+            continue
+        }
+
+        if ($i -gt $max + $numberOfReposToDo) {
+            # do not run to long
+            return $existingForks
+        }
+
+        ($owner, $repo) = $(SplitUrl $action.RepoUrl)
+        Write-Debug "Checking existing forks for an object with name [$repo] from [$($action.RepoUrl)]"
+        $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
+
+        if (EnableDependabot $existingFork) {
+            Write-Debug "Dependabot enabled on [$repo]"
+            $existingFork.dependabot = $true
+        }
+        
+        # back off just a little
+        Start-Sleep 2
+        $i++ | Out-Null
+
+    }    
 
     return $existingForks
 }
