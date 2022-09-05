@@ -2521,130 +2521,194 @@
   },
   {
     "name": "php-cs-fixer-ga",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "ansible-lint-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "action-junit-report",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "slack-release-notifier",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "megalinter",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "docker-cache",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "eggplant-github-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "start-monode-rollout",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "nuget-push",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "markdown-link-check-log-parser",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "unimport",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "pyodide-buildpackage-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "setup-alicloud-workspace",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "modrinth-upload",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "get-build-number",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "zasca",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "actions-branch-to-docker-tag-name",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "actions-path-to-docker-image-name",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "markdown-to-output",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "azure-function-app-deployment-gh-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "web-deploy",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "dolt-installer",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "typescript-action-template",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "moscow-prioritization",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "action-ssh",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "pgyer-upload-app-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "openapi-validator-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "action-delete-release",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "sst-deploy",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "spellchecker-cli-action-summary",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "cpp-linter-action",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "deploy-docker-image-action",
     "dependabot": null
+  },
+  {
+    "name": "open-issue",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "apisec-run-scan"
+  },
+  {
+    "dependabot": null,
+    "name": "upload-image"
+  },
+  {
+    "dependabot": null,
+    "name": "todo-issue"
+  },
+  {
+    "dependabot": null,
+    "name": "differential-shellcheck"
+  },
+  {
+    "dependabot": null,
+    "name": "setup-action"
+  },
+  {
+    "dependabot": null,
+    "name": "codeball-action"
+  },
+  {
+    "dependabot": null,
+    "name": "github-action-puppeteer-screenshot"
+  },
+  {
+    "dependabot": null,
+    "name": "deploy-docker-container"
+  },
+  {
+    "dependabot": null,
+    "name": "normalize-git-branch-name"
+  },
+  {
+    "dependabot": null,
+    "name": "microprint-generator"
+  },
+  {
+    "dependabot": null,
+    "name": "agp-version-finder-action"
+  },
+  {
+    "dependabot": null,
+    "name": "gitcc"
+  },
+  {
+    "dependabot": null,
+    "name": "replace-action-z"
+  },
+  {
+    "dependabot": null,
+    "name": "tutor-enable-plugin-license-manager"
+  },
+  {
+    "dependabot": null,
+    "name": "tutor-plugin-build-license-manager"
   }
 ]
