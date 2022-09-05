@@ -1,0 +1,31 @@
+on:
+  push:
+
+  schedule:
+    - cron: '*/30 * * * *'
+
+jobs:
+  fork-em:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get current actions list
+        run: |
+          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          
+      - shell: pwsh
+        run: |
+           $actions=(cat actions.json | ConvertFrom-Json)
+           Write-Host "Found [$($actions.Length)] actions in the datafile"
+
+           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 100 -access_token "${{ secrets.ACCESS_TOKEN }}"
+
+      - name: Commit changes
+        run: |
+          git config --global user.email "github_token@github.com"
+          git config --global user.name "GITHUB_TOKEN"
+          
+          git add status.json
+          git commit -m "Update status.json"
+          git push
