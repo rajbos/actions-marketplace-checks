@@ -1,6 +1,9 @@
 on:
   push:
 
+  schedule:
+    - cron: '*/30 * * * *'
+
 jobs:
   fork-em:
     runs-on: ubuntu-latest
