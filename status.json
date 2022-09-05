@@ -2725,7 +2725,7 @@
   },
   {
     "name": "get-org-repos",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "deploy-docker-ssh",
@@ -2733,10 +2733,10 @@
   },
   {
     "name": "codeowners-coverage",
-    "dependabot": null
+    "dependabot": true
   },
   {
     "name": "mba",
-    "dependabot": null
+    "dependabot": true
   }
 ]
