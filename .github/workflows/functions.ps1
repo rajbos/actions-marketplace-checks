@@ -79,7 +79,7 @@ function RunForActions {
 
         if ($i -gt $max + $numberOfReposToDo) {
             # do not run to long
-            return $existingForks
+            break
         }
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
@@ -108,6 +108,7 @@ function RunForActions {
     }
 
     # enable dependabot for all repos
+    $i = $existingForks.Length
     foreach ($action in $actions) {
         if (($null -eq $action.RepoUrl) -or ($action.RepoUrl -eq ""))
         {
@@ -117,7 +118,7 @@ function RunForActions {
 
         if ($i -gt $max + $numberOfReposToDo) {
             # do not run to long
-            return $existingForks
+            break
         }
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
