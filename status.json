@@ -2722,5 +2722,21 @@
   {
     "name": "prometheus-operator-github-action",
     "dependabot": true
+  },
+  {
+    "name": "get-org-repos",
+    "dependabot": null
+  },
+  {
+    "name": "deploy-docker-ssh",
+    "dependabot": null
+  },
+  {
+    "name": "codeowners-coverage",
+    "dependabot": null
+  },
+  {
+    "name": "mba",
+    "dependabot": null
   }
 ]
