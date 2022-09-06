@@ -2740,7 +2740,11 @@
     "dependabot": true
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "openPGP-action"
+  },
+  {
+    "name": "build-hugo",
+    "dependabot": null
   }
 ]
