@@ -6,6 +6,7 @@ on:
 
 jobs:
   fork-em:
+    concurrency: there-can-be-only-one
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,7 +20,7 @@ jobs:
            $actions=(cat actions.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
 
-           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 100 -access_token "${{ secrets.ACCESS_TOKEN }}"
+           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 250 -access_token "${{ secrets.ACCESS_TOKEN }}"
 
       - name: Commit changes
         run: |
@@ -33,4 +34,3 @@ jobs:
           else
             echo "Nothing to commit"
           fi
-          

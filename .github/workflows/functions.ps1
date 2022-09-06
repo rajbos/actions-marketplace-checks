@@ -5,7 +5,7 @@ Param (
 )
 
 $statusFile = "status.json"
-Write-Host "Got an access token with lenght of $($access_token.Length)"
+Write-Host "Got an access token with length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
 
 function GetForkedActionRepos {
 
