@@ -2810,5 +2810,57 @@
   {
     "name": "ssh-scp-deploy",
     "dependabot": true
+  },
+  {
+    "dependabot": true,
+    "name": "release-downloader"
+  },
+  {
+    "dependabot": true,
+    "name": "actions"
+  },
+  {
+    "dependabot": true,
+    "name": "container-image-scan-action"
+  },
+  {
+    "name": "setup-ko",
+    "dependabot": null
+  },
+  {
+    "name": "pytest-coverage-comment",
+    "dependabot": null
+  },
+  {
+    "name": "ReleaseBannerAction",
+    "dependabot": null
+  },
+  {
+    "name": "teams-notify-build-status",
+    "dependabot": null
+  },
+  {
+    "name": "build-action",
+    "dependabot": null
+  },
+  {
+    "name": "github-action-benchmark",
+    "dependabot": null
+  },
+  {
+    "name": "govulncheck-action",
+    "dependabot": null
+  },
+  {
+    "name": "add-commit-labels",
+    "dependabot": null
+  },
+  {
+    "name": "update-project-fields",
+    "dependabot": null
+  },
+  {
+    "name": "workflow-forge-trigger",
+    "dependabot": null
   }
 ]
