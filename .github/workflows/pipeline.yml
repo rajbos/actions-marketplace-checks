@@ -23,9 +23,13 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config --global user.email "github_token@github.com"
-          git config --global user.name "GITHUB_TOKEN"
-          
-          git add status.json
-          git commit -m "Update status.json"
-          git push
+          if [[ `git status --porcelain` ]]; then
+            git config --global user.email "github_token@github.com"
+            git config --global user.name "GITHUB_TOKEN"
+            
+            git add status.json
+            git commit -m "Update status.json"
+            git push
+          else
+            echo "Nothing to commit"
+          fi
