@@ -2770,5 +2770,29 @@
   {
     "name": "action-wait-for-workflow",
     "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "setup-kustomize"
+  },
+  {
+    "dependabot": null,
+    "name": "publish"
+  },
+  {
+    "dependabot": null,
+    "name": "datadog"
+  },
+  {
+    "dependabot": null,
+    "name": "tower-action"
+  },
+  {
+    "dependabot": null,
+    "name": "github-app-installation-token"
+  },
+  {
+    "dependabot": null,
+    "name": "debian-lts-versions"
   }
 ]
