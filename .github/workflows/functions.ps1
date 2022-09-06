@@ -67,6 +67,7 @@ function RunForActions {
         $existingForks
     )
 
+    Write-Host "Running for [$($actions.Count)] actions"
     $i = $existingForks.Length
     $max = $i
     # get existing forks with owner/repo values instead of full urls
