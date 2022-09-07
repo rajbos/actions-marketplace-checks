@@ -2950,5 +2950,17 @@
   {
     "dependabot": true,
     "name": "sync-fork-upstream"
+  },
+  {
+    "name": "load-secrets-action",
+    "dependabot": true
+  },
+  {
+    "name": "action-library-archive",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "asdf-cache-action"
   }
 ]
