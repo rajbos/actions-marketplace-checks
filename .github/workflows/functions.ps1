@@ -60,7 +60,6 @@ function GetForkedActionRepoList {
     #}
     return $repoResponse
 }
-
 function RunForActions {
     Param (
         $actions,
@@ -68,58 +67,186 @@ function RunForActions {
     )
 
     Write-Host "Running for [$($actions.Count)] actions"
-    $i = $existingForks.Length
-    $max = $i
-    # get existing forks with owner/repo values instead of full urls
-    foreach ($action in $actions) {
-        if (($null -eq $action.RepoUrl) -or ($action.RepoUrl -eq ""))
-        {
-            # skip actions without a url
+    # filter actions list to only the ones with a repoUrl
+    $actions = $actions | Where-Object { $null -ne $_.repoUrl -and $_.repoUrl -ne "" }
+    Write-Host "Found [$($actions.Count)] actions with a repoUrl"
+
+    # do the work
+    ($newlyForkedRepos, $existingForks) = ForkActionRepos -actions $actions -existingForks $existingForks
+    Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
+
+    ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+    Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
+
+    $existingForks = GetDependabotAlerts -existingForks $existingForks
+
+    return $existingForks
+}
+
+function GetDependabotAlerts { 
+    Param (
+        $existingForks
+    )
+
+    Write-Host "Loading vulnerability alerts for repos"
+    $highAlerts = 0
+    $criticalAlerts = 0
+    $vulnerableRepos = 0
+    foreach ($repo in $existingForks) {
+        if ($repo.name -eq "" -or $null -eq $repo.name) {
+            Write-Host "Skipping repo with no name" $repo | ConvertTo-Json
             continue
         }
+        Write-Debug "Loading vulnerability alerts for [$($repo.name)]"
+        $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name)
+        if ($dependabotStatus.high -gt 0) {
+            Write-Host "Found [$($dependabotStatus.high)] high alerts for repo [$($repo.name)]"
+            $highAlerts++
+        }
+        if ($dependabotStatus.critical -gt 0) {
+            Write-Host "Found [$($dependabotStatus.critical)] critical alerts for repo [$($repo.name)]"
+            $criticalAlerts++
+        }
 
+        if ($dependabotStatus.high -gt 0 -or $dependabotStatus.critical -gt 0) {
+            $vulnerableRepos++
+        }
+    }
+
+    Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($highAlerts)] high alerts"
+    Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($criticalAlerts)] critical alerts"
+
+    return $existingForks
+}
+
+function GetDependabotVulnerabilityAlerts {
+    Param (
+        $owner,
+        $repo
+    )
+
+    $query = '
+    query($name:String!, $owner:String!){
+        repository(name: $name, owner: $owner) {
+            vulnerabilityAlerts(first: 100) {
+                nodes {
+                    createdAt
+                    dismissedAt
+                    securityVulnerability {
+                        package {
+                            name
+                        }
+                        advisory {
+                            description
+                            severity
+                        }
+                    }
+                }
+            }
+        }
+    }'
+    
+    $variables = "
+        {
+            ""owner"": ""$owner"",
+            ""name"": ""$repo""
+        }
+        "
+    
+    $uri = "https://api.github.com/graphql"
+    $requestHeaders = @{
+        Authorization = GetBasicAuthenticationHeader
+    }
+    
+    Write-Debug "Loading vulnerability alerts for repo $repo"
+    $response = (Invoke-GraphQLQuery -Query $query -Variables $variables -Uri $uri -Headers $requestHeaders -Raw | ConvertFrom-Json)
+    #Write-Host ($response | ConvertTo-Json)
+    $nodes = $response.data.repository.vulnerabilityAlerts.nodes
+    #Write-Host "Found [$($nodes.Count)] vulnerability alerts"
+    #Write-Host $nodes | ConvertTo-Json
+    $moderate=0
+    $high=0
+    $critical=0
+    foreach ($node in $nodes) {
+        #Write-Host "Found $($node.securityVulnerability.advisory.severity)"
+        #Write-Host $node.securityVulnerability.advisory.severity
+        switch ($node.securityVulnerability.advisory.severity) {            
+            "MODERATE" {
+                $moderate++
+            }
+            "HIGH" {
+                $high++
+            }
+            "CRITICAL" {
+                $critical++
+            }
+        }
+    }
+    #Write-Host "Dependabot status: " $($response | ConvertTo-Json -Depth 10)
+    return @{
+        moderate = $moderate
+        high = $high
+        critical = $critical
+    }
+}
+
+function ForkActionRepos {
+    Param (
+        $actions,
+        $existingForks
+    )
+
+    $i = 1
+    $max = $existingForks.Length
+    $newlyForkedRepos = 0
+
+    Write-Host "Forking repos"
+    # get existing forks with owner/repo values instead of full urls
+    foreach ($action in $actions) {
         if ($i -gt $max + $numberOfReposToDo) {
             # do not run to long
+            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
-        Write-Debug "Checking existing forks for an object with name [$repo] from [$($action.RepoUrl)]"
+        # check if fork already exists
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
-        if ($null -ne $($existingFork)) {
-            if (EnableDependabot $existingFork) {
-                $existingFork.dependabot = $true
+        if ($null -eq $existingFork) {        
+            Write-Host " $i Checking repo [$repo]"
+            $forkResult = ForkActionRepo -owner $owner -repo $repo
+            if ($forkResult) {
+                # add the repo to the list of existing forks
+                Write-Debug "Repo forked"
+                $newlyForkedRepos++
+                $newFork = @{ name = $repo; dependabot = $null }
+                $existingForks += $newFork
             }
-
-            # skip existing forks
-            continue
+            # back off just a little
+            Start-Sleep 5
         }
-
-        Write-Host "$i Checking [$($action.url)] with owner [$forkOrg] and repo [$repo]"
-        $forkResult = ForkActionRepo -owner $owner -repo $repo
-        if ($forkResult) {
-            # add the repo to the list of existing forks
-            Write-Debug "Repo forked"
-            $newFork = @{ name = $repo; dependabot = $null }
-            $existingForks += $newFork
-        }
-        # back off just a little
-        Start-Sleep 5
+        
         $i++ | Out-Null
     }
 
+    return ($newlyForkedRepos, $existingForks)
+}
+
+function EnableDependabotForForkedActions {
+    Param (
+        $existingForks,
+        $numberOfReposToDo    
+    )
     # enable dependabot for all repos
     $i = $existingForks.Length
+    $dependabotEnabled = 0
+    Write-Host "Enabling dependabot on forked repos"
     foreach ($action in $actions) {
-        if (($null -eq $action.RepoUrl) -or ($action.RepoUrl -eq ""))
-        {
-            # skip actions without a url
-            continue
-        }
 
         if ($i -gt $max + $numberOfReposToDo) {
             # do not run to long
-            break
+            break            
+            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
         }
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
@@ -129,21 +256,24 @@ function RunForActions {
         if (EnableDependabot $existingFork) {
             Write-Debug "Dependabot enabled on [$repo]"
             $existingFork.dependabot = $true
+            $dependabotEnabled++ | Out-Null
         }
         
         # back off just a little
         Start-Sleep 2
         $i++ | Out-Null
-
     }    
-
-    return $existingForks
+    return ($existingForks, $dependabotEnabled)
 }
 
 function EnableDependabot {
     Param ( 
       $existingFork
     )
+    if ($existingFork.name -eq "" -or $null -eq $existingFork.name) {
+        Write-Host "No repo name found, skipping [$($existingFork.name)]" $existingFork | ConvertTo-Json
+        return $false
+    }
 
     # enable dependabot if not enabled yet
     if ($null -eq $existingFork.dependabot) {
@@ -155,6 +285,8 @@ function EnableDependabot {
         }
         return $status
     }
+
+    return $false
 }
 
 function SplitUrl {
@@ -317,10 +449,12 @@ function ForkActionRepo {
     # call the fork api
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"organization`":`"$forkOrg`"}" -expected 202
 
-    if ($null -ne $forkResponse) {    
+    if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
         Write-Host "Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
-        # give the back end some time before we continue and start enabling Dependabot, to prevent failure from 'eventual consistency'
-        Start-Sleep -Seconds 5
+        if ($null -eq $forkResponse.name){
+            # response is just 'True' since we pass in expected, could be improved by returning both the response and the check on status code
+            #Write-Host "Full fork response: " $forkResponse | ConvertTo-Json
+        }
         return $true
     }
     else {
@@ -332,10 +466,11 @@ function GetRateLimitInfo {
     $url = "rate_limit"	
     $response = ApiCall -method GET -url $url
 
-    Write-Host "Ratelimit info: $($response | ConvertTo-Json)"
+    Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
 }
 
 Write-Host "Got $($actions.Length) actions"
+GetRateLimitInfo
 
 # default variables
 $forkOrg = "actions-marketplace-validations"
