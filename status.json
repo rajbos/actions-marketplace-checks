@@ -2936,19 +2936,19 @@
     "name": "wait-for-lambda-update"
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "semver-tags"
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "actions-conventional-versioning"
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "github-action-python-template"
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "sync-fork-upstream"
   }
 ]
