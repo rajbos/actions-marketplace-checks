@@ -116,6 +116,8 @@ function GetDependabotAlerts {
     Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($highAlerts)] high alerts"
     Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($criticalAlerts)] critical alerts"
 
+    # todo: store this data in the status file?
+
     return $existingForks
 }
 
