@@ -11,6 +11,9 @@ on:
     - cron: '*/45 * * * *'
 
   workflow_dispatch:
+
+env:
+  numberOfReposToDo: 100
     
 jobs:
   fork-em:
@@ -28,7 +31,7 @@ jobs:
            $actions=(cat actions.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
-           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo 50 -access_token "${{ secrets.ACCESS_TOKEN }}"
+           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}"
 
       - name: Commit changes
         run: |
