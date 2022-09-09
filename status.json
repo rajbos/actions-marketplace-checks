@@ -1,23 +1,48 @@
 [
   {
     "name": "actions-marketplace-checks",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T09:51:30.3952735Z",
+      "high": 0,
+      "critical": 0
+    }
   },
   {
     "name": "setup-kubectl",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T09:51:30.7737009Z",
+      "high": 0,
+      "critical": 0
+    }
   },
   {
     "name": "setup-dapr",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T09:51:31.1024905Z",
+      "high": 2,
+      "critical": 1
+    }
   },
   {
     "name": "test-git-actions",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T09:51:31.3918896Z",
+      "high": 0,
+      "critical": 0
+    }
   },
   {
     "name": "sync-swagger-postman-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T09:51:31.8089842Z",
+      "high": 8,
+      "critical": 2
+    }
   },
   {
     "name": "pull-request-comment-trigger",
@@ -2962,5 +2987,25 @@
   {
     "dependabot": true,
     "name": "asdf-cache-action"
+  },
+  {
+    "name": "webhook-trigger",
+    "dependabot": true
+  },
+  {
+    "name": "leanpub-watch-action",
+    "dependabot": true
+  },
+  {
+    "name": "bot",
+    "dependabot": true
+  },
+  {
+    "name": "social-readme",
+    "dependabot": true
+  },
+  {
+    "name": "gh-action-buildnum",
+    "dependabot": true
   }
 ]
