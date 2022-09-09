@@ -21,3 +21,8 @@ jobs:
            $actions=(cat status.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report
+          path: ${{ GITHUB.STEP_SUMMARY }}
