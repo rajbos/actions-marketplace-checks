@@ -65,7 +65,7 @@ function ReportInMarkdown {
     }
 
     LogMessage ""
-    LogMessage "``````"
+    LogMessage "``````mermaid"
     LogMessage "pie title Vulnerable Actions"
     LogMessage "    ""Unknown"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions"" : $($vulnerableRepos)"
