@@ -3,6 +3,9 @@
 # Store the data in the repo for later use
 on:
   push:
+    paths:
+      - .github/workflows/pipeline.yml
+      - .github/workflows/functions.ps1
 
   schedule:
     - cron: '*/45 * * * *'
