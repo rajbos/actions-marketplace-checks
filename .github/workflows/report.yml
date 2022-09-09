@@ -1,0 +1,27 @@
+# report the data stored in the repository
+on:
+  
+  push: 
+    branches: 
+      - main    
+
+  schedule:
+    - cron: '*/60 * * * *'
+
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get current actions list
+        run: |
+          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          
+      - shell: pwsh
+        run: |
+           $actions=(cat actions.json | ConvertFrom-Json)
+           Write-Host "Found [$($actions.Length)] actions in the datafile"
+           ./.github/workflows/report.ps1 -actions $actions -logSummary $GITHUB_STEP_SUMMARY
