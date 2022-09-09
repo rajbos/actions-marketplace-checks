@@ -49,6 +49,10 @@ function LogMessage {
     }
 }
 
+$averageHighAlerts = $highAlerts / $reposAnalyzed
+$averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
+
+
 Write-Host "Summary: "
 LogMessage "#Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos"
 LogMessage "-----------------------------------"
@@ -57,6 +61,9 @@ LogMessage "Critical Alerts: $criticalAlerts"
 LogMessage "-----------------------------------"
 LogMessage "Max High Alerts: $maxHighAlerts"
 LogMessage "Max Critical Alerts: $maxCriticalAlerts"
+LogMessage "-----------------------------------"
+LogMessage "Average High Alerts per vulnerable repo: $averageHighAlerts"
+LogMessage "Average Critical Alerts per vulnerable repo: $maxCriticalAlerts"
 
 function ReportInMarkdown {
     if (!$logSummary) {
