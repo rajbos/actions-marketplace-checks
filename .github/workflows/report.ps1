@@ -47,12 +47,12 @@ function LogMessage {
     $message | Out-File $logSummary -Append
 }
 
-LogMessage "Summary: "
-LogMessage "  Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos"
+Write-Host "Summary: "
+LogMessage "#Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos"
 LogMessage "-----------------------------------"
-LogMessage "  High Alerts: $highAlerts"
-LogMessage "  Critical Alerts: $criticalAlerts"
+LogMessage "High Alerts: $highAlerts"
+LogMessage "Critical Alerts: $criticalAlerts"
 LogMessage "-----------------------------------"
-LogMessage "  Max High Alerts: $maxHighAlerts"
-LogMessage "  Max Critical Alerts: $maxCriticalAlerts"
+LogMessage "Max High Alerts: $maxHighAlerts"
+LogMessage "Max Critical Alerts: $maxCriticalAlerts"
 
