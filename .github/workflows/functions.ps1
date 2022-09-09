@@ -7,6 +7,12 @@ Param (
 $statusFile = "status.json"
 Write-Host "Got an access token with length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
 
+function SaveStatus {
+    Param (
+        $existingForks
+    )
+    $existingForks | ConvertTo-Json | Out-File -FilePath $statusFile -Encoding UTF8
+}
 function GetForkedActionRepos {
 
     # if file exists, read it
@@ -74,9 +80,11 @@ function RunForActions {
     # do the work
     ($newlyForkedRepos, $existingForks) = ForkActionRepos -actions $actions -existingForks $existingForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
+    SaveStatus -existingForks $existingForks
 
-    ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+    ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
     Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
+    SaveStatus -existingForks $existingForks
 
     $existingForks = GetDependabotAlerts -existingForks $existingForks
 
@@ -89,14 +97,34 @@ function GetDependabotAlerts {
     )
 
     Write-Host "Loading vulnerability alerts for repos"
+
+    $i = $existingForks.Length
+    $max = $existingForks.Length + $numberOfReposToDo
+
     $highAlerts = 0
     $criticalAlerts = 0
     $vulnerableRepos = 0
     foreach ($repo in $existingForks) {
+
+        if ($i -ge $max) {
+            # do not run to long
+            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+            break
+        }
+
         if ($repo.name -eq "" -or $null -eq $repo.name) {
             Write-Host "Skipping repo with no name" $repo | ConvertTo-Json
             continue
         }
+
+        if ($repo.vulnerabilityStatus) {
+            $timeDiff = [DateTime]::UtcNow.Subtract($repo.vulnerabilityStatus.lastUpdated)
+            if ($timeDiff.Hours -lt 72) {
+                Write-Debug "Skipping repo [$($repo.name)] as it was checked less than 72 hours ago"
+                continue
+            }
+        }
+
         Write-Debug "Loading vulnerability alerts for [$($repo.name)]"
         $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name)
         if ($dependabotStatus.high -gt 0) {
@@ -111,6 +139,21 @@ function GetDependabotAlerts {
         if ($dependabotStatus.high -gt 0 -or $dependabotStatus.critical -gt 0) {
             $vulnerableRepos++
         }
+
+       $vulnerabilityStatus = @{
+            high = $dependabotStatus.high
+            critical = $dependabotStatus.critical
+            lastUpdated = [DateTime]::UtcNow
+        }
+        #if ($repo.vulnerabilityStatus) {
+        if (Get-Member -inputobject $repo -name "vulnerabilityStatus" -Membertype Properties) {
+            $repo.vulnerabilityStatus = $vulnerabilityStatus
+        }
+        else {
+            $repo | Add-Member -Name vulnerabilityStatus -Value $vulnerabilityStatus -MemberType NoteProperty
+        }
+
+        $i++ | Out-Null
     }
 
     Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($highAlerts)] high alerts"
@@ -198,14 +241,14 @@ function ForkActionRepos {
         $existingForks
     )
 
-    $i = 1
-    $max = $existingForks.Length
+    $i = $existingForks.Length
+    $max = $existingForks.Length + $numberOfReposToDo
     $newlyForkedRepos = 0
 
     Write-Host "Forking repos"
     # get existing forks with owner/repo values instead of full urls
     foreach ($action in $actions) {
-        if ($i -gt $max + $numberOfReposToDo) {
+        if ($i -ge $max) {
             # do not run to long
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
@@ -226,9 +269,8 @@ function ForkActionRepos {
             }
             # back off just a little
             Start-Sleep 5
-        }
-        
-        $i++ | Out-Null
+            $i++ | Out-Null
+        }        
     }
 
     return ($newlyForkedRepos, $existingForks)
@@ -236,16 +278,19 @@ function ForkActionRepos {
 
 function EnableDependabotForForkedActions {
     Param (
+        $actions,
         $existingForks,
         $numberOfReposToDo    
     )
     # enable dependabot for all repos
     $i = $existingForks.Length
+    $max = $existingForks.Length + $numberOfReposToDo
     $dependabotEnabled = 0
+
     Write-Host "Enabling dependabot on forked repos"
     foreach ($action in $actions) {
 
-        if ($i -gt $max + $numberOfReposToDo) {
+        if ($i -ge $max) {
             # do not run to long
             break            
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
@@ -258,12 +303,18 @@ function EnableDependabotForForkedActions {
         if (EnableDependabot $existingFork) {
             Write-Debug "Dependabot enabled on [$repo]"
             $existingFork.dependabot = $true
+            
+            if (Get-Member -inputobject $repo -name "vulnerabilityStatus" -Membertype Properties) {
+                # reset lastUpdatedStatus
+                $repo.vulnerabilityStatus.lastUpdated = [DateTime]::UtcNow.AddYears(-1)
+            }
+            
             $dependabotEnabled++ | Out-Null
-        }
-        
-        # back off just a little
-        Start-Sleep 2
-        $i++ | Out-Null
+            $i++ | Out-Null
+
+            # back off just a little
+            Start-Sleep 2 
+        }               
     }    
     return ($existingForks, $dependabotEnabled)
 }
@@ -343,10 +394,10 @@ function ApiCall {
     {
         #$response = Invoke-RestMethod -Method $method -Uri $url -Headers $headers -Body $body -ContentType 'application/json'
         if ($method -eq "GET") {
-            $result = Invoke-WebRequest -Uri $url -Headers $headers -Method $method -ErrorAction Stop
+            $result = Invoke-WebRequest -Uri $url -Headers $headers -Method $method -ErrorVariable $errvar -ErrorAction Continue
         }
         else {
-            $result = Invoke-WebRequest -Uri $url -Headers $headers -Method $method -ErrorAction Stop -Body $body -ContentType 'application/json'
+            $result = Invoke-WebRequest -Uri $url -Headers $headers -Method $method -Body $body -ContentType 'application/json' -ErrorVariable $errvar -ErrorAction Continue
         }
 
         $response = $result.Content | ConvertFrom-Json
@@ -357,6 +408,7 @@ function ApiCall {
         Write-Debug "  RateLimit-Remaining: $($result.Headers["X-RateLimit-Remaining"])"
         Write-Debug "  RateLimit-Reset: $($result.Headers["X-RateLimit-Reset"])"
         Write-Debug "  RateLimit-Used: $($result.Headers["X-Ratelimit-used"])"
+        Write-Debug "  Retry-After: $($result.Headers["Retry-After"])"
         
         if ($result.Headers["Link"]) {
             #Write-Host "Found pagination link: $($result.Headers["Link"])"
@@ -468,7 +520,10 @@ function GetRateLimitInfo {
     $url = "rate_limit"	
     $response = ApiCall -method GET -url $url
 
+    #Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
     Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
+    Write-Host " - GraphQL: $($response.resources.graphql | ConvertTo-Json)"
+    #Write-Host " - GraphQL: $($response | ConvertTo-Json)"
 }
 
 Write-Host "Got $($actions.Length) actions"
@@ -485,7 +540,7 @@ $existingForks = GetForkedActionRepos
 $existingForks = RunForActions -actions $actions -existingForks $existingForks
 Write-Host "Ended up with $($existingForks.Count) forked repos"
 # save the status
-$existingForks | ConvertTo-Json | Out-File $statusFile
+SaveStatus -existingForks $existingForks
 
 GetRateLimitInfo
 
