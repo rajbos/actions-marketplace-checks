@@ -11,7 +11,8 @@ function SaveStatus {
     Param (
         $existingForks
     )
-    if ($env:CI) {
+    Write-Host "env.CI [$env:CI]"
+    if ("" -ne $env:CI) {
         # We are running in CI, so let's pull before we overwrite the file
         Write-Host "Pulling the repo"
         git pull
@@ -263,7 +264,7 @@ function ForkActionRepos {
         # check if fork already exists
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
         if ($null -eq $existingFork) {        
-            Write-Host " $i Checking repo [$repo]"
+            Write-Host "$i/$max Checking repo [$repo]"
             $forkResult = ForkActionRepo -owner $owner -repo $repo
             if ($forkResult) {
                 # add the repo to the list of existing forks
@@ -511,7 +512,7 @@ function ForkActionRepo {
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"organization`":`"$forkOrg`"}" -expected 202
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
-        Write-Host "Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
+        Write-Host "  Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
         if ($null -eq $forkResponse.name){
             # response is just 'True' since we pass in expected, could be improved by returning both the response and the check on status code
             #Write-Host "Full fork response: " $forkResponse | ConvertTo-Json
