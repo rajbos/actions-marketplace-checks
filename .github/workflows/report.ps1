@@ -61,12 +61,12 @@ LogMessage "Max Critical Alerts: $maxCriticalAlerts"
 function ReportInMarkdown {
     if (!$logSummary) {
         # do not report locally
-        #return
+        return
     }
 
     LogMessage ""
     LogMessage "``````mermaid"
-    LogMessage "%%{init: {'theme':'dark'}}%%"
+    LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
     LogMessage "pie title Potentially vulnerable actions"
     LogMessage "    ""Unknown"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions"" : $($vulnerableRepos)"
