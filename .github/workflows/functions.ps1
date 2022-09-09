@@ -268,7 +268,7 @@ function ForkActionRepos {
                 $existingForks += $newFork
             }
             # back off just a little
-            Start-Sleep 5
+            Start-Sleep 2
             $i++ | Out-Null
         }        
     }
