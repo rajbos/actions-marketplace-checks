@@ -81,6 +81,7 @@ function ReportInMarkdown {
     LogMessage "pie title Potentially vulnerable actions"
     LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions: $($vulnerableRepos)"" : $($vulnerableRepos)"
+    LogMessage "    ""Non vulnerable actions: $($reposAnalyzed - $vulnerableRepos)"" : $($reposAnalyzed - $vulnerableRepos)"
     LogMessage "``````"
 }
 
