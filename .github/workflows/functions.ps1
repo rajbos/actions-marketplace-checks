@@ -300,21 +300,23 @@ function EnableDependabotForForkedActions {
         Write-Debug "Checking existing forks for an object with name [$repo] from [$($action.RepoUrl)]"
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
 
-        if (EnableDependabot $existingFork) {
-            Write-Debug "Dependabot enabled on [$repo]"
-            $existingFork.dependabot = $true
-            
-            if (Get-Member -inputobject $repo -name "vulnerabilityStatus" -Membertype Properties) {
-                # reset lastUpdatedStatus
-                $repo.vulnerabilityStatus.lastUpdated = [DateTime]::UtcNow.AddYears(-1)
-            }
-            
-            $dependabotEnabled++ | Out-Null
-            $i++ | Out-Null
+        if ($existingFork) {
+            if (EnableDependabot $existingFork) {
+                Write-Debug "Dependabot enabled on [$repo]"
+                $existingFork.dependabot = $true
+                
+                if (Get-Member -inputobject $repo -name "vulnerabilityStatus" -Membertype Properties) {
+                    # reset lastUpdatedStatus
+                    $repo.vulnerabilityStatus.lastUpdated = [DateTime]::UtcNow.AddYears(-1)
+                }
+                
+                $dependabotEnabled++ | Out-Null
+                $i++ | Out-Null
 
-            # back off just a little
-            Start-Sleep 2 
-        }               
+                # back off just a little
+                Start-Sleep 2 
+            }  
+        }             
     }    
     return ($existingForks, $dependabotEnabled)
 }

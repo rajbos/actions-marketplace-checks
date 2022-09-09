@@ -496,23 +496,48 @@
   },
   {
     "name": "action-cli-login",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T11:34:01.6060993Z",
+      "high": 0,
+      "critical": 0
+    }
   },
   {
     "name": "action-cli-runscript",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T11:34:01.8995478Z",
+      "high": 0,
+      "critical": 0
+    }
   },
   {
     "name": "lambda-python-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T11:34:02.1657375Z",
+      "high": 0,
+      "critical": 0
+    }
   },
   {
     "name": "Acunetix-360-GitHub-Actions",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T11:34:02.4869727Z",
+      "high": 3,
+      "critical": 0
+    }
   },
   {
     "name": "github-profile-3d-contrib",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T11:34:02.8692261Z",
+      "high": 6,
+      "critical": 3
+    }
   },
   {
     "name": "ghaction-python-stdeb",
@@ -3457,5 +3482,45 @@
   {
     "dependabot": true,
     "name": "DockerContainer_action"
+  },
+  {
+    "dependabot": true,
+    "name": "taro-react-native-release"
+  },
+  {
+    "dependabot": null,
+    "name": "action-maven-cli"
+  },
+  {
+    "dependabot": true,
+    "name": "ZReviewTender"
+  },
+  {
+    "dependabot": true,
+    "name": "ZMediumToMarkdown"
+  },
+  {
+    "dependabot": true,
+    "name": "Upload-File-Action"
+  },
+  {
+    "name": "project-card-moved-notification-action",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "write-file-with"
+  },
+  {
+    "dependabot": null,
+    "name": "nocalhost-server-cli"
+  },
+  {
+    "dependabot": null,
+    "name": "github-action-slack-notify-build"
+  },
+  {
+    "dependabot": null,
+    "name": "github-action-slack-notify"
   }
 ]
