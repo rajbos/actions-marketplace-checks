@@ -11,6 +11,11 @@ function SaveStatus {
     Param (
         $existingForks
     )
+    if ($env.CI) {
+        # We are running in CI, so let's pull before we overwrite the file
+        Write-Host "Pulling the repo"
+        git pull
+    }
     $existingForks | ConvertTo-Json | Out-File -FilePath $statusFile -Encoding UTF8
 }
 function GetForkedActionRepos {
