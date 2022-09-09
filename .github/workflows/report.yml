@@ -25,4 +25,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: report
-          path: ${{ GITHUB.STEP_SUMMARY }}
+          path: VulnerableRepos.txt

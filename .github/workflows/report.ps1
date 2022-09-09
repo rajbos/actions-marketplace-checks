@@ -34,7 +34,13 @@ foreach ($action in $actions) {
 
         if ($action.vulnerabilityStatus.critical -gt 0 -or $action.vulnerabilityStatus.high -gt 0) {
             $vulnerableRepos++
-        }    
+        }
+
+        if ($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) {
+            "https://github.com/$($action.ReportUrl)" | Out-File -FilePath VulnerableRepos.txt -Append
+        }   
+
+
     }
 }
 
@@ -49,12 +55,12 @@ function LogMessage {
     }
 }
 
+# calculations
 $averageHighAlerts = $highAlerts / $reposAnalyzed
 $averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
 
-
 Write-Host "Summary: "
-LogMessage "#Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos"
+LogMessage "# Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos"
 LogMessage "-----------------------------------"
 LogMessage "High Alerts: $highAlerts"
 LogMessage "Critical Alerts: $criticalAlerts"
@@ -62,8 +68,8 @@ LogMessage "-----------------------------------"
 LogMessage "Max High Alerts: $maxHighAlerts"
 LogMessage "Max Critical Alerts: $maxCriticalAlerts"
 LogMessage "-----------------------------------"
-LogMessage "Average High Alerts per vulnerable repo: $averageHighAlerts"
-LogMessage "Average Critical Alerts per vulnerable repo: $maxCriticalAlerts"
+LogMessage "Average High Alerts per vulnerable repo: $([math]::Round($averageHighAlerts, 1))"
+LogMessage "Average Critical Alerts per vulnerable repo: $([math]::Round($averageCriticalAlerts, 1))"
 
 function ReportInMarkdown {
     if (!$logSummary) {
@@ -75,8 +81,8 @@ function ReportInMarkdown {
     LogMessage "``````mermaid"
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
     LogMessage "pie title Potentially vulnerable actions"
-    LogMessage "    ""Unknown"" : $($actions.Count - $reposAnalyzed)"
-    LogMessage "    ""Vulnerable actions"" : $($vulnerableRepos)"
+    LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
+    LogMessage "    ""Vulnerable actions: $($vulnerableRepos)"" : $($vulnerableRepos)"
     LogMessage "``````"
 }
 
