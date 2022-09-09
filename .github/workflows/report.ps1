@@ -58,7 +58,7 @@ $averageHighAlerts = $highAlerts / $reposAnalyzed
 $averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
 
 Write-Host "Summary: "
-LogMessage "# Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos"
+LogMessage "# Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
 LogMessage "-----------------------------------"
 LogMessage "High Alerts: $highAlerts"
 LogMessage "Critical Alerts: $criticalAlerts"
@@ -80,8 +80,7 @@ function ReportInMarkdown {
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
     LogMessage "pie title Potentially vulnerable actions"
     LogMessage "    'High Alerts' : $highAlerts"
-    $unknown = $actions.Count - $reposAnalyzed
-    LogMessage "    ""Unknown: $unknown"" : $unknown"
+    LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions: $($vulnerableRepos)"" : $($vulnerableRepos)"
     LogMessage "    ""Non vulnerable actions: $($reposAnalyzed - $vulnerableRepos)"" : $($reposAnalyzed - $vulnerableRepos)"
     LogMessage "``````"
