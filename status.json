@@ -10891,403 +10891,903 @@
   },
   {
     "dependabot": true,
-    "name": "vuepress_1.x_compiler"
+    "name": "vuepress_1.x_compiler",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:13.6765347Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "htmltest-action"
+    "name": "htmltest-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:13.843306Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "wizzdi-action-tsc"
+    "name": "wizzdi-action-tsc",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:14.1001658Z",
+      "critical": 0,
+      "high": 5
+    }
   },
   {
     "dependabot": true,
-    "name": "python-axblack-action"
+    "name": "python-axblack-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:14.2767146Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "repo-score"
+    "name": "repo-score",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:14.497559Z",
+      "critical": 1,
+      "high": 3
+    }
   },
   {
     "dependabot": true,
-    "name": "PR-LabelGenerator"
+    "name": "PR-LabelGenerator",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:14.6753783Z",
+      "critical": 0,
+      "high": 1
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-task"
+    "name": "setup-task",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:14.867084Z",
+      "critical": 0,
+      "high": 1
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-buf"
+    "name": "setup-buf",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:15.036324Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "b2"
+    "name": "b2",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:15.2746133Z",
+      "critical": 2,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "action-upload-to-s3"
+    "name": "action-upload-to-s3",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:15.4565998Z",
+      "critical": 1,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "action-publish-test-metrics"
+    "name": "action-publish-test-metrics",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:15.6426849Z",
+      "critical": 1,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "action-publish-pr-comment"
+    "name": "action-publish-pr-comment",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:15.9051767Z",
+      "critical": 2,
+      "high": 11
+    }
   },
   {
     "dependabot": true,
-    "name": "action-newrelic-report"
+    "name": "action-newrelic-report",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:16.0786733Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "File-Lister"
+    "name": "File-Lister",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:16.2723258Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "action-hosting-deploy"
+    "name": "action-hosting-deploy",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:16.5925105Z",
+      "critical": 2,
+      "high": 9
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-compose-cli"
+    "name": "setup-compose-cli",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:16.7495978Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "publish-branch-to-npm"
+    "name": "publish-branch-to-npm",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:16.9355113Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "parse-tool-versions"
+    "name": "parse-tool-versions",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:17.1665208Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "validate-data-model"
+    "name": "validate-data-model",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:17.3302845Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "create-openapi-yaml"
+    "name": "create-openapi-yaml",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:17.4699887Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "check-compatibility"
+    "name": "check-compatibility",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:17.6537595Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "action-npm-package-export-vars"
+    "name": "action-npm-package-export-vars",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:17.810673Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "helm-kubeval-action"
+    "name": "helm-kubeval-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:17.9419322Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "github-action-wire-messenger"
+    "name": "github-action-wire-messenger",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:18.1185908Z",
+      "critical": 0,
+      "high": 3
+    }
   },
   {
     "dependabot": true,
-    "name": "wipac-dev-py-versions-action"
+    "name": "wipac-dev-py-versions-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:18.279542Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "wipac-dev-py-setup-action"
+    "name": "wipac-dev-py-setup-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:18.419524Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "miscc"
+    "name": "miscc",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:18.6234353Z",
+      "critical": 2,
+      "high": 2
+    }
   },
   {
     "dependabot": true,
-    "name": "gh-action-docker-state"
+    "name": "gh-action-docker-state",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:18.7887069Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-phraseapp"
+    "name": "setup-phraseapp",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:19.1386264Z",
+      "critical": 2,
+      "high": 13
+    }
   },
   {
     "dependabot": true,
-    "name": "slack-github-action"
+    "name": "slack-github-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:19.3841768Z",
+      "critical": 0,
+      "high": 4
+    }
   },
   {
     "dependabot": true,
-    "name": "delete-package-versions-keep-latest"
+    "name": "delete-package-versions-keep-latest",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:19.55848Z",
+      "critical": 0,
+      "high": 1
+    }
   },
   {
     "dependabot": true,
-    "name": "check-title-wip-actions"
+    "name": "check-title-wip-actions",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:19.8410229Z",
+      "critical": 2,
+      "high": 8
+    }
   },
   {
     "dependabot": true,
-    "name": "windmill-gh-action-deploy"
+    "name": "windmill-gh-action-deploy",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:20.0394576Z",
+      "critical": 1,
+      "high": 0
+    }
   },
   {
     "dependabot": null,
-    "name": "setup-b2"
+    "name": "setup-b2",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:20.1665398Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "b2-upload-action"
+    "name": "b2-upload-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:20.3663009Z",
+      "critical": 0,
+      "high": 1
+    }
   },
   {
     "dependabot": true,
-    "name": "Org-reports-Actions"
+    "name": "Org-reports-Actions",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:20.5056727Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "update-monday-status-action"
+    "name": "update-monday-status-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:20.7111341Z",
+      "critical": 0,
+      "high": 1
+    }
   },
   {
     "dependabot": true,
-    "name": "google-drive-upload-action"
+    "name": "google-drive-upload-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:20.8740217Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "kustomize-set-image-hook"
+    "name": "kustomize-set-image-hook",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:21.2497773Z",
+      "critical": 4,
+      "high": 10
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-wiremock-action"
+    "name": "setup-wiremock-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:21.520318Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "workflow-wait-action"
+    "name": "workflow-wait-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:21.7677365Z",
+      "critical": 2,
+      "high": 5
+    }
   },
   {
     "dependabot": true,
-    "name": "jest-github-action"
+    "name": "jest-github-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:22.0732339Z",
+      "critical": 2,
+      "high": 8
+    }
   },
   {
     "dependabot": true,
-    "name": "yaqti"
+    "name": "yaqti",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:22.2177533Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-go-faster"
+    "name": "setup-go-faster",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:22.3777415Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "benchdiff-action"
+    "name": "benchdiff-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:22.556831Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "steam-deploy"
+    "name": "steam-deploy",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:22.7009042Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "mediawiki-phpunit-action"
+    "name": "mediawiki-phpunit-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:22.8676804Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "widgetbook-hosting"
+    "name": "widgetbook-hosting",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:23.0339596Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "setup-lxd"
+    "name": "setup-lxd",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:23.1991996Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "msgfmt-action"
+    "name": "msgfmt-action",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:23.3999285Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "dependabot": true,
-    "name": "tag-from-version"
+    "name": "tag-from-version",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:23.8145108Z",
+      "critical": 4,
+      "high": 16
+    }
   },
   {
     "name": "docker-build-with-cache-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:23.9679Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "stale-watchdog-find-docs-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:24.1800604Z",
+      "critical": 0,
+      "high": 3
+    }
   },
   {
     "name": "stale-watchdog-create-issues-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:24.410155Z",
+      "critical": 0,
+      "high": 4
+    }
   },
   {
     "name": "GitHubPackagesSecurityAction",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:24.6227034Z",
+      "critical": 0,
+      "high": 2
+    }
   },
   {
     "name": "azure-arm-action-js",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:24.8424686Z",
+      "critical": 1,
+      "high": 0
+    }
   },
   {
     "name": "update-appcast",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:25.0038522Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "CodeChecker-Action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:25.166995Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "goaction",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:25.3273607Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "WhileyBuildAction",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:25.4629053Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "action-robot-feishu",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:25.7214952Z",
+      "critical": 1,
+      "high": 5
+    }
   },
   {
     "name": "wait-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:25.8820093Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "action-dropbox",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:26.0790967Z",
+      "critical": 2,
+      "high": 3
+    }
   },
   {
     "name": "create-dotenv-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:26.3138965Z",
+      "critical": 3,
+      "high": 5
+    }
   },
   {
     "name": "github_action_slackbot",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:26.5572707Z",
+      "critical": 2,
+      "high": 1
+    }
   },
   {
     "name": "meeting-maker",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:26.8389066Z",
+      "critical": 2,
+      "high": 8
+    }
   },
   {
     "name": "action-publish-hex",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:26.985645Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "ghaction-docker-tags-by-semver",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:27.3670603Z",
+      "critical": 4,
+      "high": 19
+    }
   },
   {
     "name": "work-wechat-send-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:27.5142121Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "kuboard-deploy-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:27.6879Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "ecr-public-action-arm64",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:27.8384798Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "calver-tag-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.0039455Z",
+      "critical": 0,
+      "high": 1
+    }
   },
   {
     "name": "hello-world-docker-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.1358925Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "publish-helm-chart-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.280043Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "next-version-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.4190327Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "get-environment-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.5702018Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "aks-login-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.7374614Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "wemake-python-styleguide",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:28.9083591Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "dotenv-linter",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:29.0797944Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "docker-image-size-limit",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:29.2606067Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "jds",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:29.4298575Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "steam-workshop-upload",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:29.586584Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "action-internal-link-consistency",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:29.8010881Z",
+      "critical": 1,
+      "high": 1
+    }
   },
   {
     "name": "wget",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:29.9328486Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "rclone",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:30.1042957Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "curl",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:30.248805Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "gha-task-list-zero",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:30.4885675Z",
+      "critical": 3,
+      "high": 0
+    }
   },
   {
     "name": "gantry-deploy-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:30.6476753Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "debug-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:30.8019419Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "COVID19-main",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:30.9793371Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "chart-releaser-action",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:31.1401729Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "locale_lint",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:31.3119511Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "github-to-ftp",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:31.4933006Z",
+      "critical": 1,
+      "high": 3
+    }
   },
   {
     "name": "build",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:31.6722065Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "upload-asset",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:31.8725534Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "setup-dmd",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:32.295494Z",
+      "critical": 5,
+      "high": 21
+    }
   },
   {
     "name": "dub-upgrade",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:32.4883719Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "deploy-nightly",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:32.6769147Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "ssh-agent",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:32.8131628Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "docker-composer-require-checker",
-    "dependabot": true
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-09T20:53:32.9712607Z",
+      "critical": 0,
+      "high": 0
+    }
   },
   {
     "name": "create-aws-codedeploy-deployment",
@@ -13891,6 +14391,406 @@
   },
   {
     "name": "mkdocs2S3",
+    "dependabot": true
+  },
+  {
+    "name": "yeswiki-release-action",
+    "dependabot": true
+  },
+  {
+    "name": "swift-playgrounds-action",
+    "dependabot": true
+  },
+  {
+    "name": "check-version-upgrade",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-json-property",
+    "dependabot": true
+  },
+  {
+    "name": "yaml-schema-checker",
+    "dependabot": true
+  },
+  {
+    "name": "new-version-decider",
+    "dependabot": true
+  },
+  {
+    "name": "s3cmd-sync-action",
+    "dependabot": true
+  },
+  {
+    "name": "gatsby-cli-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "promote-google-play-track-action",
+    "dependabot": true
+  },
+  {
+    "name": "codefresh-pipeline-runner",
+    "dependabot": true
+  },
+  {
+    "name": "dgit-action",
+    "dependabot": true
+  },
+  {
+    "name": "YouRock",
+    "dependabot": true
+  },
+  {
+    "name": "jira-telegram",
+    "dependabot": true
+  },
+  {
+    "name": "gat",
+    "dependabot": true
+  },
+  {
+    "name": "ESP-LDF-OTA-Version-Auto-Increment-Github-Action",
+    "dependabot": true
+  },
+  {
+    "name": "xcode-version-setter",
+    "dependabot": true
+  },
+  {
+    "name": "jira-get-issue",
+    "dependabot": true
+  },
+  {
+    "name": "faster-hacs-action",
+    "dependabot": true
+  },
+  {
+    "name": "intellij-plugin-verifier-action",
+    "dependabot": true
+  },
+  {
+    "name": "XamlTranslationValidator",
+    "dependabot": true
+  },
+  {
+    "name": "github-actions-deploy-aur",
+    "dependabot": true
+  },
+  {
+    "name": "package-json-enforcer",
+    "dependabot": true
+  },
+  {
+    "name": "git-url-parse",
+    "dependabot": true
+  },
+  {
+    "name": "folder-hash",
+    "dependabot": true
+  },
+  {
+    "name": "required-reviews",
+    "dependabot": true
+  },
+  {
+    "dependabot": null,
+    "name": "pnpm-action"
+  },
+  {
+    "name": "assign-reviewers-action",
+    "dependabot": true
+  },
+  {
+    "name": "MkdocsToS3",
+    "dependabot": true
+  },
+  {
+    "name": "node",
+    "dependabot": true
+  },
+  {
+    "name": "nano_node",
+    "dependabot": true
+  },
+  {
+    "name": "git-log-action",
+    "dependabot": true
+  },
+  {
+    "name": "get-next-version",
+    "dependabot": true
+  },
+  {
+    "name": "randomdog-app",
+    "dependabot": true
+  },
+  {
+    "name": "setup-msvc-dev",
+    "dependabot": true
+  },
+  {
+    "name": "actions-team-membership",
+    "dependabot": true
+  },
+  {
+    "name": "mutexserver",
+    "dependabot": true
+  },
+  {
+    "name": "check-code-coverage",
+    "dependabot": true
+  },
+  {
+    "name": "vue-cli-plugin-s3-deploy-action",
+    "dependabot": true
+  },
+  {
+    "name": "bump-image-version-action",
+    "dependabot": true
+  },
+  {
+    "name": "fontship",
+    "dependabot": true
+  },
+  {
+    "name": "keep-remote-file-locally-up-to-date-action",
+    "dependabot": true
+  },
+  {
+    "name": "contributors-to-file-action",
+    "dependabot": true
+  },
+  {
+    "name": "ocr-bot",
+    "dependabot": true
+  },
+  {
+    "name": "changesets-snapshot-action",
+    "dependabot": true
+  },
+  {
+    "name": "changesets-dependencies-action",
+    "dependabot": true
+  },
+  {
+    "name": "dockercompose-health-action",
+    "dependabot": true
+  },
+  {
+    "name": "vue-deploy-github-pages",
+    "dependabot": true
+  },
+  {
+    "name": "action-minver",
+    "dependabot": true
+  },
+  {
+    "name": "zip-release",
+    "dependabot": true
+  },
+  {
+    "name": "generate-dependency-alerts-csv-action",
+    "dependabot": true
+  },
+  {
+    "name": "generate-dependencies-csv-action",
+    "dependabot": true
+  },
+  {
+    "name": "terragrunt-github-actions",
+    "dependabot": true
+  },
+  {
+    "name": "Bump-Hash-Action",
+    "dependabot": true
+  },
+  {
+    "name": "shunit2-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "ga-yaml-parser",
+    "dependabot": true
+  },
+  {
+    "name": "ga-file-list",
+    "dependabot": true
+  },
+  {
+    "name": "action-get-gradle-version",
+    "dependabot": true
+  },
+  {
+    "name": "teams-notify",
+    "dependabot": true
+  },
+  {
+    "name": "slack-notify",
+    "dependabot": true
+  },
+  {
+    "name": "body-env-tag-action",
+    "dependabot": true
+  },
+  {
+    "name": "version-check",
+    "dependabot": true
+  },
+  {
+    "name": "github-update-readme",
+    "dependabot": true
+  },
+  {
+    "name": "Whitesource-Scan-Action",
+    "dependabot": true
+  },
+  {
+    "name": "get-block-name",
+    "dependabot": true
+  },
+  {
+    "name": "get-orcid-publications",
+    "dependabot": true
+  },
+  {
+    "name": "pytype-action",
+    "dependabot": true
+  },
+  {
+    "name": "pip-compile-diff-action",
+    "dependabot": true
+  },
+  {
+    "name": "depcheck-action",
+    "dependabot": true
+  },
+  {
+    "name": "stellaris-localisation-crowdin-fix",
+    "dependabot": true
+  },
+  {
+    "name": "coolname-generator-action",
+    "dependabot": true
+  },
+  {
+    "name": "rosinstall_credentials_action",
+    "dependabot": true
+  },
+  {
+    "name": "go-cross-build",
+    "dependabot": true
+  },
+  {
+    "name": "ballerina-dependabot-action",
+    "dependabot": true
+  },
+  {
+    "name": "mirror-git-repo",
+    "dependabot": true
+  },
+  {
+    "name": "ecr-login",
+    "dependabot": true
+  },
+  {
+    "name": "redmine-integration-action",
+    "dependabot": true
+  },
+  {
+    "name": "easily-dokku-action",
+    "dependabot": true
+  },
+  {
+    "name": "kinda-contribute",
+    "dependabot": true
+  },
+  {
+    "name": "github-readme-info",
+    "dependabot": true
+  },
+  {
+    "name": "rancher-redeploy-workload",
+    "dependabot": true
+  },
+  {
+    "name": "notify-discord",
+    "dependabot": true
+  },
+  {
+    "name": "setup-swift",
+    "dependabot": true
+  },
+  {
+    "name": "publish-github-action",
+    "dependabot": true
+  },
+  {
+    "name": "fork-sync",
+    "dependabot": true
+  },
+  {
+    "name": "name-generator-node-action",
+    "dependabot": true
+  },
+  {
+    "name": "factorio-publish-mod-action",
+    "dependabot": true
+  },
+  {
+    "name": "cypress-parallel",
+    "dependabot": true
+  },
+  {
+    "name": "ticket-in-pr-title-action",
+    "dependabot": true
+  },
+  {
+    "name": "chatops",
+    "dependabot": true
+  },
+  {
+    "name": "autoplan",
+    "dependabot": true
+  },
+  {
+    "name": "matterfy",
+    "dependabot": true
+  },
+  {
+    "name": "hlint-action",
+    "dependabot": true
+  },
+  {
+    "name": "brittany-action",
+    "dependabot": true
+  },
+  {
+    "name": "stateGetter",
+    "dependabot": true
+  },
+  {
+    "name": "mongoexport",
+    "dependabot": true
+  },
+  {
+    "name": "genREADME",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-buckets",
+    "dependabot": true
+  },
+  {
+    "name": "github-action-bucket-replicate",
+    "dependabot": true
+  },
+  {
+    "name": "cloudflare-update-dnslink",
+    "dependabot": true
+  },
+  {
+    "name": "ml-gen",
     "dependabot": true
   }
 ]
