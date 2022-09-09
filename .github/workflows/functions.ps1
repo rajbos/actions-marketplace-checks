@@ -13,7 +13,7 @@ function SaveStatus {
     )
     if ("" -ne $env:CI) {
         # We are running in CI, so let's pull before we overwrite the file
-        git pull
+        git pull --quiet | Out-Null
     }
     $existingForks | ConvertTo-Json | Out-File -FilePath $statusFile -Encoding UTF8
 }

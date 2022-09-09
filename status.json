@@ -1,21 +1,5 @@
 [
-  "Already up to date.",
-  "Already up to date.",
-  "Updating 4c9d7c3..230fabd",
-  "Fast-forward",
-  " .github/workflows/report.ps1 | 4 ++--",
-  " 1 file changed, 2 insertions(+), 2 deletions(-)",
-  "Already up to date.",
-  "Updating c4bfcc5..1f6d606",
-  "Fast-forward",
-  " .github/workflows/functions.ps1 |    2 -",
-  " .github/workflows/report.ps1    |    2 +-",
-  " status.json                     | 2848 ++++++++++++++++++++++++++-------------",
-  " 3 files changed, 1876 insertions(+), 976 deletions(-)",
-  "Already up to date.",
-  "Already up to date.",
-  "Already up to date.",
-  {
+ {
     "name": "actions-marketplace-checks",
     "dependabot": true,
     "vulnerabilityStatus": {
