@@ -58,3 +58,16 @@ LogMessage "-----------------------------------"
 LogMessage "Max High Alerts: $maxHighAlerts"
 LogMessage "Max Critical Alerts: $maxCriticalAlerts"
 
+function ReportInMarkdown {
+    if (!$logSummary) {
+        # do not report locally
+        #return
+    }
+
+    LogMessage ""
+    LogMessage "``````"
+    LogMessage "pie title Vulnerable Actions"
+    LogMessage "    ""Unknown"" : $($actions.Count - $reposAnalyzed)"
+    LogMessage "    ""Vulnerable actions"" : $($vulnerableRepos)"
+    LogMessage "``````"
+}
