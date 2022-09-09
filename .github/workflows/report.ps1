@@ -79,7 +79,6 @@ function ReportInMarkdown {
     LogMessage "``````mermaid"
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
     LogMessage "pie title Potentially vulnerable actions"
-    LogMessage "    ""High Alerts"" : $highAlerts"
     LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions: $($vulnerableRepos)"" : $($vulnerableRepos)"
     LogMessage "    ""Non vulnerable actions: $($reposAnalyzed - $vulnerableRepos)"" : $($reposAnalyzed - $vulnerableRepos)"
