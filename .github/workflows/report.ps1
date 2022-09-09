@@ -71,3 +71,6 @@ function ReportInMarkdown {
     LogMessage "    ""Vulnerable actions"" : $($vulnerableRepos)"
     LogMessage "``````"
 }
+
+# call the report function
+ReportInMarkdown
