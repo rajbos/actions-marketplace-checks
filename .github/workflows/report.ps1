@@ -4,7 +4,7 @@ Param (
 )
 
 Write-Host "Found [$($actions.Count)] actions to report on"
-Write-Host "Log Summary: [$logSummary]"
+Write-Host "Log summary path: [$logSummary]"
 
 $highAlerts = 0
 $criticalAlerts = 0
@@ -44,7 +44,9 @@ function LogMessage {
     )
 
     Write-Host $message 
-    $message | Out-File $logSummary -Append
+    if ($logSummary) {
+        $message | Out-File $logSummary -Append
+    }
 }
 
 Write-Host "Summary: "
