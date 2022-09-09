@@ -15,13 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Get current actions list
-        run: |
-          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
           
       - shell: pwsh
         run: |
-           $actions=(cat actions.json | ConvertFrom-Json)
+           $actions=(cat status.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)"
