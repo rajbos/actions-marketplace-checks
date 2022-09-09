@@ -66,6 +66,7 @@ function ReportInMarkdown {
 
     LogMessage ""
     LogMessage "``````mermaid"
+    LogMessage "%%{init: {'theme':'dark'}}%%"
     LogMessage "pie title Vulnerable Actions"
     LogMessage "    ""Unknown"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions"" : $($vulnerableRepos)"
