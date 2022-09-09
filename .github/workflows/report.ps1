@@ -37,7 +37,7 @@ foreach ($action in $actions) {
         }
 
         if ($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) {
-            "https://github.com/$($action.ReportUrl)" | Out-File -FilePath VulnerableRepos.txt -Append
+            "https://github.com/actions-marketplace-validations/$($action.name)" | Out-File -FilePath VulnerableRepos.txt -Append
         }   
 
 
