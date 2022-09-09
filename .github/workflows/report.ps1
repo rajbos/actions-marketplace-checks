@@ -4,6 +4,7 @@ Param (
 )
 
 Write-Host "Found [$($actions.Count)] actions to report on"
+Write-Host "Log Summary: [$logSummary]"
 
 $highAlerts = 0
 $criticalAlerts = 0

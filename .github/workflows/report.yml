@@ -24,4 +24,4 @@ jobs:
         run: |
            $actions=(cat actions.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
-           ./.github/workflows/report.ps1 -actions $actions -logSummary "$$($env:GITHUB_STEP_SUMMARY)"
+           ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)"
