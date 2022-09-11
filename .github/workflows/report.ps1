@@ -12,6 +12,14 @@ $vulnerableRepos = 0
 $maxHighAlerts = 0
 $maxCriticalAlerts = 0
 $reposAnalyzed = 0
+
+$nodeBasedActions = 0
+$dockerBasedActions = 0
+$localDockerFile = 0
+$remoteDockerfile = 0
+$actionYmlFile = 0
+$actionYamlFile = 0
+
 foreach ($action in $actions) {
         
     if ($action.vulnerabilityStatus) {
@@ -38,6 +46,28 @@ foreach ($action in $actions) {
 
         if ($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) {
             "https://github.com/actions-marketplace-validations/$($action.name) Critical: $($action.vulnerabilityStatus.critical) High: $($action.vulnerabilityStatus.high)" | Out-File -FilePath VulnerableRepos.txt -Append
+        }
+    }
+
+    if ($action.actionType) {
+        if ($action.actionType.actionType -eq "Docker") {
+            $dockerBasedActions++
+            if ($action.actionType.actionDockerType -eq "Dockerfile") {
+                $localDockerFile++
+            }
+            elseif ($action.actionType.actionDockerType -eq "Image") {
+                $remoteDockerfile++
+            }
+        }
+        elseif ($action.actionType.actionType -eq "Node") {
+            $nodeBasedActions++
+        }
+
+        if ($action.actionType.fileFound -eq "action.yml") {
+            $actionYmlFile++
+        }
+        elseif ($action.actionType.fileFound -eq "action.yaml") {
+            $actionYamlFile++
         }
     }
 }
@@ -87,3 +117,16 @@ function ReportInMarkdown {
 
 # call the report function
 ReportInMarkdown
+
+
+LogMessage ""
+LogMessage "## General information"
+
+LogMessage "Node based actions: $nodeBasedActions"
+LogMessage "Docker based actions: $dockerBasedActions"
+LogMessage ""
+LogMessage "Docker actions using a local Dockerfile: $localDockerFile"
+LogMessage "Docker actions using a remote image: $remoteDockerfile"
+LogMessage ""
+LogMessage "``action.yml``: $actionYmlFile"
+LogMessage "``action.yaml``: $actionYamlFile"
