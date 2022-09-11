@@ -250,12 +250,22 @@ function ForkActionRepos {
     $newlyForkedRepos = 0
 
     Write-Host "Forking repos"
+    $counter = 0
+
+    # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
+    $actionsToProcess = $actions | Where-Object { $existingForks.name -notcontains (SplitUrlLastPart $_.RepoUrl) }
+
     # get existing forks with owner/repo values instead of full urls
-    foreach ($action in $actions) {
+    foreach ($action in $actionsToProcess) {
         if ($i -ge $max) {
             # do not run to long
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
+        }
+
+        # show every 100 executions a message
+        if ($counter % 100 -eq 1) {
+            Write-Host "Checked forked for ${counter} repos"
         }
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
@@ -270,11 +280,16 @@ function ForkActionRepos {
                 $newlyForkedRepos++
                 $newFork = @{ name = $repo; dependabot = $null }
                 $existingForks += $newFork
+                    
+                # back off just a little after a new fork
+                Start-Sleep 2
+                $i++ | Out-Null
             }
-            # back off just a little
-            Start-Sleep 2
-            $i++ | Out-Null
-        }        
+        }
+        else {
+            $abc = "fake for double check"
+        }
+        $counter++ | Out-Null
     }
 
     return ($newlyForkedRepos, $existingForks)
@@ -300,11 +315,11 @@ function EnableDependabotForForkedActions {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
         }
 
-        ($owner, $repo) = $(SplitUrl $action.RepoUrl)
+        $repo = SplitUrlLastPart $action.RepoUrl
         Write-Debug "Checking existing forks for an object with name [$repo] from [$($action.RepoUrl)]"
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
 
-        if ($existingFork) {
+        if ($null -ne $existingFork -And $null -eq $existingFork.dependabot) {
             if (EnableDependabot $existingFork) {
                 Write-Debug "Dependabot enabled on [$repo]"
                 $existingFork.dependabot = $true
@@ -319,7 +334,11 @@ function EnableDependabotForForkedActions {
 
                 # back off just a little
                 Start-Sleep 2 
-            }  
+            }
+            else {
+                # could not enable dependabot for some reason. Store it as false so we can skip it next time and save execution time
+                $existingFork.dependabot = $false
+            }
         }             
     }    
     return ($existingForks, $dependabotEnabled)
@@ -364,6 +383,23 @@ function SplitUrl {
     $owner = $urlParts[-2]
     # return repo and org
     return $owner, $repo
+}
+
+function SplitUrlLastPart {
+    Param (
+        $url
+    )
+
+    # this fails when finding the repo name from this url
+    #if ($url.StartsWith("https://github.com/marketplace/actions")) {
+    #    return "";
+    #}
+
+    # split the url into the last part
+    $urlParts = $url.Split('/')
+    $repo = $urlParts[-1]
+    # return repo
+    return $repo
 }
 
 function GetBasicAuthenticationHeader(){
@@ -501,7 +537,7 @@ function ForkActionRepo {
         $repo
     )
 
-    if ($owner -eq "" -or $repo -eq "") {
+    if ($owner -eq "" -or $null -eq $owner -or $repo -eq "" -or $null -eq $repo) {
         return $false
     }
     # fork the action repository to the actions-marketplace-validations organization on github
