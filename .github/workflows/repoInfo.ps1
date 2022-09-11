@@ -63,6 +63,9 @@ function GetActionType {
         if ($using -like "node*") {
             $actionType = "Node"
         }
+        elseif ($using -like "composite*") {
+            $actionType = "Composite"
+        }
         else {
             $actionType = "Unknown"
         }

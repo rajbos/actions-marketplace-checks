@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/pipeline.yml
       - .github/workflows/functions.ps1
+      - .github/workflows/repoInfo.ps1
 
   schedule:
     - cron: '* */1 * * *'
