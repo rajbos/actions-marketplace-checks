@@ -8,7 +8,7 @@ on:
       - .github/workflows/functions.ps1
 
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '* */1 * * *'
 
   workflow_dispatch:
 
