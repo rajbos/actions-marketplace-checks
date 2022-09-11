@@ -254,6 +254,7 @@ function ForkActionRepos {
 
     # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
     $actionsToProcess = $actions | Where-Object { $existingForks.name -notcontains (SplitUrlLastPart $_.RepoUrl) }
+    Write-Host "Found [$($actionsToProcess.Count)] actions still to process for forking"
 
     # get existing forks with owner/repo values instead of full urls
     foreach ($action in $actionsToProcess) {
