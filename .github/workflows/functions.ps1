@@ -4,7 +4,7 @@ Param (
   $access_token = $env:GITHUB_TOKEN
 )
 
-. .\library.ps1
+. $PSScriptRoot/library.ps1
 
 $statusFile = "status.json"
 Write-Host "Got an access token with length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
