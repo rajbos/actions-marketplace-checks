@@ -118,3 +118,4 @@ foreach ($action in $status) {
 }
 
 SaveStatus -existingForks $status
+GetRateLimitInfo
