@@ -39,7 +39,16 @@ function GetActionType {
     # load the file
     $fileContent = ApiCall -method GET -url $response.download_url
     Write-Debug "response: $($fileContent)"
-    $yaml = ConvertFrom-Yaml $fileContent
+    $yaml
+    try {
+        $yaml = ConvertFrom-Yaml $fileContent
+    }
+    catch {
+        Write-Host "Error converting to yaml: $($_.Exception.Message)"
+        Write-Host "Yaml content:"
+        Write-Host $fileContent
+        return "Unknown"
+    }
     
     # find line that says "
     # runs:
