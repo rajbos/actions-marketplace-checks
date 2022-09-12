@@ -56,7 +56,7 @@ function GetActionType {
     }
     catch {
         Write-Host "Error converting to yaml: $($_.Exception.Message)"
-        Write-Host "Yaml content:"
+        Write-Host "Yaml content repo [$owner/$repo]:"
         Write-Host $fileContent
         return "Unknown"
     }
