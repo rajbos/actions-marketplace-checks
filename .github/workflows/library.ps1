@@ -87,7 +87,13 @@ function ApiCall {
     }
     catch
     {
-        $messageData = $_.ErrorDetails.Message | ConvertFrom-Json
+        $messageData
+        try {
+            $messageData = $_.ErrorDetails.Message | ConvertFrom-Json
+        }
+        catch {
+            $messageData = $_.ErrorDetails.Message
+        }
         
         if ($messageData.message -eq "was submitted too quickly") {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
