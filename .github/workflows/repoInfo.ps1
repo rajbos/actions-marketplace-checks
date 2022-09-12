@@ -31,8 +31,19 @@ function GetActionType {
             $fileFound = "action.yaml"
         }
         catch {
-            # no files found
-            return "Unknown"
+            try {
+                $url = "/repos/$owner/$repo/contents/Dockerfile"
+                $response = ApiCall -method GET -url $url
+                $fileFound = "Dockerfile"
+                $actionDockerType = "Dockerfile"
+                $actionType = "Docker"
+    
+                return ($actionType, $fileFound, $actionDockerType)
+            }
+            catch {
+                # no files found
+                return "Unknown"
+            }
         }
     }
 
