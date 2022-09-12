@@ -19,6 +19,7 @@ $localDockerFile = 0
 $remoteDockerfile = 0
 $actionYmlFile = 0
 $actionYamlFile = 0
+$actionDockerFile = 0
 
 foreach ($action in $actions) {
         
@@ -68,6 +69,9 @@ foreach ($action in $actions) {
         }
         elseif ($action.actionType.fileFound -eq "action.yaml") {
             $actionYamlFile++
+        }
+        elseif ($action.actionType.fileFound -eq "Dockerfile") {
+            $actionDockerFile++
         }
     }
 }
@@ -128,5 +132,7 @@ LogMessage ""
 LogMessage "Docker actions using a local Dockerfile: $localDockerFile"
 LogMessage "Docker actions using a remote image: $remoteDockerfile"
 LogMessage ""
-LogMessage "``action.yml``: $actionYmlFile"
-LogMessage "``action.yaml``: $actionYamlFile"
+LogMessage "Actions defined as:"
+LogMessage "* ``action.yml``: $actionYmlFile"
+LogMessage "* ``action.yaml``: $actionYamlFile"
+LogMessage "* ``Dockerfile``: $$actionDockerFile"
