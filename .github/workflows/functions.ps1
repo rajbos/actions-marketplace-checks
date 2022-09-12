@@ -95,7 +95,7 @@ function GetDependabotAlerts {
     Write-Host "Loading vulnerability alerts for repos"
 
     $i = $existingForks.Length
-    $max = $existingForks.Length + $numberOfReposToDo
+    $max = $existingForks.Length + ($numberOfReposToDo * 2)
 
     $highAlerts = 0
     $criticalAlerts = 0
