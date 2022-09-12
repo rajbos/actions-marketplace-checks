@@ -15,6 +15,7 @@ on:
 
 env:
   numberOfReposToDo: 100
+  numberOfReposToDoRepoInfo: 200
     
 jobs:
   fork-em:
@@ -36,7 +37,7 @@ jobs:
            # fork repos and load Dependabot status
            ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}"
            # get repo information
-           ./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}"
+           ./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ secrets.ACCESS_TOKEN }}"
 
       - name: Commit changes
         run: |
