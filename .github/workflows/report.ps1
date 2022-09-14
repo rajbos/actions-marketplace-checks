@@ -20,6 +20,7 @@ $remoteDockerfile = 0
 $actionYmlFile = 0
 $actionYamlFile = 0
 $actionDockerFile = 0
+$compositeAction = 0
 
 foreach ($action in $actions) {
         
@@ -72,6 +73,9 @@ foreach ($action in $actions) {
         }
         elseif ($action.actionType.fileFound -eq "Dockerfile") {
             $actionDockerFile++
+        }
+        elseif ($action.actionType.fileFound -eq "Composite") {
+            $compositeAction++
         }
     }
 }
@@ -128,6 +132,7 @@ LogMessage "## General information"
 
 LogMessage "Node based actions: $nodeBasedActions"
 LogMessage "Docker based actions: $dockerBasedActions"
+LogMessage "Composite actions: $compositeAction"
 LogMessage ""
 LogMessage "Docker actions using a local Dockerfile: $localDockerFile"
 LogMessage "Docker actions using a remote image: $remoteDockerfile"
