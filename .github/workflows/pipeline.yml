@@ -9,7 +9,7 @@ on:
       - .github/workflows/repoInfo.ps1
 
   schedule:
-    - cron: '* */1 * * *'
+    - cron: '*/45 * * * *'
 
   workflow_dispatch:
 
