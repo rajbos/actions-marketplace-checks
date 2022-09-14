@@ -96606,6 +96606,11 @@
       "lastUpdated": "2022-09-12T18:13:22.8646581Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96615,6 +96620,11 @@
       "lastUpdated": "2022-09-12T18:13:23.0955942Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96624,6 +96634,11 @@
       "lastUpdated": "2022-09-12T18:13:23.4369609Z",
       "critical": 1,
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96633,6 +96648,11 @@
       "lastUpdated": "2022-09-12T18:13:23.5881581Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96642,6 +96662,11 @@
       "lastUpdated": "2022-09-12T18:13:23.7431457Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -96651,6 +96676,11 @@
       "lastUpdated": "2022-09-12T18:13:23.9169292Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96660,6 +96690,11 @@
       "lastUpdated": "2022-09-12T18:13:24.2312338Z",
       "critical": 2,
       "high": 8
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96669,6 +96704,11 @@
       "lastUpdated": "2022-09-12T18:13:24.3855776Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96678,6 +96718,11 @@
       "lastUpdated": "2022-09-12T18:13:24.6017777Z",
       "critical": 1,
       "high": 5
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96687,6 +96732,11 @@
       "lastUpdated": "2022-09-12T18:13:24.7807717Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96696,6 +96746,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:53.5950729Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96705,6 +96760,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:53.7718901Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96714,6 +96774,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:53.9087832Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96723,6 +96788,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:54.0550178Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96732,6 +96802,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:54.2112125Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yaml Dockerfile"
     }
   },
   {
@@ -96741,6 +96816,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:54.3434306Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96750,6 +96830,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:54.4640797Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -96759,6 +96844,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:54.5741464Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -96768,6 +96858,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:54.7280789Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Unknown",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96777,6 +96872,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:29:54.9829541Z",
       "high": 3
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96786,6 +96886,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:55.4059918Z",
       "high": 4
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96795,6 +96900,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:55.6303691Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96804,6 +96914,11 @@
       "critical": 3,
       "lastUpdated": "2022-09-12T19:29:55.8482069Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96813,6 +96928,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:56.002285Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yaml Dockerfile"
     }
   },
   {
@@ -96822,6 +96942,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:56.1389013Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -96831,6 +96956,11 @@
       "critical": 3,
       "lastUpdated": "2022-09-12T19:29:56.4021369Z",
       "high": 11
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96840,6 +96970,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:56.5429451Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96849,6 +96984,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:56.6874629Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yaml "
     }
   },
   {
@@ -96858,6 +96998,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:56.8941889Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96867,6 +97012,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:57.0331212Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96876,6 +97026,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:57.1674883Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Unknown",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96885,6 +97040,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:57.3096065Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96894,6 +97054,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:29:57.4887739Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96903,6 +97068,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:57.6403715Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yaml Dockerfile"
     }
   },
   {
@@ -96912,6 +97082,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:57.7865997Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yaml "
     }
   },
   {
@@ -96921,6 +97096,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:57.9318688Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96930,6 +97110,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:58.0889835Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Dockerfile",
+      "actionType": "Docker",
+      "actionDockerType": "Dockerfile"
     }
   },
   {
@@ -96939,6 +97124,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:58.3221303Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Dockerfile",
+      "actionType": "Docker",
+      "actionDockerType": "Dockerfile"
     }
   },
   {
@@ -96948,6 +97138,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:58.4787494Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -96957,6 +97152,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:29:58.6702532Z",
       "high": 3
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96966,6 +97166,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:58.7785464Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -96975,6 +97180,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:58.8898462Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -96984,6 +97194,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:59.0664194Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -96993,6 +97208,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:59.2064277Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97002,6 +97222,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:59.3368981Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97011,6 +97236,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:59.4940544Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97020,6 +97250,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:59.7445647Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yaml Dockerfile"
     }
   },
   {
@@ -97029,6 +97264,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:29:59.8746307Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97038,6 +97278,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:00.0251862Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97047,6 +97292,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:00.2121729Z",
       "high": 3
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97056,6 +97306,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:00.3754428Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97065,6 +97320,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:00.6000867Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yaml "
     }
   },
   {
@@ -97074,6 +97334,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:00.7661971Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97083,6 +97348,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:00.9529405Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97092,6 +97362,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:01.2716758Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97101,6 +97376,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:01.4482239Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97110,6 +97390,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:01.671456Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97119,6 +97404,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:01.9611441Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97128,6 +97418,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:02.1924489Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97137,6 +97432,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:02.4989922Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97146,6 +97446,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:02.7111924Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97155,6 +97460,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:02.9008535Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97164,6 +97474,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:03.1626854Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97173,6 +97488,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:03.3611971Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97182,6 +97502,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:03.5502373Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97191,6 +97516,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:03.7742277Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97200,6 +97530,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:04.052002Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97209,6 +97544,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:04.3697189Z",
       "high": 4
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97218,6 +97558,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:04.5617681Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97227,6 +97572,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:04.724202Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97236,6 +97586,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:04.9286621Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97245,6 +97600,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:05.2985375Z",
       "high": 4
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97254,6 +97614,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:05.5104331Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97263,6 +97628,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:05.7274084Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97272,6 +97642,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:05.9382213Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97281,6 +97656,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:06.1218336Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97290,6 +97670,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:06.2661617Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97299,6 +97684,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:06.3763698Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97308,6 +97698,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:06.5517657Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97317,6 +97712,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:06.7662815Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97326,6 +97726,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:07.1023234Z",
       "high": 7
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97335,6 +97740,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:07.2891277Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97344,6 +97754,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:07.5368443Z",
       "high": 5
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97353,6 +97768,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:07.7184855Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yaml Dockerfile"
     }
   },
   {
@@ -97362,6 +97782,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:07.8780722Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yaml Dockerfile"
     }
   },
   {
@@ -97371,6 +97796,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:08.0545184Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97380,6 +97810,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:08.2466805Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yaml "
     }
   },
   {
@@ -97389,6 +97824,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:08.4202617Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97398,6 +97838,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:08.5933203Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97407,6 +97852,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:08.7380882Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97416,6 +97866,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:08.8965679Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97425,6 +97880,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:09.0690956Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97434,6 +97894,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:09.263827Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97443,6 +97908,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:09.4467904Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97452,6 +97922,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:09.6422766Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97461,6 +97936,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:09.7831432Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97470,6 +97950,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:09.9541649Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97479,6 +97964,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:10.105739Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97488,6 +97978,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:10.3513188Z",
       "high": 4
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97497,6 +97992,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:10.4834706Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97506,6 +98006,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:10.6627934Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97515,6 +98020,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:10.7965226Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97524,6 +98034,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:11.0451136Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97533,6 +98048,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:11.1962033Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Unknown",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97542,6 +98062,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:11.3375651Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Unknown",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97551,6 +98076,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:11.5767396Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97560,6 +98090,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:11.6891219Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97569,6 +98104,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:11.8323338Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97578,6 +98118,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:11.9665932Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97587,6 +98132,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:12.1983082Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97596,6 +98146,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:12.3988003Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97605,6 +98160,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:12.5923084Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97614,6 +98174,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:12.9042286Z",
       "high": 9
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97623,6 +98188,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:13.2537144Z",
       "high": 9
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97632,6 +98202,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:13.6356949Z",
       "high": 9
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97641,6 +98216,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:13.9598083Z",
       "high": 6
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97650,6 +98230,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:14.2777467Z",
       "high": 6
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97659,6 +98244,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:14.4309486Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97668,6 +98258,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:14.6582819Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97677,6 +98272,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:14.898029Z",
       "high": 3
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97686,6 +98286,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:15.0400567Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97695,6 +98300,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:15.1894194Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97704,6 +98314,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:15.364603Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97713,6 +98328,11 @@
       "critical": 4,
       "lastUpdated": "2022-09-12T19:30:15.7546493Z",
       "high": 16
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97722,6 +98342,11 @@
       "critical": 5,
       "lastUpdated": "2022-09-12T19:30:16.1311445Z",
       "high": 20
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97731,6 +98356,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:16.276317Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97740,6 +98370,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:16.4788452Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97749,6 +98384,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:16.6117994Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97758,6 +98398,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:16.7621467Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97767,6 +98412,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:17.0734376Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97776,6 +98426,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:17.3121082Z",
       "high": 4
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97785,6 +98440,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:17.533271Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97794,6 +98454,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:17.697518Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97803,6 +98468,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:17.8592088Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -97812,6 +98482,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:17.9990469Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97821,6 +98496,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:18.2940286Z",
       "high": 7
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97830,6 +98510,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:19.6971105Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97839,6 +98524,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:19.8135463Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97848,6 +98538,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:19.9686296Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97857,6 +98552,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:20.1921248Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97866,6 +98566,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:20.3373741Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97875,6 +98580,11 @@
       "critical": 4,
       "lastUpdated": "2022-09-12T19:30:20.6293551Z",
       "high": 6
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97884,6 +98594,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:20.7893655Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97893,6 +98608,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:20.9374728Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97902,6 +98622,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:21.1091701Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97911,6 +98636,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:21.2770124Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97920,6 +98650,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:21.4842532Z",
       "high": 4
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yaml "
     }
   },
   {
@@ -97929,6 +98664,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:21.6367741Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -97938,6 +98678,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:21.7517673Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -97947,6 +98692,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:21.9280883Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97956,6 +98706,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:22.1357406Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97965,6 +98720,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:22.270743Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97974,6 +98734,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:22.4378832Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97983,6 +98748,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:22.5983861Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -97992,6 +98762,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:22.7412445Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98001,6 +98776,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:22.910454Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98010,6 +98790,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:23.0922243Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98019,6 +98804,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:23.2631519Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98028,6 +98818,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:23.4766674Z",
       "high": 2
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98037,6 +98832,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:23.6356003Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98046,6 +98846,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:23.9480894Z",
       "high": 11
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98055,6 +98860,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:24.0798509Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98064,6 +98874,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:24.261959Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98073,6 +98888,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:24.427264Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98082,6 +98902,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:24.5866984Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98091,6 +98916,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:24.6976988Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -98100,6 +98930,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:24.8726978Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98109,6 +98944,11 @@
       "critical": 2,
       "lastUpdated": "2022-09-12T19:30:25.1328274Z",
       "high": 7
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98118,6 +98958,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:25.3064638Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yaml "
     }
   },
   {
@@ -98127,6 +98972,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:25.4833091Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Unknown",
+      "actionType": null,
+      "actionDockerType": null
     }
   },
   {
@@ -98136,6 +98986,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:25.6552395Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98145,6 +99000,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:25.8508822Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98154,6 +99014,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:26.0090047Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98163,6 +99028,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:26.1836773Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98172,6 +99042,11 @@
       "critical": 5,
       "lastUpdated": "2022-09-12T19:30:26.6176711Z",
       "high": 25
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98181,6 +99056,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:26.7455098Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98190,6 +99070,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:26.8826047Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98199,6 +99084,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:27.0513165Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98208,6 +99098,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:27.3977426Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98217,6 +99112,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:27.5278678Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98226,6 +99126,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:27.6751217Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -98235,6 +99140,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:27.8349181Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98244,6 +99154,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:28.0096966Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98253,6 +99168,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:28.1607824Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Image"
     }
   },
   {
@@ -98262,6 +99182,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:28.3631472Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98271,6 +99196,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:28.516433Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98280,6 +99210,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:28.7409468Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98289,6 +99224,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:28.9622451Z",
       "high": 5
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98298,6 +99238,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:29.1141522Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98307,6 +99252,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:29.3039075Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98316,6 +99266,11 @@
       "critical": 4,
       "lastUpdated": "2022-09-12T19:30:29.6313648Z",
       "high": 13
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98325,6 +99280,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:29.7826853Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98334,6 +99294,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:29.9771766Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98343,6 +99308,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:30.1959343Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98352,6 +99322,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:30.3459013Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Docker",
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile"
     }
   },
   {
@@ -98361,6 +99336,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:30.541515Z",
       "high": 1
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98370,6 +99350,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:30.6913566Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Node",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98379,6 +99364,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:30.8120262Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
     }
   },
   {
@@ -98388,6 +99378,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:30.9776631Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -98397,6 +99392,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:31.1122388Z",
       "high": 0
+    },
+    "actionType": {
+      "fileFound": "Composite",
+      "actionType": null,
+      "actionDockerType": "action.yml "
     }
   },
   {
@@ -127566,6 +128566,906 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-09-14T03:20:55.0183443Z"
+    }
+  },
+  {
+    "name": "demo-adm",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:35.4426714Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "file_changes",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:35.6859537Z",
+      "high": 3,
+      "critical": 2
+    }
+  },
+  {
+    "name": "modify-json",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:35.8657843Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "firebase-deploy-functions-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:35.9926205Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "wasm-ghpages-generate-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:36.166104Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "k3d-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:36.3128676Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "check-base-branch-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:36.5049667Z",
+      "high": 1,
+      "critical": 0
+    }
+  },
+  {
+    "name": "twitter-header",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:36.6688512Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "wakatime-box",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:36.9548141Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "lighthouse-box",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:37.109191Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "assignee-to-reviewer-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:37.255362Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "gcp-storage-bucket-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:37.4342436Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-standard-version-release",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:37.5783915Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-promote-any",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:37.7364952Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-deploy-any",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:37.9088748Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-before-deploy-from-PR",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:38.0580077Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-before-deploy",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:38.2186825Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-after-deploy",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:38.3841273Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "push-flock-notify",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:38.5918654Z",
+      "high": 3,
+      "critical": 0
+    }
+  },
+  {
+    "name": "Dockerhub-Build-Push",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:38.737867Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "setup-bazel",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:38.9163078Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "aws-secrets-manager-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:39.0715592Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "label-pr-on-merge-bot",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:39.214073Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "labels",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:39.414425Z",
+      "high": 3,
+      "critical": 1
+    }
+  },
+  {
+    "name": "sync-gitee-mirror",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:39.5582005Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-actions-merger",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:39.7195042Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "protoc-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:39.9547172Z",
+      "high": 0,
+      "critical": 2
+    }
+  },
+  {
+    "name": "setup-premake",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:40.1319156Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-action-locks",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:40.3131231Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "godot-ci",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:40.4601524Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "file-type-finder",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:40.6218849Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "phoenix-release-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:40.7814479Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "load-dotenv",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:40.9825728Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "discord-webhook-github-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:41.1425493Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "cloudflare-worker-route-update",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:41.2938341Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "action-pnp-powershell-deploy",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:41.4965044Z",
+      "high": 0,
+      "critical": 1
+    }
+  },
+  {
+    "name": "vercel-preview-url-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:41.6620596Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "set-persistent-value",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:41.8479637Z",
+      "high": 1,
+      "critical": 0
+    }
+  },
+  {
+    "name": "get-persistent-value",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.0190167Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "newrelic-record-deployment",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.1659954Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "riot-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.304584Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "tar-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.4767715Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "action-build-aur-package",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.6366827Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "issues-translator",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.8164907Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "shellchecker",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:42.9547297Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "slim-ssh-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:43.113612Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "create-tag-to-another-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:43.318061Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "hpc-codecov-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:43.5945266Z",
+      "high": 8,
+      "critical": 2
+    }
+  },
+  {
+    "name": "github-actions-json-edit",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:43.7867635Z",
+      "high": 1,
+      "critical": 0
+    }
+  },
+  {
+    "name": "action-haml-lint",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:43.9340149Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "area-of-rectangle-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:44.128358Z",
+      "high": 1,
+      "critical": 0
+    }
+  },
+  {
+    "name": "hello1",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:44.2884034Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "init-ssh-js",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:44.4631597Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "workflow-permission-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:44.6364644Z",
+      "high": 2,
+      "critical": 0
+    }
+  },
+  {
+    "name": "SRC-DataLinter",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:44.7976064Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "gae-app-yaml-replace-env-variables",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:44.942892Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "labler",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:45.1086187Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-actions-vagrantup",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:45.2489089Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "hcloud-doorkeeper-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:45.3912125Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "monkey-release-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:45.5776227Z",
+      "high": 3,
+      "critical": 1
+    }
+  },
+  {
+    "name": "docker-image-context-hash-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:45.7179947Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "cobertura-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:45.9070242Z",
+      "high": 1,
+      "critical": 1
+    }
+  },
+  {
+    "name": "youtrack-pr-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:46.2845798Z",
+      "high": 20,
+      "critical": 5
+    }
+  },
+  {
+    "name": "goloads",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:46.4607882Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "curl-github-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:46.619349Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "Espanso-Validator",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:46.8004219Z",
+      "high": 1,
+      "critical": 0
+    }
+  },
+  {
+    "name": "block-merge-commits-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:46.9126887Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "action-files",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:47.0578006Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "actions-clever-cloud",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:47.2388171Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "gh-actions-sms",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:47.4150241Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "api-security-audit-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:47.5886507Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "danger-swiftlint",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:47.7709738Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "furry-octo-parakeet",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:47.9298627Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "mdtopdf-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:48.0788343Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "latex-build-langja",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:48.2214032Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "docker-remote-deploy-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:48.3643136Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "setup-hcloud",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:48.7010969Z",
+      "high": 7,
+      "critical": 2
+    }
+  },
+  {
+    "name": "docker-run-command-remote-host-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:48.8695641Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "extra-vars",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:49.0999303Z",
+      "high": 3,
+      "critical": 1
+    }
+  },
+  {
+    "name": "gulp-runner",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:49.2510738Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "GA-Hello",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:49.3928529Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "sqlserver-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:49.5426262Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "kafka-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:49.7071728Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "xcode-notarizer",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:49.8599545Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "love-actions-windows",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:50.0066828Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "love-actions-test",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:50.1515756Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "love-actions-linux",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:50.3115983Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "love-actions-ios",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:50.464358Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "love-actions-core",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:50.6103926Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "love-actions-android",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:50.7681327Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "gh-truncate-string-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:51.0979177Z",
+      "high": 11,
+      "critical": 1
+    }
+  },
+  {
+    "name": "gh-determine-status-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:51.379996Z",
+      "high": 11,
+      "critical": 1
+    }
+  },
+  {
+    "name": "action-vault",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:51.7777842Z",
+      "high": 13,
+      "critical": 4
+    }
+  },
+  {
+    "name": "action-localizer",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:52.1966876Z",
+      "high": 14,
+      "critical": 3
+    }
+  },
+  {
+    "name": "github-action-auto-move-related-issue",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:52.4656598Z",
+      "high": 8,
+      "critical": 2
+    }
+  },
+  {
+    "name": "sleep-random",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:52.7306939Z",
+      "high": 6,
+      "critical": 2
+    }
+  },
+  {
+    "name": "avrae-gvar-update-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:52.9303149Z",
+      "high": 1,
+      "critical": 0
+    }
+  },
+  {
+    "name": "avrae-alias-update-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:53.0812388Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "create-a-file-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:53.2585549Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "block-fixup-merge-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T04:14:53.4350035Z",
+      "high": 0,
+      "critical": 0
     }
   }
 ]
