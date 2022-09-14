@@ -123,7 +123,7 @@ foreach ($action in $status) {
         break
     }
 
-    if (!(Get-Member -inputobject $action -name "actionType" -Membertype Properties)) {
+    if (!(Get-Member -inputobject $action -name "actionType" -Membertype Properties) -or $null -eq $action.actionType) {
         ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $forkOrg -repo $action.name
 
         $actionType = @{
