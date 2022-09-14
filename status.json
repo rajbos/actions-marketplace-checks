@@ -99406,6 +99406,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:31.2614851Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99415,6 +99420,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:31.5462736Z",
       "high": 7
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99424,6 +99434,11 @@
       "critical": 1,
       "lastUpdated": "2022-09-12T19:30:31.8327436Z",
       "high": 2
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99433,6 +99448,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:31.9726049Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99442,6 +99462,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:32.1233066Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99451,6 +99476,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:32.2999843Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99460,6 +99490,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:32.4971678Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99469,6 +99504,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:32.6776628Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99478,6 +99518,11 @@
       "critical": 0,
       "lastUpdated": "2022-09-12T19:30:32.8406339Z",
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99487,6 +99532,11 @@
       "critical": 5,
       "lastUpdated": "2022-09-12T19:30:33.3677122Z",
       "high": 20
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99496,6 +99546,11 @@
       "lastUpdated": "2022-09-12T20:19:06.0001876Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99505,6 +99560,11 @@
       "lastUpdated": "2022-09-12T20:19:06.1648197Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99514,6 +99574,11 @@
       "lastUpdated": "2022-09-12T20:19:06.3293789Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99523,6 +99588,11 @@
       "lastUpdated": "2022-09-12T20:19:06.686712Z",
       "critical": 2,
       "high": 9
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99532,6 +99602,11 @@
       "lastUpdated": "2022-09-12T20:19:06.8537287Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99541,6 +99616,11 @@
       "lastUpdated": "2022-09-12T20:19:07.0212311Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99550,6 +99630,11 @@
       "lastUpdated": "2022-09-12T20:19:07.1696714Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99559,6 +99644,11 @@
       "lastUpdated": "2022-09-12T20:19:07.3432947Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99568,6 +99658,11 @@
       "lastUpdated": "2022-09-12T20:19:07.5505061Z",
       "critical": 0,
       "high": 2
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99577,6 +99672,11 @@
       "lastUpdated": "2022-09-12T20:19:07.7190836Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99586,6 +99686,11 @@
       "lastUpdated": "2022-09-12T20:19:07.9224358Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99595,6 +99700,11 @@
       "lastUpdated": "2022-09-12T20:19:08.1078405Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99604,6 +99714,11 @@
       "lastUpdated": "2022-09-12T20:19:08.5285792Z",
       "critical": 1,
       "high": 7
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99613,6 +99728,11 @@
       "lastUpdated": "2022-09-12T20:19:08.7797423Z",
       "critical": 2,
       "high": 8
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99622,6 +99742,11 @@
       "lastUpdated": "2022-09-12T20:19:08.931321Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99631,6 +99756,11 @@
       "lastUpdated": "2022-09-12T20:19:09.1068575Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99640,6 +99770,11 @@
       "lastUpdated": "2022-09-12T20:19:09.3342737Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Unknown"
     }
   },
   {
@@ -99649,6 +99784,11 @@
       "lastUpdated": "2022-09-12T20:19:09.4597852Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99658,6 +99798,11 @@
       "lastUpdated": "2022-09-12T20:19:09.5710388Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": "Unknown",
+      "actionDockerType": null,
+      "fileFound": null
     }
   },
   {
@@ -99667,6 +99812,11 @@
       "lastUpdated": "2022-09-12T20:19:09.74896Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99676,6 +99826,11 @@
       "lastUpdated": "2022-09-12T20:19:10.0289698Z",
       "critical": 3,
       "high": 4
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99685,6 +99840,11 @@
       "lastUpdated": "2022-09-12T20:19:10.3041618Z",
       "critical": 1,
       "high": 11
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99694,6 +99854,11 @@
       "lastUpdated": "2022-09-12T20:19:10.4792168Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99703,6 +99868,11 @@
       "lastUpdated": "2022-09-12T20:19:10.6346904Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99712,6 +99882,11 @@
       "lastUpdated": "2022-09-12T20:19:10.7976737Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99721,6 +99896,11 @@
       "lastUpdated": "2022-09-12T20:19:10.9916355Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99730,6 +99910,11 @@
       "lastUpdated": "2022-09-12T20:19:11.1978513Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99739,6 +99924,11 @@
       "lastUpdated": "2022-09-12T20:19:11.3718013Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99748,6 +99938,11 @@
       "lastUpdated": "2022-09-12T20:19:11.5255432Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99757,6 +99952,11 @@
       "lastUpdated": "2022-09-12T20:19:11.6537076Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99766,6 +99966,11 @@
       "lastUpdated": "2022-09-12T20:19:11.8154314Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99775,6 +99980,11 @@
       "lastUpdated": "2022-09-12T20:19:11.9833615Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99784,6 +99994,11 @@
       "lastUpdated": "2022-09-12T20:19:12.1538341Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99793,6 +100008,11 @@
       "lastUpdated": "2022-09-12T20:19:12.2928531Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99802,6 +100022,11 @@
       "lastUpdated": "2022-09-12T20:19:12.4601407Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99811,6 +100036,11 @@
       "lastUpdated": "2022-09-12T20:19:12.649724Z",
       "critical": 0,
       "high": 2
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99820,6 +100050,11 @@
       "lastUpdated": "2022-09-12T20:19:12.8011415Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99829,6 +100064,11 @@
       "lastUpdated": "2022-09-12T20:19:12.9619359Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99838,6 +100078,11 @@
       "lastUpdated": "2022-09-12T20:19:13.1128369Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99847,6 +100092,11 @@
       "lastUpdated": "2022-09-12T20:19:13.2662172Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99856,6 +100106,11 @@
       "lastUpdated": "2022-09-12T20:19:13.4451131Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99865,6 +100120,11 @@
       "lastUpdated": "2022-09-12T20:19:13.5879078Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99874,6 +100134,11 @@
       "lastUpdated": "2022-09-12T20:19:13.7487034Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99883,6 +100148,11 @@
       "lastUpdated": "2022-09-12T20:19:13.9888149Z",
       "critical": 2,
       "high": 3
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99892,6 +100162,11 @@
       "lastUpdated": "2022-09-12T20:19:14.14887Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99901,6 +100176,11 @@
       "lastUpdated": "2022-09-12T20:19:14.2948349Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99910,6 +100190,11 @@
       "lastUpdated": "2022-09-12T20:19:14.4487592Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99919,6 +100204,11 @@
       "lastUpdated": "2022-09-12T20:19:14.6317757Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99928,6 +100218,11 @@
       "lastUpdated": "2022-09-12T20:19:14.7757154Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99937,6 +100232,11 @@
       "lastUpdated": "2022-09-12T20:19:15.08268Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99946,6 +100246,11 @@
       "lastUpdated": "2022-09-12T20:19:15.2660949Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99955,6 +100260,11 @@
       "lastUpdated": "2022-09-12T20:19:15.4179006Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -99964,6 +100274,11 @@
       "lastUpdated": "2022-09-12T20:19:15.6721952Z",
       "critical": 1,
       "high": 3
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99973,6 +100288,11 @@
       "lastUpdated": "2022-09-12T20:19:15.8294856Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -99982,6 +100302,11 @@
       "lastUpdated": "2022-09-12T20:19:15.9898896Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -99991,6 +100316,11 @@
       "lastUpdated": "2022-09-12T20:19:16.127835Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100000,6 +100330,11 @@
       "lastUpdated": "2022-09-12T20:19:16.2730879Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100009,6 +100344,11 @@
       "lastUpdated": "2022-09-12T20:19:16.4563774Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100018,6 +100358,11 @@
       "lastUpdated": "2022-09-12T20:19:16.6174053Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100027,6 +100372,11 @@
       "lastUpdated": "2022-09-12T20:19:16.8010304Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100036,6 +100386,11 @@
       "lastUpdated": "2022-09-12T20:19:16.9999941Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100045,6 +100400,11 @@
       "lastUpdated": "2022-09-12T20:19:17.1554288Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100054,6 +100414,11 @@
       "lastUpdated": "2022-09-12T20:19:17.2974131Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100063,6 +100428,11 @@
       "lastUpdated": "2022-09-12T20:19:17.4837885Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100072,6 +100442,11 @@
       "lastUpdated": "2022-09-12T20:19:17.6277882Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100081,6 +100456,11 @@
       "lastUpdated": "2022-09-12T20:19:17.7897215Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100090,6 +100470,11 @@
       "lastUpdated": "2022-09-12T20:19:17.947507Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100099,6 +100484,11 @@
       "lastUpdated": "2022-09-12T20:19:18.1013271Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100108,6 +100498,11 @@
       "lastUpdated": "2022-09-12T20:19:18.2637024Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100117,6 +100512,11 @@
       "lastUpdated": "2022-09-12T20:19:18.4155555Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100126,6 +100526,11 @@
       "lastUpdated": "2022-09-12T20:19:18.5554866Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100135,6 +100540,11 @@
       "lastUpdated": "2022-09-12T20:19:18.718032Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100144,6 +100554,11 @@
       "lastUpdated": "2022-09-12T20:19:18.8627127Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100153,6 +100568,11 @@
       "lastUpdated": "2022-09-12T20:19:19.0259362Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100162,6 +100582,11 @@
       "lastUpdated": "2022-09-12T20:19:19.2546624Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100171,6 +100596,11 @@
       "lastUpdated": "2022-09-12T20:19:19.4070256Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100180,6 +100610,11 @@
       "lastUpdated": "2022-09-12T20:19:19.5403556Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100189,6 +100624,11 @@
       "lastUpdated": "2022-09-12T20:19:19.6979565Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100198,6 +100638,11 @@
       "lastUpdated": "2022-09-12T20:19:19.841081Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100207,6 +100652,11 @@
       "lastUpdated": "2022-09-12T20:19:20.002194Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100216,6 +100666,11 @@
       "lastUpdated": "2022-09-12T20:19:20.2396353Z",
       "critical": 2,
       "high": 6
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100225,6 +100680,11 @@
       "lastUpdated": "2022-09-12T20:19:20.4272639Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100234,6 +100694,11 @@
       "lastUpdated": "2022-09-12T20:19:20.7148343Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100243,6 +100708,11 @@
       "lastUpdated": "2022-09-12T20:19:20.8979567Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100252,6 +100722,11 @@
       "lastUpdated": "2022-09-12T20:19:21.048629Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100261,6 +100736,11 @@
       "lastUpdated": "2022-09-12T20:19:21.2159231Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100270,6 +100750,11 @@
       "lastUpdated": "2022-09-12T20:19:21.4378968Z",
       "critical": 2,
       "high": 3
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100279,6 +100764,11 @@
       "lastUpdated": "2022-09-12T20:19:21.8160188Z",
       "critical": 2,
       "high": 19
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100288,6 +100778,11 @@
       "lastUpdated": "2022-09-12T20:19:22.0254373Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100297,6 +100792,11 @@
       "lastUpdated": "2022-09-12T20:19:22.1892741Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": "Docker",
+      "actionDockerType": "Dockerfile",
+      "fileFound": "Dockerfile"
     }
   },
   {
@@ -100306,6 +100806,11 @@
       "lastUpdated": "2022-09-12T20:19:22.4967309Z",
       "critical": 3,
       "high": 12
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100315,6 +100820,11 @@
       "lastUpdated": "2022-09-12T20:19:22.6440272Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100324,6 +100834,11 @@
       "lastUpdated": "2022-09-12T20:19:22.7908153Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100333,6 +100848,11 @@
       "lastUpdated": "2022-09-12T20:19:23.0395776Z",
       "critical": 1,
       "high": 5
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100342,6 +100862,11 @@
       "lastUpdated": "2022-09-12T20:19:23.2052581Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100351,6 +100876,11 @@
       "lastUpdated": "2022-09-12T20:19:23.374178Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100360,6 +100890,11 @@
       "lastUpdated": "2022-09-12T20:19:23.4912693Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": "Unknown",
+      "actionDockerType": null,
+      "fileFound": null
     }
   },
   {
@@ -100369,6 +100904,11 @@
       "lastUpdated": "2022-09-12T20:19:23.6411957Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": "Docker",
+      "actionDockerType": "Dockerfile",
+      "fileFound": "Dockerfile"
     }
   },
   {
@@ -100378,6 +100918,11 @@
       "lastUpdated": "2022-09-12T20:19:23.8842238Z",
       "critical": 2,
       "high": 5
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100387,6 +100932,11 @@
       "lastUpdated": "2022-09-12T20:19:24.1476725Z",
       "critical": 1,
       "high": 4
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100396,6 +100946,11 @@
       "lastUpdated": "2022-09-12T20:19:24.3166011Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100405,6 +100960,11 @@
       "lastUpdated": "2022-09-12T20:19:24.9649025Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100414,6 +100974,11 @@
       "lastUpdated": "2022-09-12T20:19:25.1085324Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100423,6 +100988,11 @@
       "lastUpdated": "2022-09-12T20:19:25.3345196Z",
       "critical": 2,
       "high": 5
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100432,6 +101002,11 @@
       "lastUpdated": "2022-09-12T20:19:25.4701922Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": "Docker",
+      "actionDockerType": "Dockerfile",
+      "fileFound": "Dockerfile"
     }
   },
   {
@@ -100441,6 +101016,11 @@
       "lastUpdated": "2022-09-12T20:19:25.6084043Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100450,6 +101030,11 @@
       "lastUpdated": "2022-09-12T20:19:25.7395943Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100459,6 +101044,11 @@
       "lastUpdated": "2022-09-12T20:19:25.8781811Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100468,6 +101058,11 @@
       "lastUpdated": "2022-09-12T20:19:26.0542681Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100477,6 +101072,11 @@
       "lastUpdated": "2022-09-12T20:19:26.2103965Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100486,6 +101086,11 @@
       "lastUpdated": "2022-09-12T20:19:26.3392685Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100495,6 +101100,11 @@
       "lastUpdated": "2022-09-12T20:19:26.4957708Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100504,6 +101114,11 @@
       "lastUpdated": "2022-09-12T20:19:26.6278069Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100513,6 +101128,11 @@
       "lastUpdated": "2022-09-12T20:19:26.7926027Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100522,6 +101142,11 @@
       "lastUpdated": "2022-09-12T20:19:26.9577531Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100531,6 +101156,11 @@
       "lastUpdated": "2022-09-12T20:19:27.1432474Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100540,6 +101170,11 @@
       "lastUpdated": "2022-09-12T20:19:27.3426198Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100549,6 +101184,11 @@
       "lastUpdated": "2022-09-12T20:19:27.5416735Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100558,6 +101198,11 @@
       "lastUpdated": "2022-09-12T20:19:27.7369061Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100567,6 +101212,11 @@
       "lastUpdated": "2022-09-12T20:19:27.911461Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100576,6 +101226,11 @@
       "lastUpdated": "2022-09-12T20:19:28.0627959Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100585,6 +101240,11 @@
       "lastUpdated": "2022-09-12T20:19:28.2364604Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100594,6 +101254,11 @@
       "lastUpdated": "2022-09-12T20:19:28.4873131Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100603,6 +101268,11 @@
       "lastUpdated": "2022-09-12T20:19:28.6208396Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100612,6 +101282,11 @@
       "lastUpdated": "2022-09-12T20:19:28.9081722Z",
       "critical": 0,
       "high": 12
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100621,6 +101296,11 @@
       "lastUpdated": "2022-09-12T20:19:29.0734979Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100630,6 +101310,11 @@
       "lastUpdated": "2022-09-12T20:19:29.2166651Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100639,6 +101324,11 @@
       "lastUpdated": "2022-09-12T20:19:29.3591297Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100648,6 +101338,11 @@
       "lastUpdated": "2022-09-12T20:19:29.5151168Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100657,6 +101352,11 @@
       "lastUpdated": "2022-09-12T20:19:29.6518377Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100666,6 +101366,11 @@
       "lastUpdated": "2022-09-12T20:19:29.8272089Z",
       "critical": 0,
       "high": 2
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100675,6 +101380,11 @@
       "lastUpdated": "2022-09-12T20:19:29.9962972Z",
       "critical": 1,
       "high": 2
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100684,6 +101394,11 @@
       "lastUpdated": "2022-09-12T20:19:30.1675493Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100693,6 +101408,11 @@
       "lastUpdated": "2022-09-12T20:19:30.308171Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100702,6 +101422,11 @@
       "lastUpdated": "2022-09-12T20:19:30.4872209Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100711,6 +101436,11 @@
       "lastUpdated": "2022-09-12T20:19:30.7403673Z",
       "critical": 0,
       "high": 4
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100720,6 +101450,11 @@
       "lastUpdated": "2022-09-12T20:19:31.1776181Z",
       "critical": 4,
       "high": 18
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100729,6 +101464,11 @@
       "lastUpdated": "2022-09-12T20:19:31.4802318Z",
       "critical": 2,
       "high": 10
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100738,6 +101478,11 @@
       "lastUpdated": "2022-09-12T20:19:31.7870974Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100747,6 +101492,11 @@
       "lastUpdated": "2022-09-12T20:19:32.0161006Z",
       "critical": 2,
       "high": 7
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100756,6 +101506,11 @@
       "lastUpdated": "2022-09-12T20:19:32.2089703Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100765,6 +101520,11 @@
       "lastUpdated": "2022-09-12T20:19:32.4102899Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100774,6 +101534,11 @@
       "lastUpdated": "2022-09-12T20:19:32.5689448Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100783,6 +101548,11 @@
       "lastUpdated": "2022-09-12T20:19:32.7287064Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100792,6 +101562,11 @@
       "lastUpdated": "2022-09-12T20:19:32.9096637Z",
       "critical": 1,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100801,6 +101576,11 @@
       "lastUpdated": "2022-09-12T20:19:33.0443616Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100810,6 +101590,11 @@
       "lastUpdated": "2022-09-12T20:19:33.1998396Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100819,6 +101604,11 @@
       "lastUpdated": "2022-09-12T20:19:33.3049121Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": "Unknown",
+      "actionDockerType": null,
+      "fileFound": null
     }
   },
   {
@@ -100828,6 +101618,11 @@
       "lastUpdated": "2022-09-12T20:19:33.5533527Z",
       "critical": 2,
       "high": 13
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100837,6 +101632,11 @@
       "lastUpdated": "2022-09-12T20:19:33.7229599Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100846,6 +101646,11 @@
       "lastUpdated": "2022-09-12T20:19:33.8876919Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100855,6 +101660,11 @@
       "lastUpdated": "2022-09-12T20:19:34.2213431Z",
       "critical": 2,
       "high": 16
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100864,6 +101674,11 @@
       "lastUpdated": "2022-09-12T20:19:34.5567418Z",
       "critical": 2,
       "high": 16
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100873,6 +101688,11 @@
       "lastUpdated": "2022-09-12T20:19:35.0071344Z",
       "critical": 4,
       "high": 23
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100882,6 +101702,11 @@
       "lastUpdated": "2022-09-12T20:19:35.170888Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100891,6 +101716,11 @@
       "lastUpdated": "2022-09-12T20:19:35.4737773Z",
       "critical": 2,
       "high": 16
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100900,6 +101730,11 @@
       "lastUpdated": "2022-09-12T20:19:35.6496651Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100909,6 +101744,11 @@
       "lastUpdated": "2022-09-12T20:19:35.9161779Z",
       "critical": 2,
       "high": 4
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100918,6 +101758,11 @@
       "lastUpdated": "2022-09-12T20:19:36.0803745Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100927,6 +101772,11 @@
       "lastUpdated": "2022-09-12T20:19:36.2410562Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -100936,6 +101786,11 @@
       "lastUpdated": "2022-09-12T20:19:36.4138544Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100945,6 +101800,11 @@
       "lastUpdated": "2022-09-12T20:19:36.559444Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100954,6 +101814,11 @@
       "lastUpdated": "2022-09-12T20:19:36.9579252Z",
       "critical": 4,
       "high": 22
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100963,6 +101828,11 @@
       "lastUpdated": "2022-09-12T20:19:37.1271679Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100972,6 +101842,11 @@
       "lastUpdated": "2022-09-12T20:19:37.311411Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -100981,6 +101856,11 @@
       "lastUpdated": "2022-09-12T20:19:37.7281019Z",
       "critical": 6,
       "high": 19
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100990,6 +101870,11 @@
       "lastUpdated": "2022-09-12T20:19:38.0547573Z",
       "critical": 3,
       "high": 10
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -100999,6 +101884,11 @@
       "lastUpdated": "2022-09-12T20:19:38.1891205Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101008,6 +101898,11 @@
       "lastUpdated": "2022-09-12T20:19:38.3300447Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101017,6 +101912,11 @@
       "lastUpdated": "2022-09-12T20:19:38.4900964Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -101026,6 +101926,11 @@
       "lastUpdated": "2022-09-12T20:19:38.6525958Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101035,6 +101940,11 @@
       "lastUpdated": "2022-09-12T20:19:38.8096718Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -101044,6 +101954,11 @@
       "lastUpdated": "2022-09-12T20:19:38.9650526Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -101053,6 +101968,11 @@
       "lastUpdated": "2022-09-12T20:19:39.105031Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Image",
+      "fileFound": "Docker"
     }
   },
   {
@@ -101062,6 +101982,11 @@
       "lastUpdated": "2022-09-12T20:19:39.3021086Z",
       "critical": 0,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101071,6 +101996,11 @@
       "lastUpdated": "2022-09-12T20:19:39.4334723Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101080,6 +102010,11 @@
       "lastUpdated": "2022-09-12T20:19:39.575639Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101089,6 +102024,11 @@
       "lastUpdated": "2022-09-12T20:19:39.7081852Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Composite"
     }
   },
   {
@@ -101098,6 +102038,11 @@
       "lastUpdated": "2022-09-12T20:19:39.8542983Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101107,6 +102052,11 @@
       "lastUpdated": "2022-09-12T20:19:39.9946336Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101116,6 +102066,11 @@
       "lastUpdated": "2022-09-12T20:19:40.1377459Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101125,6 +102080,11 @@
       "lastUpdated": "2022-09-12T20:19:40.2873637Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yaml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101134,6 +102094,11 @@
       "lastUpdated": "2022-09-12T20:19:40.4263143Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101143,6 +102108,11 @@
       "lastUpdated": "2022-09-12T20:19:40.6983162Z",
       "critical": 2,
       "high": 10
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101152,6 +102122,11 @@
       "lastUpdated": "2022-09-12T20:19:40.9023885Z",
       "critical": 0,
       "high": 3
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101161,6 +102136,11 @@
       "lastUpdated": "2022-09-12T20:19:41.0399581Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -101170,6 +102150,11 @@
       "lastUpdated": "2022-09-12T20:19:41.2000001Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101179,6 +102164,11 @@
       "lastUpdated": "2022-09-12T20:19:41.3909832Z",
       "critical": 1,
       "high": 1
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml ",
+      "fileFound": "Node"
     }
   },
   {
@@ -101188,6 +102178,11 @@
       "lastUpdated": "2022-09-12T20:19:41.5501027Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -101197,6 +102192,11 @@
       "lastUpdated": "2022-09-12T20:19:41.718813Z",
       "critical": 0,
       "high": 0
+    },
+    "actionType": {
+      "actionType": null,
+      "actionDockerType": "action.yml Dockerfile",
+      "fileFound": "Docker"
     }
   },
   {
@@ -129464,6 +130464,96 @@
     "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-09-14T04:14:53.4350035Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "github-docker-temp",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:51.9466388Z",
+      "high": 6,
+      "critical": 1
+    }
+  },
+  {
+    "name": "docker-php-testing",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:52.0872196Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "jekyll-4-deploy-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:52.2214384Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "go-deploy-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:52.3544594Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "esy-action-clean",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:52.5421161Z",
+      "high": 2,
+      "critical": 0
+    }
+  },
+  {
+    "name": "galaxy-role-import-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:52.6878633Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "open-sauced-semantic-config-test",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:52.837371Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "ai-sdk",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:53.0047954Z",
+      "high": 0,
+      "critical": 1
+    }
+  },
+  {
+    "name": "labelcommit",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:53.1372594Z",
+      "high": 0,
+      "critical": 0
+    }
+  },
+  {
+    "name": "assemble",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-14T05:02:53.2996937Z",
       "high": 0,
       "critical": 0
     }
