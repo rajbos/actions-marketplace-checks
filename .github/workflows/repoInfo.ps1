@@ -96,7 +96,7 @@ function GetActionType {
 
 $statusFile = "status.json"
 
-Write-Host "Got $($actions.Length) actions"
+Write-Host "Got $($actions.Length) actions to get the status information for"
 GetRateLimitInfo
 
 # default variables

@@ -192,5 +192,7 @@ function SaveStatus {
         # We are running in CI, so let's pull before we overwrite the file
         git pull --quiet | Out-Null
     }
+    Write-Host "Storing the information to the status file:"
     $existingForks | ConvertTo-Json | Out-File -FilePath $statusFile -Encoding UTF8
+    Write-Host "Saved"
 }
