@@ -240,10 +240,9 @@ function ForkActionRepos {
     $i = $existingForks.Length
     $max = $existingForks.Length + $numberOfReposToDo
     $newlyForkedRepos = 0
-
-    Write-Host "Forking repos"
     $counter = 0
-
+    
+    Write-Host "Filtering repos to the ones we still need to fork"
     # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
     $actionsToProcess = $actions | Where-Object { $existingForks.name -notcontains (SplitUrlLastPart $_.RepoUrl) }
     Write-Host "Found [$($actionsToProcess.Count)] actions still to process for forking"
