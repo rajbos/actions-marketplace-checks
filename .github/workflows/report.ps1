@@ -21,6 +21,7 @@ $actionYmlFile = 0
 $actionYamlFile = 0
 $actionDockerFile = 0
 $compositeAction = 0
+$unknownActionType = 0
 
 foreach ($action in $actions) {
         
@@ -52,6 +53,7 @@ foreach ($action in $actions) {
     }
 
     if ($action.actionType) {
+        # actionType
         if ($action.actionType.actionType -eq "Docker") {
             $dockerBasedActions++
             if ($action.actionType.actionDockerType -eq "Dockerfile") {
@@ -63,8 +65,15 @@ foreach ($action in $actions) {
         }
         elseif ($action.actionType.actionType -eq "Node") {
             $nodeBasedActions++
+        }        
+        elseif ($action.actionType.actionType -eq "Composite") {
+            $compositeAction++
+        }
+        elseif ($action.actionType.actionType -eq "Unkown"){
+            $unknownActionType++
         }
 
+        # action definition sort
         if ($action.actionType.fileFound -eq "action.yml") {
             $actionYmlFile++
         }
@@ -73,9 +82,6 @@ foreach ($action in $actions) {
         }
         elseif ($action.actionType.fileFound -eq "Dockerfile") {
             $actionDockerFile++
-        }
-        elseif ($action.actionType.fileFound -eq "Composite") {
-            $compositeAction++
         }
     }
 }
@@ -133,6 +139,7 @@ LogMessage "## General information"
 LogMessage "Node based actions: $nodeBasedActions"
 LogMessage "Docker based actions: $dockerBasedActions"
 LogMessage "Composite actions: $compositeAction"
+LogMessage "Unkown action type: $unknownActionType"
 LogMessage ""
 LogMessage "Docker actions using a local Dockerfile: $localDockerFile"
 LogMessage "Docker actions using a remote image: $remoteDockerfile"
