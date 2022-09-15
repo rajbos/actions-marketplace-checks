@@ -96,16 +96,16 @@ $averageHighAlerts = $highAlerts / $reposAnalyzed
 $averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
 
 Write-Host "Summary: "
-LogMessage "# Vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
-LogMessage "-----------------------------------"
-LogMessage "High Alerts: $highAlerts"
-LogMessage "Critical Alerts: $criticalAlerts"
-LogMessage "-----------------------------------"
-LogMessage "Max High Alerts: $maxHighAlerts"
-LogMessage "Max Critical Alerts: $maxCriticalAlerts"
-LogMessage "-----------------------------------"
-LogMessage "Average High Alerts per vulnerable repo: $([math]::Round($averageHighAlerts, 1))"
-LogMessage "Average Critical Alerts per vulnerable repo: $([math]::Round($averageCriticalAlerts, 1))"
+LogMessage "## Potentially vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
+
+LogMessage "Total high alerts: $highAlerts"
+LogMessage "Total critical alerts: $criticalAlerts"
+LogMessage ""
+LogMessage "Max high alerts: $maxHighAlerts"
+LogMessage "Max critical alerts: $maxCriticalAlerts"
+LogMessage ""
+LogMessage "Average high alerts per vulnerable repo: $([math]::Round($averageHighAlerts, 1))"
+LogMessage "Average critical alerts per vulnerable repo: $([math]::Round($averageCriticalAlerts, 1))"
 
 function ReportInMarkdown {
     if (!$logSummary) {
