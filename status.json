@@ -148268,5 +148268,33 @@
       "fileFound": "action.yml",
       "actionType": "Node"
     }
+  },
+  {
+    "name": "deploy-docker-image-on-northflank-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-15T15:19:58.8416649Z",
+      "critical": 0,
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionDockerType": "",
+      "actionType": "Node"
+    }
+  },
+  {
+    "name": "jenkins_client",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-15T15:19:59.0967551Z",
+      "critical": 0,
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile",
+      "actionType": "Docker"
+    }
   }
 ]
