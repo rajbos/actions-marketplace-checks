@@ -50,7 +50,6 @@ function GetActionType {
     # load the file
     $fileContent = ApiCall -method GET -url $response.download_url
     Write-Debug "response: $($fileContent)"
-    $yaml
     try {
         $yaml = ConvertFrom-Yaml $fileContent
     }
