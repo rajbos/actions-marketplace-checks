@@ -18,6 +18,7 @@ function GetActionType {
     $response = ""
     $fileFound = ""
     $actionType = ""
+    Write-Host "Checking action information for [$owner/$repo]"
     try {
         $url = "/repos/$owner/$repo/contents/action.yml"
         $response = ApiCall -method GET -url $url
@@ -122,16 +123,25 @@ foreach ($action in $status) {
         break
     }
 
-    if (!(Get-Member -inputobject $action -name "actionType" -Membertype Properties) -or $null -eq $action.actionType) {
+    $hasField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
+    if (!$hasField -or ($null -eq $action.actionType.actionType)) {
         ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $forkOrg -repo $action.name
 
-        $actionType = @{
-            actionType = $actionTypeResult 
-            fileFound = $fileFoundResult
-            actionDockerType = $actionDockerTypeResult
+        If (!$hasField) {
+            $actionType = @{
+                actionType = $actionTypeResult 
+                fileFound = $fileFoundResult
+                actionDockerType = $actionDockerTypeResult
+            }
+
+            $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
+        }
+        else {
+            $action.actionType.actionType = $actionTypeResult
+            $action.actionType.fileFound = $fileFoundResult
+            $action.actionType.actionDockerType = $actionDockerTypeResult
         }
 
-        $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
         $i++ | Out-Null
     }
 }
