@@ -193,6 +193,6 @@ function SaveStatus {
         git pull --quiet | Out-Null
     }
     Write-Host "Storing the information to the status file:"
-    $existingForks | ConvertTo-Json - Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+    $existingForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
     Write-Host "Saved"
 }
