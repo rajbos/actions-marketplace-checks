@@ -119,7 +119,7 @@ LogMessage "|---|---|"
 LogMessage "| High alerts per vulnerable repo         | $([math]::Round($averageHighAlerts, 1))|"
 LogMessage "| Critical alerts per vulnerable repo     | $([math]::Round($averageCriticalAlerts, 1))|"
 
-function ReportInMarkdown {
+function ReportVulnChartInMarkdown {
     if (!$logSummary) {
         # do not report locally
         return
@@ -135,8 +135,33 @@ function ReportInMarkdown {
     LogMessage "``````"
 }
 
+function ReportInsightsInMarkdown {
+    if (!$logSummary) {
+        # do not report locally
+        return
+    }
+
+    LogMessage "## Action type"
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    LogMessage "  A[$reposAnalyzed Actions]-->B[$nodeBasedActions Node based]"
+    LogMessage "  A-->C[$dockerBasedActions Docker based]"
+    LogMessage "  A-->D[$compositeAction Composite actions]"
+    LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
+    LogMessage "  C-->F[$remoteDockerfileRemote image]"
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "## Action definition setup"
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile]"
+    LogMessage "  A-->C[$actionYamlFile]"
+    LogMessage "  A-->D[$actionDockerFile]"
+    LogMessage "``````"
+}
+
 # call the report function
-ReportInMarkdown
+ReportVulnChartInMarkdown
 
 
 LogMessage ""
@@ -161,3 +186,5 @@ LogMessage "|---|---|"
 LogMessage "|``action.yml`` | $actionYmlFile   |"
 LogMessage "|``action.yaml``| $actionYamlFile  |"
 LogMessage "|``Dockerfile`` | $actionDockerFile|"
+
+ReportInsightsInMarkdown
