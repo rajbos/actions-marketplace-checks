@@ -155,12 +155,12 @@ function ReportInsightsInMarkdown {
     LogMessage "## Action definition setup"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    $ymlPercentage = [math]::Round($reposAnalyzed / $actionYmlFile * 100 , 1)
-    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml ($ymlPercentage %)]"
-    $yamlPercentage = [math]::Round($reposAnalyzed / $actionYamlFile * 100 , 1)
-    LogMessage "  A-->C[$actionYamlFile action.yaml ($yamlPercentage %)]"
-    $dockerPercentage = [math]::Round($reposAnalyzed / $actionDockerFile * 100 , 1)
-    LogMessage "  A-->D[$actionDockerFile Dockerfile ($dockerPercentage %)]"
+    $ymlPercentage = [math]::Round($actionYmlFile/$reposAnalyzed * 100 , 1)
+    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
+    $yamlPercentage = [math]::Round($actionYamlFile/$reposAnalyzed * 100 , 1)
+    LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
+    $dockerPercentage = [math]::Round($actionDockerFile/$reposAnalyzed * 100 , 1)
+    LogMessage "  A-->D[$actionDockerFile Dockerfile - $dockerPercentage%]"
     LogMessage "``````"
 }
 
