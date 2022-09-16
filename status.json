@@ -146662,5 +146662,47 @@
       "actionType": "Composite",
       "fileFound": "action.yml"
     }
+  },
+  {
+    "dependabot": true,
+    "name": "vsign-action",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-16T21:27:47.7865091Z",
+      "critical": 0
+    },
+    "actionType": {
+      "actionDockerType": "",
+      "actionType": "Composite",
+      "fileFound": "action.yml"
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "github-action-kubelinter-tools",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-16T21:27:47.9007593Z",
+      "critical": 0
+    },
+    "actionType": {
+      "actionDockerType": null,
+      "actionType": "Unknown",
+      "fileFound": null
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "pr-diff",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-16T21:27:48.0510866Z",
+      "critical": 0
+    },
+    "actionType": {
+      "actionDockerType": "",
+      "actionType": "Node",
+      "fileFound": "action.yml"
+    }
   }
 ]
