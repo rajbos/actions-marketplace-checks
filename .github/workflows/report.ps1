@@ -154,9 +154,19 @@ function ReportInsightsInMarkdown {
     LogMessage "## Action definition setup"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile]"
-    LogMessage "  A-->C[$actionYamlFile]"
-    LogMessage "  A-->D[$actionDockerFile]"
+    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml]"
+    LogMessage "  A-->C[$actionYamlFile action.yaml]"
+    LogMessage "  A-->D[$actionDockerFile Dockerfile]"
+    LogMessage "``````"
+
+    LogMessage ""
+    LogMessage "``````mermaid"
+    LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
+    LogMessage "pie title Action definition setup"
+    LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
+    LogMessage "    ""action.yml file: $($actionYmlFile)"" : $($actionYmlFile)"
+    LogMessage "    ""action.yaml: $($actionYamlFile)"" : $($actionYamlFile)"
+    LogMessage "    ""Dockerfile: $($actionDockerFile)"" : $($actionDockerFile)"
     LogMessage "``````"
 }
 
