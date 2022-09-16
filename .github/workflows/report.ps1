@@ -142,17 +142,19 @@ function ReportInsightsInMarkdown {
     }
 
     LogMessage "## Action type"
+    LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     LogMessage "  A[$reposAnalyzed Actions]-->B[$nodeBasedActions Node based]"
     LogMessage "  A-->C[$dockerBasedActions Docker based]"
     LogMessage "  A-->D[$compositeAction Composite actions]"
     LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
-    LogMessage "  C-->F[$remoteDockerfileRemote image]"
+    LogMessage "  C-->F[$remoteDockerfile Remote image]"
     LogMessage "  A-->G[$unknownActionType Unknown]"
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
+    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file, where it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     $ymlPercentage = [math]::Round($actionYmlFile/$reposAnalyzed * 100 , 1)
@@ -167,21 +169,6 @@ function ReportInsightsInMarkdown {
 # call the report function
 ReportVulnChartInMarkdown
 
-
-LogMessage ""
-LogMessage "## General information"
-
-LogMessage "|Action type|Count|"
-LogMessage "|---|---|"
-LogMessage "|Node based actions   | $nodeBasedActions  |"
-LogMessage "|Docker based actions | $dockerBasedActions|"
-LogMessage "|Composite actions    | $compositeAction   |"
-LogMessage "|Unkown action type   | $unknownActionType |"
-LogMessage ""
-LogMessage "|Docker definition method| Count            |"
-LogMessage "|---|---|"
-LogMessage "|Local Dockerfile        | $localDockerFile |"
-LogMessage "|Remote image            | $remoteDockerfile|"
 LogMessage ""
 
 ReportInsightsInMarkdown
