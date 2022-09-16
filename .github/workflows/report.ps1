@@ -142,7 +142,7 @@ function ReportInsightsInMarkdown {
     }
 
     LogMessage "## Action type"
-    LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action."
+    LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     LogMessage "  A[$reposAnalyzed Actions]-->B[$nodeBasedActions Node based]"
@@ -154,7 +154,7 @@ function ReportInsightsInMarkdown {
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
-    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file, where it will show up as one of those two files in this overview."
+    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     $ymlPercentage = [math]::Round($actionYmlFile/$reposAnalyzed * 100 , 1)
