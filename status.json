@@ -146762,31 +146762,31 @@
     }
   },
   {
-    "name": "logseq-export",
     "dependabot": true,
+    "name": "logseq-export",
     "vulnerabilityStatus": {
       "critical": 0,
-      "lastUpdated": "2022-09-17T21:43:27.4135238Z",
+      "lastUpdated": "2022-09-17T21:11:50.0122485Z",
       "high": 0
     },
     "actionType": {
-      "actionDockerType": null,
+      "fileFound": null,
       "actionType": "Unknown",
-      "fileFound": null
+      "actionDockerType": null
     }
   },
   {
-    "name": "mandatory-reviews",
     "dependabot": true,
+    "name": "mandatory-reviews",
     "vulnerabilityStatus": {
       "critical": 0,
-      "lastUpdated": "2022-09-17T21:43:27.8881485Z",
+      "lastUpdated": "2022-09-17T21:11:50.468914Z",
       "high": 0
     },
     "actionType": {
-      "actionDockerType": "",
+      "fileFound": "action.yml",
       "actionType": "Node",
-      "fileFound": "action.yml"
+      "actionDockerType": ""
     }
   }
 ]
