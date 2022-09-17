@@ -146724,13 +146724,13 @@
     "dependabot": true,
     "vulnerabilityStatus": {
       "critical": 0,
-      "lastUpdated": "2022-09-17T12:26:25.9461717Z",
-      "high": 0
+      "high": 0,
+      "lastUpdated": "2022-09-17T12:54:37.6869774Z"
     },
     "actionType": {
-      "actionDockerType": "Dockerfile",
       "actionType": "Docker",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
     }
   },
   {
@@ -146738,27 +146738,27 @@
     "dependabot": true,
     "vulnerabilityStatus": {
       "critical": 0,
-      "lastUpdated": "2022-09-17T12:26:26.1541368Z",
-      "high": 0
+      "high": 0,
+      "lastUpdated": "2022-09-17T12:54:37.8246335Z"
     },
     "actionType": {
-      "actionDockerType": "",
       "actionType": "Node",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionDockerType": ""
     }
   },
   {
     "dependabot": true,
     "name": "NoToxicDiscussions",
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-17T18:37:58.1491016Z",
+      "high": 0,
       "critical": 0,
-      "high": 0
+      "lastUpdated": "2022-09-17T19:05:07.1159908Z"
     },
     "actionType": {
-      "fileFound": null,
       "actionType": "Unknown",
-      "actionDockerType": null
+      "actionDockerType": null,
+      "fileFound": null
     }
   }
 ]
