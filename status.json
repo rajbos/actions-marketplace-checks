@@ -146724,13 +146724,13 @@
     "dependabot": true,
     "vulnerabilityStatus": {
       "critical": 0,
-      "high": 0,
-      "lastUpdated": "2022-09-17T12:54:37.6869774Z"
+      "lastUpdated": "2022-09-17T12:26:25.9461717Z",
+      "high": 0
     },
     "actionType": {
+      "actionDockerType": "Dockerfile",
       "actionType": "Docker",
-      "fileFound": "action.yml",
-      "actionDockerType": "Dockerfile"
+      "fileFound": "action.yml"
     }
   },
   {
@@ -146738,13 +146738,13 @@
     "dependabot": true,
     "vulnerabilityStatus": {
       "critical": 0,
-      "high": 0,
-      "lastUpdated": "2022-09-17T12:54:37.8246335Z"
+      "lastUpdated": "2022-09-17T12:26:26.1541368Z",
+      "high": 0
     },
     "actionType": {
+      "actionDockerType": "",
       "actionType": "Node",
-      "fileFound": "action.yml",
-      "actionDockerType": ""
+      "fileFound": "action.yml"
     }
   }
 ]
