@@ -146760,5 +146760,33 @@
       "actionType": "Unknown",
       "actionDockerType": null
     }
+  },
+  {
+    "dependabot": true,
+    "name": "logseq-export",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-17T21:11:50.0122485Z",
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "mandatory-reviews",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-17T21:11:50.468914Z",
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionType": "Node",
+      "actionDockerType": ""
+    }
   }
 ]
