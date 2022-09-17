@@ -146718,5 +146718,33 @@
       "actionDockerType": "",
       "fileFound": "action.yml"
     }
+  },
+  {
+    "name": "action.k8s",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-17T12:26:25.9461717Z",
+      "high": 0
+    },
+    "actionType": {
+      "actionDockerType": "Dockerfile",
+      "actionType": "Docker",
+      "fileFound": "action.yml"
+    }
+  },
+  {
+    "name": "deploy-aeweb-github-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-17T12:26:26.1541368Z",
+      "high": 0
+    },
+    "actionType": {
+      "actionDockerType": "",
+      "actionType": "Node",
+      "fileFound": "action.yml"
+    }
   }
 ]
