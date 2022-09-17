@@ -146664,45 +146664,59 @@
     }
   },
   {
-    "dependabot": true,
     "name": "vsign-action",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-16T21:27:47.7865091Z",
-      "critical": 0
+      "lastUpdated": "2022-09-16T22:03:25.2911754Z"
     },
     "actionType": {
-      "actionDockerType": "",
       "actionType": "Composite",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionDockerType": ""
     }
   },
   {
-    "dependabot": true,
     "name": "github-action-kubelinter-tools",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-16T21:27:47.9007593Z",
-      "critical": 0
+      "lastUpdated": "2022-09-16T22:03:25.6780217Z"
     },
     "actionType": {
-      "actionDockerType": null,
       "actionType": "Unknown",
-      "fileFound": null
+      "fileFound": null,
+      "actionDockerType": null
     }
   },
   {
-    "dependabot": true,
     "name": "pr-diff",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-16T21:27:48.0510866Z",
+      "lastUpdated": "2022-09-16T22:03:26.0986653Z"
+    },
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
+  },
+  {
+    "name": "eslint-reporter-action",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-17T00:14:36.9348476Z",
+      "high": 0,
       "critical": 0
     },
     "actionType": {
       "actionDockerType": "",
-      "actionType": "Node",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionType": "Node"
     }
   }
 ]
