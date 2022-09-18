@@ -330,7 +330,7 @@ function EnableDependabotForForkedActions {
         Write-Debug "Checking existing forks for an object with name [$repo] from [$($action.RepoUrl)]"
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
 
-        if ($null -ne $existingFork -And $null -eq $existingFork.dependabot) {
+        if (($null -ne $existingFork) -And ($null -eq $existingFork.dependabot)) {
             if (EnableDependabot $existingFork) {
                 Write-Debug "Dependabot enabled on [$repo]"
                 $existingFork.dependabot = $true
@@ -371,6 +371,9 @@ function EnableDependabot {
         $status = ApiCall -method PUT -url $url -body $null -expected 204
         if ($status -eq $true) {
             return $true
+        }
+        else {
+            Write-Host "Failed to enable dependabot for [$($existingFork.name)]"
         }
         return $status
     }
