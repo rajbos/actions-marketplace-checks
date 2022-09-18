@@ -58,7 +58,7 @@ function GetVulnerableIfo {
 
 foreach ($action in $actions) {
         
-    GetVulnerableIfo -action $action -actionType $action.actionType.actionType
+    GetVulnerableIfo -action $action -actionType "Any"
 
     if ($action.actionType) {
         # actionType
