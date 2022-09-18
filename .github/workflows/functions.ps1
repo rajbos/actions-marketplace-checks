@@ -17,7 +17,10 @@ function GetForkedActionRepos {
         Write-Host "Using existing status file"
         $status = Get-Content $statusFile | ConvertFrom-Json
         if (Test-Path $failedStatusFile) {
-          $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
+            $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
+        }
+        else {
+            $failedForks = New-Object System.Collections.ArrayList
         }
         
         Write-Host "Found $($status.Count) existing repos in status file"
@@ -39,6 +42,8 @@ function GetForkedActionRepos {
         foreach ($repo in $status) {
             $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name)
         }
+        
+        $failedForks = New-Object System.Collections.ArrayList
     }
     return ($status, $failedForks)
 }
