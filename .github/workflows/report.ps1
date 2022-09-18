@@ -203,12 +203,12 @@ LogMessage ""
 ReportInsightsInMarkdown
 
 # reset everything for just the Node actions
-$highAlerts = 0
-$criticalAlerts = 0
-$vulnerableRepos = 0
-$maxHighAlerts = 0
-$maxCriticalAlerts = 0
-$reposAnalyzed = 0
+$global:highAlerts = 0
+$global:criticalAlerts = 0
+$global:vulnerableRepos = 0
+$global:maxHighAlerts = 0
+$global:maxCriticalAlerts = 0
+$global:reposAnalyzed = 0
 $nodeBasedActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node")}
 foreach ($action in $nodeBasedActions) {        
     GetVulnerableIfo $action
@@ -217,12 +217,12 @@ ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions
 
 
 # reset everything for just the Composite actions
-$highAlerts = 0
-$criticalAlerts = 0
-$vulnerableRepos = 0
-$maxHighAlerts = 0
-$maxCriticalAlerts = 0
-$reposAnalyzed = 0
+$global:highAlerts = 0
+$global:criticalAlerts = 0
+$global:vulnerableRepos = 0
+$global:maxHighAlerts = 0
+$global:maxCriticalAlerts = 0
+$global:reposAnalyzed = 0
 $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite")}
 foreach ($action in $compositeActions) {        
     GetVulnerableIfo $action
