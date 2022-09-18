@@ -28,25 +28,25 @@ function GetVulnerableIfo {
         $action
     )
     if ($action.vulnerabilityStatus) {
-        $reposAnalyzed++
+        $global:reposAnalyzed++
         if ($action.vulnerabilityStatus.high -gt 0) {
-            $highAlerts++
+            $global:highAlerts++
 
             if ($action.vulnerabilityStatus.high -gt $maxHighAlerts) {
-                $maxHighAlerts = $action.vulnerabilityStatus.high
+                $global:maxHighAlerts = $action.vulnerabilityStatus.high
             }
         }
 
         if ($action.vulnerabilityStatus.critical -gt 0) {
-            $criticalAlerts++
+            $global:criticalAlerts++
 
             if ($action.vulnerabilityStatus.critical -gt $maxCriticalAlerts) {
-                $maxCriticalAlerts = $action.vulnerabilityStatus.critical
+                $global:maxCriticalAlerts = $action.vulnerabilityStatus.critical
             }
         }
 
         if ($action.vulnerabilityStatus.critical -gt 0 -or $action.vulnerabilityStatus.high -gt 0) {
-            $vulnerableRepos++
+            $global:vulnerableRepos++
         }
 
         if ($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) {
@@ -109,21 +109,28 @@ function LogMessage {
 
 # calculations
 function VulnerabilityCalculations {
-    $averageHighAlerts = $highAlerts / $reposAnalyzed
-    $averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
+    $averageHighAlerts = 0
+    averageCriticalAlerts = 0
+    if ($reposAnalyzed -eq 0) {
+        Write-Error "No repos analyzed"        
+    } 
+    else {
+        $averageHighAlerts = $global:highAlerts / $global:reposAnalyzed
+        $averageCriticalAlerts = $global:criticalAlerts / $global:reposAnalyzed
+    }
 
     Write-Host "Summary: "
     LogMessage "## Potentially vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
 
     LogMessage "| Type                  | Count           |"
     LogMessage "|---|---|"
-    LogMessage "| Total high alerts     | $highAlerts     |"
-    LogMessage "| Total critical alerts | $criticalAlerts |"
+    LogMessage "| Total high alerts     | $($global:highAlerts)     |"
+    LogMessage "| Total critical alerts | $($global:criticalAlerts) |"
     LogMessage ""
     LogMessage "| Maximum number of alerts per repo | Count              |"
     LogMessage "|---|---|"
-    LogMessage "| High alerts                       | $maxHighAlerts     |"
-    LogMessage "| Critical alerts                   | $maxCriticalAlerts |"
+    LogMessage "| High alerts                       | $($global:maxHighAlerts)     |"
+    LogMessage "| Critical alerts                   | $($global:maxCriticalAlerts) |"
     LogMessage ""
     LogMessage "| Average number of alerts per vuln. repo | Count              |"
     LogMessage "|---|---|"
