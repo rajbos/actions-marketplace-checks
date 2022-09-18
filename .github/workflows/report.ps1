@@ -25,7 +25,8 @@ $unknownActionType =
 
 function GetVulnerableIfo {
     Param (
-        $action
+        $action,
+        $actionType
     )
     if ($action.vulnerabilityStatus) {
         $global:reposAnalyzed++
@@ -50,14 +51,14 @@ function GetVulnerableIfo {
         }
 
         if ($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) {
-            "https://github.com/actions-marketplace-validations/$($action.name) Critical: $($action.vulnerabilityStatus.critical) High: $($action.vulnerabilityStatus.high)" | Out-File -FilePath VulnerableRepos.txt -Append
+            "https://github.com/actions-marketplace-validations/$($action.name) Critical: $($action.vulnerabilityStatus.critical) High: $($action.vulnerabilityStatus.high)" | Out-File -FilePath VulnerableRepos-$actionType.txt -Append
         }
     }
 }
 
 foreach ($action in $actions) {
         
-    GetVulnerableIfo $action
+    GetVulnerableIfo -action $action -actionType $action.actionType.actionType
 
     if ($action.actionType) {
         # actionType
@@ -211,7 +212,7 @@ $global:maxCriticalAlerts = 0
 $global:reposAnalyzed = 0
 $nodeBasedActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node")}
 foreach ($action in $nodeBasedActions) {        
-    GetVulnerableIfo $action
+    GetVulnerableIfo -action $action -actionType "Node"
 }
 ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions
 
@@ -225,6 +226,6 @@ $global:maxCriticalAlerts = 0
 $global:reposAnalyzed = 0
 $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite")}
 foreach ($action in $compositeActions) {        
-    GetVulnerableIfo $action
+    GetVulnerableIfo -action $action -actionType "Composite"
 }
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions
