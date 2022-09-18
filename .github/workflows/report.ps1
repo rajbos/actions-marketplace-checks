@@ -21,10 +21,12 @@ $actionYmlFile = 0
 $actionYamlFile = 0
 $actionDockerFile = 0
 $compositeAction = 0
-$unknownActionType = 0
+$unknownActionType = 
 
-foreach ($action in $actions) {
-        
+function GetVulnerableIfo {
+    Param (
+        $action
+    )
     if ($action.vulnerabilityStatus) {
         $reposAnalyzed++
         if ($action.vulnerabilityStatus.high -gt 0) {
@@ -51,6 +53,11 @@ foreach ($action in $actions) {
             "https://github.com/actions-marketplace-validations/$($action.name) Critical: $($action.vulnerabilityStatus.critical) High: $($action.vulnerabilityStatus.high)" | Out-File -FilePath VulnerableRepos.txt -Append
         }
     }
+}
+
+foreach ($action in $actions) {
+        
+    GetVulnerableIfo $action
 
     if ($action.actionType) {
         # actionType
@@ -101,28 +108,33 @@ function LogMessage {
 }
 
 # calculations
-$averageHighAlerts = $highAlerts / $reposAnalyzed
-$averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
+function VulnerabilityCalculations {
+    $averageHighAlerts = $highAlerts / $reposAnalyzed
+    $averageCriticalAlerts = $criticalAlerts / $reposAnalyzed
 
-Write-Host "Summary: "
-LogMessage "## Potentially vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
+    Write-Host "Summary: "
+    LogMessage "## Potentially vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
 
-LogMessage "| Type                  | Count           |"
-LogMessage "|---|---|"
-LogMessage "| Total high alerts     | $highAlerts     |"
-LogMessage "| Total critical alerts | $criticalAlerts |"
-LogMessage ""
-LogMessage "| Maximum number of alerts per repo | Count              |"
-LogMessage "|---|---|"
-LogMessage "| High alerts                       | $maxHighAlerts     |"
-LogMessage "| Critical alerts                   | $maxCriticalAlerts |"
-LogMessage ""
-LogMessage "| Average number of alerts per vuln. repo | Count              |"
-LogMessage "|---|---|"
-LogMessage "| High alerts per vulnerable repo         | $([math]::Round($averageHighAlerts, 1))|"
-LogMessage "| Critical alerts per vulnerable repo     | $([math]::Round($averageCriticalAlerts, 1))|"
+    LogMessage "| Type                  | Count           |"
+    LogMessage "|---|---|"
+    LogMessage "| Total high alerts     | $highAlerts     |"
+    LogMessage "| Total critical alerts | $criticalAlerts |"
+    LogMessage ""
+    LogMessage "| Maximum number of alerts per repo | Count              |"
+    LogMessage "|---|---|"
+    LogMessage "| High alerts                       | $maxHighAlerts     |"
+    LogMessage "| Critical alerts                   | $maxCriticalAlerts |"
+    LogMessage ""
+    LogMessage "| Average number of alerts per vuln. repo | Count              |"
+    LogMessage "|---|---|"
+    LogMessage "| High alerts per vulnerable repo         | $([math]::Round($averageHighAlerts, 1))|"
+    LogMessage "| Critical alerts per vulnerable repo     | $([math]::Round($averageCriticalAlerts, 1))|"
+}
 
 function ReportVulnChartInMarkdown {
+    Param (
+        $chartTitle
+    )
     if (!$logSummary) {
         # do not report locally
         return
@@ -131,7 +143,7 @@ function ReportVulnChartInMarkdown {
     LogMessage ""
     LogMessage "``````mermaid"
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
-    LogMessage "pie title Potentially vulnerable actions"
+    LogMessage "pie title Potentially vulnerable $chartTitle"
     LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
     LogMessage "    ""Vulnerable actions: $($vulnerableRepos)"" : $($vulnerableRepos)"
     LogMessage "    ""Non vulnerable actions: $($reposAnalyzed - $vulnerableRepos)"" : $($reposAnalyzed - $vulnerableRepos)"
@@ -173,8 +185,36 @@ function ReportInsightsInMarkdown {
 }
 
 # call the report function
-ReportVulnChartInMarkdown
+VulnerabilityCalculations
+ReportVulnChartInMarkdown -chartTitle "actions"
 
 LogMessage ""
 
 ReportInsightsInMarkdown
+
+# reset everything for just the Node actions
+$highAlerts = 0
+$criticalAlerts = 0
+$vulnerableRepos = 0
+$maxHighAlerts = 0
+$maxCriticalAlerts = 0
+$reposAnalyzed = 0
+$nodeBasedActions = $actions | Where-Object (($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node"))
+foreach ($action in nodeBasedActions) {        
+    GetVulnerableIfo $action
+}
+ReportVulnChartInMarkdown -chartTitle "Node actions"
+
+
+# reset everything for just the Composite actions
+$highAlerts = 0
+$criticalAlerts = 0
+$vulnerableRepos = 0
+$maxHighAlerts = 0
+$maxCriticalAlerts = 0
+$reposAnalyzed = 0
+$nodeBasedActions = $actions | Where-Object (($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite"))
+foreach ($action in nodeBasedActions) {        
+    GetVulnerableIfo $action
+}
+ReportVulnChartInMarkdown -chartTitle "Composite actions"
