@@ -7,8 +7,8 @@ Param (
 . $PSScriptRoot/library.ps1
 
 $statusFile = "status.json"
+$failedStatusFile = "failedForks.json"
 Write-Host "Got an access token with length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
-
 function GetForkedActionRepos {
 
     # if file exists, read it
@@ -16,6 +16,9 @@ function GetForkedActionRepos {
     if (Test-Path $statusFile) {
         Write-Host "Using existing status file"
         $status = Get-Content $statusFile | ConvertFrom-Json
+        if (Test-Pqth $failedStatusFile) {
+          $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
+        }
         
         Write-Host "Found $($status.Count) existing repos in status file"
     }
@@ -37,7 +40,7 @@ function GetForkedActionRepos {
             $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name)
         }
     }
-    return $status
+    return ($status, $failedForks)
 }
 
 function GetDependabotStatus {
@@ -65,7 +68,8 @@ function GetForkedActionRepoList {
 function RunForActions {
     Param (
         $actions,
-        $existingForks
+        $existingForks,
+        $failedForks
     )
 
     Write-Host "Running for [$($actions.Count)] actions"
@@ -74,7 +78,8 @@ function RunForActions {
     Write-Host "Found [$($actions.Count)] actions with a repoUrl"
 
     # do the work
-    ($newlyForkedRepos, $existingForks) = ForkActionRepos -actions $actions -existingForks $existingForks
+    ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
+    SaveStatus -failedForks $failedForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
     SaveStatus -existingForks $existingForks
 
@@ -234,7 +239,8 @@ function GetDependabotVulnerabilityAlerts {
 function ForkActionRepos {
     Param (
         $actions,
-        $existingForks
+        $existingForks,
+        $failedForks
     )
 
     $i = $existingForks.Length
@@ -263,7 +269,8 @@ function ForkActionRepos {
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
         # check if fork already exists
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
-        if ($null -eq $existingFork) {        
+        $failedFork = $failedForks | Where-Object { $_.name -eq $repo -And $_.owner -eq $owner}
+        if ($null -eq $existingFork -And $failedFork.timesFailed -lt 5) {        
             Write-Host "$i/$max Checking repo [$repo]"
             $forkResult = ForkActionRepo -owner $owner -repo $repo
             if ($forkResult) {
@@ -277,6 +284,18 @@ function ForkActionRepos {
                 Start-Sleep 2
                 $i++ | Out-Null
             }
+            else {
+                if ($failedFork) {
+                    # up the number of times we failed to fork this repo
+                    $failedFork.timesFailed++
+                }
+                else {
+                # let's store a list of failed forks
+                    Write-Host "Failed to fork repo [$owner/$repo]"
+                    $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
+                    $failedForks += $failedFork
+                }
+            }
         }
         else {
             Write-Host "Fake message for double check"
@@ -284,7 +303,7 @@ function ForkActionRepos {
         $counter++ | Out-Null
     }
 
-    return ($newlyForkedRepos, $existingForks)
+    return ($newlyForkedRepos, $existingForks, $failedForks)
 }
 
 function EnableDependabotForForkedActions {
@@ -393,10 +412,10 @@ GetRateLimitInfo
 $forkOrg = "actions-marketplace-validations"
 
 # load the list of forked repos
-$existingForks = GetForkedActionRepos
+($existingForks, $failedForks) = GetForkedActionRepos
 
 # run the functions for all actions
-$existingForks = RunForActions -actions $actions -existingForks $existingForks
+$existingForks = RunForActions -actions $actions -existingForks $existingForks -failedForks $failedForks
 Write-Host "Ended up with $($existingForks.Count) forked repos"
 # save the status
 SaveStatus -existingForks $existingForks

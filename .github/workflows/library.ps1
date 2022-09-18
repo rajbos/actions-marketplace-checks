@@ -186,13 +186,22 @@ function GetRateLimitInfo {
 
 function SaveStatus {
     Param (
-        $existingForks
+        $existingForks,
+        $failedForks
     )
     if ("" -ne $env:CI) {
         # We are running in CI, so let's pull before we overwrite the file
         git pull --quiet | Out-Null
     }
-    Write-Host "Storing the information to the status file:"
-    $existingForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
-    Write-Host "Saved"
+    if ($existingForks) {
+        Write-Host "Storing the information to the status file:"
+        $existingForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+        Write-Host "Saved"
+    }
+
+    if ($failedForks) {
+        Write-Host "Storing the information to the failed status file:"
+        $failedForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $failedStatusFile -Encoding UTF8
+        Write-Host "Saved"
+    }
 }
