@@ -146802,5 +146802,19 @@
       "actionDockerType": null,
       "fileFound": null
     }
+  },
+  {
+    "dependabot": true,
+    "name": "tags-sync",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-18T04:08:10.6533425Z",
+      "critical": 0,
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionDockerType": "",
+      "actionType": "Composite"
+    }
   }
 ]
