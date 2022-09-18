@@ -194,13 +194,13 @@ function SaveStatus {
         git pull --quiet | Out-Null
     }
     if ($existingForks) {
-        Write-Host "Storing the information to the status file:"
+        Write-Host "Storing the information of [$($existingForks.Length)] existing forks to the status file"
         $existingForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         Write-Host "Saved"
     }
 
     if ($failedForks) {
-        Write-Host "Storing the information to the failed status file:"
+        Write-Host "Storing the information of [$($failedForks.Length)] existing forks to the failed status file"
         $failedForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $failedStatusFile -Encoding UTF8
         Write-Host "Saved"
     }
