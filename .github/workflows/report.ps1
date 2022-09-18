@@ -84,6 +84,9 @@ foreach ($action in $actions) {
             $actionDockerFile++
         }
     }
+    else {
+        $unknownActionType++
+    }
 }
 
 function LogMessage {
