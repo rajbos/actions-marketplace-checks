@@ -141,10 +141,15 @@ foreach ($action in $status) {
     if (!$hasField) {
         # load owner from repo info out of the fork
         $url = "/repos/$forkOrg/$($action.name)"
-        $response = ApiCall -method GET -url $url
-        if ($response -and $response.parent) {
-            # load owner info from parent
-            $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
+        try {
+            $response = ApiCall -method GET -url $url
+            if ($response -and $response.parent) {
+                # load owner info from parent
+                $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
+            }
+        }
+        catch {
+            Write-Host "Error getting repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
         }
     }
 
