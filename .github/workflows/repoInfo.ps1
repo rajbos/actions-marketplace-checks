@@ -16,6 +16,9 @@ function GetRepoInfo {
 
     $url = "/repos/$owner/$repo"
     $response = ApiCall -method GET -url $url
+    $url = "/repos/$owner/$repo/releases/latest"
+    $release = ApiCall -method GET -url $url
+    return ($response.archived, $response.disabled, $response.$updated_at, $release.published_at)
 }
 
 function GetActionType {
@@ -122,6 +125,7 @@ else {
     return
 }
 
+# get information from the action files
 $i = $status.Length
 $max = $status.Length + ($numberOfReposToDo * 2)
 foreach ($action in $status) {
@@ -150,6 +154,44 @@ foreach ($action in $status) {
             $action.actionType.actionType = $actionTypeResult
             $action.actionType.fileFound = $fileFoundResult
             $action.actionType.actionDockerType = $actionDockerTypeResult
+        }
+
+        $i++ | Out-Null
+    }
+}
+
+# get repo information
+$i = $status.Length
+$max = $status.Length + ($numberOfReposToDo * 2)
+Write-Host "Loading repository information"
+foreach ($action in $status) {
+
+    if ($i -ge $max) {
+        # do not run to long
+        Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+        break
+    }
+
+    $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+    if (!$hasField -or ($null -eq $action.actionType.actionType)) {
+        Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
+        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $forkOrg -repo $action.name
+
+        If (!$hasField) {
+            $repoInfo = @{
+                archived = $repo_archived
+                disabled = $repo_disabled
+                updated_at = $repo_updated_at
+                latest_release_published_at = $latest_release_published_at
+            }
+
+            $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+        }
+        else {
+            $action.archived.archived = $repo_archived
+            $action.archived.disabled = $repo_disabled
+            $action.archived.updated_at = $repo_updated_at
+            $action.archived.latest_release_published_at = $latest_release_published_at
         }
 
         $i++ | Out-Null
