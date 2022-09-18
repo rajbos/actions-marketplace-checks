@@ -207,7 +207,7 @@ $maxHighAlerts = 0
 $maxCriticalAlerts = 0
 $reposAnalyzed = 0
 $nodeBasedActions = $actions | Where-Object (($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node"))
-foreach ($action in nodeBasedActions) {        
+foreach ($action in $nodeBasedActions) {        
     GetVulnerableIfo $action
 }
 ReportVulnChartInMarkdown -chartTitle "Node actions"
@@ -220,8 +220,8 @@ $vulnerableRepos = 0
 $maxHighAlerts = 0
 $maxCriticalAlerts = 0
 $reposAnalyzed = 0
-$nodeBasedActions = $actions | Where-Object (($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite"))
-foreach ($action in nodeBasedActions) {        
+$compositeActions = $actions | Where-Object (($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite"))
+foreach ($action in $compositeActions) {        
     GetVulnerableIfo $action
 }
 ReportVulnChartInMarkdown -chartTitle "Composite actions"
