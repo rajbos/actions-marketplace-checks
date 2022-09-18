@@ -65,12 +65,14 @@ function ApiCall {
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
         if ($rateLimitRemaining -And $rateLimitRemaining -lt 10) {
-            Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
             # convert rateLimitReset from epoch to ms
             $rateLimitReset = [DateTime]::FromBinary($rateLimitReset).ToUniversalTime()
             $rateLimitReset = $rateLimitReset - [DateTime]::Now
+            Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
             Write-Host "Waiting [$rateLimitReset] for rate limit reset"
             Start-Sleep -Milliseconds $rateLimitReset
+            
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
         }
 
         if ($null -ne $expected) {
@@ -105,18 +107,20 @@ function ApiCall {
             Write-Host "Log message: $($messageData.message)"
         }
 
-        if ($messageData.message.StartsWith( "API rate limit exceeded for user ID")) {
+        if ($messageData.message -And ($messageData.message.StartsWith( "API rate limit exceeded for user ID")) {
             # we need to back off
             Write-Error "Detected rate limit issue"
             $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
             $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
             if ($rateLimitRemaining -And $rateLimitRemaining -lt 10) {
-                Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
                 # convert rateLimitReset from epoch to ms
                 $rateLimitReset = [DateTime]::FromBinary($rateLimitReset).ToUniversalTime()
                 $rateLimitReset = $rateLimitReset - [DateTime]::Now
+                Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
                 Write-Host "Waiting [$rateLimitReset] for rate limit reset"
                 Start-Sleep -Milliseconds $rateLimitReset
+
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
             }
         }
 
