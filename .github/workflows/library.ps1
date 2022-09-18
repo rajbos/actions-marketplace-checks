@@ -64,13 +64,13 @@ function ApiCall {
         
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
-        if ($rateLimitRemaining -And $rateLimitRemaining -lt 10) {
+        if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 10) {
             # convert rateLimitReset from epoch to ms
-            $rateLimitReset = [DateTime]::FromBinary($rateLimitReset).ToUniversalTime()
-            $rateLimitReset = $rateLimitReset - [DateTime]::Now
-            Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
-            Write-Host "Waiting [$rateLimitReset] for rate limit reset"
-            Start-Sleep -Milliseconds $rateLimitReset
+            $rateLimitResetInt = [int]$rateLimitReset[0]
+            $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
+            $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
+            Write-Host "Rate limit is low or hit, waiting for [$($rateLimitReset.TotalSeconds)] seconds before continuing"
+            Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
             
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
         }
@@ -112,13 +112,14 @@ function ApiCall {
             Write-Error "Detected rate limit issue"
             $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
             $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
-            if ($rateLimitRemaining -And $rateLimitRemaining -lt 10) {
+            if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 10) {
                 # convert rateLimitReset from epoch to ms
-                $rateLimitReset = [DateTime]::FromBinary($rateLimitReset).ToUniversalTime()
-                $rateLimitReset = $rateLimitReset - [DateTime]::Now
-                Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
-                Write-Host "Waiting [$rateLimitReset] for rate limit reset"
-                Start-Sleep -Milliseconds $rateLimitReset
+                $rateLimitResetInt = [int]$rateLimitReset[0]
+                $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
+                $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
+                Write-Host "Rate limit is low or hit, waiting for [$($rateLimitReset.TotalSeconds)] seconds before continuing"
+                Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+                
 
                 return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
             }
