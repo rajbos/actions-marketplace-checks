@@ -69,7 +69,7 @@ foreach ($action in $actions) {
         elseif ($action.actionType.actionType -eq "Composite") {
             $compositeAction++
         }
-        elseif ($action.actionType.actionType -eq "Unkown"){
+        elseif (($action.actionType.actionType -eq "Unkown") -or ($null -eq $action.actionType.actionType)){
             $unknownActionType++
         }
 
