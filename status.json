@@ -146762,31 +146762,45 @@
     }
   },
   {
+    "dependabot": true,
     "name": "logseq-export",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-17T21:11:50.0122485Z",
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": null,
+      "actionType": "Unknown",
+      "actionDockerType": null
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "mandatory-reviews",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-17T21:11:50.468914Z",
+      "high": 0
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionType": "Node",
+      "actionDockerType": ""
+    }
+  },
+  {
+    "name": "openaudio-maven-discord-integration",
     "dependabot": true,
     "vulnerabilityStatus": {
       "critical": 0,
-      "lastUpdated": "2022-09-17T21:43:27.4135238Z",
-      "high": 0
+      "high": 0,
+      "lastUpdated": "2022-09-18T00:14:55.1478534Z"
     },
     "actionType": {
       "actionDockerType": null,
       "actionType": "Unknown",
       "fileFound": null
-    }
-  },
-  {
-    "name": "mandatory-reviews",
-    "dependabot": true,
-    "vulnerabilityStatus": {
-      "critical": 0,
-      "lastUpdated": "2022-09-17T21:43:27.8881485Z",
-      "high": 0
-    },
-    "actionType": {
-      "actionDockerType": "",
-      "actionType": "Node",
-      "fileFound": "action.yml"
     }
   }
 ]
