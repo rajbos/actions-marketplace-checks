@@ -8,6 +8,16 @@ Param (
 
 Import-Module powershell-yaml -Force
 
+function GetRepoInfo {
+    Param (
+        $owner,
+        $repo
+    )
+
+    $url = "/repos/$owner/$repo"
+    $response = ApiCall -method GET -url $url
+}
+
 function GetActionType {
     Param (
         $owner,

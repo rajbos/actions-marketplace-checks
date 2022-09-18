@@ -140,20 +140,23 @@ function VulnerabilityCalculations {
 
 function ReportVulnChartInMarkdown {
     Param (
-        $chartTitle
+        $chartTitle,
+        $actions
     )
     if (!$logSummary) {
         # do not report locally
         return
     }
 
+    Write-Host "Writing chart [$chartTitle] with information about [$($actions.Count)] actions and [$global:reposAnalyzed] reposAnalyzed"
+
     LogMessage ""
     LogMessage "``````mermaid"
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
     LogMessage "pie title Potentially vulnerable $chartTitle"
-    LogMessage "    ""Unknown: $($actions.Count - $reposAnalyzed)"" : $($actions.Count - $reposAnalyzed)"
-    LogMessage "    ""Vulnerable actions: $($vulnerableRepos)"" : $($vulnerableRepos)"
-    LogMessage "    ""Non vulnerable actions: $($reposAnalyzed - $vulnerableRepos)"" : $($reposAnalyzed - $vulnerableRepos)"
+    LogMessage "    ""Unknown: $($actions.Count - $global:reposAnalyzed)"" : $($actions.Count - $global:reposAnalyzed)"
+    LogMessage "    ""Vulnerable actions: $($global:vulnerableRepos)"" : $($global:vulnerableRepos)"
+    LogMessage "    ""Non vulnerable actions: $($global:reposAnalyzed - $global:vulnerableRepos)"" : $($global:reposAnalyzed - $global:vulnerableRepos)"
     LogMessage "``````"
 }
 
@@ -193,7 +196,7 @@ function ReportInsightsInMarkdown {
 
 # call the report function
 VulnerabilityCalculations
-ReportVulnChartInMarkdown -chartTitle "actions"
+ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
 
 LogMessage ""
 
@@ -210,7 +213,7 @@ $nodeBasedActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.
 foreach ($action in $nodeBasedActions) {        
     GetVulnerableIfo $action
 }
-ReportVulnChartInMarkdown -chartTitle "Node actions"
+ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions
 
 
 # reset everything for just the Composite actions
@@ -224,4 +227,4 @@ $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.
 foreach ($action in $compositeActions) {        
     GetVulnerableIfo $action
 }
-ReportVulnChartInMarkdown -chartTitle "Composite actions"
+ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions
