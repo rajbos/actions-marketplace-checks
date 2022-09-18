@@ -105,6 +105,21 @@ function ApiCall {
             Write-Host "Log message: $($messageData.message)"
         }
 
+        if ($messageData.message.StartsWith( "API rate limit exceeded for user ID")) {
+            # we need to back off
+            Write-Error "Detected rate limit issue"
+            $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
+            $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
+            if ($rateLimitRemaining -And $rateLimitRemaining -lt 10) {
+                Write-Host "Rate limit is low, waiting for [$rateLimitReset] ms before continuing"
+                # convert rateLimitReset from epoch to ms
+                $rateLimitReset = [DateTime]::FromBinary($rateLimitReset).ToUniversalTime()
+                $rateLimitReset = $rateLimitReset - [DateTime]::Now
+                Write-Host "Waiting [$rateLimitReset] for rate limit reset"
+                Start-Sleep -Milliseconds $rateLimitReset
+            }
+        }
+
         if ($null -ne $expected)
         {
             Write-Host "Expected status code [$expected] but got [$($_.Exception.Response.StatusCode)] for [$url]"
