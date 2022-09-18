@@ -136,10 +136,22 @@ foreach ($action in $status) {
         break
     }
 
+    # back fill the 'owner' field with info from the fork
+    $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
+    if (!$hasField) {
+        # load owner from repo info out of the fork
+        $url = "/repos/$forkOrg/$($action.name)"
+        $response = ApiCall -method GET -url $url
+        if ($response -and $response.parent) {
+            # load owner info from parent
+            $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
+        }
+    }
+
     $hasField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
     if (!$hasField -or ($null -eq $action.actionType.actionType)) {
-        Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
-        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $forkOrg -repo $action.name
+        Write-Host "$i/$max - Checking action information for [$owner/$reponame]"
+        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $action.owner -repo $action.name
 
         If (!$hasField) {
             $actionType = @{
@@ -175,7 +187,7 @@ foreach ($action in $status) {
     $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
     if (!$hasField -or ($null -eq $action.actionType.actionType)) {
         Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
-        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $forkOrg -repo $action.name
+        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action. -repo $action.name
 
         If (!$hasField) {
             $repoInfo = @{

@@ -241,7 +241,7 @@ function ForkActionRepos {
     $max = $existingForks.Length + $numberOfReposToDo
     $newlyForkedRepos = 0
     $counter = 0
-    
+
     Write-Host "Filtering repos to the ones we still need to fork"
     # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
     $actionsToProcess = $actions | Where-Object { $existingForks.name -notcontains (SplitUrlLastPart $_.RepoUrl) }
@@ -270,7 +270,7 @@ function ForkActionRepos {
                 # add the repo to the list of existing forks
                 Write-Debug "Repo forked"
                 $newlyForkedRepos++
-                $newFork = @{ name = $repo; dependabot = $null }
+                $newFork = @{ name = $repo; dependabot = $null; owner = $owner }
                 $existingForks += $newFork
                     
                 # back off just a little after a new fork
@@ -392,7 +392,6 @@ GetRateLimitInfo
 # default variables
 $forkOrg = "actions-marketplace-validations"
 
-# todo: store which repos got forked already
 # load the list of forked repos
 $existingForks = GetForkedActionRepos
 
