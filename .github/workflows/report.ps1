@@ -110,7 +110,7 @@ function LogMessage {
 # calculations
 function VulnerabilityCalculations {
     $averageHighAlerts = 0
-    averageCriticalAlerts = 0
+    $averageCriticalAlerts = 0
     if ($reposAnalyzed -eq 0) {
         Write-Error "No repos analyzed"        
     } 
