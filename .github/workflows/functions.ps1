@@ -16,7 +16,7 @@ function GetForkedActionRepos {
     if (Test-Path $statusFile) {
         Write-Host "Using existing status file"
         $status = Get-Content $statusFile | ConvertFrom-Json
-        if (Test-Pqth $failedStatusFile) {
+        if (Test-Path $failedStatusFile) {
           $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
         }
         
