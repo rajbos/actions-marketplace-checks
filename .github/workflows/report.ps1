@@ -6,12 +6,12 @@ Param (
 Write-Host "Found [$($actions.Count)] actions to report on"
 Write-Host "Log summary path: [$logSummary]"
 
-$highAlerts = 0
-$criticalAlerts = 0
-$vulnerableRepos = 0
-$maxHighAlerts = 0
-$maxCriticalAlerts = 0
-$reposAnalyzed = 0
+$global:highAlerts = 0
+$global:criticalAlerts = 0
+$global:vulnerableRepos = 0
+$global:maxHighAlerts = 0
+$global:maxCriticalAlerts = 0
+$global:reposAnalyzed = 0
 
 $nodeBasedActions = 0
 $dockerBasedActions = 0
