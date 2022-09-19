@@ -109,13 +109,17 @@ function ApiCall {
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
-            # convert rateLimitReset from epoch to ms
-            $rateLimitResetInt = [int]$rateLimitReset[0]
-            $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
-            $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
-            if ($rateLimitReset.TotalMilliseconds -gt 0) {
-                Write-Host "Rate limit is low or hit, waiting for [$($rateLimitReset.TotalSeconds)] seconds before continuing"
-                Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+            $rateLimitReset = $_.Exception.Response.Headers["X-RateLimit-Reset"]
+            $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
+            if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 1) {
+                # convert rateLimitReset from epoch to ms
+                $rateLimitResetInt = [int]$rateLimitReset[0]
+                $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
+                $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
+                if ($rateLimitReset.TotalMilliseconds -gt 0) {
+                    Write-Host "Rate limit is low or hit, waiting for [$($rateLimitReset.TotalSeconds)] seconds before continuing"
+                    Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+                }
             }
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
         }
