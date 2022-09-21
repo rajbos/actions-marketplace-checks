@@ -15,10 +15,22 @@ function GetRepoInfo {
     )
 
     $url = "/repos/$owner/$repo"
-    $response = ApiCall -method GET -url $url
-    $url = "/repos/$owner/$repo/releases/latest"
-    $release = ApiCall -method GET -url $url
-    return ($response.archived, $response.disabled, $response.$updated_at, $release.published_at)
+    Write-Host "Loading repository info for [$owner/$repo]"
+    try {
+        $response = ApiCall -method GET -url $url
+        try {
+            $url = "/repos/$owner/$repo/releases/latest"
+            $release = ApiCall -method GET -url $url
+            return ($response.archived, $response.disabled, $response.$updated_at, $release.published_at)
+        }
+        catch {
+            return ($response.archived, $response.disabled, $response.$updated_at, $null)
+        }
+    }
+    catch {
+        Write-Error "Error loading repository info for [$owner/$repo]: $($_.Exception.Message)"
+        return ($null, $null, $null)
+    }
 }
 
 function GetActionType {
@@ -194,24 +206,27 @@ foreach ($action in $status) {
         Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
         ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action. -repo $action.name
 
-        If (!$hasField) {
-            $repoInfo = @{
-                archived = $repo_archived
-                disabled = $repo_disabled
-                updated_at = $repo_updated_at
-                latest_release_published_at = $latest_release_published_at
+        if ($null -ne $repo_archived)
+        {
+            if (!$hasField) {
+                $repoInfo = @{
+                    archived = $repo_archived
+                    disabled = $repo_disabled
+                    updated_at = $repo_updated_at
+                    latest_release_published_at = $latest_release_published_at
+                }
+
+                $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+            }
+            else {
+                $action.archived.archived = $repo_archived
+                $action.archived.disabled = $repo_disabled
+                $action.archived.updated_at = $repo_updated_at
+                $action.archived.latest_release_published_at = $latest_release_published_at
             }
 
-            $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+            $i++ | Out-Null
         }
-        else {
-            $action.archived.archived = $repo_archived
-            $action.archived.disabled = $repo_disabled
-            $action.archived.updated_at = $repo_updated_at
-            $action.archived.latest_release_published_at = $latest_release_published_at
-        }
-
-        $i++ | Out-Null
     }
 }
 
