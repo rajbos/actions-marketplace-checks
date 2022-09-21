@@ -158379,5 +158379,35 @@
       "actionDockerType": "",
       "fileFound": "action.yml"
     }
+  },
+  {
+    "name": "notation-venafi-csp-action",
+    "owner": "zosocanuck",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-09-21T21:43:28.3573587Z"
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionType": "Composite",
+      "actionDockerType": ""
+    }
+  },
+  {
+    "name": "action-html-dir-to-gh-pages",
+    "owner": "uibcdf",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-09-21T21:43:28.5134397Z"
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionType": "Composite",
+      "actionDockerType": ""
+    }
   }
 ]
