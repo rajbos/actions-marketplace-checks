@@ -39,6 +39,14 @@ function GetActionType {
         $repo
     )
 
+    if ($null -eq $owner) {
+        return ("No owner found", "No owner found", "No owner found")
+    }
+
+    if ($null -eq $repo) {
+        return ("No repo found", "No repo found", "No repo found")
+    }
+
     # check repo for action.yml or action.yaml
     $response = ""
     $fileFound = ""
@@ -67,7 +75,7 @@ function GetActionType {
             }
             catch {
                 # no files found
-                return "Unknown"
+                return ("No file found", "No file found", "No file found")
             }
         }
     }
@@ -152,6 +160,7 @@ foreach ($action in $status) {
     $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
     if (!$hasField) {
         # load owner from repo info out of the fork
+        Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
         $url = "/repos/$forkOrg/$($action.name)"
         try {
             $response = ApiCall -method GET -url $url
@@ -188,46 +197,54 @@ foreach ($action in $status) {
         $i++ | Out-Null
     }
 }
+# save status in case the next part goes wrong, then we did not do all these calls for nothing
+SaveStatus -existingForks $status
 
 # get repo information
 $i = $status.Length
 $max = $status.Length + ($numberOfReposToDo * 2)
 Write-Host "Loading repository information"
-foreach ($action in $status) {
+try {
+    foreach ($action in $status) {
 
-    if ($i -ge $max) {
-        # do not run to long
-        Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
-        break
-    }
+        if ($i -ge $max) {
+            # do not run to long
+            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+            break
+        }
 
-    $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-    if (!$hasField -or ($null -eq $action.actionType.actionType)) {
-        Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
-        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action. -repo $action.name
+        $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+        if (!$hasField -or ($null -eq $action.actionType.actionType)) {
+            Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
+            ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
 
-        if ($null -ne $repo_archived)
-        {
-            if (!$hasField) {
-                $repoInfo = @{
-                    archived = $repo_archived
-                    disabled = $repo_disabled
-                    updated_at = $repo_updated_at
-                    latest_release_published_at = $latest_release_published_at
+            if ($null -ne $repo_archived)
+            {
+                if (!$hasField) {
+                    $repoInfo = @{
+                        archived = $repo_archived
+                        disabled = $repo_disabled
+                        updated_at = $repo_updated_at
+                        latest_release_published_at = $latest_release_published_at
+                    }
+
+                    $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                }
+                else {
+                    $action.archived.archived = $repo_archived
+                    $action.archived.disabled = $repo_disabled
+                    $action.archived.updated_at = $repo_updated_at
+                    $action.archived.latest_release_published_at = $latest_release_published_at
                 }
 
-                $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                $i++ | Out-Null
             }
-            else {
-                $action.archived.archived = $repo_archived
-                $action.archived.disabled = $repo_disabled
-                $action.archived.updated_at = $repo_updated_at
-                $action.archived.latest_release_published_at = $latest_release_published_at
-            }
-
-            $i++ | Out-Null
         }
     }
+}
+catch {
+    Write-Host "Error getting all repo info: $($_.Exception.Message)"
+    Write-Host "Continuing"
 }
 
 SaveStatus -existingForks $status
