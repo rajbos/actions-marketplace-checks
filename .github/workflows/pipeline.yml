@@ -16,7 +16,7 @@ on:
 
 env:
   numberOfReposToDo: 100
-  numberOfReposToDoRepoInfo: 200
+  numberOfReposToDoRepoInfo: 100
     
 jobs:
   check-em-all:
