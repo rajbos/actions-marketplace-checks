@@ -158385,14 +158385,14 @@
     "owner": "zosocanuck",
     "dependabot": true,
     "vulnerabilityStatus": {
+      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-21T22:12:01.5008573Z",
-      "critical": 0
+      "lastUpdated": "2022-09-21T21:43:28.3573587Z"
     },
     "actionType": {
+      "fileFound": "action.yml",
       "actionType": "Composite",
-      "actionDockerType": "",
-      "fileFound": "action.yml"
+      "actionDockerType": ""
     }
   },
   {
@@ -158400,14 +158400,14 @@
     "owner": "uibcdf",
     "dependabot": true,
     "vulnerabilityStatus": {
+      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-21T22:12:01.7444612Z",
-      "critical": 0
+      "lastUpdated": "2022-09-21T21:43:28.5134397Z"
     },
     "actionType": {
+      "fileFound": "action.yml",
       "actionType": "Composite",
-      "actionDockerType": "",
-      "fileFound": "action.yml"
+      "actionDockerType": ""
     }
   }
 ]
