@@ -158319,5 +158319,65 @@
       "fileFound": "action.yml",
       "actionType": "Node"
     }
+  },
+  {
+    "dependabot": true,
+    "name": "infrastructure-diagram-action",
+    "owner": "olmesm",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-21T18:41:28.1910388Z",
+      "high": 0
+    },
+    "actionType": {
+      "actionType": "Docker",
+      "actionDockerType": "Image",
+      "fileFound": "action.yml"
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "update-github-project-v2-item-status",
+    "owner": "eleutheria-tech",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-21T18:41:28.4197586Z",
+      "high": 0
+    },
+    "actionType": {
+      "actionType": "Node",
+      "actionDockerType": "",
+      "fileFound": "action.yml"
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "get-github-project-v2-item-ids",
+    "owner": "eleutheria-tech",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-21T18:41:28.6497683Z",
+      "high": 0
+    },
+    "actionType": {
+      "actionType": "Node",
+      "actionDockerType": "",
+      "fileFound": "action.yml"
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "node-versionless-cache-key",
+    "owner": "codaline-io",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "lastUpdated": "2022-09-21T18:41:28.8905208Z",
+      "high": 0
+    },
+    "actionType": {
+      "actionType": "Node",
+      "actionDockerType": "",
+      "fileFound": "action.yml"
+    }
   }
 ]
