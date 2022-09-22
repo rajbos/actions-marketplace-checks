@@ -158469,5 +158469,35 @@
       "fileFound": "action.yml",
       "actionDockerType": ""
     }
+  },
+  {
+    "dependabot": true,
+    "name": "testflight-feedback",
+    "owner": "lukas-ruzicka",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-09-22T09:41:50.6001922Z"
+    },
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionType": "Node",
+      "actionDockerType": ""
+    }
+  },
+  {
+    "dependabot": true,
+    "name": "actions-retry-command",
+    "owner": "corrupt952",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-09-22T09:41:50.7773931Z"
+    },
+    "actionType": {
+      "fileFound": "action.yaml",
+      "actionType": "Composite",
+      "actionDockerType": ""
+    }
   }
 ]
