@@ -168982,44 +168982,44 @@
   },
   {
     "dependabot": true,
-    "name": "testflight-feedback",
     "owner": "lukas-ruzicka",
+    "name": "testflight-feedback",
     "vulnerabilityStatus": {
-      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-22T09:41:50.6001922Z"
+      "critical": 0,
+      "lastUpdated": "2022-09-22T10:09:21.1505253Z"
     },
     "actionType": {
-      "fileFound": "action.yml",
+      "actionDockerType": "",
       "actionType": "Node",
-      "actionDockerType": ""
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
   {
     "dependabot": true,
-    "name": "actions-retry-command",
     "owner": "corrupt952",
+    "name": "actions-retry-command",
     "vulnerabilityStatus": {
-      "critical": 0,
       "high": 0,
-      "lastUpdated": "2022-09-22T09:41:50.7773931Z"
+      "critical": 0,
+      "lastUpdated": "2022-09-22T10:09:21.3130305Z"
     },
     "actionType": {
-      "fileFound": "action.yaml",
+      "actionDockerType": "",
       "actionType": "Composite",
-      "actionDockerType": ""
+      "fileFound": "action.yaml"
     },
     "forkFound": true
   },
   {
+    "name": "build-docC-static-site",
     "owner": "kiarashvosough1999",
     "dependabot": true,
-    "name": "build-docC-static-site",
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T13:00:09.16376Z",
       "high": 0,
-      "critical": 0
+      "critical": 0,
+      "lastUpdated": "2022-09-22T12:30:00.9207903Z"
     },
     "actionType": {
       "fileFound": "action.yml",
@@ -169029,13 +169029,13 @@
     "forkFound": true
   },
   {
+    "name": "gha-trigger-awx",
     "owner": "bilalahmad99",
     "dependabot": true,
-    "name": "gha-trigger-awx",
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T13:00:09.498393Z",
       "high": 0,
-      "critical": 0
+      "critical": 0,
+      "lastUpdated": "2022-09-22T12:30:02.8060435Z"
     },
     "actionType": {
       "fileFound": "action.yml",
@@ -169045,66 +169045,66 @@
     "forkFound": true
   },
   {
-    "dependabot": true,
     "name": "jira-jql-query",
     "owner": "shamrat17",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-22T15:50:49.385762Z",
       "high": 4,
-      "lastUpdated": "2022-09-22T15:12:45.8578149Z",
       "critical": 2
     },
     "actionType": {
-      "fileFound": "action.yml",
+      "actionType": "Node",
       "actionDockerType": "",
-      "actionType": "Node"
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
   {
-    "dependabot": true,
     "name": "docC-github-pages-deploy",
     "owner": "kiarashvosough1999",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-22T15:50:49.8837507Z",
       "high": 0,
-      "lastUpdated": "2022-09-22T15:12:46.0141439Z",
       "critical": 0
     },
     "actionType": {
-      "fileFound": "action.yml",
+      "actionType": "Composite",
       "actionDockerType": "",
-      "actionType": "Composite"
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
   {
-    "dependabot": true,
     "name": "wecom-notification-action",
     "owner": "guangzhengli",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-22T15:50:50.3797726Z",
       "high": 0,
-      "lastUpdated": "2022-09-22T15:12:46.1744443Z",
       "critical": 0
     },
     "actionType": {
-      "fileFound": "action.yml",
+      "actionType": "Composite",
       "actionDockerType": "",
-      "actionType": "Composite"
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
   {
-    "dependabot": true,
     "name": "aeweb-github-action",
     "owner": "archethic-foundation",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-22T15:50:50.8246294Z",
       "high": 0,
-      "lastUpdated": "2022-09-22T15:12:46.285148Z",
       "critical": 0
     },
     "actionType": {
-      "fileFound": "action.yml",
+      "actionType": "Node",
       "actionDockerType": "",
-      "actionType": "Node"
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
@@ -169113,14 +169113,14 @@
     "name": "Castor-Build-Action",
     "dependabot": true,
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T18:46:04.4929921Z",
       "critical": 0,
+      "lastUpdated": "2022-09-22T19:22:51.9614707Z",
       "high": 0
     },
     "actionType": {
+      "actionDockerType": "",
       "actionType": "Composite",
-      "fileFound": "action.yml",
-      "actionDockerType": ""
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
@@ -169129,14 +169129,14 @@
     "name": "spotter-action",
     "dependabot": true,
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T18:46:04.7569495Z",
       "critical": 0,
+      "lastUpdated": "2022-09-22T19:22:52.4609637Z",
       "high": 0
     },
     "actionType": {
+      "actionDockerType": "Dockerfile",
       "actionType": "Docker",
-      "fileFound": "action.yml",
-      "actionDockerType": "Dockerfile"
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
@@ -169145,14 +169145,14 @@
     "name": "gh-action-file-change",
     "dependabot": true,
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T18:46:05.0018083Z",
       "critical": 0,
+      "lastUpdated": "2022-09-22T19:22:52.950013Z",
       "high": 0
     },
     "actionType": {
+      "actionDockerType": "",
       "actionType": "Composite",
-      "fileFound": "action.yml",
-      "actionDockerType": ""
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
@@ -169161,14 +169161,14 @@
     "name": "cypress-test-results",
     "dependabot": true,
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T18:46:05.4025665Z",
       "critical": 2,
+      "lastUpdated": "2022-09-22T19:22:53.5680262Z",
       "high": 6
     },
     "actionType": {
+      "actionDockerType": "",
       "actionType": "Node",
-      "fileFound": "action.yml",
-      "actionDockerType": ""
+      "fileFound": "action.yml"
     },
     "forkFound": true
   },
@@ -169177,15 +169177,31 @@
     "name": "gh-action--accum-gh-rate-limits",
     "dependabot": true,
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-22T18:46:05.6386766Z",
       "critical": 0,
+      "lastUpdated": "2022-09-22T19:22:54.0006068Z",
       "high": 0
     },
     "actionType": {
+      "actionDockerType": "",
       "actionType": "Composite",
-      "fileFound": "action.yml",
-      "actionDockerType": ""
+      "fileFound": "action.yml"
     },
     "forkFound": true
+  },
+  {
+    "name": "python-bandit-scan",
+    "owner": "shundor",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-22T21:46:41.8102064Z",
+      "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "action.yml",
+      "actionDockerType": "",
+      "actionType": "Composite"
+    }
   }
 ]
