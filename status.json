@@ -158409,5 +158409,50 @@
       "actionType": "Composite",
       "actionDockerType": ""
     }
+  },
+  {
+    "owner": "Stevedow99",
+    "dependabot": true,
+    "name": "dbt-cloud-get-job-run-action",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-22T03:56:01.2443448Z",
+      "critical": 0
+    },
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
+  },
+  {
+    "owner": "jhihyulin",
+    "dependabot": true,
+    "name": "deta-update-env-action",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-22T03:56:01.4255836Z",
+      "critical": 0
+    },
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
+  },
+  {
+    "owner": "Austinhs",
+    "dependabot": true,
+    "name": "static-google-site-deploy",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "lastUpdated": "2022-09-22T03:56:01.6695773Z",
+      "critical": 0
+    },
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   }
 ]
