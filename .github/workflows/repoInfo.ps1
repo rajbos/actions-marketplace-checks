@@ -159,6 +159,11 @@ foreach ($action in $status) {
     # back fill the 'owner' field with info from the fork
     $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
     if (!$hasField) {
+        $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+        if ($hasField -and !$action.forkFound) {
+            # skip this one to prevent us from keeping checking on erroneous repos
+            continue
+        }
         # load owner from repo info out of the fork
         Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
         $url = "/repos/$forkOrg/$($action.name)"
@@ -167,10 +172,23 @@ foreach ($action in $status) {
             if ($response -and $response.parent) {
                 # load owner info from parent
                 $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
+                $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
             }
         }
         catch {
             Write-Host "Error getting repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+            $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+            if (!$hasField) {
+                $action | Add-Member -Name forkFound -Value $false -MemberType NoteProperty
+            }
+        }
+    }
+    else {
+        # owner field is filled, let's check if forkFound field already exists
+        $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+        if (!$hasField) {
+            # owner is known, so this fork exists
+            $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
         }
     }
 
