@@ -158454,5 +158454,20 @@
       "fileFound": "action.yml",
       "actionDockerType": ""
     }
+  },
+  {
+    "dependabot": true,
+    "name": "deta-change-visor-action",
+    "owner": "jhihyulin",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-22T06:33:10.9065072Z",
+      "critical": 0,
+      "high": 0
+    },
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   }
 ]
