@@ -169254,98 +169254,98 @@
   },
   {
     "name": "openapi-api-version-print",
-    "owner": "stelzo",
     "dependabot": true,
+    "owner": "stelzo",
     "vulnerabilityStatus": {
       "high": 0,
       "critical": 0,
-      "lastUpdated": "2022-09-23T12:53:53.0947381Z"
+      "lastUpdated": "2022-09-23T12:26:24.5208346Z"
     },
     "forkFound": true,
     "actionType": {
-      "fileFound": "action.yml",
       "actionType": "Docker",
+      "fileFound": "action.yml",
       "actionDockerType": "Dockerfile"
     }
   },
   {
     "name": "workflow-run-diff-action",
-    "owner": "danielweller-swp",
     "dependabot": true,
+    "owner": "danielweller-swp",
     "vulnerabilityStatus": {
       "high": 0,
       "critical": 0,
-      "lastUpdated": "2022-09-23T12:53:53.2421598Z"
+      "lastUpdated": "2022-09-23T12:26:24.9610362Z"
     },
     "forkFound": true,
     "actionType": {
-      "fileFound": "action.yml",
       "actionType": "Node",
+      "fileFound": "action.yml",
       "actionDockerType": ""
     }
   },
   {
-    "dependabot": true,
     "name": "setup-wso2-apictl",
     "owner": "yasassri",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-23T15:26:24.5234189Z",
       "high": 0,
-      "lastUpdated": "2022-09-23T15:56:27.3281685Z",
       "critical": 0
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Node",
       "actionDockerType": "",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionType": "Node"
     }
   },
   {
-    "dependabot": true,
     "name": "tagpr",
     "owner": "Songmu",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-23T15:26:24.7770809Z",
       "high": 0,
-      "lastUpdated": "2022-09-23T15:56:27.461778Z",
       "critical": 0
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Composite",
       "actionDockerType": "",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionType": "Composite"
     }
   },
   {
-    "dependabot": true,
     "name": "Wanderer-Action",
     "owner": "romanzipp",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-23T15:26:25.0239828Z",
       "high": 0,
-      "lastUpdated": "2022-09-23T15:56:27.6270561Z",
       "critical": 0
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Composite",
       "actionDockerType": "",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionType": "Composite"
     }
   },
   {
-    "dependabot": true,
     "name": "docker-release-action",
     "owner": "fylein",
+    "dependabot": true,
     "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-23T15:26:25.2967735Z",
       "high": 0,
-      "lastUpdated": "2022-09-23T15:56:27.7711366Z",
       "critical": 0
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Composite",
       "actionDockerType": "",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "actionType": "Composite"
     }
   }
 ]
