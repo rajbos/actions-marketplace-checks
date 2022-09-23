@@ -169254,33 +169254,33 @@
   },
   {
     "name": "openapi-api-version-print",
-    "dependabot": true,
     "owner": "stelzo",
+    "dependabot": true,
     "vulnerabilityStatus": {
       "high": 0,
       "critical": 0,
-      "lastUpdated": "2022-09-23T12:26:24.5208346Z"
+      "lastUpdated": "2022-09-23T12:53:53.0947381Z"
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Docker",
       "fileFound": "action.yml",
+      "actionType": "Docker",
       "actionDockerType": "Dockerfile"
     }
   },
   {
     "name": "workflow-run-diff-action",
-    "dependabot": true,
     "owner": "danielweller-swp",
+    "dependabot": true,
     "vulnerabilityStatus": {
       "high": 0,
       "critical": 0,
-      "lastUpdated": "2022-09-23T12:26:24.9610362Z"
+      "lastUpdated": "2022-09-23T12:53:53.2421598Z"
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Node",
       "fileFound": "action.yml",
+      "actionType": "Node",
       "actionDockerType": ""
     }
   }
