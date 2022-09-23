@@ -169237,19 +169237,19 @@
     }
   },
   {
-    "dependabot": true,
     "owner": "sethreidnz",
     "name": "azure-webapps-preview-deploy",
+    "dependabot": true,
     "vulnerabilityStatus": {
       "critical": 0,
-      "high": 0,
-      "lastUpdated": "2022-09-23T06:34:15.0914714Z"
+      "lastUpdated": "2022-09-23T07:13:36.9744904Z",
+      "high": 0
     },
     "forkFound": true,
     "actionType": {
-      "actionType": "Node",
+      "actionDockerType": "",
       "fileFound": "action.yml",
-      "actionDockerType": ""
+      "actionType": "Node"
     }
   }
 ]
