@@ -169235,5 +169235,21 @@
       "fileFound": "action.yml",
       "actionType": "Node"
     }
+  },
+  {
+    "dependabot": true,
+    "owner": "sethreidnz",
+    "name": "azure-webapps-preview-deploy",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-09-23T06:34:15.0914714Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   }
 ]
