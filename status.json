@@ -169413,51 +169413,51 @@
     }
   },
   {
-    "name": "push-css-action",
-    "dependabot": true,
     "owner": "projectwallace",
+    "dependabot": true,
+    "name": "push-css-action",
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-24T00:17:10.2875253Z",
+      "critical": 0,
       "high": 1,
-      "critical": 0
+      "lastUpdated": "2022-09-24T00:46:51.4551128Z"
     },
     "forkFound": true,
     "actionType": {
-      "actionDockerType": "",
+      "actionType": "Node",
       "fileFound": "action.yaml",
-      "actionType": "Node"
+      "actionDockerType": ""
     }
   },
   {
-    "name": "jest-badges-aws",
-    "dependabot": true,
     "owner": "LPMendoza",
+    "dependabot": true,
+    "name": "jest-badges-aws",
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-24T00:17:10.7303498Z",
+      "critical": 0,
       "high": 0,
-      "critical": 0
+      "lastUpdated": "2022-09-24T00:46:51.6162825Z"
     },
     "forkFound": true,
     "actionType": {
-      "actionDockerType": "",
+      "actionType": "Node",
       "fileFound": "action.yml",
-      "actionType": "Node"
+      "actionDockerType": ""
     }
   },
   {
-    "name": "vcpkg-action",
-    "dependabot": true,
     "owner": "johnwason",
+    "dependabot": true,
+    "name": "vcpkg-action",
     "vulnerabilityStatus": {
-      "lastUpdated": "2022-09-24T00:17:11.1700998Z",
+      "critical": 0,
       "high": 0,
-      "critical": 0
+      "lastUpdated": "2022-09-24T00:46:51.7556711Z"
     },
     "forkFound": true,
     "actionType": {
-      "actionDockerType": "",
+      "actionType": "Composite",
       "fileFound": "action.yml",
-      "actionType": "Composite"
+      "actionDockerType": ""
     }
   }
 ]
