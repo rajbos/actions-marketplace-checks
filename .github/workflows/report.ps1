@@ -115,11 +115,11 @@ foreach ($action in $actions) {
             $updatedLastMonth++
         }
 
-        if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-3)) {
+        if ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-3)) {
             $updatedLastQuarter++
         }
 
-        if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-6)) {
+        if ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-6)) {
             $updatedLast6Months++
         }
 
