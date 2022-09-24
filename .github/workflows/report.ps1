@@ -227,7 +227,7 @@ function ReportInsightsInMarkdown {
 function ReportAgeInsights {
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
-    LogMwssage "Analyzed $repoInfo/$reposAnalyzed repos"
+    LogMessage "Analyzed $repoInfo/$reposAnalyzed repos"
 
     LogMessage "Oldest repository: $oldestRepo days old"
     LogMessage "Updated last month: $updatedLastMonth repos"
