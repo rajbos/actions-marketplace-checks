@@ -275,7 +275,7 @@ function ForkActionRepos {
         # check if fork already exists
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
         $failedFork = $failedForks | Where-Object { $_.name -eq $repo -And $_.owner -eq $owner}
-        if ($null -eq $existingFork -And $failedFork.timesFailed -lt 5) {        
+        if (($null -eq $existingFork) -And ($null -ne $failedFork -and $failedFork.timesFailed -lt 5)) {        
             Write-Host "$i/$max Checking repo [$repo]"
             $forkResult = ForkActionRepo -owner $owner -repo $repo
             if ($forkResult) {
@@ -301,11 +301,11 @@ function ForkActionRepos {
                     $failedForks.Add($failedFork) | Out-Null
                 }
             }
+            $counter++ | Out-Null
         }
         else {
             Write-Host "Fake message for double check"
         }
-        $counter++ | Out-Null
     }
 
     return ($newlyForkedRepos, $existingForks, $failedForks)
