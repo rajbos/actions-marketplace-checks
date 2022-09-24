@@ -234,9 +234,9 @@ function ReportAgeInsights {
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
     LogMessage "Analyzed $repoInfo/$reposAnalyzed repos"
 
-    LogMessage "Oldest repository: $oldestRepo days old"
+    LogMessage "Oldest repository: $((Get-Date - $oldestRepo).TotalDaysfix ca) days old"
     LogMessage "Updated last month: $updatedLastMonth repos"
-    LogMessage "Updated last 3 months: $updatedLast3Months repos"
+    LogMessage "Updated last 3 months: $updatedLastQuarter repos"
     LogMessage "Updated last 6 months: $updatedLast6Months repos"
 
     LogMessage "Average age: $([math]::Round($sumDaysOld / $repoInfo, 1)) days"
