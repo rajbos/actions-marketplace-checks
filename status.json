@@ -3394,7 +3394,13 @@
       "actionDockerType": ""
     },
     "owner": "DavideViolante",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-23T13:33:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "rust-build.action",
@@ -3410,7 +3416,13 @@
       "actionDockerType": "Image"
     },
     "owner": "rust-build",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-04T17:44:38Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-vint",
@@ -3426,7 +3438,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "reviewdog",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-21T13:01:01Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-phpcs",
@@ -3442,7 +3460,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "shirobrak",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-31T06:12:46Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ReportGenerator-GitHub-Action",
@@ -3458,7 +3482,13 @@
       "actionDockerType": ""
     },
     "owner": "danielpalme",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-04T11:55:33Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-rubocop",
@@ -3474,7 +3504,13 @@
       "actionDockerType": ""
     },
     "owner": "reviewdog",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-03T09:35:25Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "smartsheet-update-row",
@@ -3490,7 +3526,13 @@
       "actionDockerType": ""
     },
     "owner": "paulholden2",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-28T11:29:18Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "Detekt-Action",
@@ -3506,7 +3548,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "alaegin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-15T12:08:40Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "s3-backup",
@@ -3522,7 +3570,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "peter-evans",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-09T01:59:21Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ipfs-action",
@@ -3538,7 +3592,13 @@
       "actionDockerType": ""
     },
     "owner": "aquiladev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-29T09:22:15Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "swagger-ui-action",
@@ -3554,7 +3614,13 @@
       "actionDockerType": ""
     },
     "owner": "Legion2",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-20T13:57:08Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "UnityAutomatedSemver",
@@ -3570,7 +3636,13 @@
       "actionDockerType": ""
     },
     "owner": "AlexHolderDeveloper",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-08T02:46:16Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-cljstyle",
@@ -3586,7 +3658,13 @@
       "actionDockerType": ""
     },
     "owner": "0918nobita",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-12T16:41:32Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-wordpress-plugin-asset-update",
@@ -3602,7 +3680,13 @@
       "actionDockerType": ""
     },
     "owner": "10up",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-17T05:09:41Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action",
@@ -3618,7 +3702,13 @@
       "actionDockerType": ""
     },
     "owner": "volta-cli",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T15:52:21Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "branch-env-vars",
@@ -3634,7 +3724,13 @@
       "actionDockerType": ""
     },
     "owner": "iamtheyammer",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-18T07:55:15Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "workflow-status",
@@ -3650,7 +3746,13 @@
       "actionDockerType": ""
     },
     "owner": "martialonline",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-05T20:44:30Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-wsl",
@@ -3666,7 +3768,13 @@
       "actionDockerType": ""
     },
     "owner": "Vampire",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-02T03:00:12Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-slack-incoming-webhook",
@@ -3682,7 +3790,13 @@
       "actionDockerType": ""
     },
     "owner": "tokorom",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-06T09:07:47Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "dynamic-badges-action",
@@ -3698,7 +3812,13 @@
       "actionDockerType": ""
     },
     "owner": "Schneegans",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-15T10:49:20Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ios-build-action",
@@ -3714,7 +3834,13 @@
       "actionDockerType": ""
     },
     "owner": "sparkfabrik",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-14T19:39:54Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "github-actions-build",
@@ -3730,7 +3856,13 @@
       "actionDockerType": "Image"
     },
     "owner": "timzu",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-29T09:01:12Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-packer",
@@ -3746,7 +3878,13 @@
       "actionDockerType": ""
     },
     "owner": "hashicorp-contrib",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-30T13:40:36Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "terraform-action",
@@ -3762,7 +3900,13 @@
       "actionDockerType": "Image"
     },
     "owner": "robertdebock",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-31T12:58:38Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "buildah-build",
@@ -3778,7 +3922,13 @@
       "actionDockerType": ""
     },
     "owner": "redhat-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-02T10:26:53Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "provision-with-micromamba",
@@ -3794,7 +3944,13 @@
       "actionDockerType": ""
     },
     "owner": "mamba-org",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-29T14:40:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "testhub-io.action",
@@ -3810,7 +3966,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "testhub-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-17T10:00:17Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "add-pr-owner-action",
@@ -3826,7 +3988,13 @@
       "actionDockerType": ""
     },
     "owner": "a-b-r-o-w-n",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2020-12-08T16:53:00Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-flake8",
@@ -3842,7 +4010,13 @@
       "actionDockerType": ""
     },
     "owner": "reviewdog",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-11T08:10:15Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "branch-names",
@@ -3858,7 +4032,13 @@
       "actionDockerType": ""
     },
     "owner": "tj-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-22T15:12:10Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "minio-deploy-action",
@@ -3874,7 +4054,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "hkdobrev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-29T17:52:21Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "issues-helper",
@@ -3890,7 +4076,13 @@
       "actionDockerType": ""
     },
     "owner": "actions-cool",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-02T09:07:27Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-bin",
@@ -3906,7 +4098,13 @@
       "actionDockerType": ""
     },
     "owner": "zcong1993",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-23T08:10:57Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "commit-with-deploy-key",
@@ -3922,7 +4120,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "leigholiver",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-28T14:02:57Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "conditional-build-matrix",
@@ -3938,7 +4142,13 @@
       "actionDockerType": ""
     },
     "owner": "JoshuaTheMiller",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-29T02:31:03Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "copy-to-branches",
@@ -3954,7 +4164,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "planetoftheweb",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-29T09:39:22Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "jest-coverage-report-action",
@@ -3970,7 +4186,13 @@
       "actionDockerType": ""
     },
     "owner": "ArtiomTr",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-03T21:43:35Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-create-tag",
@@ -3986,7 +4208,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "rickstaa",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-27T16:17:46Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "hyperlink",
@@ -4002,7 +4230,13 @@
       "actionDockerType": ""
     },
     "owner": "untitaker",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-15T23:38:19Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "unity-test-publisher",
@@ -4018,7 +4252,13 @@
       "actionDockerType": ""
     },
     "owner": "rainbow-duck-games",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-18T15:24:43Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "gh-project-context",
@@ -4034,7 +4274,13 @@
       "actionDockerType": ""
     },
     "owner": "zero88",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-23T17:32:13Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "linkcheck",
@@ -4050,7 +4296,13 @@
       "actionDockerType": "Image"
     },
     "owner": "filiph",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-11T05:20:06Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "team-sync",
@@ -4066,7 +4318,13 @@
       "actionDockerType": ""
     },
     "owner": "rmacklin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-07-31T19:37:08Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "airflow-dag-action",
@@ -4082,7 +4340,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "jayamanikharyono",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-08T04:52:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "Wechat-Timed-Message",
@@ -4098,7 +4362,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "HollowMan6",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-14T04:58:34Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "github-actions-slack",
@@ -4114,7 +4384,13 @@
       "actionDockerType": ""
     },
     "owner": "719media",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-02T23:54:38Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "pr_size_checker",
@@ -4130,7 +4406,13 @@
       "actionDockerType": ""
     },
     "owner": "maidsafe",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-15T17:43:07Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "upload-rust-binary-action",
@@ -4146,7 +4428,13 @@
       "actionDockerType": ""
     },
     "owner": "taiki-e",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-16T14:56:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-browser",
@@ -4162,7 +4450,13 @@
       "actionDockerType": ""
     },
     "owner": "abhi1693",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-19T09:16:28Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "enable-github-automerge-action",
@@ -4178,7 +4472,13 @@
       "actionDockerType": ""
     },
     "owner": "alexwilson",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-21T16:11:34Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "dobby",
@@ -4194,7 +4494,13 @@
       "actionDockerType": ""
     },
     "owner": "simplybusiness",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-31T09:36:24Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "github-action-vagrant--vagrantfile-from-repository",
@@ -4210,7 +4516,13 @@
       "actionDockerType": ""
     },
     "owner": "kentahikaru",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-11T23:10:13Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "gh_pages-sitemap-ping",
@@ -4226,7 +4538,13 @@
       "actionDockerType": ""
     },
     "owner": "Umio-Yasuno",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-18T02:41:24Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "actions-opsgenie",
@@ -4242,7 +4560,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "idan-gur",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-16T12:55:23Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "check-pr-ci",
@@ -4258,7 +4582,13 @@
       "actionDockerType": ""
     },
     "owner": "actions-cool",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-30T11:21:55Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "markdown-image-uploader",
@@ -4274,7 +4604,13 @@
       "actionDockerType": "Image"
     },
     "owner": "rxrw",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-17T09:03:23Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "skeleton-builder",
@@ -4290,7 +4626,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "getgrav",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-25T07:07:52Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "auto-cancel-redundant-workflow-runs-action",
@@ -4306,7 +4648,13 @@
       "actionDockerType": ""
     },
     "owner": "yuya-takeyama",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-28T10:25:09Z",
+      "disabled": false,
+      "archived": true,
+      "updated_at": null
+    }
   },
   {
     "name": "git-clone-action",
@@ -4322,7 +4670,13 @@
       "actionDockerType": ""
     },
     "owner": "sudosubin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-25T10:21:51Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "dependabot": false,
@@ -4353,7 +4707,13 @@
       "actionDockerType": ""
     },
     "owner": "NdagiStanley",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-02T13:25:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "check-user-permission",
@@ -4369,7 +4729,13 @@
       "actionDockerType": ""
     },
     "owner": "actions-cool",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-08T01:47:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "google-repo-action",
@@ -4385,7 +4751,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "Javier-varez",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-03T22:56:44Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ziti-webhook-action",
@@ -4401,7 +4773,13 @@
       "actionDockerType": ""
     },
     "owner": "openziti",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-03T04:23:11Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "package-deployer",
@@ -4417,7 +4795,13 @@
       "actionDockerType": ""
     },
     "owner": "danitseitlin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-10T03:24:07Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "slack-action",
@@ -4433,7 +4817,13 @@
       "actionDockerType": ""
     },
     "owner": "keithalpichi",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-24T16:32:28Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "api-client-gen",
@@ -4449,7 +4839,13 @@
       "actionDockerType": ""
     },
     "owner": "ajupov",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-13T18:32:32Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "buf-breaking-action",
@@ -4465,7 +4861,13 @@
       "actionDockerType": ""
     },
     "owner": "bufbuild",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T17:35:33Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "buf-setup-action",
@@ -4481,7 +4883,13 @@
       "actionDockerType": ""
     },
     "owner": "bufbuild",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-14T17:25:11Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ipfs-upload-action",
@@ -4497,7 +4905,13 @@
       "actionDockerType": ""
     },
     "owner": "crustio",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-24T04:26:09Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "terraform-io-github-action",
@@ -4513,7 +4927,13 @@
       "actionDockerType": ""
     },
     "owner": "bruceharrison1984",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-27T01:48:41Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "buf-lint-action",
@@ -4529,7 +4949,13 @@
       "actionDockerType": ""
     },
     "owner": "bufbuild",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T17:38:00Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "auto-changelog",
@@ -4545,7 +4971,13 @@
       "actionDockerType": ""
     },
     "owner": "ryan-cha",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-20T12:53:33Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "tencent-cos-action",
@@ -4561,7 +4993,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "jaehue",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-25T06:18:53Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "get-chagelog-diff",
@@ -4577,7 +5015,13 @@
       "actionDockerType": ""
     },
     "owner": "jupyter-naas",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-06T23:58:22Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "hexo-gulp-action",
@@ -4593,7 +5037,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "alterhu2020",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-14T02:43:45Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "rust-action",
@@ -4609,7 +5059,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "ismail",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-23T06:24:29Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "sync-up-to-codecommit-action",
@@ -4625,7 +5081,13 @@
       "actionDockerType": "Image"
     },
     "owner": "youyo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-28T04:52:51Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "branch-pruner-action",
@@ -4641,7 +5103,13 @@
       "actionDockerType": ""
     },
     "owner": "MyActionWay",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-22T13:56:02Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "gigalixir-action",
@@ -4657,7 +5125,13 @@
       "actionDockerType": ""
     },
     "owner": "beastawakens",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-15T15:17:06Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "delete-artifact",
@@ -4673,7 +5147,13 @@
       "actionDockerType": ""
     },
     "owner": "joutvhu",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-02T16:45:18Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "changed-files",
@@ -4689,7 +5169,13 @@
       "actionDockerType": ""
     },
     "owner": "tj-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-24T05:52:01Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "artifacts-url-comments",
@@ -4705,7 +5191,13 @@
       "actionDockerType": ""
     },
     "owner": "tonyhallett",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-07T13:46:20Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "workflow-run-conclusion-dispatch-action",
@@ -4721,7 +5213,13 @@
       "actionDockerType": ""
     },
     "owner": "tonyhallett",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-11T09:51:16Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "deploy-gcp-workflow",
@@ -4737,7 +5235,13 @@
       "actionDockerType": ""
     },
     "owner": "UriKatsirPrivate",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T22:10:41Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "fvtt-autopublish",
@@ -4753,7 +5257,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "Varriount",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-03T22:02:13Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "upload-github-workflow-logs-to-elastic",
@@ -4769,7 +5279,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "shahargl",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-19T08:13:46Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "github-stats-pages",
@@ -4785,7 +5301,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "astrochun",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-30T21:14:32Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "markdown-to-html-with-github-style-action",
@@ -4801,7 +5323,13 @@
       "actionDockerType": ""
     },
     "owner": "natescherer",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-20T00:39:35Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "wheels",
@@ -4817,7 +5345,13 @@
       "actionDockerType": ""
     },
     "owner": "OpenPeerPower",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-07-20T12:05:36Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "buildpacks-action",
@@ -4833,7 +5367,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "bigloupe",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-29T11:34:42Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "compas-actions.ghpython_components",
@@ -4849,7 +5389,13 @@
       "actionDockerType": ""
     },
     "owner": "compas-dev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-26T14:53:21Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "dispatch-workflow-action",
@@ -4865,7 +5411,13 @@
       "actionDockerType": ""
     },
     "owner": "WormJim",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-29T14:49:52Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "slack-webhook-payload",
@@ -4881,7 +5433,13 @@
       "actionDockerType": ""
     },
     "owner": "alonsohki",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-03T09:40:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-upload-artifacts-and-release-assets",
@@ -4897,7 +5455,13 @@
       "actionDockerType": ""
     },
     "owner": "nanoufo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-29T17:12:48Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "create-dns-record",
@@ -4913,7 +5477,13 @@
       "actionDockerType": ""
     },
     "owner": "domenix",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-08T21:50:51Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ToCVersions",
@@ -4929,7 +5499,13 @@
       "actionDockerType": ""
     },
     "owner": "Numynum",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-16T22:10:27Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "helm-chart-releaser",
@@ -4945,7 +5521,13 @@
       "actionDockerType": ""
     },
     "owner": "layer5io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-13T22:08:31Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "faros-cicd-github-action",
@@ -4961,7 +5543,13 @@
       "actionDockerType": ""
     },
     "owner": "faros-ai",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-13T20:27:51Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "hexo-deploy-with-hook",
@@ -4977,7 +5565,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "yuzhishuo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-24T01:12:51Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "eks-helm-deploy-action",
@@ -4993,7 +5587,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "craftech-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-06T14:48:10Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "aws-s3-website-action",
@@ -5009,7 +5609,13 @@
       "actionDockerType": ""
     },
     "owner": "etc-tiago",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-22T13:48:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "get-releases-by-semver",
@@ -5025,7 +5631,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "wistefan",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-26T06:45:50Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "pr-updater",
@@ -5041,7 +5653,13 @@
       "actionDockerType": ""
     },
     "owner": "juztcode",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-22T04:41:23Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "report-action-usage",
@@ -5057,7 +5675,13 @@
       "actionDockerType": ""
     },
     "owner": "ActionsDesk",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-26T07:38:57Z",
+      "disabled": false,
+      "archived": true,
+      "updated_at": null
+    }
   },
   {
     "name": "update-android-manifest-package-action",
@@ -5073,7 +5697,13 @@
       "actionDockerType": ""
     },
     "owner": "damienaicheh",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-29T09:08:48Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "automl-actions",
@@ -5089,7 +5719,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "ZoranPandovski",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-01T11:10:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ghactions-mplabx-xc32",
@@ -5105,7 +5741,13 @@
       "actionDockerType": "Image"
     },
     "owner": "SOUNDBOKS",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-08T13:57:10Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "Discord-Message-Updater",
@@ -5121,7 +5763,13 @@
       "actionDockerType": "Image"
     },
     "owner": "Michael2MacDonald",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-19T06:17:02Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "direktiv-actions-ghexec",
@@ -5137,7 +5785,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "direktiv",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-25T00:40:48Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-pyright",
@@ -5153,7 +5807,13 @@
       "actionDockerType": ""
     },
     "owner": "jordemort",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-31T03:51:11Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "surge-preview",
@@ -5169,7 +5829,13 @@
       "actionDockerType": ""
     },
     "owner": "lxfu1",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-14T12:55:14Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "block-merge-based-on-time",
@@ -5185,7 +5851,13 @@
       "actionDockerType": ""
     },
     "owner": "yykamei",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-22T14:07:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "next-build-export-action",
@@ -5201,7 +5873,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "tsg-iitkgp",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-30T19:09:52Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "aserto-build-action",
@@ -5217,7 +5895,13 @@
       "actionDockerType": "Image"
     },
     "owner": "aserto-dev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-30T21:57:15Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "browserslist-update-action",
@@ -5233,7 +5917,13 @@
       "actionDockerType": ""
     },
     "owner": "c2corg",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-22T14:37:59Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-build-and-upload-conda-packages",
@@ -5249,7 +5939,13 @@
       "actionDockerType": ""
     },
     "owner": "uibcdf",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-01T03:21:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "chess-stats-readme",
@@ -5265,7 +5961,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "Prathamesh-B",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-05T09:36:10Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-upload-release-asset",
@@ -5281,7 +5983,13 @@
       "actionDockerType": ""
     },
     "owner": "tanyagray",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-14T05:05:58Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "Algolia-Upload-Records",
@@ -5297,7 +6005,13 @@
       "actionDockerType": ""
     },
     "owner": "iChochy",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-16T02:30:46Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "mega-upload",
@@ -5313,7 +6027,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "Siege-Wizard",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-18T16:46:12Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "cloudflare-preview-url",
@@ -5329,7 +6049,13 @@
       "actionDockerType": ""
     },
     "owner": "zentered",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-01T15:06:36Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "resharper-unity-ci",
@@ -5345,7 +6071,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "florius0",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-08T05:56:52Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "dependabot": false,
@@ -5376,7 +6108,13 @@
       "actionDockerType": ""
     },
     "owner": "Firehed",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-08T22:22:11Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "hugo-article-from-issue-action",
@@ -5392,7 +6130,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "koonchen",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-07-29T09:47:22Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-pylint",
@@ -5408,7 +6152,13 @@
       "actionDockerType": ""
     },
     "owner": "dciborow",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-16T17:31:38Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-winlibs-action",
@@ -5424,7 +6174,13 @@
       "actionDockerType": ""
     },
     "owner": "bwoodsend",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-20T19:18:02Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "dependabot": true,
@@ -5440,7 +6196,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "venkuppu-chn",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-21T18:26:18Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-actionlint",
@@ -5456,7 +6218,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "reviewdog",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-22T15:47:17Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-release-releaseapk",
@@ -5472,7 +6240,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "VladDaniliuk",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-28T09:57:25Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "add-to-web3",
@@ -5488,7 +6262,13 @@
       "actionDockerType": ""
     },
     "owner": "web3-storage",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-10T10:46:30Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "discord-activity-badge",
@@ -5504,7 +6284,13 @@
       "actionDockerType": "Image"
     },
     "owner": "CodexLink",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-14T08:30:37Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "gradle-build-action",
@@ -5520,7 +6306,13 @@
       "actionDockerType": ""
     },
     "owner": "gradle",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-22T17:10:42Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "arweave-upload-file",
@@ -5536,7 +6328,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "rgbrota",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-17T13:11:47Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "scan-unverified-actions",
@@ -5552,7 +6350,13 @@
       "actionDockerType": ""
     },
     "owner": "gioragutt",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-20T18:03:52Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "upload-packagecloud",
@@ -5568,7 +6372,13 @@
       "actionDockerType": ""
     },
     "owner": "danielmundi",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-11T01:24:59Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "npm-package-update-sync",
@@ -5584,7 +6394,13 @@
       "actionDockerType": ""
     },
     "owner": "tjololo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-21T08:21:20Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "trigger-ifttt-webhook-applet-ghaction",
@@ -5600,7 +6416,13 @@
       "actionDockerType": "Image"
     },
     "owner": "hugoalh",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-17T09:29:34Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "docusaurus-deploy-action",
@@ -5616,7 +6438,13 @@
       "actionDockerType": "Image"
     },
     "owner": "redkubes",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-10T09:04:02Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "arweave-upload-directory",
@@ -5632,7 +6460,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "rgbrota",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-17T13:08:58Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "single-pr-updater",
@@ -5648,7 +6482,13 @@
       "actionDockerType": ""
     },
     "owner": "pyrbin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-24T07:45:40Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "sile",
@@ -5664,7 +6504,13 @@
       "actionDockerType": "Image"
     },
     "owner": "sile-typesetter",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T20:36:35Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "pr-info-action",
@@ -5680,7 +6526,13 @@
       "actionDockerType": ""
     },
     "owner": "Brymastr",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-25T01:55:19Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-build",
@@ -5696,7 +6548,13 @@
       "actionDockerType": ""
     },
     "owner": "WPCanny",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-11T21:24:40Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "BlazeAction",
@@ -5712,7 +6570,13 @@
       "actionDockerType": "Dockerfile"
     },
     "owner": "dnyanesh-nagre-blazerunner",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "archived": false,
+      "updated_at": "2022-07-22T14:06:44Z"
+    }
   },
   {
     "name": "action-hubble-push",
@@ -5728,7 +6592,13 @@
       "actionType": "Composite"
     },
     "owner": "jina-ai",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-29T09:47:21Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "dependency-update-action",
@@ -5744,7 +6614,13 @@
       "actionType": "Docker"
     },
     "owner": "boozallen",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-22T13:58:10Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "clubhouse-workflow-action",
@@ -5760,7 +6636,13 @@
       "actionType": "Node"
     },
     "owner": "farmersdog",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-22T00:38:21Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-golang-cache",
@@ -5776,7 +6658,13 @@
       "actionType": "Composite"
     },
     "owner": "magnetikonline",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-18T02:15:32Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "points-bar",
@@ -5792,7 +6680,13 @@
       "actionType": "Node"
     },
     "owner": "markpatterson27",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-03T18:35:37Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-setup-python",
@@ -5808,7 +6702,13 @@
       "actionType": "Composite"
     },
     "owner": "ITProKyle",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-02T15:14:13Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "tableau-workbook-action",
@@ -5824,7 +6724,13 @@
       "actionType": "Docker"
     },
     "owner": "jayamanikharyono",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-03T08:25:41Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "helm-kubeconform-action",
@@ -5840,7 +6746,13 @@
       "actionType": "Docker"
     },
     "owner": "shivjm",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-28T12:20:56Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "gh-action-huawei-swr-policy",
@@ -5856,7 +6768,13 @@
       "actionType": "Docker"
     },
     "owner": "smu-chile",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T16:38:01Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "random-advice-workflow",
@@ -5872,7 +6790,13 @@
       "actionType": "Node"
     },
     "owner": "ashutoshkrris",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-29T16:20:22Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "meshery-smp-action",
@@ -5888,7 +6812,13 @@
       "actionType": "Node"
     },
     "owner": "layer5io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-07T19:18:13Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "d365fo-lcs-asset-upload",
@@ -5904,7 +6834,13 @@
       "actionType": "Composite"
     },
     "owner": "ciellos-dev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-20T04:51:58Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "auth",
@@ -5920,7 +6856,13 @@
       "actionType": "Node"
     },
     "owner": "google-github-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-31T23:28:46Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "f-droid-nightly-action",
@@ -5936,7 +6878,13 @@
       "actionType": "Docker"
     },
     "owner": "wardvl",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-20T07:50:28Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "octocov-action",
@@ -5952,7 +6900,13 @@
       "actionType": "Docker"
     },
     "owner": "k1LoW",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-01T08:04:35Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "github-action-aws-cdk-update",
@@ -5968,7 +6922,13 @@
       "actionType": "Node"
     },
     "owner": "grandmasterdev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-20T09:39:57Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-conventional-release",
@@ -5984,7 +6944,13 @@
       "actionType": "Composite"
     },
     "owner": "cresh-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-02T07:51:10Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "run-with-secrets",
@@ -6000,7 +6966,13 @@
       "actionType": "Node"
     },
     "owner": "CryogenicPlanet",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-22T03:53:25Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "GitHub-Issues-to-Wechat",
@@ -6016,7 +6988,13 @@
       "actionType": "Docker"
     },
     "owner": "HollowMan6",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-22T06:43:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "update-team-avatars",
@@ -6032,7 +7010,13 @@
       "actionType": "Docker"
     },
     "owner": "enygma",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-19T20:16:17Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "bitbucket-server-pat-generator",
@@ -6048,7 +7032,13 @@
       "actionType": "Docker"
     },
     "owner": "reecetech",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-16T01:56:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "trigger-pipedream-workflow-ghaction",
@@ -6064,7 +7054,13 @@
       "actionType": "Docker"
     },
     "owner": "hugoalh",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-17T09:45:34Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-godot",
@@ -6080,7 +7076,13 @@
       "actionType": "Node"
     },
     "owner": "lihop",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-26T04:10:30Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "cloudinary-upload-action",
@@ -6096,7 +7098,13 @@
       "actionType": "Node"
     },
     "owner": "emmanuelgautier",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-02T23:03:45Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "percy-upload",
@@ -6112,7 +7120,13 @@
       "actionType": "Unknown"
     },
     "owner": "carlosnizolli",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-04T14:15:09Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "upload-to-roblox",
@@ -6128,7 +7142,13 @@
       "actionType": "Node"
     },
     "owner": "Ulferno",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-16T14:54:22Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "dataverse-uploader",
@@ -6144,7 +7164,13 @@
       "actionType": "Composite"
     },
     "owner": "IQSS",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-27T19:50:36Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-ghcr-batch-delete-versions",
@@ -6160,7 +7186,13 @@
       "actionType": "Composite"
     },
     "owner": "cresh-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-12T10:20:20Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "bioc-check-action",
@@ -6176,7 +7208,13 @@
       "actionType": "Composite"
     },
     "owner": "insightsengineering",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-24T03:21:04Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "bump-node-package-version",
@@ -6192,7 +7230,13 @@
       "actionType": "Node"
     },
     "owner": "KageKirin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-18T04:19:42Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "bump-csproj-version",
@@ -6208,7 +7252,13 @@
       "actionType": "Node"
     },
     "owner": "KageKirin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-18T04:32:43Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "r-pkgdown-multiversion",
@@ -6224,7 +7274,13 @@
       "actionType": "Composite"
     },
     "owner": "insightsengineering",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-03T15:34:26Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "probot",
@@ -6240,7 +7296,13 @@
       "actionType": "Node"
     },
     "owner": "carmocca",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-18T15:58:25Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "bump-unity-bundle-version",
@@ -6256,7 +7318,13 @@
       "actionType": "Node"
     },
     "owner": "KageKirin",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-18T04:46:15Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "contributors-update",
@@ -6272,7 +7340,13 @@
       "actionType": "Node"
     },
     "owner": "risadams",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-20T12:11:09Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "ifttt-webhook-action",
@@ -6288,7 +7362,13 @@
       "actionType": "Docker"
     },
     "owner": "funnyzak",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-28T13:54:25Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "MAL-autoreadme",
@@ -6304,7 +7384,13 @@
       "actionType": "Composite"
     },
     "owner": "MoonLGH",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-09T11:25:31Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "WordPress-Site-Deploy",
@@ -6320,7 +7406,13 @@
       "actionType": "Docker"
     },
     "owner": "lattepress",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-02T12:41:16Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "article-badge-counter-workflow",
@@ -6336,7 +7428,13 @@
       "actionType": "Composite"
     },
     "owner": "lyqht",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "archived": false,
+      "updated_at": "2022-02-01T15:56:12Z"
+    }
   },
   {
     "name": "Azure-CLI-Wrapper-Action",
@@ -6352,7 +7450,13 @@
       "actionType": "Docker"
     },
     "owner": "Plabick",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-07T16:01:35Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "unity-project-settings-info",
@@ -6368,7 +7472,13 @@
       "actionType": "Composite"
     },
     "owner": "Breakstep-Studios",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-09T11:25:41Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "wait-for-netlify-deploy-action",
@@ -6384,7 +7494,13 @@
       "actionType": "Node"
     },
     "owner": "denar90",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-19T21:17:49Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "workflows2md-action",
@@ -6400,7 +7516,13 @@
       "actionType": "Node"
     },
     "owner": "KhudaDad414",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-28T07:50:09Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "Power-BI-Pipeline-Deploy",
@@ -6416,7 +7538,13 @@
       "actionType": "Docker"
     },
     "owner": "nathangiusti",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-24T20:29:35Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "fast-r-action",
@@ -6432,7 +7560,13 @@
       "actionType": "Docker"
     },
     "owner": "jrcamelo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-02T19:52:44Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "pomxml-dep-update",
@@ -6448,7 +7582,13 @@
       "actionType": "Node"
     },
     "owner": "book000",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-17T12:42:55Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "action-clippy",
@@ -6464,7 +7604,13 @@
       "actionType": "Composite"
     },
     "owner": "sksat",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-20T22:14:38Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "Heroku-Auto-Deployment",
@@ -6480,7 +7626,13 @@
       "actionType": "Node"
     },
     "owner": "ElayGelbart",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-31T06:52:00Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "lost-pixel",
@@ -6496,7 +7648,13 @@
       "actionType": "Docker"
     },
     "owner": "lost-pixel",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-23T21:01:57Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "nanodu",
@@ -6512,7 +7670,13 @@
       "actionType": "Node"
     },
     "owner": "nanoframework",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-23T01:30:05Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "unity-action",
@@ -6528,7 +7692,13 @@
       "actionType": "Composite"
     },
     "owner": "XRTK",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-28T20:57:00Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "unity-validate",
@@ -6544,7 +7714,13 @@
       "actionType": "Composite"
     },
     "owner": "XRTK",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-28T21:00:15Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "upm-release",
@@ -6560,7 +7736,13 @@
       "actionType": "Composite"
     },
     "owner": "XRTK",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-13T00:55:17Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "setup-nix-cache-action",
@@ -6576,7 +7758,13 @@
       "actionType": "Node"
     },
     "owner": "zombiezen",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-07T03:32:29Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "sn-devops-change-update",
@@ -6592,7 +7780,13 @@
       "actionType": "Node"
     },
     "owner": "rapdev-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-21T20:44:06Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "s3-upload-sha256-action",
@@ -6608,7 +7802,13 @@
       "actionType": "Docker"
     },
     "owner": "noveto-com",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-16T20:08:38Z",
+      "disabled": false,
+      "archived": false,
+      "updated_at": null
+    }
   },
   {
     "name": "dbt-cloud-action",
