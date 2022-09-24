@@ -24,7 +24,7 @@ function GetRepoInfo {
             return ($response.archived, $response.disabled, $response.$updated_at, $release.published_at)
         }
         catch {
-            return ($response.archived, $response.disabled, $response.$updated_at, $null)
+            return ($response.archived, $response.disabled, $response.updated_at, $null)
         }
     }
     catch {
@@ -232,7 +232,7 @@ try {
         }
 
         $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-        if (!$hasField -or ($null -eq $action.actionType.actionType)) {
+        if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -ne $action.repoInfo.updated_at))) {
             Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
             ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
 
@@ -249,10 +249,10 @@ try {
                     $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
                 }
                 else {
-                    $action.archived.archived = $repo_archived
-                    $action.archived.disabled = $repo_disabled
-                    $action.archived.updated_at = $repo_updated_at
-                    $action.archived.latest_release_published_at = $latest_release_published_at
+                    $action.repoInfo.archived = $repo_archived
+                    $action.repoInfo.disabled = $repo_disabled
+                    $action.repoInfo.updated_at = $repo_updated_at
+                    $action.repoInfo.latest_release_published_at = $latest_release_published_at
                 }
 
                 $i++ | Out-Null
