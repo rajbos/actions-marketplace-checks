@@ -281,9 +281,9 @@ function ForkActionRepos {
             if ($forkResult) {
                 # add the repo to the list of existing forks
                 Write-Debug "Repo forked"
-                $newlyForkedRepos++
+                $newlyForkedRepos++ | Out-Null
                 $newFork = @{ name = $repo; dependabot = $null; owner = $owner }
-                $existingForks += $newFork
+                $existingForks += $newFork | Out-Null
                     
                 # back off just a little after a new fork
                 Start-Sleep 2
@@ -292,13 +292,13 @@ function ForkActionRepos {
             else {
                 if ($failedFork) {
                     # up the number of times we failed to fork this repo
-                    $failedFork.timesFailed++
+                    $failedFork.timesFailed++ | Out-Null
                 }
                 else {
                 # let's store a list of failed forks
                     Write-Host "Failed to fork repo [$owner/$repo]"
                     $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
-                    $failedForks += $failedFork
+                    $failedForks.Add($failedFork) | Out-Null
                 }
             }
         }

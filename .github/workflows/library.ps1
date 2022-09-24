@@ -219,7 +219,7 @@ function SaveStatus {
     }
 
     if ($failedForks) {
-        Write-Host "Storing the information of [$($failedForks.Length)] existing forks to the failed status file"
+        Write-Host "Storing the information of [$($failedForks.Length)] failed forks to the failed status file"
         $failedForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $failedStatusFile -Encoding UTF8
         Write-Host "Saved"
     }
