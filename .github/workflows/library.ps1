@@ -216,6 +216,10 @@ function SaveStatus {
         Write-Host "Storing the information of [$($existingForks.Length)] existing forks to the status file"
         $existingForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         Write-Host "Saved"
+
+        # get number of forks that have repo information
+        $existingForksWithRepoInfo = $existingForks | Where-Object { $_.repoInfo -And ($null -ne $_.repoInfo.updated_at) }
+        "Found [$($existingForksWithRepoInfo.Length) out of $($existingForks.Length)] repos that have repo information" >> GITHUB_STEP_SUMMARY
     }
 
     if ($failedForks) {
