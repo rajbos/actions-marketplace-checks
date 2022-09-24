@@ -29,6 +29,7 @@ $updatedLastMonth = 0
 $updatedLastQuarter = 0
 $updatedLast6Months = 0
 $sumDaysOld = 0
+$archived = 0
 
 function GetVulnerableIfo {
     Param (
@@ -123,6 +124,10 @@ foreach ($action in $actions) {
         }
 
         $sumDaysOld += ((Get-Date) - $action.repoInfo.updated_at).Days
+
+        if ($action.repoInfo.archived) {
+            $archived++
+        }
     }
 }
 
@@ -235,6 +240,8 @@ function ReportAgeInsights {
     LogMessage "Updated last 6 months: $updatedLast6Months repos"
 
     LogMessage "Average age: $([math]::Round($sumDaysOld / $repoInfo, 1)) days"
+
+    LogMessage "Archived repos: $archived"
 
 }
 
