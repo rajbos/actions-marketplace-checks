@@ -234,28 +234,33 @@ try {
         $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
         if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -ne $action.repoInfo.updated_at))) {
             Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]"
-            ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
+            try {
+                ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
 
-            if ($null -ne $repo_archived)
-            {
-                if (!$hasField) {
-                    $repoInfo = @{
-                        archived = $repo_archived
-                        disabled = $repo_disabled
-                        updated_at = $repo_updated_at
-                        latest_release_published_at = $latest_release_published_at
+                if ($null -ne $repo_archived)
+                {
+                    if (!$hasField) {
+                        $repoInfo = @{
+                            archived = $repo_archived
+                            disabled = $repo_disabled
+                            updated_at = $repo_updated_at
+                            latest_release_published_at = $latest_release_published_at
+                        }
+
+                        $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                    }
+                    else {
+                        $action.repoInfo.archived = $repo_archived
+                        $action.repoInfo.disabled = $repo_disabled
+                        $action.repoInfo.updated_at = $repo_updated_at
+                        $action.repoInfo.latest_release_published_at = $latest_release_published_at
                     }
 
-                    $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                    $i++ | Out-Null
                 }
-                else {
-                    $action.repoInfo.archived = $repo_archived
-                    $action.repoInfo.disabled = $repo_disabled
-                    $action.repoInfo.updated_at = $repo_updated_at
-                    $action.repoInfo.latest_release_published_at = $latest_release_published_at
-                }
-
-                $i++ | Out-Null
+            }
+            catch {
+                # continue with next one
             }
         }
     }
