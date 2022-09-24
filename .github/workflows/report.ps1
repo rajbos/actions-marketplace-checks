@@ -21,7 +21,14 @@ $actionYmlFile = 0
 $actionYamlFile = 0
 $actionDockerFile = 0
 $compositeAction = 0
-$unknownActionType = 
+$unknownActionType = 0
+$repoInfo = 0
+# store current datetime
+$oldestRepo = Get-Date
+$updatedLastMonth = 0
+$updatedLastQuarter = 0
+$updatedLast6Months = 0
+$sumDaysOld = 0
 
 function GetVulnerableIfo {
     Param (
@@ -94,6 +101,28 @@ foreach ($action in $actions) {
     }
     else {
         $unknownActionType++
+    }
+
+    if ($action.repoInfo -And $action.repoInfo.updated_at ) {
+        $repoInfo++
+
+        if ($action.repoInfo.updated_at -lt $oldestRepo) {
+            $oldestRepo = $action.repoInfo.updated_at
+        }
+
+        if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-1)) {
+            $updatedLastMonth++
+        }
+
+        if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-3)) {
+            $updatedLastQuarter++
+        }
+
+        if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-6)) {
+            $updatedLast6Months++
+        }
+
+        $sumDaysOld += ((Get-Date) - $action.repoInfo.updated_at).Days
     }
 }
 
@@ -195,6 +224,20 @@ function ReportInsightsInMarkdown {
     LogMessage "``````"
 }
 
+function ReportAgeInsights {
+    LogMessage "## Repo age"
+    LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
+    LogMwssage "Analyzed $repoInfo/$reposAnalyzed repos"
+
+    LogMessage "Oldest repository: $oldestRepo days old"
+    LogMessage "Updated last month: $updatedLastMonth repos"
+    LogMessage "Updated last 3 months: $updatedLast3Months repos"
+    LogMessage "Updated last 6 months: $updatedLast6Months repos"
+
+    LogMessage "Average age: $([math]::Round($sumDaysOld / $repoInfo, 1)) days"
+
+}
+
 # call the report function
 VulnerabilityCalculations
 ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
@@ -202,6 +245,7 @@ ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
 LogMessage ""
 
 ReportInsightsInMarkdown
+ReportAgeInsights
 
 # reset everything for just the Node actions
 $global:highAlerts = 0
