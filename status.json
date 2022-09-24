@@ -12224,7 +12224,13 @@
       "actionType": "Node"
     },
     "owner": "tpluscode",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-21T12:55:40Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-22T09:31:25Z"
+    }
   },
   {
     "name": "github-org-git-audit-log-for-repos-action",
@@ -12240,7 +12246,13 @@
       "actionType": "Node"
     },
     "owner": "nicklegan",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-04-01T16:00:45Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-22T19:33:22Z"
+    }
   },
   {
     "name": "hugo-obsidian",
@@ -12256,7 +12268,13 @@
       "actionType": "Docker"
     },
     "owner": "aadimator",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-09T03:19:36Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-29T09:48:15Z"
+    }
   },
   {
     "name": "bumpver-action",
@@ -12272,7 +12290,13 @@
       "actionType": "Docker"
     },
     "owner": "harvidsen",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-23T10:32:42Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-24T08:06:45Z"
+    }
   },
   {
     "name": "GitDiffNotifierInSlack",
@@ -12288,7 +12312,13 @@
       "actionType": "Node"
     },
     "owner": "Dutchie1990",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-12T04:51:34Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T11:09:21Z"
+    }
   },
   {
     "name": "action-electron-forge",
@@ -12304,7 +12334,13 @@
       "actionType": "Node"
     },
     "owner": "wenwuwu",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-21T05:36:16Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-26T05:16:06Z"
+    }
   },
   {
     "name": "copy-action-pb",
@@ -12320,7 +12356,13 @@
       "actionType": "Docker"
     },
     "owner": "piersb",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-24T14:41:38Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-23T15:33:40Z"
+    }
   },
   {
     "name": "caprover-webhook-deploy",
@@ -12336,7 +12378,13 @@
       "actionType": "Docker"
     },
     "owner": "spcily",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-26T06:42:25Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-23T18:09:31Z"
+    }
   },
   {
     "name": "aws-web-deploy",
@@ -12352,7 +12400,13 @@
       "actionType": "Node"
     },
     "owner": "supermean-org",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T03:09:31Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-24T03:19:01Z"
+    }
   },
   {
     "name": "workflow-rerun-action",
@@ -12368,7 +12422,13 @@
       "actionType": "Node"
     },
     "owner": "guguducken",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-23T04:41:19Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-25T06:49:13Z"
+    }
   },
   {
     "name": "busted",
@@ -12384,7 +12444,13 @@
       "actionType": "Docker"
     },
     "owner": "lunarmodules",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-23T11:25:07Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-24T14:40:59Z"
+    }
   },
   {
     "name": "GitSync",
@@ -12400,7 +12466,13 @@
       "actionType": "Node"
     },
     "owner": "a11smiles",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-21T20:11:55Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T20:06:19Z"
+    }
   },
   {
     "name": "upload-static-website-to-s3",
@@ -12416,7 +12488,13 @@
       "actionType": "Composite"
     },
     "owner": "ettorestark",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-25T02:28:50Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-25T02:30:32Z"
+    }
   },
   {
     "name": "github-pages-directory-listing",
@@ -12432,7 +12510,13 @@
       "actionType": "Docker"
     },
     "owner": "jayanta525",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-21T12:46:33Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-15T05:06:37Z"
+    }
   },
   {
     "name": "JupyterHub-Autotagger-Action",
@@ -12448,7 +12532,13 @@
       "actionType": "Docker"
     },
     "owner": "fhswf",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-17T12:46:28Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-17T13:11:12Z"
+    }
   },
   {
     "name": "dotnet-migrations",
@@ -12464,7 +12554,13 @@
       "actionType": "Composite"
     },
     "owner": "warrenbrasil",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-26T19:16:05Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-26T14:15:20Z"
+    }
   },
   {
     "name": "generate-stackaid-json",
@@ -12480,7 +12576,13 @@
       "actionType": "Node"
     },
     "owner": "stackaid",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-15T15:30:33Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-08T14:44:08Z"
+    }
   },
   {
     "name": "hava-sync-action",
@@ -12496,7 +12598,13 @@
       "actionType": "Node"
     },
     "owner": "teamhava",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-25T03:06:32Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-25T02:58:41Z"
+    }
   },
   {
     "name": "backblaze-b2-action",
@@ -12512,7 +12620,13 @@
       "actionType": "Docker"
     },
     "owner": "getpersio",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-04-22T11:59:13Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-26T09:11:49Z"
+    }
   },
   {
     "name": "github-action-hot-repos",
@@ -12528,7 +12642,13 @@
       "actionType": "Node"
     },
     "owner": "zachary-cauchi",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-25T15:48:05Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-29T07:43:25Z"
+    }
   },
   {
     "name": "github-action-deploy-from-PR",
@@ -12544,7 +12664,13 @@
       "actionType": "Composite"
     },
     "owner": "abiglobalhealth",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-04-08T13:49:28Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-04-08T14:22:09Z"
+    }
   },
   {
     "name": "setup-mesa-dist-win",
@@ -12560,7 +12686,13 @@
       "actionType": "Node"
     },
     "owner": "ssciwr",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-26T13:41:29Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-26T13:45:34Z"
+    }
   },
   {
     "name": "setup-azure-workspace",
@@ -12576,7 +12708,13 @@
       "actionType": "Composite"
     },
     "owner": "coscene-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T07:51:35Z",
+      "archived": true,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-27T06:56:10Z"
+    }
   },
   {
     "name": "BranchValidator",
@@ -12592,7 +12730,13 @@
       "actionType": "Docker"
     },
     "owner": "KinsonDigital",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-27T12:59:08Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": false,
@@ -12623,7 +12767,13 @@
       "actionType": "Composite"
     },
     "owner": "HackzCompany",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-25T18:31:56Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-25T19:43:41Z"
+    }
   },
   {
     "name": "lcov-reporter-action",
@@ -12639,7 +12789,13 @@
       "actionType": "Node"
     },
     "owner": "ShaMan123",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-28T11:56:39Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-29T10:02:15Z"
+    }
   },
   {
     "name": "devenv-action",
@@ -12655,7 +12811,13 @@
       "actionType": "Node"
     },
     "owner": "kubefy-com",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-27T11:46:58Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "name": "gitflow-workflow-action",
@@ -12671,7 +12833,13 @@
       "actionType": "Node"
     },
     "owner": "hoangvvo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-31T16:05:03Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-13T20:35:13Z"
+    }
   },
   {
     "name": "wolfia-github-action",
@@ -12687,7 +12855,13 @@
       "actionType": "Node"
     },
     "owner": "wolfia-app",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-30T15:45:51Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-09T18:56:36Z"
+    }
   },
   {
     "name": "NDiff-testing",
@@ -12703,7 +12877,13 @@
       "actionType": "Docker"
     },
     "owner": "rijadge",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-28T21:05:24Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T15:37:15Z"
+    }
   },
   {
     "name": "hello-world-javascript-action",
@@ -12719,7 +12899,13 @@
       "actionType": "Node"
     },
     "owner": "impks27",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-27T17:16:36Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-28T19:34:22Z"
+    }
   },
   {
     "name": "copy-wiki-action",
@@ -12735,7 +12921,13 @@
       "actionType": "Composite"
     },
     "owner": "jcbhmr",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-28T20:36:25Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-28T21:46:11Z"
+    }
   },
   {
     "name": "create-repo-action",
@@ -12751,7 +12943,13 @@
       "actionType": "Node"
     },
     "owner": "MortenDuus",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T08:21:09Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-02T11:11:14Z"
+    }
   },
   {
     "name": "benedikt",
@@ -12767,7 +12965,13 @@
       "actionType": "Composite"
     },
     "owner": "saveourtool",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T06:58:35Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-29T15:06:36Z"
+    }
   },
   {
     "name": "purge-cloudflare-cache-action",
@@ -12783,7 +12987,13 @@
       "actionType": "Node"
     },
     "owner": "rafaucau",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-28T21:30:49Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-29T15:40:48Z"
+    }
   },
   {
     "name": "kustomize-deploy-action",
@@ -12799,7 +13009,13 @@
       "actionType": "Composite"
     },
     "owner": "jacobsvante",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T14:16:56Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-01T12:37:13Z"
+    }
   },
   {
     "name": "tutor-k8s-configure-mongodb",
@@ -12815,7 +13031,13 @@
       "actionType": "Composite"
     },
     "owner": "openedx-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T22:13:39Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T18:48:26Z"
+    }
   },
   {
     "name": "yandex-cloud-s3-sync-github-actions",
@@ -12831,7 +13053,13 @@
       "actionType": "Node"
     },
     "owner": "sergeevpasha",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T16:50:46Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T08:56:49Z"
+    }
   },
   {
     "name": "ndiff-composite",
@@ -12847,7 +13075,13 @@
       "actionType": "Composite"
     },
     "owner": "rijadge",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T16:24:14Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T16:02:59Z"
+    }
   },
   {
     "name": "pr-content-validation",
@@ -12863,7 +13097,13 @@
       "actionType": "Node"
     },
     "owner": "MarekPinski",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T09:02:49Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-31T08:03:12Z"
+    }
   },
   {
     "name": "repo-file-sync-action",
@@ -12879,7 +13119,13 @@
       "actionType": "Node"
     },
     "owner": "JackTn",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-30T08:29:38Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T08:10:21Z"
+    }
   },
   {
     "name": "actions-mobile-test-run",
@@ -12895,7 +13141,13 @@
       "actionType": "Composite"
     },
     "owner": "autifyhq",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T06:01:38Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-20T23:12:10Z"
+    }
   },
   {
     "name": "vercel-env-push-action",
@@ -12911,7 +13163,13 @@
       "actionType": "Node"
     },
     "owner": "HackzCompany",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T19:59:15Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-13T13:43:06Z"
+    }
   },
   {
     "name": "maven-dependency-submission-action",
@@ -12927,7 +13185,13 @@
       "actionType": "Node"
     },
     "owner": "advanced-security",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-31T13:02:18Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T15:07:03Z"
+    }
   },
   {
     "name": "quilted-dependabot",
@@ -12943,7 +13207,13 @@
       "actionType": "Node"
     },
     "owner": "RyanModDev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T08:45:45Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-09T10:17:37Z"
+    }
   },
   {
     "name": "file-upload-box",
@@ -12959,7 +13229,13 @@
       "actionType": "Node"
     },
     "owner": "rimonhanna",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-30T10:18:15Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-31T08:10:56Z"
+    }
   },
   {
     "name": "who_is_flakiest_gh_action",
@@ -12975,7 +13251,13 @@
       "actionType": "Composite"
     },
     "owner": "kbredemeier",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-30T22:04:53Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T22:06:27Z"
+    }
   },
   {
     "name": "semantic-tag-helper",
@@ -12991,7 +13273,13 @@
       "actionType": "Composite"
     },
     "owner": "denisa",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-05-15T00:06:18Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-05-24T10:43:39Z"
+    }
   },
   {
     "name": "github-release-version",
@@ -13007,7 +13295,13 @@
       "actionType": "Docker"
     },
     "owner": "AlexKoronskyi",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-30T12:04:13Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-31T08:15:23Z"
+    }
   },
   {
     "name": "caprover-deploy",
@@ -13023,7 +13317,13 @@
       "actionType": "Composite"
     },
     "owner": "ariaieboy",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-31T14:26:00Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-31T14:24:19Z"
+    }
   },
   {
     "name": "Upload_Github_Artifacts_TO_GDrive",
@@ -13039,7 +13339,13 @@
       "actionType": "Node"
     },
     "owner": "Jumbo810",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T09:59:00Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-31T19:13:33Z"
+    }
   },
   {
     "name": "witness-install-action",
@@ -13055,7 +13361,13 @@
       "actionType": "Node"
     },
     "owner": "testifysec",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-19T17:35:45Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-19T17:17:07Z"
+    }
   },
   {
     "name": "gh-action--check-os-version",
@@ -13071,7 +13383,13 @@
       "actionType": "Composite"
     },
     "owner": "andry81-devops",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-01T07:39:04Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-01T12:14:41Z"
+    }
   },
   {
     "name": "vmerge",
@@ -13087,7 +13405,13 @@
       "actionType": "Docker"
     },
     "owner": "gowizzard",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-10T17:47:07Z",
+      "archived": true,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T18:13:35Z"
+    }
   },
   {
     "name": "setup-updatechart",
@@ -13103,7 +13427,13 @@
       "actionType": "Composite"
     },
     "owner": "edgefarm",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-01T10:38:36Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T12:28:44Z"
+    }
   },
   {
     "name": "sol-test",
@@ -13119,7 +13449,13 @@
       "actionType": "Node"
     },
     "owner": "EthereumRemix",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-21T17:24:07Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-01T12:16:28Z"
+    }
   },
   {
     "dependabot": false,
@@ -13150,7 +13486,13 @@
       "actionType": "Node"
     },
     "owner": "devgioele",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-24T06:31:22Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-01T17:23:39Z"
+    }
   },
   {
     "name": "Action-CargoVersionBump",
@@ -13166,7 +13508,13 @@
       "actionType": "Node"
     },
     "owner": "Yuri6037",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-28T14:13:35Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "name": "version-action",
@@ -13182,7 +13530,13 @@
       "actionType": "Docker"
     },
     "owner": "online-applications",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-03-01T17:48:17Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-08T18:09:55Z"
+    }
   },
   {
     "name": "update-updates-release-channel-expo-plist-action",
@@ -13198,7 +13552,13 @@
       "actionType": "Node"
     },
     "owner": "Brune04",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-04-05T17:54:19Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-01T20:18:06Z"
+    }
   },
   {
     "name": "format-codeowners",
@@ -13214,7 +13574,13 @@
       "actionType": "Node"
     },
     "owner": "Archetypically",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T18:52:27Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-14T19:35:36Z"
+    }
   },
   {
     "name": "analyzer",
@@ -13230,7 +13596,13 @@
       "actionType": "Docker"
     },
     "owner": "rijadge",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T12:36:06Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-23T13:59:18Z"
+    }
   },
   {
     "name": "review-action",
@@ -13246,7 +13618,13 @@
       "actionType": "Docker"
     },
     "owner": "Chatyusha",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T03:53:56Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-10T03:29:11Z"
+    }
   },
   {
     "name": "find-occurences",
@@ -13262,7 +13640,13 @@
       "actionType": "Node"
     },
     "owner": "OMikkel",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T15:32:42Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-02T15:50:33Z"
+    }
   },
   {
     "name": "comp",
@@ -13278,7 +13662,13 @@
       "actionType": "Composite"
     },
     "owner": "rijadge",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T12:16:33Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-23T13:59:53Z"
+    }
   },
   {
     "name": "promtool-junit",
@@ -13294,7 +13684,13 @@
       "actionType": "Docker"
     },
     "owner": "fivetag",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T16:58:23Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-02T17:00:50Z"
+    }
   },
   {
     "name": "edit-cabal-version.github-action",
@@ -13310,7 +13706,13 @@
       "actionType": "Docker"
     },
     "owner": "nikita-volkov",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T09:01:49Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-20T11:23:06Z"
+    }
   },
   {
     "name": "goreleaser-action",
@@ -13326,7 +13728,13 @@
       "actionType": "Node"
     },
     "owner": "testifysec",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T14:52:42Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "name": "zScanMarketplace",
@@ -13342,7 +13750,13 @@
       "actionType": "Node"
     },
     "owner": "Zimperium",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-31T20:55:00Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-21T18:55:49Z"
+    }
   },
   {
     "name": "okteto-configmap",
@@ -13358,7 +13772,13 @@
       "actionType": "Docker"
     },
     "owner": "elreclamador",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-02T19:46:22Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-02T19:56:56Z"
+    }
   },
   {
     "dependabot": false,
@@ -13389,7 +13809,13 @@
       "actionType": "Docker"
     },
     "owner": "OskarStark",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-12T05:29:19Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T19:56:52Z"
+    }
   },
   {
     "name": "ansible-lint-action",
@@ -13405,7 +13831,13 @@
       "actionType": "Docker"
     },
     "owner": "ansible-community",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-21T12:19:22Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-22T20:02:40Z"
+    }
   },
   {
     "name": "action-junit-report",
@@ -13421,7 +13853,13 @@
       "actionType": "Node"
     },
     "owner": "mikepenz",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-23T07:56:21Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-13T06:56:36Z"
+    }
   },
   {
     "name": "slack-release-notifier",
@@ -13437,7 +13875,13 @@
       "actionType": "Docker"
     },
     "owner": "fedecalendino",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-17T11:31:15Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T14:28:59Z"
+    }
   },
   {
     "name": "megalinter",
@@ -13453,7 +13897,13 @@
       "actionType": "Docker"
     },
     "owner": "oxsecurity",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-24T09:36:39Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-19T20:09:40Z"
+    }
   },
   {
     "name": "docker-cache",
@@ -13469,7 +13919,13 @@
       "actionType": "Node"
     },
     "owner": "ScribeMD",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-28T12:03:10Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T06:40:44Z"
+    }
   },
   {
     "name": "eggplant-github-action",
@@ -13485,7 +13941,13 @@
       "actionType": "Composite"
     },
     "owner": "keysight-eggplant",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-05-11T09:15:03Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T01:19:14Z"
+    }
   },
   {
     "name": "start-monode-rollout",
@@ -13501,7 +13963,13 @@
       "actionType": "Docker"
     },
     "owner": "monopolis-cloud",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-05-15T19:32:40Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T15:21:47Z"
+    }
   },
   {
     "name": "nuget-push",
@@ -13517,7 +13985,13 @@
       "actionType": "Composite"
     },
     "owner": "edumserrano",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-09T23:00:50Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-07-09T22:14:38Z"
+    }
   },
   {
     "name": "markdown-link-check-log-parser",
@@ -13533,7 +14007,13 @@
       "actionType": "Docker"
     },
     "owner": "edumserrano",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-09T23:02:03Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T14:00:27Z"
+    }
   },
   {
     "name": "unimport",
@@ -13549,7 +14029,13 @@
       "actionType": "Composite"
     },
     "owner": "hakancelikdev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-24T17:22:09Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-21T20:21:56Z"
+    }
   },
   {
     "name": "pyodide-buildpackage-action",
@@ -13565,7 +14051,13 @@
       "actionType": "Composite"
     },
     "owner": "jobovy",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-06-10T14:42:41Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-06-15T18:43:44Z"
+    }
   },
   {
     "name": "setup-alicloud-workspace",
@@ -13581,7 +14073,13 @@
       "actionType": "Composite"
     },
     "owner": "coscene-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T07:51:22Z",
+      "archived": true,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T06:00:32Z"
+    }
   },
   {
     "name": "modrinth-upload",
@@ -13597,7 +14095,13 @@
       "actionType": "Node"
     },
     "owner": "RubixDev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-03T09:45:51Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T10:06:05Z"
+    }
   },
   {
     "name": "get-build-number",
@@ -13613,7 +14117,13 @@
       "actionType": "Node"
     },
     "owner": "lte-deankier",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-03T11:38:16Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "name": "zasca",
@@ -13629,7 +14139,13 @@
       "actionType": "Docker"
     },
     "owner": "javixeneize",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-03T11:37:20Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T12:01:35Z"
+    }
   },
   {
     "name": "actions-branch-to-docker-tag-name",
@@ -13645,7 +14161,13 @@
       "actionType": "Node"
     },
     "owner": "sleepypikachu",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T08:20:23Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T16:51:22Z"
+    }
   },
   {
     "name": "actions-path-to-docker-image-name",
@@ -13661,7 +14183,13 @@
       "actionType": "Node"
     },
     "owner": "sleepypikachu",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T08:20:22Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T16:21:07Z"
+    }
   },
   {
     "name": "markdown-to-output",
@@ -13677,7 +14205,13 @@
       "actionType": "Node"
     },
     "owner": "markpatterson27",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-12-04T10:16:01Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-03T17:50:09Z"
+    }
   },
   {
     "name": "azure-function-app-deployment-gh-action",
@@ -13693,7 +14227,13 @@
       "actionType": "Docker"
     },
     "owner": "libre-devops",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T12:14:29Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T14:02:01Z"
+    }
   },
   {
     "name": "web-deploy",
@@ -13709,7 +14249,13 @@
       "actionType": "Node"
     },
     "owner": "SamKirkland",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-22T19:31:50Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T06:03:30Z"
+    }
   },
   {
     "name": "dolt-installer",
@@ -13725,7 +14271,13 @@
       "actionType": "Composite"
     },
     "owner": "sebhoss",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T04:57:08Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T09:03:03Z"
+    }
   },
   {
     "name": "typescript-action-template",
@@ -13741,7 +14293,13 @@
       "actionType": "Node"
     },
     "owner": "Dhaiwat10",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T11:35:58Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T11:33:27Z"
+    }
   },
   {
     "name": "moscow-prioritization",
@@ -13771,7 +14329,13 @@
       "actionType": "Node"
     },
     "owner": "aliffaizar",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T04:13:52Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T11:38:04Z"
+    }
   },
   {
     "name": "pgyer-upload-app-action",
@@ -13787,7 +14351,13 @@
       "actionType": "Node"
     },
     "owner": "PGYER",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T13:45:02Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T03:17:50Z"
+    }
   },
   {
     "name": "openapi-validator-action",
@@ -13803,7 +14373,13 @@
       "actionType": "Node"
     },
     "owner": "thiyagu06",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T17:01:34Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T17:01:08Z"
+    }
   },
   {
     "name": "action-delete-release",
@@ -13819,7 +14395,13 @@
       "actionType": "Node"
     },
     "owner": "Archaholic",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T02:39:27Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T06:10:57Z"
+    }
   },
   {
     "name": "sst-deploy",
@@ -13835,7 +14417,13 @@
       "actionType": "Node"
     },
     "owner": "quenginedev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-04T23:51:28Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-04T21:11:53Z"
+    }
   },
   {
     "name": "spellchecker-cli-action-summary",
@@ -13851,7 +14439,13 @@
       "actionType": "Node"
     },
     "owner": "austenstone",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T23:56:23Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T04:51:05Z"
+    }
   },
   {
     "name": "cpp-linter-action",
@@ -13867,7 +14461,13 @@
       "actionType": "Composite"
     },
     "owner": "cpp-linter",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-09T08:21:23Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-20T03:18:07Z"
+    }
   },
   {
     "name": "deploy-docker-image-action",
@@ -13898,7 +14498,13 @@
       "actionType": "Node"
     },
     "owner": "SnehaDavari",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T10:22:09Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-08T06:41:08Z"
+    }
   },
   {
     "dependabot": true,
@@ -13914,7 +14520,13 @@
       "actionType": "Composite"
     },
     "owner": "apisec-inc",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-14T08:35:12Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T14:04:36Z"
+    }
   },
   {
     "dependabot": true,
@@ -13930,7 +14542,13 @@
       "actionType": "Node"
     },
     "owner": "McCzarny",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-12-04T16:50:30Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-23T11:43:48Z"
+    }
   },
   {
     "dependabot": true,
@@ -13946,7 +14564,13 @@
       "actionType": "Node"
     },
     "owner": "DerJuulsn",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-06T20:51:21Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T13:44:15Z"
+    }
   },
   {
     "dependabot": true,
@@ -13962,7 +14586,13 @@
       "actionType": "Docker"
     },
     "owner": "redhat-plumbers-in-action",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-23T09:43:26Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T12:07:35Z"
+    }
   },
   {
     "dependabot": true,
@@ -13978,7 +14608,13 @@
       "actionType": "Node"
     },
     "owner": "depot",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-05-25T14:10:37Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-21T18:12:12Z"
+    }
   },
   {
     "dependabot": true,
@@ -13994,7 +14630,13 @@
       "actionType": "Composite"
     },
     "owner": "sturdy-dev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-20T02:57:32Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-12T14:24:09Z"
+    }
   },
   {
     "dependabot": true,
@@ -14010,7 +14652,13 @@
       "actionType": "Node"
     },
     "owner": "bluelion2",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-23T07:05:42Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-23T09:01:01Z"
+    }
   },
   {
     "dependabot": true,
@@ -14026,7 +14674,13 @@
       "actionType": "Node"
     },
     "owner": "iacobfred",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T10:37:10Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -14042,7 +14696,13 @@
       "actionType": "Docker"
     },
     "owner": "ohueter",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T07:46:04Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T07:51:48Z"
+    }
   },
   {
     "dependabot": true,
@@ -14058,7 +14718,13 @@
       "actionType": "Docker"
     },
     "owner": "AlphaSteam",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T08:05:13Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-12T09:22:58Z"
+    }
   },
   {
     "dependabot": true,
@@ -14074,7 +14740,13 @@
       "actionType": "Composite"
     },
     "owner": "usefulness",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-14T23:14:01Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T09:22:34Z"
+    }
   },
   {
     "dependabot": true,
@@ -14090,7 +14762,13 @@
       "actionType": "Node"
     },
     "owner": "IceflowRE",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-05-02T17:23:04Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T12:23:21Z"
+    }
   },
   {
     "dependabot": true,
@@ -14106,7 +14784,13 @@
       "actionType": "Node"
     },
     "owner": "mh4647",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T11:07:24Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T12:31:57Z"
+    }
   },
   {
     "dependabot": true,
@@ -14122,7 +14806,13 @@
       "actionType": "Composite"
     },
     "owner": "openedx-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T16:34:40Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T20:05:06Z"
+    }
   },
   {
     "dependabot": true,
@@ -14138,7 +14828,13 @@
       "actionType": "Composite"
     },
     "owner": "openedx-actions",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T17:00:15Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T18:12:40Z"
+    }
   },
   {
     "name": "generate-phpdocs-with-clean-phpdoc-md-action",
@@ -14154,7 +14850,13 @@
       "actionType": "Composite"
     },
     "owner": "impresscms-dev",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-06-28T09:31:18Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T18:45:22Z"
+    }
   },
   {
     "name": "base-tagging",
@@ -14170,7 +14872,13 @@
       "actionType": "Docker"
     },
     "owner": "kangketikonlen",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T11:14:24Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-12T12:25:12Z"
+    }
   },
   {
     "name": "prometheus-operator-github-action",
@@ -14186,7 +14894,13 @@
       "actionType": "Docker"
     },
     "owner": "theodore86",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T19:49:40Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T19:58:33Z"
+    }
   },
   {
     "name": "get-org-repos",
@@ -14202,7 +14916,13 @@
       "actionType": "Node"
     },
     "owner": "austenstone",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-07T12:02:15Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T21:01:14Z"
+    }
   },
   {
     "name": "deploy-docker-ssh",
@@ -14233,7 +14953,13 @@
       "actionType": "Node"
     },
     "owner": "austenstone",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-17T00:18:10Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-05T20:08:52Z"
+    }
   },
   {
     "name": "mba",
@@ -14249,7 +14975,13 @@
       "actionType": "Docker"
     },
     "owner": "ferreiratiago",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-05T20:31:14Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -14265,7 +14997,13 @@
       "actionType": "Node"
     },
     "owner": "oplik0",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T00:47:04Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T20:21:49Z"
+    }
   },
   {
     "name": "build-hugo",
@@ -14281,7 +15019,13 @@
       "actionType": "Docker"
     },
     "owner": "lowply",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-11-17T21:59:35Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T00:46:50Z"
+    }
   },
   {
     "dependabot": true,
@@ -14297,7 +15041,13 @@
       "actionType": "Composite"
     },
     "owner": "r7kamura",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T12:43:29Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T08:27:44Z"
+    }
   },
   {
     "dependabot": true,
@@ -14313,7 +15063,13 @@
       "actionType": "Composite"
     },
     "owner": "coscene-io",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T07:29:12Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -14329,7 +15085,13 @@
       "actionType": "Node"
     },
     "owner": "gitevents",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-03-17T13:55:28Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-22T12:18:19Z"
+    }
   },
   {
     "name": "cypress-vercel",
@@ -14373,7 +15135,13 @@
       "actionType": "Node"
     },
     "owner": "ArcticLampyrid",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-09T05:21:41Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-12T11:23:03Z"
+    }
   },
   {
     "dependabot": true,
@@ -14389,7 +15157,13 @@
       "actionType": "Node"
     },
     "owner": "imranismail",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-22T08:32:03Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T10:05:27Z"
+    }
   },
   {
     "dependabot": true,
@@ -14405,7 +15179,13 @@
       "actionType": "Node"
     },
     "owner": "zattoo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T08:31:03Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T11:09:43Z"
+    }
   },
   {
     "dependabot": true,
@@ -14421,7 +15201,13 @@
       "actionType": "Node"
     },
     "owner": "masci",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-16T18:47:24Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T10:43:20Z"
+    }
   },
   {
     "dependabot": true,
@@ -14437,7 +15223,13 @@
       "actionType": "Docker"
     },
     "owner": "nf-core",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-27T13:06:45Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-20T11:54:18Z"
+    }
   },
   {
     "dependabot": true,
@@ -14467,7 +15259,13 @@
       "actionType": "Composite"
     },
     "owner": "rcarpio-hbo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T10:25:12Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T10:59:56Z"
+    }
   },
   {
     "name": "ast-github-action",
@@ -14483,7 +15281,13 @@
       "actionType": "Docker"
     },
     "owner": "Checkmarx",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T14:09:50Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-21T10:42:08Z"
+    }
   },
   {
     "name": "action-octommit",
@@ -14499,7 +15303,13 @@
       "actionType": "Node"
     },
     "owner": "Stockopedia",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T14:21:14Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T14:27:26Z"
+    }
   },
   {
     "name": "Zscaler-IaC-Action",
@@ -14515,7 +15325,13 @@
       "actionType": "Node"
     },
     "owner": "ZscalerCWP",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-18T12:10:51Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T13:20:20Z"
+    }
   },
   {
     "name": "ssh-scp-deploy",
@@ -14531,7 +15347,13 @@
       "actionType": "Docker"
     },
     "owner": "String-Obj",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T14:23:18Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T15:50:36Z"
+    }
   },
   {
     "dependabot": true,
@@ -14547,7 +15369,13 @@
       "actionType": "Node"
     },
     "owner": "robinraju",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-23T17:37:14Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T16:28:34Z"
+    }
   },
   {
     "dependabot": true,
@@ -14563,7 +15391,13 @@
       "actionType": "Node"
     },
     "owner": "pulumi",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-22T16:02:08Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T16:39:24Z"
+    }
   },
   {
     "dependabot": true,
@@ -14579,7 +15413,13 @@
       "actionType": "Composite"
     },
     "owner": "CrowdStrike",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-23T11:24:58Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T16:19:43Z"
+    }
   },
   {
     "name": "setup-ko",
@@ -14595,7 +15435,13 @@
       "actionType": "Composite"
     },
     "owner": "imjasonh",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-23T19:33:09Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T17:53:42Z"
+    }
   },
   {
     "name": "pytest-coverage-comment",
@@ -14611,7 +15457,13 @@
       "actionType": "Node"
     },
     "owner": "MishaKav",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-19T06:18:43Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T19:26:18Z"
+    }
   },
   {
     "name": "ReleaseBannerAction",
@@ -14627,7 +15479,13 @@
       "actionType": "Node"
     },
     "owner": "RajvirSingh1313",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-06-16T17:37:10Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T14:22:32Z"
+    }
   },
   {
     "name": "teams-notify-build-status",
@@ -14643,7 +15501,13 @@
       "actionType": "Node"
     },
     "owner": "neonidian",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-24T19:20:34Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T17:45:11Z"
+    }
   },
   {
     "name": "build-action",
@@ -14659,7 +15523,13 @@
       "actionType": "Composite"
     },
     "owner": "cam3ron2",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-11T15:29:04Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T14:14:48Z"
+    }
   },
   {
     "name": "github-action-benchmark",
@@ -14675,7 +15545,13 @@
       "actionType": "Node"
     },
     "owner": "benchmark-action",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-24T19:22:33Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-05-28T16:11:50Z"
+    }
   },
   {
     "name": "govulncheck-action",
@@ -14691,7 +15567,13 @@
       "actionType": "Composite"
     },
     "owner": "kmulvey",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-19T04:15:04Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-12T15:21:59Z"
+    }
   },
   {
     "name": "add-commit-labels",
@@ -14707,7 +15589,13 @@
       "actionType": "Node"
     },
     "owner": "dlavrenuek",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-13T07:44:34Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T11:20:38Z"
+    }
   },
   {
     "name": "update-project-fields",
@@ -14723,7 +15611,13 @@
       "actionType": "Node"
     },
     "owner": "titoportas",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-14T13:43:19Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T17:55:21Z"
+    }
   },
   {
     "name": "workflow-forge-trigger",
@@ -14739,7 +15633,13 @@
       "actionType": "Docker"
     },
     "owner": "cloudvaio",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T15:30:40Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -14755,7 +15655,13 @@
       "actionType": "Composite"
     },
     "owner": "Oldes",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-26T06:23:19Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T21:03:28Z"
+    }
   },
   {
     "dependabot": true,
@@ -14771,7 +15677,13 @@
       "actionType": "Node"
     },
     "owner": "databricks",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-07T20:42:47Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T22:17:31Z"
+    }
   },
   {
     "dependabot": true,
@@ -14787,7 +15699,13 @@
       "actionType": "Node"
     },
     "owner": "aki77",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T13:06:10Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-08-30T03:02:03Z"
+    }
   },
   {
     "dependabot": false,
@@ -14818,7 +15736,13 @@
       "actionType": "Node"
     },
     "owner": "magicwallet",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T02:23:31Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T02:23:13Z"
+    }
   },
   {
     "dependabot": true,
@@ -14834,7 +15758,13 @@
       "actionType": "Node"
     },
     "owner": "Maliek2",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T01:12:33Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -14850,7 +15780,13 @@
       "actionType": "Node"
     },
     "owner": "swolfand",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T21:58:03Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-06T22:31:12Z"
+    }
   },
   {
     "dependabot": true,
@@ -14866,7 +15802,13 @@
       "actionType": "Docker"
     },
     "owner": "christian-draeger",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T10:09:01Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T10:15:41Z"
+    }
   },
   {
     "dependabot": true,
@@ -14882,7 +15824,13 @@
       "actionType": "Composite"
     },
     "owner": "simbo",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T09:28:05Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T08:08:14Z"
+    }
   },
   {
     "dependabot": true,
@@ -14898,7 +15846,13 @@
       "actionType": "Docker"
     },
     "owner": "elgohr",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T07:17:10Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T07:04:39Z"
+    }
   },
   {
     "dependabot": true,
@@ -14914,7 +15868,13 @@
       "actionType": "Docker"
     },
     "owner": "bob1113",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T05:31:07Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T06:24:41Z"
+    }
   },
   {
     "dependabot": true,
@@ -14930,7 +15890,13 @@
       "actionType": "Composite"
     },
     "owner": "FabrizioSandri",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T19:02:41Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T08:16:49Z"
+    }
   },
   {
     "dependabot": true,
@@ -14960,7 +15926,13 @@
       "actionType": "Composite"
     },
     "owner": "AnupamAs0x1",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-30T20:22:43Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T12:08:12Z"
+    }
   },
   {
     "dependabot": true,
@@ -14976,7 +15948,13 @@
       "actionType": "Docker"
     },
     "owner": "sharhan-alhassan",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-27T16:14:18Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T12:07:42Z"
+    }
   },
   {
     "dependabot": true,
@@ -14992,7 +15970,13 @@
       "actionType": "Composite"
     },
     "owner": "Staffbase",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-06T12:25:46Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-08T13:48:08Z"
+    }
   },
   {
     "dependabot": true,
@@ -15008,7 +15992,13 @@
       "actionType": "Composite"
     },
     "owner": "cachix",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-12T03:03:59Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T12:49:06Z"
+    }
   },
   {
     "dependabot": true,
@@ -15024,7 +16014,13 @@
       "actionType": "Node"
     },
     "owner": "teal-inc",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-12T12:11:47Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -15040,7 +16036,13 @@
       "actionType": "Node"
     },
     "owner": "SOLIDSoftworks",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-02-10T00:39:54Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-22T15:48:59Z"
+    }
   },
   {
     "dependabot": true,
@@ -15056,7 +16058,13 @@
       "actionType": "Composite"
     },
     "owner": "ArwynFr",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-02-24T22:35:51Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-22T15:36:05Z"
+    }
   },
   {
     "dependabot": true,
@@ -15072,7 +16080,13 @@
       "actionType": "Composite"
     },
     "owner": "swamirara",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-07T15:21:31Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T16:14:12Z"
+    }
   },
   {
     "dependabot": true,
@@ -15088,7 +16102,13 @@
       "actionType": "Node"
     },
     "owner": "AbdulmelikKalkan",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-10T10:57:45Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T14:30:58Z"
+    }
   },
   {
     "name": "load-secrets-action",
@@ -15104,7 +16124,13 @@
       "actionType": "Node"
     },
     "owner": "1Password",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-20T10:42:01Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T18:51:51Z"
+    }
   },
   {
     "name": "action-library-archive",
@@ -15120,7 +16146,13 @@
       "actionType": "Docker"
     },
     "owner": "NYCPlanning",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-15T20:38:55Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-16T15:46:54Z"
+    }
   },
   {
     "dependabot": true,
@@ -15136,7 +16168,13 @@
       "actionType": "Composite"
     },
     "owner": "ai",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-11T01:27:06Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-09-07T18:01:36Z"
+    }
   },
   {
     "name": "webhook-trigger",
@@ -15152,7 +16190,13 @@
       "actionType": "Docker"
     },
     "owner": "zzzze",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-06-23T15:18:50Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2019-09-28T06:15:26Z"
+    }
   },
   {
     "name": "leanpub-watch-action",
@@ -15168,7 +16212,13 @@
       "actionType": "Composite"
     },
     "owner": "zzamboni",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-05-26T11:20:31Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2021-05-26T11:19:36Z"
+    }
   },
   {
     "name": "bot",
@@ -15184,7 +16234,13 @@
       "actionType": "Node"
     },
     "owner": "zymap",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-01-26T08:53:50Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2020-05-17T09:38:49Z"
+    }
   },
   {
     "name": "social-readme",
@@ -15200,7 +16256,13 @@
       "actionType": "Docker"
     },
     "owner": "zylele",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-05-04T17:44:32Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2021-03-08T10:15:42Z"
+    }
   },
   {
     "name": "gh-action-buildnum",
@@ -15216,7 +16278,13 @@
       "actionType": "Node"
     },
     "owner": "zyborg",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-06-16T11:25:23Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2020-11-19T21:10:55Z"
+    }
   },
   {
     "dependabot": true,
@@ -15232,7 +16300,13 @@
       "actionType": "Node"
     },
     "owner": "zxyle",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2020-09-01T03:19:00Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2020-09-01T03:21:06Z"
+    }
   },
   {
     "dependabot": true,
@@ -15248,7 +16322,13 @@
       "actionType": "Node"
     },
     "owner": "zwaldowski",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-21T18:40:02Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-07-01T03:02:19Z"
+    }
   },
   {
     "dependabot": true,
@@ -15264,7 +16344,13 @@
       "actionType": "Node"
     },
     "owner": "zwaldowski",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-10T19:42:42Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-03-12T22:58:00Z"
+    }
   },
   {
     "dependabot": true,
@@ -15280,7 +16366,13 @@
       "actionType": "Node"
     },
     "owner": "zwaldowski",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-29T03:38:51Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2020-01-07T03:21:49Z"
+    }
   },
   {
     "dependabot": true,
@@ -15296,7 +16388,13 @@
       "actionType": "Node"
     },
     "owner": "zwaldowski",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-09-09T17:01:58Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2020-07-19T17:44:24Z"
+    }
   },
   {
     "dependabot": true,
@@ -15312,7 +16410,13 @@
       "actionType": "Node"
     },
     "owner": "zwacky",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-03-15T18:45:51Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2021-12-24T14:01:19Z"
+    }
   },
   {
     "dependabot": true,
@@ -15328,7 +16432,13 @@
       "actionType": "Node"
     },
     "owner": "zwacky",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-08-05T22:15:22Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2022-06-05T08:56:38Z"
+    }
   },
   {
     "dependabot": true,
@@ -15344,7 +16454,13 @@
       "actionType": "Node"
     },
     "owner": "zvfvrv",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-06-14T08:13:38Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2020-10-04T16:39:42Z"
+    }
   },
   {
     "dependabot": true,
@@ -15360,7 +16476,13 @@
       "actionType": "Node"
     },
     "owner": "zurb",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-10-18T08:57:02Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": null
+    }
   },
   {
     "dependabot": true,
@@ -15376,7 +16498,13 @@
       "actionType": "Unknown"
     },
     "owner": "zulip",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2022-07-13T09:32:16Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2021-08-14T13:12:21Z"
+    }
   },
   {
     "dependabot": true,
@@ -15392,7 +16520,13 @@
       "actionType": "Docker"
     },
     "owner": "zugazagoitia",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-06-18T16:03:13Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2021-05-20T16:32:38Z"
+    }
   },
   {
     "dependabot": true,
@@ -15408,7 +16542,13 @@
       "actionType": "Docker"
     },
     "owner": "zslwyuan",
-    "forkFound": true
+    "forkFound": true,
+    "repoInfo": {
+      "updated_at": "2021-10-03T16:14:26Z",
+      "archived": false,
+      "disabled": false,
+      "latest_release_published_at": "2021-10-03T16:14:40Z"
+    }
   },
   {
     "dependabot": true,
