@@ -169411,5 +169411,53 @@
       "actionType": "Node",
       "actionDockerType": ""
     }
+  },
+  {
+    "name": "push-css-action",
+    "dependabot": true,
+    "owner": "projectwallace",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-24T00:17:10.2875253Z",
+      "high": 1,
+      "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "",
+      "fileFound": "action.yaml",
+      "actionType": "Node"
+    }
+  },
+  {
+    "name": "jest-badges-aws",
+    "dependabot": true,
+    "owner": "LPMendoza",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-24T00:17:10.7303498Z",
+      "high": 0,
+      "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "",
+      "fileFound": "action.yml",
+      "actionType": "Node"
+    }
+  },
+  {
+    "name": "vcpkg-action",
+    "dependabot": true,
+    "owner": "johnwason",
+    "vulnerabilityStatus": {
+      "lastUpdated": "2022-09-24T00:17:11.1700998Z",
+      "high": 0,
+      "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "",
+      "fileFound": "action.yml",
+      "actionType": "Composite"
+    }
   }
 ]
