@@ -28,6 +28,8 @@ $oldestRepo = Get-Date
 $updatedLastMonth = 0
 $updatedLastQuarter = 0
 $updatedLast6Months = 0
+$updatedLast12Months = 0
+$moreThen12Month = 0
 $sumDaysOld = 0
 $archived = 0
 
@@ -114,13 +116,17 @@ foreach ($action in $actions) {
         if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-1)) {
             $updatedLastMonth++
         }
-
-        if ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-3)) {
+        elseif ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-3)) {
             $updatedLastQuarter++
-        }
-
-        if ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-6)) {
+        } 
+        elseif ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-6)) {
             $updatedLast6Months++
+        }
+        elseif ($action.repoInfo.updated_at -lt (Get-Date).AddMonths(-12)) {
+            $updatedLast12Months++
+        }
+        else {
+            $moreThen12Months++
         }
 
         $sumDaysOld += ((Get-Date) - $action.repoInfo.updated_at).Days
@@ -236,8 +242,10 @@ function ReportAgeInsights {
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
     LogMessage "Oldest repository: $($timeSpan.Days) days old"
     LogMessage "Updated last month: $updatedLastMonth repos"
-    LogMessage "Updated last 3 months: $updatedLastQuarter repos"
-    LogMessage "Updated last 6 months: $updatedLast6Months repos"
+    LogMessage "Updated within last 3 months: $updatedLastQuarter repos"
+    LogMessage "Updated within last 3-6 months: $updatedLast6Months repos"
+    LogMessage "Updated within last 6-12 months: $updatedLast12Months repos"
+    LogMessage "Updated more then 12 months ago: $moreThen12Month repos"
 
     LogMessage "Average age: $([math]::Round($sumDaysOld / $repoInfo, 1)) days"
 
