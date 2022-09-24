@@ -21,7 +21,7 @@ function GetRepoInfo {
         try {
             $url = "/repos/$owner/$repo/releases/latest"
             $release = ApiCall -method GET -url $url
-            return ($response.archived, $response.disabled, $response.$updated_at, $release.published_at)
+            return ($response.archived, $response.disabled, $response.updated_at, $release.published_at)
         }
         catch {
             return ($response.archived, $response.disabled, $response.updated_at, $null)
