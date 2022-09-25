@@ -81,7 +81,7 @@ function RunForActions {
     # filter actions list to only the ones with a repoUrl
     $actions = $actions | Where-Object { $null -ne $_.repoUrl -and $_.repoUrl -ne "" }
     Write-Host "Found [$($actions.Count)] actions with a repoUrl"
-    "Found [$($actions.Count)] actions with a repoUrl" >> $env:GITHUB_STEP_SUMMARY
+    "Found [$($actions.Count)] actions with a repoUrl" | Out-File $env:GITHUB_STEP_SUMMARY
     # do the work
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
