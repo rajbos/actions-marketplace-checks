@@ -241,6 +241,7 @@ try {
                 if ($null -ne $repo_archived)
                 {
                     if (!$hasField) {
+                        Write-Host "Adding repo information object"
                         $repoInfo = @{
                             archived = $repo_archived
                             disabled = $repo_disabled
@@ -251,6 +252,7 @@ try {
                         $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
                     }
                     else {
+                        Write-Host "Updating repo information object"
                         $action.repoInfo.archived = $repo_archived
                         $action.repoInfo.disabled = $repo_disabled
                         $action.repoInfo.updated_at = $repo_updated_at
