@@ -86,12 +86,12 @@ function RunForActions {
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
-    "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" >> $env:GITHUB_STEP_SUMMARY
+    "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" | Out-File $env:GITHUB_STEP_SUMMARY
     SaveStatus -existingForks $existingForks
 
     ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
     Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
-    "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
+    "Enabled Dependabot on [$($dependabotEnabled)] repos" | Out-File $env:GITHUB_STEP_SUMMARY
 
     SaveStatus -existingForks $existingForks
 
