@@ -221,7 +221,8 @@ SaveStatus -existingForks $status
 # get repo information
 $i = $status.Length
 $max = $status.Length + ($numberOfReposToDo * 2)
-Write-Host "Loading repository information"
+$hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo}).Length
+Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
 try {
     foreach ($action in $status) {
 
@@ -269,6 +270,10 @@ catch {
     Write-Host "Error getting all repo info: $($_.Exception.Message)"
     Write-Host "Continuing"
 }
+
+
+$hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo}).Length
+Write-Host "Loading repository information, ended with [$($hasRepoInfo.Length)] already loaded"
 
 SaveStatus -existingForks $status
 GetRateLimitInfo
