@@ -81,17 +81,17 @@ function RunForActions {
     # filter actions list to only the ones with a repoUrl
     $actions = $actions | Where-Object { $null -ne $_.repoUrl -and $_.repoUrl -ne "" }
     Write-Host "Found [$($actions.Count)] actions with a repoUrl"
-    "Found [$($actions.Count)] actions with a repoUrl" >> $GITHUB_STEP_SUMMARY
+    "Found [$($actions.Count)] actions with a repoUrl" >> $env:GITHUB_STEP_SUMMARY
     # do the work
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
-    "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" >> $GITHUB_STEP_SUMMARY
+    "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" >> $env:GITHUB_STEP_SUMMARY
     SaveStatus -existingForks $existingForks
 
     ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
     Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
-    "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $GITHUB_STEP_SUMMARY
+    "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
 
     SaveStatus -existingForks $existingForks
 
