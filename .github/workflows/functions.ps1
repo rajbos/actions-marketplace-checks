@@ -9,6 +9,7 @@ Param (
 $statusFile = "status.json"
 $failedStatusFile = "failedForks.json"
 Write-Host "Got an access token with length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
+Write-Host "Location of env:GITHUB_STEP_SUMMARY is [$($env:GITHUB_STEP_SUMMARY)]"
 function GetForkedActionRepos {
 
     # if file exists, read it
