@@ -228,6 +228,8 @@ $max = $status.Length + ($numberOfReposToDo * 2)
 $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
 Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
 "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+$memberAdded = 0
+$memberUpdate = 0 
 try {
     foreach ($action in $status) {
 
@@ -243,7 +245,7 @@ try {
             try {
                 ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
 
-                if ($null -ne $repo_archived)
+                if ($null -ne $repo_archived -And $repo_archived.Length -eq 0)
                 {
                     if (!$hasField) {
                         Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
@@ -255,6 +257,7 @@ try {
                         }
 
                         $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                        $memberAdded++ | Out-Null
                     }
                     else {
                         Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
@@ -262,6 +265,7 @@ try {
                         $action.repoInfo.disabled = $repo_disabled
                         $action.repoInfo.updated_at = $repo_updated_at
                         $action.repoInfo.latest_release_published_at = $latest_release_published_at
+                        $memberUpdate++ | Out-Null
                     }
 
                     $i++ | Out-Null
@@ -281,7 +285,7 @@ catch {
     Write-Host "Continuing"
 }
 
-
+Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
 $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
 Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded"
 "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
