@@ -3378,7 +3378,13 @@
       "fileFound": null,
       "actionDockerType": null
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "pr-reviews-reminder-action",
@@ -4691,7 +4697,13 @@
       "fileFound": null,
       "actionDockerType": null
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "github-project-automation",
@@ -6092,7 +6104,13 @@
       "fileFound": null,
       "actionDockerType": null
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "multistage-docker-build-action",
@@ -8043,7 +8061,13 @@
       "actionDockerType": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "vn-discord-webhook",
@@ -10785,6 +10809,12 @@
       "fileFound": "action.yml",
       "actionDockerType": "",
       "actionType": "Node"
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
     }
   },
   {
@@ -11086,7 +11116,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "create-branch-from-tag",
@@ -12512,7 +12548,7 @@
     "owner": "jayanta525",
     "forkFound": true,
     "repoInfo": {
-      "updated_at": "2022-09-21T12:46:33Z",
+      "updated_at": "2022-09-26T08:50:52Z",
       "archived": false,
       "disabled": false,
       "latest_release_published_at": "2022-08-15T05:06:37Z"
@@ -12751,7 +12787,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "doppler-secrets-upload-action",
@@ -13451,7 +13493,7 @@
     "owner": "EthereumRemix",
     "forkFound": true,
     "repoInfo": {
-      "updated_at": "2022-09-21T17:24:07Z",
+      "updated_at": "2022-09-26T08:58:36Z",
       "archived": false,
       "disabled": false,
       "latest_release_published_at": "2022-09-01T12:16:28Z"
@@ -13470,7 +13512,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "fabriko",
@@ -13793,7 +13841,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "php-cs-fixer-ga",
@@ -14313,6 +14367,12 @@
       "actionDockerType": "",
       "fileFound": "action.yml",
       "actionType": "Unknown"
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
     }
   },
   {
@@ -14482,7 +14542,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "open-issue",
@@ -14723,7 +14789,7 @@
       "updated_at": "2022-09-05T08:05:13Z",
       "archived": false,
       "disabled": false,
-      "latest_release_published_at": "2022-09-12T09:22:58Z"
+      "latest_release_published_at": "2022-09-26T09:03:01Z"
     }
   },
   {
@@ -14937,7 +15003,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "name": "codeowners-coverage",
@@ -15105,6 +15177,12 @@
       "actionDockerType": "Dockerfile",
       "fileFound": "action.yml",
       "actionType": "Docker"
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
     }
   },
   {
@@ -15119,6 +15197,12 @@
       "actionDockerType": "Image",
       "fileFound": "action.yml",
       "actionType": "Docker"
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
     }
   },
   {
@@ -15243,6 +15327,12 @@
       "actionDockerType": "",
       "fileFound": "action.yaml",
       "actionType": "Node"
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
     }
   },
   {
@@ -15459,7 +15549,7 @@
     "owner": "MishaKav",
     "forkFound": true,
     "repoInfo": {
-      "updated_at": "2022-09-19T06:18:43Z",
+      "updated_at": "2022-09-26T09:38:16Z",
       "archived": false,
       "disabled": false,
       "latest_release_published_at": "2022-09-06T19:26:18Z"
@@ -15720,7 +15810,13 @@
       "fileFound": null,
       "actionType": "Unknown"
     },
-    "forkFound": false
+    "forkFound": false,
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
+    }
   },
   {
     "dependabot": true,
@@ -15910,6 +16006,12 @@
       "actionDockerType": "Dockerfile",
       "fileFound": "action.yml",
       "actionType": "Docker"
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": null,
+      "updated_at": null,
+      "archived": null
     }
   },
   {
