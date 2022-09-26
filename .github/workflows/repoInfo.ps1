@@ -224,7 +224,7 @@ SaveStatus -existingForks $status
 
 # get repo information
 $i = $status.Length
-$max = $status.Length + ($numberOfReposToDo * 2)
+$max = $status.Length + ($numberOfReposToDo * 4)
 $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
 Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
 "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
