@@ -1,4 +1,6 @@
 # report the data stored in the repository
+name: Generate report
+
 on:
   
   push: 
