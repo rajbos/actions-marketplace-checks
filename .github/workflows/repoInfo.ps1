@@ -223,6 +223,7 @@ $i = $status.Length
 $max = $status.Length + ($numberOfReposToDo * 2)
 $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
 Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
+"Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
 try {
     foreach ($action in $status) {
 
@@ -275,7 +276,8 @@ catch {
 
 
 $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
-Write-Host "Loading repository information, ended with [$($hasRepoInfo.Length)] already loaded"
+Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded"
+"Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
 
 SaveStatus -existingForks $status
 GetRateLimitInfo
