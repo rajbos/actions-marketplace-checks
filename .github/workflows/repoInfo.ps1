@@ -240,7 +240,7 @@ try {
         }
 
         $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-        if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -ne $action.repoInfo.updated_at))) {
+        if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
             Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
                 ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
