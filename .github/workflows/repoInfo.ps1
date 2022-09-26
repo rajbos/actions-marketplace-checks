@@ -14,6 +14,10 @@ function GetRepoInfo {
         $repo
     )
 
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return ($null, $null, $null)
+    }
+
     $url = "/repos/$owner/$repo"
     Write-Host "Loading repository info for [$owner/$repo]"
     try {
@@ -242,7 +246,7 @@ try {
                 if ($null -ne $repo_archived)
                 {
                     if (!$hasField) {
-                        Write-Host "Adding repo information object"
+                        Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
                         $repoInfo = @{
                             archived = $repo_archived
                             disabled = $repo_disabled
@@ -253,7 +257,7 @@ try {
                         $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
                     }
                     else {
-                        Write-Host "Updating repo information object"
+                        Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
                         $action.repoInfo.archived = $repo_archived
                         $action.repoInfo.disabled = $repo_disabled
                         $action.repoInfo.updated_at = $repo_updated_at
@@ -261,6 +265,9 @@ try {
                     }
 
                     $i++ | Out-Null
+                }
+                else {
+                    Write-Host "Got repo_archived = $repo_archived"
                 }
             }
             catch {
