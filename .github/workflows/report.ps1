@@ -238,17 +238,17 @@ function ReportInsightsInMarkdown {
 function ReportAgeInsights {
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
-    LogMessage "Analyzed $repoInfo/$reposAnalyzed repos"
+    LogMessage "|Analyzed|$repoInfo|$reposAnalyzed repos|"
+    LogMessage "|---|---|---|"
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
-    LogMessage "Oldest repository: $($timeSpan.Days) days old"
-    LogMessage "Updated last month: $updatedLastMonth/$repoInfo repos"
-    LogMessage "Updated within last 3 months: $updatedLastQuarter/$repoInfo repos"
-    LogMessage "Updated within last 3-6 months: $updatedLast6Months/$repoInfo repos"
-    LogMessage "Updated within last 6-12 months: $updatedLast12Months/$repoInfo repos"
-    LogMessage "Updated more then 12 months ago: $moreThen12Months/$repoInfo repos"
-
+    LogMessage "|Oldest repository             ||$($timeSpan.Days) days old            |"
+    LogMessage "|Updated last month             | $updatedLastMonth   |$repoInfo repos |"
+    LogMessage "|Updated within last 3 months   | $updatedLastQuarter |$repoInfo repos |"
+    LogMessage "|Updated within last 3-6 months | $updatedLast6Months |$repoInfo repos |"
+    LogMessage "|Updated within last 6-12 months| $updatedLast12Months|$repoInfo repos |"
+    LogMessage "|Updated more then 12 months ago| $moreThen12Months   |$repoInfo repos |"
+    LogMessage ""
     LogMessage "Average age: $([math]::Round($sumDaysOld / $repoInfo, 1)) days"
-
     LogMessage "Archived repos: $archived"
 
 }
