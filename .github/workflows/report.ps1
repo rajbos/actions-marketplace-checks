@@ -253,14 +253,14 @@ function ReportAgeInsights {
 
 }
 
-# call the report function
-VulnerabilityCalculations
-ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
-
+# call the report functions
+ReportAgeInsights
 LogMessage ""
 
 ReportInsightsInMarkdown
-ReportAgeInsights
+VulnerabilityCalculations
+ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
+
 
 # reset everything for just the Node actions
 $global:highAlerts = 0
