@@ -137,6 +137,51 @@ foreach ($action in $actions) {
     }
 }
 
+function GetTagReleaseInfo {
+    $tagButNoRelease = 0
+    $tagInfo = 0
+    $releaseInfo = 0
+    $countMismatch = 0
+    foreach ($action in $actions) {
+        if ($action.tagInfo) {
+            $tagInfo++
+            if (!$action.releaseInfo) {
+                $tagButNoRelease++
+            }
+            else {                
+                $releaseInfo++
+
+                $tagCount = 0
+                if ($action.tagInfo.GetType().FullName -eq "System.Object[]") {
+                    $tagCount = $action.tagInfo.Count
+                }
+                elseif ($null -ne $action.tagInfo) {
+                    $tagCount = 1
+                }
+
+                $releaseCount = 0
+                if ($action.releaseInfo.GetType().FullName -eq "System.Object[]") {
+                    $releaseCount = $action.releaseInfo.Count
+                }
+                elseif ($null -ne $action.releaseInfo.Length) {
+                    $releaseCount = 1
+                }
+
+                if (($tagCount -gt 0) -And ($releaseCount -gt 0)) {
+                    if ($tagCount -ne $releaseCount) {
+                        $countMismatch++
+                    }
+                }
+            }
+        }
+    }
+
+    Write-Host ""
+    Write-Host "Total actions: $($actions.Count)"
+    Write-Host "Repos with tag info but no releases: $tagButNoRelease"
+    Write-Host "Repos with mismatches between tag and release count: $countMismatch"
+}
+
 function LogMessage {
     Param (
         $message
@@ -288,3 +333,5 @@ foreach ($action in $compositeActions) {
     GetVulnerableIfo -action $action -actionType "Composite"
 }
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions
+
+GetTagReleaseInfo
