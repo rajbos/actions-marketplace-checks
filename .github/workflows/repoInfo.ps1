@@ -360,11 +360,11 @@ Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] a
 
 $hasTagInfo = $($status | Where-Object {$null -ne $_.tagInfo})
 Write-Host "Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded"
-"Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+"Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
 
 $hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
 Write-Host "Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded"
-"Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+"Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
 
 SaveStatus -existingForks $status
 GetRateLimitInfo
