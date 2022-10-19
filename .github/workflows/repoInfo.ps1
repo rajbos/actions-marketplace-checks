@@ -310,7 +310,6 @@ try {
                     Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
                     
                     $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
-                    $memberAdded++ | Out-Null
                 }
                 else {
                     Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
@@ -331,13 +330,12 @@ try {
             try {
                 $releaseInfo = GetRepoReleases -owner $action.owner -repo $action.name
                 if (!$hasField) {
-                    Write-Host "Adding release information object with tags:[$($releaseInfo.Length)]"
+                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
                     
                     $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
-                    $memberAdded++ | Out-Null
                 }
                 else {
-                    Write-Host "Updating release information object with tags:[$($releaseInfo.Length)]"
+                    Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
                     $action.releaseInfo = $releaseInfo
                 }
 
@@ -359,6 +357,14 @@ Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
 $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
 Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded"
 "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+
+$hasTagInfo = $($status | Where-Object {$null -ne $_.tagInfo})
+Write-Host "Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded"
+"Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+
+$hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
+Write-Host "Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded"
+"Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
 
 SaveStatus -existingForks $status
 GetRateLimitInfo
