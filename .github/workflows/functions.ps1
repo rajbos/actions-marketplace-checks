@@ -308,7 +308,7 @@ function ForkActionRepos {
             $counter++ | Out-Null
         }
         else {
-            Write-Host "Fake message for double check"
+            # Write-Host "Fake message for double check"
         }
     }
 
