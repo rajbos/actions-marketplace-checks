@@ -177,7 +177,7 @@ function GetTagReleaseInfo {
     }
 
     Write-Host ""
-    Write-Host "Total actions: $($actions.Count)"
+    Write-Host "Total actions: $($actions.Count) with $tagInfo tags and $releaseInfo release information"
     Write-Host "Repos with tag info but no releases: $tagButNoRelease"
     Write-Host "Repos with mismatches between tag and release count: $countMismatch"
 }
