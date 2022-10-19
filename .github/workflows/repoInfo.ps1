@@ -42,6 +42,11 @@ function GetRepoTagInfo {
         $owner,
         $repo
     )
+    
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
     $url = "repos/$owner/$repo/git/matching-refs/tags"
     $response = ApiCall -method GET -url $url
     
@@ -56,6 +61,10 @@ function GetRepoReleases {
         $owner,
         $repo
     )
+    
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
     $url = "repos/$owner/$repo/releases"
     $response = ApiCall -method GET -url $url
     
