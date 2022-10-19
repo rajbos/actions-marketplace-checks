@@ -37,6 +37,34 @@ function GetRepoInfo {
     }
 }
 
+function GetRepoTagInfo {
+    Param (
+        $owner,
+        $repo
+    )
+    $url = "repos/$owner/$repo/git/matching-refs/tags"
+    $response = ApiCall -method GET -url $url
+    
+    # filter the result array to only use the ref field
+    $response = $response | ForEach-Object { SplitUrlLastPart($_.ref) }
+
+    return $response
+}
+
+function GetRepoReleases {
+    Param (
+        $owner,
+        $repo
+    )
+    $url = "repos/$owner/$repo/releases"
+    $response = ApiCall -method GET -url $url
+    
+    # filter the result array to only use the ref field
+    $response = $response | ForEach-Object { SplitUrlLastPart($_.tag_name) }
+
+    return $response
+}
+
 function GetActionType {
     Param (
         $owner,
@@ -267,6 +295,54 @@ try {
                 }
 
                 $i++ | Out-Null
+            }
+            catch {
+                # continue with next one
+            }
+        }
+
+        $hasField = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
+        if (!$hasField -or ($null -eq $action.tagInfo)) {
+            Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            try {
+                $tagInfo = GetRepoTagInfo -owner $action.owner -repo $action.name
+                if (!$hasField) {
+                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
+                    
+                    $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+                    $memberAdded++ | Out-Null
+                }
+                else {
+                    Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
+                    $action.tagInfo = $tagInfo
+                }
+
+                $i++ | Out-Null
+
+            }
+            catch {
+                # continue with next one
+            }
+        }
+
+        $hasField = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
+        if (!$hasField -or ($null -eq $action.releaseInfo)) {
+            Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            try {
+                $releaseInfo = GetRepoReleases -owner $action.owner -repo $action.name
+                if (!$hasField) {
+                    Write-Host "Adding release information object with tags:[$($releaseInfo.Length)]"
+                    
+                    $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+                    $memberAdded++ | Out-Null
+                }
+                else {
+                    Write-Host "Updating release information object with tags:[$($releaseInfo.Length)]"
+                    $action.releaseInfo = $releaseInfo
+                }
+
+                $i++ | Out-Null
+
             }
             catch {
                 # continue with next one
