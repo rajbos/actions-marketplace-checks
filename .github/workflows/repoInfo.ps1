@@ -303,16 +303,16 @@ try {
 
         $hasField = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
         if (!$hasField -or ($null -eq $action.tagInfo)) {
-            Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
                 $tagInfo = GetRepoTagInfo -owner $action.owner -repo $action.name
                 if (!$hasField) {
-                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
+                    #Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
                     
                     $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
                 }
                 else {
-                    Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
+                    #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
                     $action.tagInfo = $tagInfo
                 }
 
@@ -326,16 +326,16 @@ try {
 
         $hasField = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
         if (!$hasField -or ($null -eq $action.releaseInfo)) {
-            Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
                 $releaseInfo = GetRepoReleases -owner $action.owner -repo $action.name
                 if (!$hasField) {
-                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
+                    #Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
                     
                     $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
                 }
                 else {
-                    Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                    #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
                     $action.releaseInfo = $releaseInfo
                 }
 
