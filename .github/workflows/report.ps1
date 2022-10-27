@@ -290,7 +290,7 @@ function ReportInsightsInMarkdown {
 function ReportAgeInsights {
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
-    LogMessage "|Analyzed|Total: $repoInfo|Analyzed: $reposAnalyzed repos|100%|"
+    LogMessage "|Analyzed|Total: $global:repoInfo|Analyzed: $global:reposAnalyzed repos|100%|"
     LogMessage "|---|---|---|---|"
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
     LogMessage "|Oldest repository             |$($timeSpan.Days) days old            |||"
