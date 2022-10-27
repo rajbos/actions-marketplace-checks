@@ -235,7 +235,7 @@ function VulnerabilityCalculations {
     LogMessage "## Potentially vulnerable Repos: $($repoInformation.vulnerableRepos) out of $($repoInformation.reposAnalyzed) analyzed repos [Total: $($actions.Count)]"
 
     LogMessage "| Type                  | Count           | GitHub Count |"
-    LogMessage "|---|---|"
+    LogMessage "|---|---|---|"
     LogMessage "| Total high alerts     | $($repoInformation.highAlerts)     | $($github_RepoInformation.highAlerts) |"
     LogMessage "| Total critical alerts | $($repoInformation.criticalAlerts) | $($github_RepoInformation.criticalAlerts) |"
     LogMessage ""
