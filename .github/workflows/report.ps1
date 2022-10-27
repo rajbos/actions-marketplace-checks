@@ -353,9 +353,9 @@ ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions 
 
 # reset everything for just the Composite actions
 $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite")}
-$compositeInformation = New-Object RepoInformation
+$compositeRepoInformation = New-Object RepoInformation
 foreach ($action in $compositeActions) {        
-    GetVulnerableInfo -action $action -actionType "Composite" -repoInformation $compositeInformation
+    GetVulnerableInfo -action $action -actionType "Composite" -repoInformation $compositeRepoInformation
 }
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions -repoInformation $compositeRepoInformation
 
