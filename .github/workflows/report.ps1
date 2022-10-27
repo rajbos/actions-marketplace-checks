@@ -13,25 +13,25 @@ $global:maxHighAlerts = 0
 $global:maxCriticalAlerts = 0
 $global:reposAnalyzed = 0
 
-$nodeBasedActions = 0
-$dockerBasedActions = 0
-$localDockerFile = 0
-$remoteDockerfile = 0
-$actionYmlFile = 0
-$actionYamlFile = 0
-$actionDockerFile = 0
-$compositeAction = 0
-$unknownActionType = 0
-$repoInfo = 0
+$global:nodeBasedActions = 0
+$global:dockerBasedActions = 0
+$global:localDockerFile = 0
+$global:remoteDockerfile = 0
+$global:actionYmlFile = 0
+$global:actionYamlFile = 0
+$global:actionDockerFile = 0
+$global:compositeAction = 0
+$global:unknownActionType = 0
+$global:repoInfo = 0
 # store current datetime
-$oldestRepo = Get-Date
-$updatedLastMonth = 0
-$updatedLastQuarter = 0
-$updatedLast6Months = 0
-$updatedLast12Months = 0
-$moreThen12Months = 0
-$sumDaysOld = 0
-$archived = 0
+$global:oldestRepo = Get-Date
+$global:updatedLastMonth = 0
+$global:updatedLastQuarter = 0
+$global:updatedLast6Months = 0
+$global:updatedLast12Months = 0
+$global:moreThen12Months = 0
+$global:sumDaysOld = 0
+$global:archived = 0
 
 function GetVulnerableIfo {
     Param (
@@ -66,73 +66,80 @@ function GetVulnerableIfo {
     }
 }
 
-foreach ($action in $actions) {
-        
-    GetVulnerableIfo -action $action -actionType "Any"
+function AnalyzeActionInformation {
+    Param (
+        $actions
+    )
 
-    if ($action.actionType) {
-        # actionType
-        if ($action.actionType.actionType -eq "Docker") {
-            $dockerBasedActions++
-            if ($action.actionType.actionDockerType -eq "Dockerfile") {
-                $localDockerFile++
+    # analyze action type, definition and age
+    foreach ($action in $actions) {
+            
+        GetVulnerableIfo -action $action -actionType "Any"
+
+        if ($action.actionType) {
+            # actionType
+            if ($action.actionType.actionType -eq "Docker") {
+                $global:dockerBasedActions++
+                if ($action.actionType.actionDockerType -eq "Dockerfile") {
+                    $global:localDockerFile++
+                }
+                elseif ($action.actionType.actionDockerType -eq "Image") {
+                    $global:remoteDockerfile++
+                }
             }
-            elseif ($action.actionType.actionDockerType -eq "Image") {
-                $remoteDockerfile++
+            elseif ($action.actionType.actionType -eq "Node") {
+                $global:nodeBasedActions++
+            }        
+            elseif ($action.actionType.actionType -eq "Composite") {
+                $global:compositeAction++
+            }
+            elseif (($action.actionType.actionType -eq "Unkown") -or ($null -eq $action.actionType.actionType)){
+                $global:unknownActionType++
+            }
+
+            # action definition sort
+            if ($action.actionType.fileFound -eq "action.yml") {
+                $global:actionYmlFile++
+            }
+            elseif ($action.actionType.fileFound -eq "action.yaml") {
+                $global:actionYamlFile++
+            }
+            elseif ($action.actionType.fileFound -eq "Dockerfile") {
+                $global:actionDockerFile++
             }
         }
-        elseif ($action.actionType.actionType -eq "Node") {
-            $nodeBasedActions++
-        }        
-        elseif ($action.actionType.actionType -eq "Composite") {
-            $compositeAction++
-        }
-        elseif (($action.actionType.actionType -eq "Unkown") -or ($null -eq $action.actionType.actionType)){
+        else {
             $unknownActionType++
         }
 
-        # action definition sort
-        if ($action.actionType.fileFound -eq "action.yml") {
-            $actionYmlFile++
-        }
-        elseif ($action.actionType.fileFound -eq "action.yaml") {
-            $actionYamlFile++
-        }
-        elseif ($action.actionType.fileFound -eq "Dockerfile") {
-            $actionDockerFile++
-        }
-    }
-    else {
-        $unknownActionType++
-    }
+        if ($action.repoInfo -And $action.repoInfo.updated_at ) {
+            $global:repoInfo++
 
-    if ($action.repoInfo -And $action.repoInfo.updated_at ) {
-        $repoInfo++
+            if ($action.repoInfo.updated_at -lt $oldestRepo) {
+                $global:oldestRepo = $action.repoInfo.updated_at
+            }
 
-        if ($action.repoInfo.updated_at -lt $oldestRepo) {
-            $oldestRepo = $action.repoInfo.updated_at
-        }
+            if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-1)) {
+                $global:updatedLastMonth++
+            }
+            elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-3)) {
+                $global:updatedLastQuarter++
+            } 
+            elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-6)) {
+                $global:updatedLast6Months++
+            }
+            elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-12)) {
+                $global:updatedLast12Months++
+            }
+            else {
+                $global:moreThen12Months++
+            }
 
-        if ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-1)) {
-            $updatedLastMonth++
-        }
-        elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-3)) {
-            $updatedLastQuarter++
-        } 
-        elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-6)) {
-            $updatedLast6Months++
-        }
-        elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-12)) {
-            $updatedLast12Months++
-        }
-        else {
-            $moreThen12Months++
-        }
+            $global:sumDaysOld += ((Get-Date) - $action.repoInfo.updated_at).Days
 
-        $sumDaysOld += ((Get-Date) - $action.repoInfo.updated_at).Days
-
-        if ($action.repoInfo.archived) {
-            $archived++
+            if ($action.repoInfo.archived) {
+                $global:archived++
+            }
         }
     }
 }
@@ -299,6 +306,7 @@ function ReportAgeInsights {
 }
 
 # call the report functions
+AnalyzeActionInformation
 ReportAgeInsights
 LogMessage ""
 
