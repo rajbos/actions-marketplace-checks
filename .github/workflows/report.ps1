@@ -306,7 +306,7 @@ function ReportAgeInsights {
 }
 
 # call the report functions
-AnalyzeActionInformation
+AnalyzeActionInformation -actions $actions
 ReportAgeInsights
 LogMessage ""
 
