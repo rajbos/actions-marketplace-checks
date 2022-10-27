@@ -253,7 +253,8 @@ function VulnerabilityCalculations {
 function ReportVulnChartInMarkdown {
     Param (
         $chartTitle,
-        $actions
+        $actions,
+        [RepoInformation] $repoInformation
     )
     if (!$logSummary) {
         # do not report locally
@@ -339,7 +340,7 @@ $githubActions = $actions | Where-Object { $_.owner -eq "github" -or $_.owner -e
 $github_RepoInformation = AnalyzeActionInformation -actions $githubactions
 # report information:
 VulnerabilityCalculations -repoInformation $repoInformation -github_RepoInformation $github_RepoInformation
-ReportVulnChartInMarkdown -chartTitle "actions" -actions $actions
+ReportVulnChartInMarkdown -chartTitle "actions" -actions $actions -repoInformation $repoInformation
 
 
 # reset everything for just the Node actions
@@ -348,7 +349,7 @@ $nodeRepoInformation = New-Object RepoInformation
 foreach ($action in $nodeBasedActions) {        
     GetVulnerableInfo -action $action -actionType "Node" -repoInformation $nodeRepoInformation
 }
-ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions
+ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions -repoInformation $nodeRepoInformation
 
 # reset everything for just the Composite actions
 $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite")}
@@ -356,6 +357,6 @@ $compositeInformation = New-Object RepoInformation
 foreach ($action in $compositeActions) {        
     GetVulnerableInfo -action $action -actionType "Composite" -repoInformation $compositeInformation
 }
-ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions
+ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions -repoInformation $compositeRepoInformation
 
 GetTagReleaseInfo
