@@ -285,7 +285,7 @@ function ReportInsightsInMarkdown {
     LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    LogMessage "  A[$(repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based]"
+    LogMessage "  A[$($repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based]"
     LogMessage "  A-->C[$dockerBasedActions Docker based]"
     LogMessage "  A-->D[$compositeAction Composite actions]"
     LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
