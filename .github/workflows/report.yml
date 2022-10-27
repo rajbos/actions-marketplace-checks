@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
           
       - shell: pwsh
-        name: Run reporing script
+        name: Run reporting script
         run: |
            $actions=(cat status.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
