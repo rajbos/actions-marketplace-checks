@@ -6,12 +6,22 @@ Param (
 Write-Host "Found [$($actions.Count)] actions to report on"
 Write-Host "Log summary path: [$logSummary]"
 
-$global:highAlerts = 0
-$global:criticalAlerts = 0
-$global:vulnerableRepos = 0
-$global:maxHighAlerts = 0
-$global:maxCriticalAlerts = 0
-$global:reposAnalyzed = 0
+class RepoInformation
+{
+    # Optionally, add attributes to prevent invalid values
+    [int]$highAlerts
+    [int]$criticalAlerts
+    [int]$maxHighAlerts
+    [int]$maxCriticalAlerts
+    [int]$vulnerableRepos
+    [int]$reposAnalyzed
+
+    # constructor that sets all values to 0
+    # RepoInformation() {
+    #     $this.highAlerts = 0
+    #     $this.criticalAlerts = 0
+    #  }
+}
 
 $global:nodeBasedActions = 0
 $global:dockerBasedActions = 0
@@ -33,34 +43,35 @@ $global:moreThen12Months = 0
 $global:sumDaysOld = 0
 $global:archived = 0
 
-function GetVulnerableIfo {
+function GetVulnerableInfo {
     Param (
         $action,
-        $actionType
+        $actionType,
+        [repoInformation] $repoInformation
     )
     if ($action.vulnerabilityStatus) {
-        $global:reposAnalyzed++
+        $repoInformation.reposAnalyzed++
         if ($action.vulnerabilityStatus.high -gt 0) {
-            $global:highAlerts++
+            $repoInformation.highAlerts++
 
             if ($action.vulnerabilityStatus.high -gt $maxHighAlerts) {
-                $global:maxHighAlerts = $action.vulnerabilityStatus.high
+                $repoInformation.maxHighAlerts = $action.vulnerabilityStatus.high
             }
         }
 
         if ($action.vulnerabilityStatus.critical -gt 0) {
-            $global:criticalAlerts++
+            $repoInformation.criticalAlerts++
 
-            if ($action.vulnerabilityStatus.critical -gt $maxCriticalAlerts) {
-                $global:maxCriticalAlerts = $action.vulnerabilityStatus.critical
+            if ($action.vulnerabilityStatus.critical -gt $repoInformation.maxCriticalAlerts) {
+                $repoInformation.maxCriticalAlerts = $action.vulnerabilityStatus.critical
             }
         }
 
         if ($action.vulnerabilityStatus.critical -gt 0 -or $action.vulnerabilityStatus.high -gt 0) {
-            $global:vulnerableRepos++
+            $repoInformation.vulnerableRepos++
         }
 
-        if ($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) {
+        if (($action.vulnerabilityStatus.critical + $action.vulnerabilityStatus.high -gt 10) -Or ($action.owner -eq "actions" -and $action.owner -eq "github")) {
             "https://github.com/actions-marketplace-validations/$($action.name) Critical: $($action.vulnerabilityStatus.critical) High: $($action.vulnerabilityStatus.high)" | Out-File -FilePath VulnerableRepos-$actionType.txt -Append
         }
     }
@@ -71,10 +82,12 @@ function AnalyzeActionInformation {
         $actions
     )
 
+    
+    $repoInformation = New-Object RepoInformation
     # analyze action type, definition and age
     foreach ($action in $actions) {
             
-        GetVulnerableIfo -action $action -actionType "Any"
+        GetVulnerableInfo -action $action -actionType "Any" -repoInformation $repoInformation
 
         if ($action.actionType) {
             # actionType
@@ -142,6 +155,8 @@ function AnalyzeActionInformation {
             }
         }
     }
+
+    return $repoInformation
 }
 
 function GetTagReleaseInfo {
@@ -203,11 +218,8 @@ function LogMessage {
 # calculations
 function VulnerabilityCalculations {
     Param (
-        $highAlerts,
-        $criticalAlerts,
-
-        $github_highAlerts,
-        $github_criticalAlerts
+        [RepoInformation] $repoInformation,
+        [RepoInformation] $github_RepoInformation
     )
     $averageHighAlerts = 0
     $averageCriticalAlerts = 0
@@ -215,22 +227,22 @@ function VulnerabilityCalculations {
         Write-Error "No repos analyzed"        
     } 
     else {
-        $averageHighAlerts = $global:highAlerts / $global:reposAnalyzed
-        $averageCriticalAlerts = $global:criticalAlerts / $global:reposAnalyzed
+        $averageHighAlerts = $repoInformation.highAlerts / $repoInformation.reposAnalyzed
+        $averageCriticalAlerts = $repoInformation.criticalAlerts / $repoInformation.reposAnalyzed
     }
 
     Write-Host "Summary: "
-    LogMessage "## Potentially vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
+    LogMessage "## Potentially vulnerable Repos: $($repoInformation.vulnerableRepos) out of $($repoInformation.reposAnalyzed) analyzed repos [Total: $($actions.Count)]"
 
-    LogMessage "| Type                  | Count           | GitHub Count"
+    LogMessage "| Type                  | Count           | GitHub Count |"
     LogMessage "|---|---|"
-    LogMessage "| Total high alerts     | $highAlerts     | $github_highAlerts |"
-    LogMessage "| Total critical alerts | $criticalAlerts | $github_criticalAlerts |"
+    LogMessage "| Total high alerts     | $($repoInformation.highAlerts)     | $($github_RepoInformation.highAlerts) |"
+    LogMessage "| Total critical alerts | $($repoInformation.criticalAlerts) | $($github_RepoInformation.criticalAlerts) |"
     LogMessage ""
     LogMessage "| Maximum number of alerts per repo | Count              |"
     LogMessage "|---|---|"
-    LogMessage "| High alerts                       | $($global:maxHighAlerts)     |"
-    LogMessage "| Critical alerts                   | $($global:maxCriticalAlerts) |"
+    LogMessage "| High alerts                       | $($repoInformation.maxHighAlerts)     |"
+    LogMessage "| Critical alerts                   | $($repoInformation.maxCriticalAlerts) |"
     LogMessage ""
     LogMessage "| Average number of alerts per vuln. repo | Count              |"
     LogMessage "|---|---|"
@@ -248,19 +260,22 @@ function ReportVulnChartInMarkdown {
         return
     }
 
-    Write-Host "Writing chart [$chartTitle] with information about [$($actions.Count)] actions and [$global:reposAnalyzed] reposAnalyzed"
+    Write-Host "Writing chart [$chartTitle] with information about [$($actions.Count)] actions and [$(repoInformation.reposAnalyzed)] reposAnalyzed"
 
     LogMessage ""
     LogMessage "``````mermaid"
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#686362', 'pie2':'#d35130' }}}%%"
     LogMessage "pie title Potentially vulnerable $chartTitle"
-    LogMessage "    ""Unknown: $($actions.Count - $global:reposAnalyzed)"" : $($actions.Count - $global:reposAnalyzed)"
-    LogMessage "    ""Vulnerable actions: $($global:vulnerableRepos)"" : $($global:vulnerableRepos)"
-    LogMessage "    ""Non vulnerable actions: $($global:reposAnalyzed - $global:vulnerableRepos)"" : $($global:reposAnalyzed - $global:vulnerableRepos)"
+    LogMessage "    ""Unknown: $($actions.Count - $repoInformation.reposAnalyzed)"" : $($actions.Count - $repoInformation.reposAnalyzed)"
+    LogMessage "    ""Vulnerable actions: $($repoInformation.vulnerableRepos)"" : $($repoInformation.vulnerableRepos)"
+    LogMessage "    ""Non vulnerable actions: $($repoInformation.reposAnalyzed - $repoInformation.vulnerableRepos)"" : $($repoInformation.reposAnalyzed - $repoInformation.vulnerableRepos)"
     LogMessage "``````"
 }
 
 function ReportInsightsInMarkdown {
+    param (
+        [RepoInformation] $repoInformation
+    )
     if (!$logSummary) {
         # do not report locally
         return
@@ -270,7 +285,7 @@ function ReportInsightsInMarkdown {
     LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    LogMessage "  A[$reposAnalyzed Actions]-->B[$nodeBasedActions Node based]"
+    LogMessage "  A[$(repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based]"
     LogMessage "  A-->C[$dockerBasedActions Docker based]"
     LogMessage "  A-->D[$compositeAction Composite actions]"
     LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
@@ -282,14 +297,14 @@ function ReportInsightsInMarkdown {
     LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    $ymlPercentage = [math]::Round($global:actionYmlFile/$global:reposAnalyzed * 100 , 1)
+    $ymlPercentage = [math]::Round($global:actionYmlFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
-    $yamlPercentage = [math]::Round($global:actionYamlFile/$global:reposAnalyzed * 100 , 1)
+    $yamlPercentage = [math]::Round($global:actionYamlFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
-    $dockerPercentage = [math]::Round($global:actionDockerFile/$global:reposAnalyzed * 100 , 1)
+    $dockerPercentage = [math]::Round($global:actionDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->D[$actionDockerFile Dockerfile - $dockerPercentage%]"
     $unknownActionDefinitionCount = $global:reposAnalyzed - $global:actionYmlFile - $global:actionYamlFile - $global:actionDockerFile
-    $unknownActionPercentage = [math]::Round($global:unknownActionDefinitionCount/$global:reposAnalyzed * 100 , 1)
+    $unknownActionPercentage = [math]::Round($repoInformation.unknownActionDefinitionCount/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->E[$unknownActionDefinitionCount Unknown - $unknownActionPercentage%]"
     LogMessage "``````"
 }
@@ -297,7 +312,7 @@ function ReportInsightsInMarkdown {
 function ReportAgeInsights {
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
-    LogMessage "|Analyzed|Total: $global:repoInfo|Analyzed: $global:reposAnalyzed repos|100%|"
+    LogMessage "|Analyzed|Total: $($global:repoInfo)|Analyzed: $($repoInformation.reposAnalyzed) repos|100%|"
     LogMessage "|---|---|---|---|"
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
     LogMessage "|Oldest repository             |$($timeSpan.Days) days old            |||"
@@ -313,49 +328,33 @@ function ReportAgeInsights {
 }
 
 # call the report functions
-AnalyzeActionInformation -actions $actions
+$repoInformation = AnalyzeActionInformation -actions $actions
 ReportAgeInsights
 LogMessage ""
 
-ReportInsightsInMarkdown
+ReportInsightsInMarkdown -repoInformation $repoInformation
 
-# store global counters
-$temp_highAlerts = $global:highAlerts
-$temp_criticalAlerts = $global:criticalAlerts
-# reset counters
-$global:highAlerts = 0
-$global:criticalAlerts = 0
 # filter actions to the ones owned by GitHub
-$githubActions = $actions | Where-Object { $_.owner -eq "github" }
-AnalyzeActionInformation -actions $githubactions
-VulnerabilityCalculations -highAlerts $temp_highAlerts -criticalAlerts $temp_criticalAlerts -github_highAlerts 0 -github_criticalAlerts 0
-ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
+$githubActions = $actions | Where-Object { $_.owner -eq "github" -or $_.owner -eq "actions" }
+$github_RepoInformation = AnalyzeActionInformation -actions $githubactions
+# report information:
+VulnerabilityCalculations -repoInformation $repoInformation -github_RepoInformation $github_RepoInformation
+ReportVulnChartInMarkdown -chartTitle "actions" -actions $actions
 
 
 # reset everything for just the Node actions
-$global:highAlerts = 0
-$global:criticalAlerts = 0
-$global:vulnerableRepos = 0
-$global:maxHighAlerts = 0
-$global:maxCriticalAlerts = 0
-$global:reposAnalyzed = 0
 $nodeBasedActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node")}
+$nodeRepoInformation = New-Object RepoInformation
 foreach ($action in $nodeBasedActions) {        
-    GetVulnerableIfo -action $action -actionType "Node"
+    GetVulnerableInfo -action $action -actionType "Node" -repoInformation $nodeRepoInformation
 }
 ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions
 
-
 # reset everything for just the Composite actions
-$global:highAlerts = 0
-$global:criticalAlerts = 0
-$global:vulnerableRepos = 0
-$global:maxHighAlerts = 0
-$global:maxCriticalAlerts = 0
-$global:reposAnalyzed = 0
 $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite")}
+$compositeInformation = New-Object RepoInformation
 foreach ($action in $compositeActions) {        
-    GetVulnerableIfo -action $action -actionType "Composite"
+    GetVulnerableInfo -action $action -actionType "Composite" -repoInformation $compositeInformation
 }
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions
 
