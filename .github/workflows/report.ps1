@@ -260,7 +260,7 @@ function ReportVulnChartInMarkdown {
         return
     }
 
-    Write-Host "Writing chart [$chartTitle] with information about [$($actions.Count)] actions and [$(repoInformation.reposAnalyzed)] reposAnalyzed"
+    Write-Host "Writing chart [$chartTitle] with information about [$($actions.Count)] actions and [$($repoInformation.reposAnalyzed)] reposAnalyzed"
 
     LogMessage ""
     LogMessage "``````mermaid"
