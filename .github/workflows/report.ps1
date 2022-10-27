@@ -202,6 +202,13 @@ function LogMessage {
 
 # calculations
 function VulnerabilityCalculations {
+    Param (
+        $highAlerts,
+        $criticalAlerts,
+
+        $github_highAlerts,
+        $github_criticalAlerts
+    )
     $averageHighAlerts = 0
     $averageCriticalAlerts = 0
     if ($reposAnalyzed -eq 0) {
@@ -215,10 +222,10 @@ function VulnerabilityCalculations {
     Write-Host "Summary: "
     LogMessage "## Potentially vulnerable Repos: $vulnerableRepos out of $reposAnalyzed analyzed repos [Total: $($actions.Count)]"
 
-    LogMessage "| Type                  | Count           |"
+    LogMessage "| Type                  | Count           | GitHub Count"
     LogMessage "|---|---|"
-    LogMessage "| Total high alerts     | $($global:highAlerts)     |"
-    LogMessage "| Total critical alerts | $($global:criticalAlerts) |"
+    LogMessage "| Total high alerts     | $highAlerts     | $github_highAlerts |"
+    LogMessage "| Total critical alerts | $criticalAlerts | $github_criticalAlerts |"
     LogMessage ""
     LogMessage "| Maximum number of alerts per repo | Count              |"
     LogMessage "|---|---|"
@@ -311,7 +318,17 @@ ReportAgeInsights
 LogMessage ""
 
 ReportInsightsInMarkdown
-VulnerabilityCalculations
+
+# store global counters
+$temp_highAlerts = $global:highAlerts
+$temp_criticalAlerts = $global:criticalAlerts
+# reset counters
+$global:highAlerts = 0
+$global:criticalAlerts = 0
+# filter actions to the ones owned by GitHub
+$githubActions = $actions | Where-Object { $_.owner -eq "github" }
+AnalyzeActionInformation -actions $githubactions
+VulnerabilityCalculations -highAlerts $temp_highAlerts -criticalAlerts $temp_criticalAlerts -github_highAlerts 0 -github_criticalAlerts 0
 ReportVulnChartInMarkdown -chartTitle "actions"  -actions $actions
 
 

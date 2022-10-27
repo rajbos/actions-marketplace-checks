@@ -25,7 +25,7 @@ jobs:
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)"
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3.1.1
         with:
           name: report
           path: VulnerableRepos-**.txt
