@@ -275,14 +275,14 @@ function ReportInsightsInMarkdown {
     LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    $ymlPercentage = [math]::Round($actionYmlFile/$reposAnalyzed * 100 , 1)
+    $ymlPercentage = [math]::Round($global:actionYmlFile/$global:reposAnalyzed * 100 , 1)
     LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
-    $yamlPercentage = [math]::Round($actionYamlFile/$reposAnalyzed * 100 , 1)
+    $yamlPercentage = [math]::Round($global:actionYamlFile/$global:reposAnalyzed * 100 , 1)
     LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
-    $dockerPercentage = [math]::Round($actionDockerFile/$reposAnalyzed * 100 , 1)
+    $dockerPercentage = [math]::Round($globafix el:actionDockerFile/$global:reposAnalyzed * 100 , 1)
     LogMessage "  A-->D[$actionDockerFile Dockerfile - $dockerPercentage%]"
-    $unknownActionDefinitionCount = $reposAnalyzed - $actionYmlFile - $actionYamlFile - $actionDockerFile
-    $unknownActionPercentage = [math]::Round($unknownActionDefinitionCount/$reposAnalyzed * 100 , 1)
+    $unknownActionDefinitionCount = $global:reposAnalyzed - $global:actionYmlFile - $global:actionYamlFile - $global:actionDockerFile
+    $unknownActionPercentage = [math]::Round($global:unknownActionDefinitionCount/$global:reposAnalyzed * 100 , 1)
     LogMessage "  A-->E[$unknownActionDefinitionCount Unknown - $unknownActionPercentage%]"
     LogMessage "``````"
 }
@@ -294,14 +294,14 @@ function ReportAgeInsights {
     LogMessage "|---|---|---|---|"
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
     LogMessage "|Oldest repository             |$($timeSpan.Days) days old            |||"
-    LogMessage "|Updated last month             | $updatedLastMonth   |$repoInfo repos |$([math]::Round($updatedLastMonth   /$repoInfo * 100 , 1))%|"
-    LogMessage "|Updated within last 3 months   | $updatedLastQuarter |$repoInfo repos |$([math]::Round($updatedLastQuarter /$repoInfo * 100 , 1))%|"
-    LogMessage "|Updated within last 3-6 months | $updatedLast6Months |$repoInfo repos |$([math]::Round($updatedLast6Months /$repoInfo * 100 , 1))%|"
-    LogMessage "|Updated within last 6-12 months| $updatedLast12Months|$repoInfo repos |$([math]::Round($updatedLast12Months/$repoInfo * 100 , 1))%|"
-    LogMessage "|Updated more then 12 months ago| $moreThen12Months   |$repoInfo repos |$([math]::Round($moreThen12Months   /$repoInfo * 100 , 1))%|"
+    LogMessage "|Updated last month             | $global:updatedLastMonth   |$global:repoInfo repos |$([math]::Round($global:updatedLastMonth   /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated within last 3 months   | $global:updatedLastQuarter |$global:repoInfo repos |$([math]::Round($global:updatedLastQuarter /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated within last 3-6 months | $global:updatedLast6Months |$global:repoInfo repos |$([math]::Round($global:updatedLast6Months /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated within last 6-12 months| $global:updatedLast12Months|$global:repoInfo repos |$([math]::Round($global:updatedLast12Months/$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated more then 12 months ago| $global:moreThen12Months   |$global:repoInfo repos |$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
     LogMessage ""
-    LogMessage "Average age: $([math]::Round($sumDaysOld / $repoInfo, 1)) days"
-    LogMessage "Archived repos: $archived"
+    LogMessage "Average age: $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days"
+    LogMessage "Archived repos: $global:archived"
 
 }
 
