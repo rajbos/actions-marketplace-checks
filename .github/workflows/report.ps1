@@ -279,7 +279,7 @@ function ReportInsightsInMarkdown {
     LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
     $yamlPercentage = [math]::Round($global:actionYamlFile/$global:reposAnalyzed * 100 , 1)
     LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
-    $dockerPercentage = [math]::Round($globafix el:actionDockerFile/$global:reposAnalyzed * 100 , 1)
+    $dockerPercentage = [math]::Round($global:actionDockerFile/$global:reposAnalyzed * 100 , 1)
     LogMessage "  A-->D[$actionDockerFile Dockerfile - $dockerPercentage%]"
     $unknownActionDefinitionCount = $global:reposAnalyzed - $global:actionYmlFile - $global:actionYamlFile - $global:actionDockerFile
     $unknownActionPercentage = [math]::Round($global:unknownActionDefinitionCount/$global:reposAnalyzed * 100 , 1)
