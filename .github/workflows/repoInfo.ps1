@@ -256,6 +256,30 @@ foreach ($action in $status) {
         $i++ | Out-Null
     }
 }
+
+function GetRepoDockerBaseImage {
+    Param (
+        $owner,
+        $repo,
+        $actionType
+    )
+
+    $dockerBaseImage = ""
+    if ($actionType.actionDockerType -eq "Dockerfile") {
+        $url = "/repos/$owner/$repo/contents/Dockerfile"
+        $dockerFile = ApiCall -method GET -url $url
+        $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
+        # find first line with FROM in the Dockerfile
+        $lines = $dockerFileContent.Split("`n") 
+        $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
+        $dockerBaseImage = $firstFromLine | Select-Object -First 1
+        if ($dockerBaseImage) {
+            $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
+        }
+    }
+
+    return $dockerBaseImage
+}
 # save status in case the next part goes wrong, then we did not do all these calls for nothing
 SaveStatus -existingForks $status
 
@@ -353,6 +377,31 @@ try {
             }
             catch {
                 # continue with next one
+            }
+        }
+
+        if ($action.actionType.actionType -eq "Docker") {
+            $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
+            if (!$hasField -or ($null -eq $action.actionType.dockerBaseImage)) {
+                #Write-Host "$i/$max - Checking Docker base image information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                try {
+                    $dockerBaseImage = GetRepoDockerBaseImage -owner $action.owner -repo $action.name -actionType $action.actionType
+                    if (!$hasField) {
+                        #Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
+                        
+                        $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
+                    }
+                    else {
+                        #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                        $action.actionType.dockerBaseImage = $dockerBaseImage
+                    }
+
+                    $i++ | Out-Null
+
+                }
+                catch {
+                    # continue with next one
+                }
             }
         }
     }
