@@ -268,14 +268,19 @@ function GetRepoDockerBaseImage {
     $dockerBaseImage = ""
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
-        $dockerFile = ApiCall -method GET -url $url
-        $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
-        # find first line with FROM in the Dockerfile
-        $lines = $dockerFileContent.Split("`n") 
-        $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
-        $dockerBaseImage = $firstFromLine | Select-Object -First 1
-        if ($dockerBaseImage) {
-            $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
+        try {
+            $dockerFile = ApiCall -method GET -url $url
+            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
+            # find first line with FROM in the Dockerfile
+            $lines = $dockerFileContent.Split("`n") 
+            $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
+            $dockerBaseImage = $firstFromLine | Select-Object -First 1
+            if ($dockerBaseImage) {
+                $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
+            }
+        }
+        catch {
+            Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message)"
         }
     }
     else {
