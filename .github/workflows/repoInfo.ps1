@@ -258,6 +258,23 @@ foreach ($action in $status) {
     }
 }
 
+function GetDockerBaseImageNameFromContent {
+    param (
+        $dockerFileContent
+    )
+    # find first line with FROM in the Dockerfile
+    $lines = $dockerFileContent.Split("`n") 
+    $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
+    $dockerBaseImage = $firstFromLine | Select-Object -First 1
+    if ($dockerBaseImage) {
+        $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
+    }
+    
+    # remove \r from the end
+    $dockerBaseImage = $dockerBaseImage.TrimEnd("`r")
+
+    return $dockerBaseImage
+}
 function GetRepoDockerBaseImage {
     Param (
         $owner,
@@ -271,24 +288,25 @@ function GetRepoDockerBaseImage {
         try {
             $dockerFile = ApiCall -method GET -url $url
             $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
-            # find first line with FROM in the Dockerfile
-            $lines = $dockerFileContent.Split("`n") 
-            $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
-            $dockerBaseImage = $firstFromLine | Select-Object -First 1
-            if ($dockerBaseImage) {
-                $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
-            }
+            $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
         }
         catch {
             Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message)"
-            # todo: retry with lowercase dockerfile name
+            # retry with lowercase dockerfile name
+            $url = "/repos/$owner/$repo/contents/dockerfile"
+            try {
+                $dockerFile = ApiCall -method GET -url $url
+                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
+                $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+            }
+            catch {
+                Write-Host "Error getting dockerfile for [$owner/$repo]: $($_.Exception.Message)"
+            }
         }
     }
     else {
         Write-Host "Cant load docker base image for action type [$($actionType.actionType)] with [$($actionType.actionDockerType)] in [$owner/$repo)]"
     }
-    # remove \r from the end
-    $dockerBaseImage = $dockerBaseImage.TrimEnd("`r")
 
     return $dockerBaseImage
 }
