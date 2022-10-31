@@ -389,7 +389,7 @@ try {
                 try {
                     $dockerBaseImage = GetRepoDockerBaseImage -owner $action.owner -repo $action.name -actionType $action.actionType
                     if (!$hasField) {
-                        #Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
+                        Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner/$action.name)]"
                         
                         $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
                         $i++ | Out-Null
