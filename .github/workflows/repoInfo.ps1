@@ -281,6 +281,7 @@ function GetRepoDockerBaseImage {
         }
         catch {
             Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message)"
+            # todo: retry with lowercase dockerfile name
         }
     }
     else {
@@ -313,7 +314,7 @@ try {
         }
 
         if (!$action.forkFound) {
-            Write-Host "Skipping this repo, since the fork was not found: [$($action.owner/$action.name)]"
+            Write-Host "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
             continue
         }
 
