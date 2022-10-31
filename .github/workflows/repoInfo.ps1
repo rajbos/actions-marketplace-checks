@@ -341,7 +341,7 @@ try {
             try {
                 $tagInfo = GetRepoTagInfo -owner $action.owner -repo $action.name
                 if (!$hasField) {
-                    #Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
+                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
                     
                     $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
                     $i++ | Out-Null
@@ -362,7 +362,7 @@ try {
             try {
                 $releaseInfo = GetRepoReleases -owner $action.owner -repo $action.name
                 if (!$hasField) {
-                    #Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
+                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
                     
                     $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
                     $i++ | Out-Null
