@@ -307,6 +307,11 @@ try {
             break
         }
 
+        if (!$action.forkFound) {
+            Write-Host "Skipping this repo, since the fork was not found: [$($action.owner/$action.name)]"
+            continue
+        }
+
         $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
         if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
             Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
