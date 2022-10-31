@@ -304,7 +304,7 @@ try {
 
         $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
         if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
-            Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
                 ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
 
@@ -319,6 +319,7 @@ try {
 
                     $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
                     $memberAdded++ | Out-Null
+                    $i++ | Out-Null
                 }
                 else {
                     Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
@@ -328,8 +329,6 @@ try {
                     $action.repoInfo.latest_release_published_at = $latest_release_published_at
                     $memberUpdate++ | Out-Null
                 }
-
-                $i++ | Out-Null
             }
             catch {
                 # continue with next one
@@ -345,14 +344,12 @@ try {
                     #Write-Host "Adding tag information object with tags:[$($tagInfo.Length)]"
                     
                     $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+                    $i++ | Out-Null
                 }
                 else {
                     #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
                     $action.tagInfo = $tagInfo
                 }
-
-                $i++ | Out-Null
-
             }
             catch {
                 # continue with next one
@@ -368,13 +365,12 @@ try {
                     #Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
                     
                     $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+                    $i++ | Out-Null
                 }
                 else {
                     #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
                     $action.releaseInfo = $releaseInfo
                 }
-
-                $i++ | Out-Null
 
             }
             catch {
