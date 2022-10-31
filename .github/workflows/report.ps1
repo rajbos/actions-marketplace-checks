@@ -319,7 +319,7 @@ function ReportInsightsInMarkdown {
     # summarize the string list dockerBaseImages to count each item
     $dockerBaseImagesGrouped = $global:dockerBaseImages | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
     $dockerBaseImagesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
-        LogMessage "- ($_.Name): ($_.Count)"
+        LogMessage "- $($_.Name): $($_.Count)"
     }
     LogMessage ""
 }
