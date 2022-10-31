@@ -42,6 +42,8 @@ $global:updatedLast12Months = 0
 $global:moreThen12Months = 0
 $global:sumDaysOld = 0
 $global:archived = 0
+# string array to hold all used docker base images:
+$global:dockerBaseImages = @()
 
 function GetVulnerableInfo {
     Param (
@@ -98,6 +100,10 @@ function AnalyzeActionInformation {
                 }
                 elseif ($action.actionType.actionDockerType -eq "Image") {
                     $global:remoteDockerfile++
+                }
+
+                if ($action.actionType.dockerBaseImage) {
+                    $global:dockerBaseImages += $action.actionType.dockerBaseImage
                 }
             }
             elseif ($action.actionType.actionType -eq "Node") {
@@ -308,6 +314,13 @@ function ReportInsightsInMarkdown {
     $unknownActionPercentage = [math]::Round($repoInformation.unknownActionDefinitionCount/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->E[$unknownActionDefinitionCount Unknown - $unknownActionPercentage%]"
     LogMessage "``````"
+    LogMessage ""
+    LogMessage "## Docker based actions, most used base images: "
+    # count occurence by item
+    $global:dockerBaseImages | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
+        LogMessage "- $_.Name: $_.Count"
+    }
+    LogMessage ""
 }
 
 function ReportAgeInsights {
