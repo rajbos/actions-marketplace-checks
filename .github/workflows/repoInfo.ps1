@@ -230,6 +230,7 @@ foreach ($action in $status) {
         if (!$hasField) {
             # owner is known, so this fork exists
             $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+            $i++ | Out-Null
         }
     }
 
@@ -246,6 +247,7 @@ foreach ($action in $status) {
             }
 
             $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
+            $i++ | Out-Null
         }
         else {
             $action.actionType.actionType = $actionTypeResult
@@ -253,7 +255,6 @@ foreach ($action in $status) {
             $action.actionType.actionDockerType = $actionDockerTypeResult
         }
 
-        $i++ | Out-Null
     }
 }
 
@@ -291,6 +292,7 @@ Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length
 "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
 $memberAdded = 0
 $memberUpdate = 0 
+$dockerBaseImageInfoAdded = 0
 try {
     foreach ($action in $status) {
 
@@ -390,14 +392,13 @@ try {
                         #Write-Host "Adding release information object with releases:[$($releaseInfo.Length)]"
                         
                         $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
+                        $i++ | Out-Null
+                        $dockerBaseImageInfoAdded++ | Out-Null
                     }
                     else {
                         #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
                         $action.actionType.dockerBaseImage = $dockerBaseImage
                     }
-
-                    $i++ | Out-Null
-
                 }
                 catch {
                     # continue with next one
@@ -423,6 +424,9 @@ Write-Host "Loaded repository information, ended with [$($hasTagInfo.Length)] al
 $hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
 Write-Host "Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded"
 "Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+
+Write-Host "Docker base image information added for [$dockerBaseImageInfoAdded] actions"
+"Docker base image information added for [$dockerBaseImageInfoAdded] actions" >> $env:GITHUB_STEP_SUMMARY
 
 SaveStatus -existingForks $status
 GetRateLimitInfo
