@@ -316,6 +316,9 @@ function ReportInsightsInMarkdown {
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Docker based actions, most used base images: "
+    # calculate unique items in dockerBaseImages
+    $dockerBaseImagesUnique = $dockerBaseImages | Sort-Object | Get-Unique
+    LogMessage "Found ($global:dockerBaseImages.Length) base images with $($dockerBaseImagesUnique.Length) uniques. The top 10 are listed below."
     # summarize the string list dockerBaseImages to count each item
     $dockerBaseImagesGrouped = $global:dockerBaseImages | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
     $dockerBaseImagesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
