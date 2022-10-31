@@ -305,7 +305,7 @@ function GetRepoDockerBaseImage {
         }
     }
     else {
-        Write-Host "Cant load docker base image for action type [$($actionType.actionType)] with [$($actionType.actionDockerType)] in [$owner/$repo)]"
+        Write-Host "Cant load docker base image for action type [$($actionType.actionType)] with [$($actionType.actionDockerType)] in [$owner/$repo]"
     }
 
     return $dockerBaseImage
