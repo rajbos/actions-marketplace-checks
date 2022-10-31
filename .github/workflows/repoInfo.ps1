@@ -278,6 +278,11 @@ function GetRepoDockerBaseImage {
             $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
         }
     }
+    else {
+        Write-Host "Cant load docker base image for action type [$($actionType.actionType)] with [$($actionType.actionDockerType)] in [$owner/$repo)]"
+    }
+    # remove \r from the end
+    $dockerBaseImage = $dockerBaseImage.TrimEnd("`r")
 
     return $dockerBaseImage
 }
@@ -383,19 +388,21 @@ try {
         if ($action.actionType.actionType -eq "Docker") {
             $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
             if (!$hasField -or ($null -eq $action.actionType.dockerBaseImage)) {
-                #Write-Host "$i/$max - Checking Docker base image information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                Write-Host "$i/$max - Checking Docker base image information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     $dockerBaseImage = GetRepoDockerBaseImage -owner $action.owner -repo $action.name -actionType $action.actionType
-                    if (!$hasField) {
-                        Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner/$action.name)]"
-                        
-                        $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
-                        $i++ | Out-Null
-                        $dockerBaseImageInfoAdded++ | Out-Null
-                    }
-                    else {
-                        #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
-                        $action.actionType.dockerBaseImage = $dockerBaseImage
+                    if ($dockerBaseImage -ne "") {                    
+                        if (!$hasField) {
+                            Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner/$action.name)]"
+                            
+                            $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
+                            $i++ | Out-Null
+                            $dockerBaseImageInfoAdded++ | Out-Null
+                        }
+                        else {
+                            #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                            $action.actionType.dockerBaseImage = $dockerBaseImage
+                        }
                     }
                 }
                 catch {
