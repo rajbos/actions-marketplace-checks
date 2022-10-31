@@ -399,19 +399,19 @@ try {
         if ($action.actionType.actionType -eq "Docker") {
             $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
             if (!$hasField -or ($null -eq $action.actionType.dockerBaseImage)) {
-                Write-Host "$i/$max - Checking Docker base image information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                Write-Host "$i/$max - Checking Docker base image information for [$($action.owner)/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($actionType.actionDockerType)]"
                 try {
                     $dockerBaseImage = GetRepoDockerBaseImage -owner $action.owner -repo $action.name -actionType $action.actionType
                     if ($dockerBaseImage -ne "") {                    
                         if (!$hasField) {
-                            Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner/$action.name)]"
+                            Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
                             
                             $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
                             $i++ | Out-Null
                             $dockerBaseImageInfoAdded++ | Out-Null
                         }
                         else {
-                            #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                            Write-Host "Updating Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
                             $action.actionType.dockerBaseImage = $dockerBaseImage
                         }
                     }
