@@ -70,7 +70,10 @@ function ApiCall {
             $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
             $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
-                Write-Host "Rate limit is low or hit, waiting for [$($rateLimitReset.TotalSeconds)] seconds before continuing"
+                Write-Host ""
+                Write-Host "Rate limit is low or hit, waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing"
+                Write-Host ""
+                "Rate limit is low or hit, waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing" >> $env:GITHUB_STEP_SUMMARY
                 Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
             }
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
