@@ -13,7 +13,7 @@ on:
       - .github/workflows/library.ps1
 
   schedule:
-    - cron: '*/7 * * * *'
+    - cron: '*/60 * * * *'
 
   workflow_dispatch:
 
