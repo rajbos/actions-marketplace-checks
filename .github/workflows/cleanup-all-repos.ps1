@@ -34,7 +34,7 @@ function RemoveRepos {
             ApiCall -method DELETE -url $url
         }
         catch {
-            Write-Error "Error deleting [$owner/$repoName]"
+            Write-Host "Error deleting [$owner/$repoName]"
         }
         $i++
     }
