@@ -5,7 +5,8 @@ function ApiCall {
         $body,
         $expected,
         [int] $backOff = 5,
-        [int] $maxResultCount = 0
+        [int] $maxResultCount = 0,
+        [int] $currentResultCount
     )
     $headers = @{
         Authorization = GetBasicAuthenticationHeader
@@ -51,20 +52,28 @@ function ApiCall {
         if ($result.Headers["Link"]) {
             #Write-Host "Found pagination link: $($result.Headers["Link"])"
             # load next link from header
-            if ($maxResultCount -ne 0) {
-                # check if we need to stop getting more pages
-                if ($response.Count -gt $maxResultCount) {
-                    Write-Host "Stopping with [$($response.Count)] results, which is more then the max result count [$maxResultCount]"
-                    return $response
-                }
-            }
+            
             $result.Headers["Link"].Split(',') | ForEach-Object {
                 # search for the 'next' link in this list
                 $link = $_.Split(';')[0].Trim()
                 if ($_.Split(';')[1].Contains("next")) {
                     $nextUrl = $link.Substring(1, $link.Length - 2)
+                    
+                    $currentResultCount = $currentResultCount + $response.Count
+                    if ($maxResultCount -ne 0) {
+                        Write-Host "Loading next page of data, where at [$($currentResultCount)] of max [$maxResultCount]"
+                    }
                     # and get the results
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount
+                    if ($maxResultCount -ne 0) {
+                        # check if we need to stop getting more pages
+                        if ($currentResultCount -gt $maxResultCount) {
+                            Write-Host "Stopping with [$($currentResultCount)] results, which is more then the max result count [$maxResultCount]"
+                            return $response
+                        }
+                    }
+
+                    # continue fetching next page
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount
                     $response += $nextResult
                 }
             }            

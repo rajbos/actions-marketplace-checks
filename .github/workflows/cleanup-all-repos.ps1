@@ -30,7 +30,12 @@ function RemoveRepos {
         $repoName = $repo.name
         Write-Host "$($i)/$($repoCount) Deleting repo [$($owner)/$($repo.name)]"
         $url = "/repos/$owner/$repoName"
-        ApiCall -method DELETE -url $url
+        try {
+            ApiCall -method DELETE -url $url
+        }
+        catch {
+            Write-Error "Error deleting [$owner/$repoName]"
+        }
         $i++
     }
 }
