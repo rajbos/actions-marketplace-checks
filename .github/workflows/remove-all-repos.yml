@@ -1,6 +1,9 @@
 name: Cleanup repos
 on:
   workflow_dispatch:
+
+  schedule:
+    - cron: '*/60 * * * *'
     
 jobs:
   cleanup-all-repos:
