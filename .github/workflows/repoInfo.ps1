@@ -417,7 +417,7 @@ try {
 
         if ($action.actionType.actionType -eq "Docker") {
             $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.actionType.dockerBaseImage -And $action.actionType.actionDockerType -ne "Image")) {
+            if (!$hasField -or (($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image")) {
                 Write-Host "$i/$max - Checking Docker base image information for [$($action.owner)/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($actionType.actionDockerType)]"
                 try {
                     $dockerBaseImage = GetRepoDockerBaseImage -owner $action.owner -repo $action.name -actionType $action.actionType
