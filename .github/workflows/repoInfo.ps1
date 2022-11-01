@@ -408,7 +408,6 @@ try {
                     #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
                     $action.releaseInfo = $releaseInfo
                 }
-
             }
             catch {
                 # continue with next one
@@ -418,9 +417,10 @@ try {
         if ($action.actionType.actionType -eq "Docker") {
             $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
             if (!$hasField -or (($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image")) {
-                Write-Host "$i/$max - Checking Docker base image information for [$($action.owner)/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($actionType.actionDockerType)]"
+                Write-Host "$i/$max - Checking Docker base image information for [$($action.owner)/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
                 try {
-                    $dockerBaseImage = GetRepoDockerBaseImage -owner $action.owner -repo $action.name -actionType $action.actionType
+                    # search for the docker file in the fork organization, since the original repo might already have seen updates
+                    $dockerBaseImage = GetRepoDockerBaseImage -owner $forkOrg -repo $action.name -actionType $action.actionType
                     if ($dockerBaseImage -ne "") {                    
                         if (!$hasField) {
                             Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
