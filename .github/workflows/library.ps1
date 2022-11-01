@@ -4,7 +4,8 @@ function ApiCall {
         $url,
         $body,
         $expected,
-        [int] $backOff = 5
+        [int] $backOff = 5,
+        [int] $maxResultCount = 0
     )
     $headers = @{
         Authorization = GetBasicAuthenticationHeader
@@ -25,7 +26,7 @@ function ApiCall {
     try
     {
         #$response = Invoke-RestMethod -Method $method -Uri $url -Headers $headers -Body $body -ContentType 'application/json'
-        if ($method -eq "GET") {
+        if ($method -eq "GET" -or $method -eq "DELETE") {
             $result = Invoke-WebRequest -Uri $url -Headers $headers -Method $method -ErrorVariable $errvar -ErrorAction Continue
         }
         else {
@@ -50,13 +51,20 @@ function ApiCall {
         if ($result.Headers["Link"]) {
             #Write-Host "Found pagination link: $($result.Headers["Link"])"
             # load next link from header
+            if ($maxResultCount -ne 0) {
+                # check if we need to stop getting more pages
+                if ($response.Count -gt $maxResultCount) {
+                    Write-Host "Stopping with [$($response.Count)] results, which is more then the max result count [$maxResultCount]"
+                    return $response
+                }
+            }
             $result.Headers["Link"].Split(',') | ForEach-Object {
                 # search for the 'next' link in this list
                 $link = $_.Split(';')[0].Trim()
                 if ($_.Split(';')[1].Contains("next")) {
                     $nextUrl = $link.Substring(1, $link.Length - 2)
                     # and get the results
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount
                     $response += $nextResult
                 }
             }            

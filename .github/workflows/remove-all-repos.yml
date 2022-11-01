@@ -1,0 +1,15 @@
+on:
+  workflow_dispatch:
+    
+jobs:
+  cleanup-all-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+          
+      - shell: pwsh
+        name: Run reporting script
+        run: |
+           ./.github/workflows/cleanup-all-repos.ps1 -access_token "${{ secrets.ACCESS_TOKEN }}"
+
+      
