@@ -1,3 +1,4 @@
+name: Cleanup repos
 on:
   workflow_dispatch:
     
@@ -10,6 +11,6 @@ jobs:
       - shell: pwsh
         name: Run reporting script
         run: |
-           ./.github/workflows/cleanup-all-repos.ps1 -access_token "${{ secrets.ACCESS_TOKEN }}"
+           ./.github/workflows/cleanup-all-repos.ps1 -numberOfReposToDo 4000 -access_token "${{ secrets.ACCESS_TOKEN }}"
 
       

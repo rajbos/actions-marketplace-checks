@@ -23,11 +23,15 @@ function RemoveRepos {
         $repos
     )
 
+    $i=1
+    $repoCount = $repos.Count
     foreach ($repo in $repos) 
     {
         $repoName = $repo.name
+        Write-Host "$($i)/$($repoCount) Deleting repo [$($owner)/$($repo.name)]"
         $url = "/repos/$owner/$repoName"
-        $response = ApiCall -method DELETE -url $url
+        ApiCall -method DELETE -url $url
+        $i++
     }
 }
 
