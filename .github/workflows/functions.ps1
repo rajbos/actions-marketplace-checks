@@ -95,7 +95,7 @@ function RunForActions {
     #TODO: check for existing repos first, or update the status.json with existing repos
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
-    Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
+    Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Count)] repos"
     "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" >> $env:GITHUB_STEP_SUMMARY
     SaveStatus -existingForks $existingForks
 
