@@ -426,6 +426,15 @@ function ForkActionRepo {
     if ($owner -eq "" -or $null -eq $owner -or $repo -eq "" -or $null -eq $repo) {
         return $false
     }
+
+    # check if the source repo exists
+    $url = "repos/$owner/$repo"
+    $status = ApiCall -method GET -url $url -body $null -expected 200
+    if ($status -eq $false) {
+        Write-Host "Repo [$owner/$repo] does not exist"
+        return $false
+    }
+
     # fork the action repository to the actions-marketplace-validations organization on github
     $forkUrl = "orgs/$forkOrg/repos"
     # call the fork api | CREATE repo
@@ -443,23 +452,30 @@ function ForkActionRepo {
         # $url = "repos/$forkOrg/$newRepoName/actions/permissions"
         # $response = ApiCall -method PUT -url $url -body "{`"enabled`":false}" -expected 204
         
-        # cd to temp directory
-        Set-Location $tempDir | Out-Null
-        Write-Host "Cloning from repo [https://github.com/$owner/$repo.git]"
-        git clone "https://github.com/$owner/$repo.git" 
-        Set-Location $repo  | Out-Null
-        git remote remove origin  | Out-Null
-        git remote add origin "https://x:$access_token@github.com/$forkOrg/$($newRepoName).git"  | Out-Null
-        $branchName = $(git branch --show-current)
-        Write-Host "Pushing to branch [$($branchName)]"
-        git push --set-upstream origin $branchName | Out-Null
-        # back to normal repo
-        Set-Location ../..  | Out-Null
-        # remove the temp directory to prevent disk build up
-        Remove-Item -Path $tempDir/$repo -Recurse -Force  | Out-Null
-        Write-Host " Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+        try {
+            # cd to temp directory
+            Set-Location $tempDir | Out-Null
+            Write-Host "Cloning from repo [https://github.com/$owner/$repo.git]"
+            git clone "https://github.com/$owner/$repo.git" 
+            Set-Location $repo  | Out-Null
+            git remote remove origin  | Out-Null
+            git remote add origin "https://x:$access_token@github.com/$forkOrg/$($newRepoName).git"  | Out-Null
+            $branchName = $(git branch --show-current)
+            Write-Host "Pushing to branch [$($branchName)]"
+            git push --set-upstream origin $branchName | Out-Null
+            # back to normal repo
+            Set-Location ../..  | Out-Null
+            # remove the temp directory to prevent disk build up
+            Remove-Item -Path $tempDir/$repo -Recurse -Force  | Out-Null
+            Write-Host " Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
 
-        return $true
+            return $true
+        }
+        catch {
+            Write-Host "Failed to mirror [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+            Write-Host $_.Exception.Message
+            return $false
+        }
     }
     else {
         return $false
