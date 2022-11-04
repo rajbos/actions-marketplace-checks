@@ -20,6 +20,10 @@ function GetForkedActionRepos {
         $status = Get-Content $statusFile | ConvertFrom-Json
         if (Test-Path $failedStatusFile) {
             $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
+            if ($null -eq $failedForks) {
+                # init empty list
+                $failedForks = New-Object System.Collections.ArrayList
+            }
         }
         else {
             $failedForks = New-Object System.Collections.ArrayList
