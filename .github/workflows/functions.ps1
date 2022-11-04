@@ -439,6 +439,9 @@ function ForkActionRepo {
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
         Write-Host "  Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+        # disable actions on the new repo, to prevent them from running on push
+        $url = "repos/$forkOrg/$newRepoName/actions/permissions"
+        $response = ApiCall -method PUT -url $url -body "{`"enabled`":`"false`"}" -expected 204
         
         # cd to temp directory
         Set-Location $tempDir | Out-Null
