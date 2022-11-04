@@ -10,6 +10,7 @@ $statusFile = "status.json"
 $failedStatusFile = "failedForks.json"
 Write-Host "Got an access token with length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
 Write-Host "Location of env:GITHUB_STEP_SUMMARY is [$($env:GITHUB_STEP_SUMMARY)]"
+
 function GetForkedActionRepos {
 
     # if file exists, read it
@@ -36,7 +37,7 @@ function GetForkedActionRepos {
         # convert list of forkedRepos to a new array with only the name of the repo
         $status = New-Object System.Collections.ArrayList
         foreach ($repo in $forkedRepos) {
-            $status.Add(@{name = $repo.name; dependabot = $null})
+            $status.Add(@{name = $repo.name; dependabot = $null}) | Out-Null
         }
         Write-Host "Found $($status.Count) existing repos in target org"
         # for each repo, get the Dependabot status
@@ -62,7 +63,8 @@ function GetDependabotStatus {
 
 function GetForkedActionRepoList {
     # get all existing repos in target org
-    $repoUrl = "orgs/$forkOrg/repos?type=forks"
+    #$repoUrl = "orgs/$forkOrg/repos?type=forks"
+    $repoUrl = "orgs/$forkOrg/repos"
     $repoResponse = ApiCall -method GET -url $repoUrl -body "{`"organization`":`"$forkOrg`"}"
     Write-Host "Found [$($repoResponse.Count)] existing repos in org [$forkOrg]"
     
@@ -71,6 +73,7 @@ function GetForkedActionRepoList {
     #}
     return $repoResponse
 }
+
 function RunForActions {
     Param (
         $actions,
@@ -84,6 +87,8 @@ function RunForActions {
     Write-Host "Found [$($actions.Count)] actions with a repoUrl"
     "Found [$($actions.Count)] actions with a repoUrl" >> $env:GITHUB_STEP_SUMMARY
     # do the work
+
+    #TODO: check for existing repos first, or update the status.json with existing repos
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos"
@@ -255,8 +260,8 @@ function ForkActionRepos {
         $failedForks
     )
 
-    $i = $existingForks.Length
-    $max = $existingForks.Length + $numberOfReposToDo
+    $i = $existingForks.Count
+    $max = $existingForks.Count + $numberOfReposToDo
     $newlyForkedRepos = 0
     $counter = 0
 
@@ -272,7 +277,7 @@ function ForkActionRepos {
     else {
         $actionsToProcess = $actions
     }
-    
+
     Write-Host "Found [$($actionsToProcess.Count)] actions still to process for forking"
 
     # get existing forks with owner/repo values instead of full urls
@@ -290,8 +295,9 @@ function ForkActionRepos {
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
         # check if fork already exists
-        $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
-        $failedFork = $failedForks | Where-Object { $_.name -eq $repo -And $_.owner -eq $owner}
+        $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+        $existingFork = $existingForks | Where-Object {$_.name -eq $forkedRepoName}
+        $failedFork = $failedForks | Where-Object {$_.name -eq $repo -And $_.owner -eq $owner}
         if ($null -eq $existingFork) {
             if (($null -ne $failedFork) -Or $failedFork.timesFailed -lt 5) {        
                 Write-Host "$i/$max Checking repo [$owner/$repo]"
@@ -300,7 +306,7 @@ function ForkActionRepos {
                     # add the repo to the list of existing forks
                     Write-Debug "Repo forked"
                     $newlyForkedRepos++ | Out-Null
-                    $newFork = @{ name = $repo; dependabot = $null; owner = $owner }
+                    $newFork = @{ name = $forkedRepoName; dependabot = $null; owner = $owner }
                     $existingForks += $newFork | Out-Null
                         
                     # back off just a little after a new fork
@@ -419,7 +425,7 @@ function ForkActionRepo {
     # fork the action repository to the actions-marketplace-validations organization on github
     $forkUrl = "orgs/$forkOrg/repos"
     # call the fork api | CREATE repo
-    $newRepoName="$($owner)_$($repo)"
+    $newRepoName = GetForkedRepoName -owner $owner -repo $repo
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201
 
     # if temp directory does not exist, create it
@@ -431,17 +437,19 @@ function ForkActionRepo {
         Write-Host "  Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
         
         # cd to temp directory
-        Set-Location $tempDir
-        git clone "https://github.com/$owner/$repo.git"
-        Set-Location $repo
-        git remote remove origin
-        git remote add origin "https://github.com/$forkOrg/$($newRepoName).git"
-        git push -u origin
+        Set-Location $tempDir | Out-Null
+        git clone "https://github.com/$owner/$repo.git" 
+        Set-Location $repo  | Out-Null
+        git remote remove origin  | Out-Null
+        git remote add origin "https://github.com/$forkOrg/$($newRepoName).git"  | Out-Null
+        git push -u origin  | Out-Null
         # back to normal repo
-        Set-Location ../..
+        Set-Location ../..  | Out-Null
         # remove the temp directory to prevent disk build up
-        Remove-Item -Path $tempDir/$repo -Recurse -Force
+        Remove-Item -Path $tempDir/$repo -Recurse -Force  | Out-Null
         Write-Host " Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+
+        return $true
     }
     else {
         return $false

@@ -199,6 +199,14 @@ function SplitUrl {
     return $owner, $repo
 }
 
+function GetForkedRepoName {
+    Param ( 
+        $owner,
+        $repo
+     )
+    return "$($owner)_$($repo)"    
+}
+
 function SplitUrlLastPart {
     Param (
         $url
