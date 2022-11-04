@@ -13,6 +13,7 @@ function ApiCall {
     }
     if ($null -ne $body) {
         $headers.Add('Content-Type', 'application/json')
+        $headers.Add('User-Agent', 'rajbos')
     }
     # prevent errors with starting slashes
     if ($url.StartsWith("/")) {
@@ -126,6 +127,11 @@ function ApiCall {
         }
         else {
             Write-Host "Log message: $($messageData.message)"
+        }
+
+        if ($messageData.message -And ($messageData.message.StartsWith("You have exceeded a secondary rate limit"))) {
+            Start-Sleep -Seconds 10
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {

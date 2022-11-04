@@ -440,7 +440,9 @@ function ForkActionRepo {
     # call the fork api | CREATE repo
     $newRepoName = GetForkedRepoName -owner $owner -repo $repo
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201
-
+    # there is a secondary rate limit for the creation api, so we need to wait a little
+    Start-Sleep -Seconds 5
+ 
     # if temp directory does not exist, create it
     if (-not (Test-Path $tempDir)) {
         New-Item -ItemType Directory -Path $tempDir
