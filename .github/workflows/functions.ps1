@@ -449,7 +449,8 @@ function ForkActionRepo {
         Set-Location $repo  | Out-Null
         git remote remove origin  | Out-Null
         git remote add origin "https://github.com/$forkOrg/$($newRepoName).git"  | Out-Null
-        git push --set-upstream origin | Out-Null
+        $brancHName = $(git branch --show-current)
+        git push --set-upstream origin $brancHName | Out-Null
         # back to normal repo
         Set-Location ../..  | Out-Null
         # remove the temp directory to prevent disk build up
