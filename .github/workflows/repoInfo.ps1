@@ -214,6 +214,10 @@ foreach ($action in $status) {
                 # load owner info from parent
                 $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
                 $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+            } else {
+                # new entry with leading owner name
+                $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
+                $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
             }
         }
         catch {
@@ -236,7 +240,7 @@ foreach ($action in $status) {
 
     $hasField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
     if (!$hasField -or ($null -eq $action.actionType.actionType)) {
-        Write-Host "$i/$max - Checking action information for [$owner/$reponame]"
+        Write-Host "$i/$max - Checking action information for [$($action.owner)/$($action.name)]"
         ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $action.owner -repo $action.name
 
         If (!$hasField) {
