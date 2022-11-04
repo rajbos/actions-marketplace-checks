@@ -260,9 +260,19 @@ function ForkActionRepos {
     $newlyForkedRepos = 0
     $counter = 0
 
-    Write-Host "Filtering repos to the ones we still need to fork"
-    # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
-    $actionsToProcess = $actions | Where-Object { $existingForks.name -notcontains (SplitUrlLastPart $_.RepoUrl) }
+    if (($null -ne $actions) -And ($null -ne $existingForks) -And ($existingForks.Count -gt 0)) {
+        # TODO: fix the filtering here with owner and repo
+        Write-Host "Filtering repos to the ones we still need to fork"
+        # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
+        $actionsToProcess = $actions | Where-Object { 
+            ($owner, $repo) = SplitUrl -url $_.RepoUrl
+            return $existingForks.name -notcontains $repo -And $failedForks.owner -notcontains $owner
+        }
+    }
+    else {
+        $actionsToProcess = $actions
+    }
+    
     Write-Host "Found [$($actionsToProcess.Count)] actions still to process for forking"
 
     # get existing forks with owner/repo values instead of full urls
@@ -282,33 +292,35 @@ function ForkActionRepos {
         # check if fork already exists
         $existingFork = $existingForks | Where-Object { $_.name -eq $repo }
         $failedFork = $failedForks | Where-Object { $_.name -eq $repo -And $_.owner -eq $owner}
-        if (($null -eq $existingFork) -And ($null -ne $failedFork -and $failedFork.timesFailed -lt 5)) {        
-            Write-Host "$i/$max Checking repo [$repo]"
-            $forkResult = ForkActionRepo -owner $owner -repo $repo
-            if ($forkResult) {
-                # add the repo to the list of existing forks
-                Write-Debug "Repo forked"
-                $newlyForkedRepos++ | Out-Null
-                $newFork = @{ name = $repo; dependabot = $null; owner = $owner }
-                $existingForks += $newFork | Out-Null
-                    
-                # back off just a little after a new fork
-                Start-Sleep 2
-                $i++ | Out-Null
-            }
-            else {
-                if ($failedFork) {
-                    # up the number of times we failed to fork this repo
-                    $failedFork.timesFailed++ | Out-Null
+        if ($null -eq $existingFork) {
+            if (($null -ne $failedFork) -Or $failedFork.timesFailed -lt 5) {        
+                Write-Host "$i/$max Checking repo [$owner/$repo]"
+                $forkResult = ForkActionRepo -owner $owner -repo $repo
+                if ($forkResult) {
+                    # add the repo to the list of existing forks
+                    Write-Debug "Repo forked"
+                    $newlyForkedRepos++ | Out-Null
+                    $newFork = @{ name = $repo; dependabot = $null; owner = $owner }
+                    $existingForks += $newFork | Out-Null
+                        
+                    # back off just a little after a new fork
+                    Start-Sleep 2
+                    $i++ | Out-Null
                 }
                 else {
-                # let's store a list of failed forks
-                    Write-Host "Failed to fork repo [$owner/$repo]"
-                    $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
-                    $failedForks.Add($failedFork) | Out-Null
+                    if ($failedFork) {
+                        # up the number of times we failed to fork this repo
+                        $failedFork.timesFailed++ | Out-Null
+                    }
+                    else {
+                    # let's store a list of failed forks
+                        Write-Host "Failed to fork repo [$owner/$repo]"
+                        $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
+                        $failedForks.Add($failedFork) | Out-Null
+                    }
                 }
+                $counter++ | Out-Null
             }
-            $counter++ | Out-Null
         }
         else {
             # Write-Host "Fake message for double check"
@@ -393,6 +405,8 @@ function EnableDependabot {
     return $false
 }
 
+$tempDir = "mirroredRepos"
+
 function ForkActionRepo {
     Param (
         $owner,
@@ -403,17 +417,31 @@ function ForkActionRepo {
         return $false
     }
     # fork the action repository to the actions-marketplace-validations organization on github
-    $forkUrl = "repos/$owner/$repo/forks"
-    # call the fork api
-    $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"organization`":`"$forkOrg`"}" -expected 202
+    $forkUrl = "orgs/$forkOrg/repos"
+    # call the fork api | CREATE repo
+    $newRepoName="$($owner)_$($repo)"
+    $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201
+
+    # if temp directory does not exist, create it
+    if (-not (Test-Path $tempDir)) {
+        New-Item -ItemType Directory -Path $tempDir
+    }
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
-        Write-Host "  Forked [$owner/$repo] to [$forkOrg/$($forkResponse.name)]"
-        if ($null -eq $forkResponse.name){
-            # response is just 'True' since we pass in expected, could be improved by returning both the response and the check on status code
-            #Write-Host "Full fork response: " $forkResponse | ConvertTo-Json
-        }
-        return $true
+        Write-Host "  Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+        
+        # cd to temp directory
+        Set-Location $tempDir
+        git clone "https://github.com/$owner/$repo.git"
+        Set-Location $repo
+        git remote remove origin
+        git remote add origin "https://github.com/$forkOrg/$($newRepoName).git"
+        git push -u origin
+        # back to normal repo
+        Set-Location ../..
+        # remove the temp directory to prevent disk build up
+        Remove-Item -Path $tempDir/$repo -Recurse -Force
+        Write-Host " Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
     }
     else {
         return $false

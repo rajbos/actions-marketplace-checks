@@ -187,6 +187,9 @@ function SplitUrl {
     #if ($url.StartsWith("https://github.com/marketplace/actions")) {
     #    return "";
     #}
+    if ($null -eq $url) {
+        return $null
+    }
 
     # split the url into the last 2 parts
     $urlParts = $url.Split('/')
