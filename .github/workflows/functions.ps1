@@ -438,19 +438,21 @@ function ForkActionRepo {
     }
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
-        Write-Host "  Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+        Write-Host "Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
         # disable actions on the new repo, to prevent them from running on push (not needed, actions disabled on org leve)
         # $url = "repos/$forkOrg/$newRepoName/actions/permissions"
         # $response = ApiCall -method PUT -url $url -body "{`"enabled`":false}" -expected 204
         
         # cd to temp directory
         Set-Location $tempDir | Out-Null
+        Write-Host "Cloning from repo [https://github.com/$owner/$repo.git]"
         git clone "https://github.com/$owner/$repo.git" 
         Set-Location $repo  | Out-Null
         git remote remove origin  | Out-Null
-        git remote add origin "https://github.com/$forkOrg/$($newRepoName).git"  | Out-Null
-        $brancHName = $(git branch --show-current)
-        git push --set-upstream origin $brancHName | Out-Null
+        git remote add origin "https://x:$access_token@github.com/$forkOrg/$($newRepoName).git"  | Out-Null
+        $branchName = $(git branch --show-current)
+        Write-Host "Pushing to branch [$($branchName)]"
+        git push --set-upstream origin $branchName | Out-Null
         # back to normal repo
         Set-Location ../..  | Out-Null
         # remove the temp directory to prevent disk build up
