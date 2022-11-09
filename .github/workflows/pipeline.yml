@@ -12,8 +12,8 @@ on:
       - .github/workflows/repoInfo.ps1
       - .github/workflows/library.ps1
 
-  schedule:
-    - cron: '*/60 * * * *'
+  # schedule:
+  #   - cron: '*/60 * * * *'
 
   workflow_dispatch:
 
