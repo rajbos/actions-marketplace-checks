@@ -132,7 +132,7 @@ function ApiCall {
         if ($messageData.message -And ($messageData.message.StartsWith("You have exceeded a secondary rate limit"))) {
             $backOff = $backOff*2
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
-            Start-Sleep -Seconds 10
+            Start-Sleep -Seconds $backOff
 
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff
         }
