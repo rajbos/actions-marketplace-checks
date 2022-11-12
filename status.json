@@ -10,7 +10,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "debian:9.8-slim"
     }
   },
   {
@@ -52,7 +53,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:latest"
     }
   },
   {
@@ -220,7 +222,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "node:14"
     }
   },
   {
@@ -262,7 +265,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:3.12"
     }
   },
   {
@@ -276,7 +280,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "ubuntu:18.04"
     }
   },
   {
@@ -304,7 +309,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "gcc:latest"
     }
   },
   {
@@ -360,7 +366,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "pytorch/pytorch:latest"
     }
   },
   {
@@ -430,7 +437,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "node:11-alpine"
     }
   },
   {
@@ -486,7 +494,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.7-slim"
     }
   },
   {
@@ -570,7 +579,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "Dockerfile"
+      "fileFound": "Dockerfile",
+      "dockerBaseImage": "node:10"
     }
   },
   {
@@ -584,7 +594,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "debian:stable-slim"
     }
   },
   {
@@ -598,7 +609,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -626,7 +638,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "golang:latest"
     }
   },
   {
@@ -640,7 +653,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -668,7 +682,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.7-slim"
     }
   },
   {
@@ -682,7 +697,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "martynas/archlinux:latest"
     }
   },
   {
@@ -710,7 +726,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "node:slim"
     }
   },
   {
@@ -724,7 +741,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "Dockerfile"
+      "fileFound": "Dockerfile",
+      "dockerBaseImage": "alpine:3.8"
     }
   },
   {
@@ -738,7 +756,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "Dockerfile"
+      "fileFound": "Dockerfile",
+      "dockerBaseImage": "node:10-alpine"
     }
   },
   {
@@ -794,7 +813,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "php:7.4-alpine"
     }
   },
   {
@@ -822,7 +842,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "php:7.4-alpine"
     }
   },
   {
@@ -850,7 +871,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine"
     }
   },
   {
@@ -864,7 +886,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.7-slim"
     }
   },
   {
@@ -906,7 +929,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "clux/muslrust"
     }
   },
   {
@@ -920,7 +944,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "docker:stable"
     }
   },
   {
@@ -934,7 +959,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "docker:stable"
     }
   },
   {
@@ -948,7 +974,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:3.10"
     }
   },
   {
@@ -962,7 +989,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "quay.io/pypa/manylinux2010_x86_64:2021-01-12-ff3830d"
     }
   },
   {
@@ -990,7 +1018,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "maven:3.6-jdk-11-slim"
     }
   },
   {
@@ -1032,7 +1061,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:3.10"
     }
   },
   {
@@ -1116,7 +1146,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -1256,7 +1287,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "mcr.microsoft.com/dotnet/sdk:6.0"
     }
   },
   {
@@ -1410,7 +1442,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "golang:1.14"
     }
   },
   {
@@ -1424,7 +1457,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine"
     }
   },
   {
@@ -1508,7 +1542,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "docker:stable"
     }
   },
   {
@@ -1522,7 +1557,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "zemuldo/git-crypt-unlock:latest"
     }
   },
   {
@@ -1536,7 +1572,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "node:10"
     }
   },
   {
@@ -1564,7 +1601,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine/git:latest"
     }
   },
   {
@@ -1690,7 +1728,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "ubuntu"
     }
   },
   {
@@ -1718,7 +1757,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.7-alpine"
     }
   },
   {
@@ -1802,7 +1842,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "ubuntu"
     }
   },
   {
@@ -1816,7 +1857,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "debian:stretch-slim"
     }
   },
   {
@@ -1998,7 +2040,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "golang:alpine"
     }
   },
   {
@@ -2012,7 +2055,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "zanderzhao/gitbook-action"
     }
   },
   {
@@ -2040,7 +2084,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "docker:dind"
     }
   },
   {
@@ -2054,7 +2099,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "php:7.3"
     }
   },
   {
@@ -2068,7 +2114,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -2082,7 +2129,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "node:12.10.0-alpine"
     }
   },
   {
@@ -2096,7 +2144,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.8"
     }
   },
   {
@@ -2110,7 +2159,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.8"
     }
   },
   {
@@ -2180,7 +2230,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "panvelissariou1/coastalapp:test1"
     }
   },
   {
@@ -2208,7 +2259,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:3.10"
     }
   },
   {
@@ -2236,7 +2288,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -2250,7 +2303,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yaml"
+      "fileFound": "action.yaml",
+      "dockerBaseImage": "public.ecr.aws/docker/library/python:3.8-slim-buster"
     }
   },
   {
@@ -2278,7 +2332,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.8-slim-buster"
     }
   },
   {
@@ -2390,7 +2445,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "node:14"
     }
   },
   {
@@ -2586,7 +2642,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "ruby:latest"
     }
   },
   {
@@ -2628,7 +2685,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "debian:10.1"
     }
   },
   {
@@ -2684,7 +2742,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "futureys/deploy-wordpress-plugin:2.1.1"
     }
   },
   {
@@ -2740,7 +2799,8 @@
     "actionType": {
       "actionType": "Docker",
       "actionDockerType": "Dockerfile",
-      "fileFound": "action.yml"
+      "fileFound": "action.yml",
+      "dockerBaseImage": "python:3.9-slim"
     }
   },
   {
@@ -2804,1400 +2864,2800 @@
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yuezk_publish-obs-package",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yucchiy_notion-to-markdown",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "y-temp4_add-wip-label",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ystyle_hwcdn-cache",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yshui_git-clang-format-lint",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "ysfchn_appinventor-aix-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yrpang_github-actions-hexo",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "Yproximite_auto-approve-and-merge-dependabot-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ypicard_get-branch-name-github-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "youyo_sync-up-to-codecommit-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Image"
+    }
   },
   {
     "name": "youyo_aws-sam-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Image"
+    }
   },
   {
     "name": "youxingz_sshpass-scp-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "Youssef1313_markdown-links-verifier",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yourbase_install-yb-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "younited_nomad-logs-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "younited_detect-branch-changes-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "youngcheol-son_hello-ga-1",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "youmengme_upload-lafyun",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "youaredev123_kubectl_helm_action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "youappz_action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YOU54F_grumpygit",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YosysHQ_setup-oss-cad-suite",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yoshuaandrean_universal-apk",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yoshi389111_github-profile-3d-contrib",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YosephKS_moralis-deploy-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yoo_kubediff-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yonycalsin_deploy-simple-to-heroku",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yongyan-gh_ansible-lint-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yongsub_issue-to-shortcut-story",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yongmams_load-inputs-from-flie-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yongjiajie_notion-burndown",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yolocs_pasarif",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yokawasa_action-setup-kube-tools",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yokawasa_action-setup-ecctl",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yoichiro_gh-action-increment-value",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yoheimuta_action-protolint",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yoheikikuta_sql-autoformat-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yogstation13_DreamAnnotate",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yogonza524_ejs-lint-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yogevbd_pr-lint-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yogevbd_enforce-label-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yogeshlonkar_wait-for-jobs",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yogeshlonkar_trivy-cache-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yogendra0Sharma_mendix-widget-release-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yog27ray_mongo-inmemory-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yoelsusanto_pr-labels-checker",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YOCKOW_Action-setup-swift",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yoavain_Setup-CSC",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "y-not-u_electron-builder-latest-yml-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Ynniss_golang-security-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "ymyzk_run-tox-gh-actions",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ymwymw_check-mixed-line-endings",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "ymohl-cl_go_sdl2_actionbuilder",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "y-mehta_vulnalerts",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "ymde_vk-notifications",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yly24_s3-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yly24_ali-oss-utils",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ylemkimon_labeler",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ylemkimon_cache-restore",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ykxVK8yL5L_add-to-web3",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ykpythemind_run_prettier_action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yknx4_generate-authorized-keys-from-github-teams",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yj7_team-labeler-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yizhoumo_setup-ossutil",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yiyungent_upyun-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yi-Xu-0100_traffic-to-badge",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yi-Xu-0100_repo-list-generator",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yi-Xu-0100_license-generator",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yitsushi_devmapper-containerd-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yisonPylkita_gh-action-toml-linter",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yinxulai_actions-electron-forge",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yimura_gtav-sigscan-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yiliang114_commit-times",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yikun_hub-mirror-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yieon-swk_kubectl",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "YieldingExploiter_License-Action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yhosun_pr-translation-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ygnoh_actions-thank-you-new",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ygnoh_actions-request-pr-review",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yesolutions_mirror-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yeslayla_zappa-deploy-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yeslayla_butler-publish-itchio-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yeslayla_build-nakama-plugin-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yeslayla_build-godot-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yeshan333_rsync-deploy-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yeouchien_sanitize-branch-name-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YenlinChenMoments_cert-2-aws-creds",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yellowrook1_market-action-test",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "No file found",
+      "fileFound": "No file found",
+      "actionDockerType": "No file found"
+    }
   },
   {
     "name": "yellowmegaman_prtrigger",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yellowmegaman_k3s-gha",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yellowbrim_pulumi-github-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yellow-Box-Software_terraform-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yehan-coding_yehan-git-sync",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yegorrybchenko_go-swag-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yegor256_latexmk-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yegobox_secret-parser",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "ydah_rubocop-updater",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ydah_rubocop-todo-regenerator",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ydah_mdformat-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "ycswaves_action-pagerduty-alert",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ycs77_readme-anime-list",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ycjcl868_outdated-version-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-sls-function",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-sls-container-deploy",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-lockbox",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-iam-token",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-cr-login",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-coi-deploy",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yc-actions_yc-cdn-cache",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "ybyzek_cp-all-in-one-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yaxitech_nix-install-pkgs-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yaml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yavinenana_s3-sync-gha",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Image"
+    }
   },
   {
     "name": "yavinenana_invalidate-aws-cloudfront-gha",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Image"
+    }
   },
   {
     "name": "yavinenana_cloudflare-purge-gha",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Image"
+    }
   },
   {
     "name": "yatima1460_ec2-multiple-github-runners",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yatatsu_pod-outdated-check-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YassinEldeeb_has-changed-path",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yash-Singh1_pr-labeler-config-validator",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yashhy_pr-label-check-and-comment-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yashdigi_hello-world-javascript-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yashanand1910_standard-release-notes",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yash0patni_github-action-test",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yasen-pavlov_amazon-ecs-deploy-task-definition",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yasassri_setup-wso2-apictl",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yaraku_ecs-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yaraku_code-reviews",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yaourdt_mongoose-os-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yaourdt_mgos-combine-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yanzay_notify-telegram",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yankewei_laravel-deploy-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yaml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yanjingzhu_FirstJSAction",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yanjingzhu_DockerContainer_action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Image"
+    }
   },
   {
     "name": "yangwu91_bioconda",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yanglbme_v2ex-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yanamura_ios-bump-version",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yanamura_git-merge-diff",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yanamura_git-flow-merge-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yaminyam_auto-label-in-issue",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yamatt_scaleway-serverless-container-deploy-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yamatt_backblaze-b2-upload-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yamatatsu_protect-branch-by-user",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yamatatsu_document-summary-csv-creater",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yamaks2306_telegram-notification",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yalefresne_slack-notification-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yakumioto_serverchan-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yakuhzi_setup-ssh-agent",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yakuhzi_release-asset",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yakuhzi_notify-workflow",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yakketyyak_validate-k8s-files",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "YakDriver_md-check-links",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "yajushiSri_Badgr-Create-Badge",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yadoms_build-yadoms-windows-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yadoms_build-yadoms-rpiimage-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Yadoms_build-yadoms-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "YadavGulshan_gist-box",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yaananth_twine-upload",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yaananth_run-notebook",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yaananth_review-cheerleader",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "yaananth_boss-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "y4code_hexo-deploy-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xztaityozx_owari-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yaml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xzebra_notion-blog",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xylabs_action-code-climate-test-reporter",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xxidbr9_vercel-preview-url",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "X-Wei_pelican-gh-actions-xwei",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xUnholy_operator-sdk-github-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "Xu-Justin_nuctl-deploy-checker-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XueMoMo_Sync-Fork-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yaml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XueMoMo_ipfs-upload-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XueMoMo_actions-coudflare-dns",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yaml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XUEGAONET_tencent-cos-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xu-cheng_latex-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xt0rted_stylelint-problem-matcher",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_slash-command-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_setup-dotnet",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_secrets-sync",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_pull-request-comment-branch",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_markdownlint-problem-matcher",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_dotnet-tool-restore",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_dotnet-sdk-updater",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_dotnet-format-problem-matcher",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_dotnet-format",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xt0rted_block-autosquash-commits-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xShteff_Self-Reward-Actions",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xserrat_pr-jira-properties-labeler",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "xsc_homebrew-import-release-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Docker",
+      "fileFound": "action.yml",
+      "actionDockerType": "Dockerfile"
+    }
   },
   {
     "name": "XRTK_upm-release",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yaml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XRTK_unity-validate",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XRTK_unity-build",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yaml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "XRTK_unity-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xresloader_upload-to-github-release",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xRealNeon_VuePagesAction",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Composite",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xpowery_covid-api",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xportation_junit-coverage-report",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xpol_setup-lua",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xoviat_actions-pytest",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Xotl_cool-github-releases",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Xotabu4_send-to-allure-server-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "Xotabu4_selenoid-github-action",
     "dependabot": [
       null,
       false
-    ]
+    ],
+    "owner": "actions-marketplace-validations",
+    "forkFound": true,
+    "actionType": {
+      "actionType": "Node",
+      "fileFound": "action.yml",
+      "actionDockerType": ""
+    }
   },
   {
     "name": "xorilog_twitter-action",
