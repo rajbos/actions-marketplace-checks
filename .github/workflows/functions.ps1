@@ -502,4 +502,5 @@ SaveStatus -existingForks $existingForks
 GetRateLimitInfo
 
 Write-Host "End of script, added [$numberOfReposToDo] forked repos"
-echo $PWD
+# show the current location
+Write-Host "Current location: $(Get-Location)"
