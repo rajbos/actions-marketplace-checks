@@ -502,3 +502,4 @@ SaveStatus -existingForks $existingForks
 GetRateLimitInfo
 
 Write-Host "End of script, added [$numberOfReposToDo] forked repos"
+echo $PWD

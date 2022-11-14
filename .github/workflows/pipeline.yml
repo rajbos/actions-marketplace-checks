@@ -45,6 +45,7 @@ jobs:
            ./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ secrets.ACCESS_TOKEN }}"
 
       - name: Commit changes
+        if: always()
         run: |
           if [[ `git status --porcelain` ]]; then
             git config --global user.email "github_token@github.com"
