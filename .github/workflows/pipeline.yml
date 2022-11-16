@@ -52,6 +52,7 @@ jobs:
             git config --global user.name "GITHUB_TOKEN"
             
             git add status.json
+            git add failedForks.json
             git commit -m "Update status.json"
             git push
           else
