@@ -313,8 +313,6 @@ function ForkActionRepos {
                     $newFork = @{ name = $forkedRepoName; dependabot = $null; owner = $owner }
                     $existingForks += $newFork | Out-Null
                         
-                    # back off just a little after a new fork
-                    Start-Sleep 2
                     $i++ | Out-Null
                 }
                 else {
@@ -440,15 +438,16 @@ function ForkActionRepo {
     # call the fork api | CREATE repo
     $newRepoName = GetForkedRepoName -owner $owner -repo $repo
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201
-    # there is a secondary rate limit for the creation api, so we need to wait a little
-    Start-Sleep -Seconds 15
- 
+     
     # if temp directory does not exist, create it
     if (-not (Test-Path $tempDir)) {
         New-Item -ItemType Directory -Path $tempDir
     }
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
+        # there is a secondary rate limit for the creation api, so we need to wait a little if the call was successful
+        Start-Sleep -Seconds 15
+        
         Write-Host "Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
         # disable actions on the new repo, to prevent them from running on push (not needed, actions disabled on org leve)
         # $url = "repos/$forkOrg/$newRepoName/actions/permissions"
@@ -480,7 +479,17 @@ function ForkActionRepo {
         }
     }
     else {
-        return $false
+        # test if the repo already existed, to fix previous errors
+        $url = "repos/$forkOrg/$newRepoName"
+        $status = ApiCall -method GET -url $url
+        if ($null -ne $status) {
+            Write-Host "Repo [$forkOrg/$newRepoName] already exists"
+            return $true
+        }
+        else {
+            Write-Host "Failed to create repo [$forkOrg/$newRepoName]"
+            return $false
+        }
     }
 }
 
