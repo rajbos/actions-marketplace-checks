@@ -294,7 +294,7 @@ function ForkActionRepos {
 
         # show every 100 executions a message
         if (($counter % 100) -eq 1) {
-            Write-Host "Checked forked for ${counter} repos"
+            Write-Host "Checked forked for $counter repos"
         }
 
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
