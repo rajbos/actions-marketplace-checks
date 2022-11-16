@@ -446,7 +446,7 @@ function ForkActionRepo {
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
         # there is a secondary rate limit for the creation api, so we need to wait a little if the call was successful
-        Start-Sleep -Seconds 15
+        Start-Sleep -Seconds 20
         
         Write-Host "Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
         # disable actions on the new repo, to prevent them from running on push (not needed, actions disabled on org leve)
