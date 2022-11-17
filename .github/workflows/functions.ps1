@@ -311,7 +311,7 @@ function ForkActionRepos {
                     Write-Debug "Repo forked"
                     $newlyForkedRepos++ | Out-Null
                     $newFork = @{ name = $forkedRepoName; dependabot = $null; owner = $owner }
-                    $existingForks += $newFork | Out-Null
+                    $existingForks += $newFork
                         
                     $i++ | Out-Null
                 }
@@ -324,7 +324,7 @@ function ForkActionRepos {
                     # let's store a list of failed forks
                         Write-Host "Failed to fork repo [$owner/$repo]"
                         $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
-                        $failedForks.Add($failedFork) | Out-Null
+                        $failedForks.Add($failedFork)
                     }
                 }
                 $counter++ | Out-Null
@@ -441,7 +441,7 @@ function ForkActionRepo {
      
     # if temp directory does not exist, create it
     if (-not (Test-Path $tempDir)) {
-        New-Item -ItemType Directory -Path $tempDir
+        New-Item -ItemType Directory -Path $tempDir | Out-null
     }
 
     if ($null -ne $forkResponse -and $forkResponse -eq "True") {    
@@ -465,9 +465,9 @@ function ForkActionRepo {
             Write-Host "Pushing to branch [$($branchName)]"
             git push --set-upstream origin $branchName | Out-Null
             # back to normal repo
-            Set-Location ../..  | Out-Null
+            Set-Location ../.. | Out-Null
             # remove the temp directory to prevent disk build up
-            Remove-Item -Path $tempDir/$repo -Recurse -Force  | Out-Null
+            Remove-Item -Path $tempDir/$repo -Recurse -Force | Out-Null
             Write-Host " Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
 
             return $true
