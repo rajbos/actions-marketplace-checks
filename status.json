@@ -11490,7 +11490,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -11644,7 +11645,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "cicirello/pyaction:4"
     }
   },
   {
@@ -11714,7 +11716,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "debian:10.1"
     }
   },
   {
@@ -11728,7 +11731,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "docker:19.03.2"
     }
   },
   {
@@ -11742,7 +11746,8 @@
     "actionType": {
       "fileFound": "action.yaml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:alpine"
     }
   },
   {
@@ -11770,7 +11775,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ruby:2.6-alpine"
     }
   },
   {
@@ -11812,7 +11818,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "jekyll/minimal:latest"
     }
   },
   {
@@ -11826,7 +11833,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "node:14-alpine3.13"
     }
   },
   {
@@ -11840,7 +11848,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "docker:19.03.4"
     }
   },
   {
@@ -11854,7 +11863,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3.8-alpine"
     }
   },
   {
@@ -11896,7 +11906,8 @@
     "actionType": {
       "fileFound": "action.yaml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:3.16"
     }
   },
   {
@@ -11966,7 +11977,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3.9.1"
     }
   },
   {
@@ -12022,7 +12034,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ubuntu:latest"
     }
   },
   {
@@ -12036,7 +12049,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "docker:stable"
     }
   },
   {
@@ -12050,7 +12064,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "google/cloud-sdk"
     }
   },
   {
@@ -12064,7 +12079,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "google/cloud-sdk"
     }
   },
   {
@@ -12078,7 +12094,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -12092,7 +12109,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -12106,7 +12124,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -12148,7 +12167,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "registry.gitlab.com/codetaleintegration/codetale-converter:0.2.3"
     }
   },
   {
@@ -12162,7 +12182,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ubuntu:18.04"
     }
   },
   {
@@ -12176,7 +12197,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "docker:stable"
     }
   },
   {
@@ -12218,7 +12240,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3.7-slim"
     }
   },
   {
@@ -12246,7 +12269,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "minidocks/mkdocs:1.0-pdf"
     }
   },
   {
@@ -12260,7 +12284,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:3.10"
     }
   },
   {
@@ -12302,7 +12327,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ubuntu"
     }
   },
   {
@@ -12344,7 +12370,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "node:16-alpine"
     }
   },
   {
@@ -12372,7 +12399,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "golang:1.12-alpine"
     }
   },
   {
@@ -12414,7 +12442,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "vinay0410/tectonic-image:latest"
     }
   },
   {
@@ -12442,7 +12471,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:3"
     }
   },
   {
@@ -12554,7 +12584,8 @@
     "actionType": {
       "fileFound": "Dockerfile",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "node:slim"
     }
   },
   {
@@ -12568,7 +12599,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine/git:latest"
     }
   },
   {
@@ -12652,7 +12684,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3-buster"
     }
   },
   {
@@ -12666,7 +12699,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:latest"
     }
   },
   {
@@ -12680,7 +12714,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "node:12"
     }
   },
   {
@@ -12750,7 +12785,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "vibranthq/opinionated-review:1.0"
     }
   },
   {
@@ -12764,7 +12800,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ubuntu:latest"
     }
   },
   {
@@ -12792,7 +12829,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "node:dubnium-alpine"
     }
   },
   {
@@ -12834,7 +12872,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3-slim"
     }
   },
   {
@@ -12848,7 +12887,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "vgaidarji/docker-android-build:v1.0.1"
     }
   },
   {
@@ -12876,7 +12916,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:3.10"
     }
   },
   {
@@ -12960,7 +13001,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ghcr.io/verschoren/docker_zat:latest"
     }
   },
   {
@@ -12988,7 +13030,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3-slim"
     }
   },
   {
@@ -13030,7 +13073,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "openjdk:latest"
     }
   },
   {
@@ -13114,7 +13158,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "mcr.microsoft.com/azure-cli:2.8.0"
     }
   },
   {
@@ -13128,7 +13173,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "mcr.microsoft.com/powershell:lts-alpine-3.10"
     }
   },
   {
@@ -13352,7 +13398,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "ubuntu:18.04"
     }
   },
   {
@@ -13380,7 +13427,8 @@
     "actionType": {
       "fileFound": "Dockerfile",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "debian:stable-slim"
     }
   },
   {
@@ -13450,7 +13498,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "whitegecko/pyinstaller"
     }
   },
   {
@@ -13464,7 +13513,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "alpine:3.10"
     }
   },
   {
@@ -13562,7 +13612,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "vcoder/git_pylint:0.0.1"
     }
   },
   {
@@ -13604,7 +13655,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3-slim"
     }
   },
   {
@@ -13632,7 +13684,8 @@
     "actionType": {
       "fileFound": "action.yml",
       "actionType": "Docker",
-      "actionDockerType": "Dockerfile"
+      "actionDockerType": "Dockerfile",
+      "dockerBaseImage": "python:3.7-slim"
     }
   },
   {
@@ -13911,502 +13964,1102 @@
   {
     "dependabot": null,
     "owner": "ttd2089",
-    "name": "ttd2089_secret-file-action"
+    "name": "ttd2089_secret-file-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tszalbot",
-    "name": "tszalbot_action-upload-webdav"
+    "name": "tszalbot_action-upload-webdav",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyoshicho",
-    "name": "tsuyoshicho_action-vimlint"
+    "name": "tsuyoshicho_action-vimlint",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyoshicho",
-    "name": "tsuyoshicho_action-vimhelp-tagname-check"
+    "name": "tsuyoshicho_action-vimhelp-tagname-check",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyoshicho",
-    "name": "tsuyoshicho_action-vimhelp-html-generate"
+    "name": "tsuyoshicho_action-vimhelp-html-generate",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyoshicho",
-    "name": "tsuyoshicho_action-textlint"
+    "name": "tsuyoshicho_action-textlint",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyoshicho",
-    "name": "tsuyoshicho_action-redpen"
+    "name": "tsuyoshicho_action-redpen",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyoshicho",
-    "name": "tsuyoshicho_action-mypy"
+    "name": "tsuyoshicho_action-mypy",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuyo",
-    "name": "tsuyo_auto-release-milestone"
+    "name": "tsuyo_auto-release-milestone",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsunematsu21",
-    "name": "tsunematsu21_actions-publish-gh-pages"
+    "name": "tsunematsu21_actions-publish-gh-pages",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsuki42",
-    "name": "tsuki42_publish-image-tags"
+    "name": "tsuki42_publish-image-tags",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsigouris007",
-    "name": "tsigouris007_action-semgrep-reviewdog"
+    "name": "tsigouris007_action-semgrep-reviewdog",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsickert",
-    "name": "tsickert_discord-webhook"
+    "name": "tsickert_discord-webhook",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "ts-graphviz",
-    "name": "ts-graphviz_setup-graphviz"
+    "name": "ts-graphviz_setup-graphviz",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsg-iitkgp",
-    "name": "tsg-iitkgp_next-build-export-action"
+    "name": "tsg-iitkgp_next-build-export-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tsar-boomba",
-    "name": "tsar-boomba_prettier-java-action"
+    "name": "tsar-boomba_prettier-java-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trympet",
-    "name": "trympet_microsoft-store-flight-action"
+    "name": "trympet_microsoft-store-flight-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trymbill",
-    "name": "trymbill_cypress-slack-video-upload-action"
+    "name": "trymbill_cypress-slack-video-upload-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TryGhost",
-    "name": "TryGhost_action-deploy-theme"
+    "name": "TryGhost_action-deploy-theme",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tryggth",
-    "name": "tryggth_ngs-docker-action"
+    "name": "tryggth_ngs-docker-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tryfabric",
-    "name": "tryfabric_notion-github-action"
+    "name": "tryfabric_notion-github-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tryfabric",
-    "name": "tryfabric_notify-slack-on-release"
+    "name": "tryfabric_notify-slack-on-release",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tryfabric",
-    "name": "tryfabric_memorable-milestones"
+    "name": "tryfabric_memorable-milestones",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trybeapp",
-    "name": "trybeapp_redocly-openapi-cli-github-action"
+    "name": "trybeapp_redocly-openapi-cli-github-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trustcerts",
-    "name": "trustcerts_upload-s3-action"
+    "name": "trustcerts_upload-s3-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trustcerts",
-    "name": "trustcerts_nrwl-nx-action"
+    "name": "trustcerts_nrwl-nx-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trunk-io",
-    "name": "trunk-io_trunk-action"
+    "name": "trunk-io_trunk-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trunkcode",
-    "name": "trunkcode_check-http-status-action"
+    "name": "trunkcode_check-http-status-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trumant",
-    "name": "trumant_terraform-module-versions-action"
+    "name": "trumant_terraform-module-versions-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trufflesecurity",
-    "name": "trufflesecurity_TruffleHog-Enterprise-Github-Action"
+    "name": "trufflesecurity_TruffleHog-Enterprise-Github-Action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trufflesecurity",
-    "name": "trufflesecurity_trufflehog"
+    "name": "trufflesecurity_trufflehog",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TrueBrain",
-    "name": "TrueBrain_actions-flake8"
+    "name": "TrueBrain_actions-flake8",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trstringer",
-    "name": "trstringer_require-label-prefix"
+    "name": "trstringer_require-label-prefix",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trstringer",
-    "name": "trstringer_manual-approval"
+    "name": "trstringer_manual-approval",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "troubleshoot-codacy",
-    "name": "troubleshoot-codacy_codacy-analysis-cli-action"
+    "name": "troubleshoot-codacy_codacy-analysis-cli-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trmcnvn",
-    "name": "trmcnvn_firefox-addon"
+    "name": "trmcnvn_firefox-addon",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tristan-weil",
-    "name": "tristan-weil_ghaction-checksum-sign-artifact"
+    "name": "tristan-weil_ghaction-checksum-sign-artifact",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TrisNol",
-    "name": "TrisNol_trello-create-card-action"
+    "name": "TrisNol_trello-create-card-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TriPSs",
-    "name": "TriPSs_conventional-changelog-action"
+    "name": "TriPSs_conventional-changelog-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tripheo0412",
-    "name": "tripheo0412_auto-commit-log-action"
+    "name": "tripheo0412_auto-commit-log-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trilom",
-    "name": "trilom_file-changes-action"
+    "name": "trilom_file-changes-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "triedandtested-dev",
-    "name": "triedandtested-dev_trigger-dbt-cloud-job-v2-action"
+    "name": "triedandtested-dev_trigger-dbt-cloud-job-v2-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trideepnag1911",
-    "name": "trideepnag1911_gradle-build-with-sonarqube"
+    "name": "trideepnag1911_gradle-build-with-sonarqube",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "triat",
-    "name": "triat_terraform-security-scan"
+    "name": "triat_terraform-security-scan",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TrianguloY",
-    "name": "TrianguloY_action-validate-Triple-T"
+    "name": "TrianguloY_action-validate-Triple-T",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trevorlloydelliott",
-    "name": "trevorlloydelliott_set-environment-variables"
+    "name": "trevorlloydelliott_set-environment-variables",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TreTuna",
-    "name": "TreTuna_sync-branches"
+    "name": "TreTuna_sync-branches",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "treosh",
-    "name": "treosh_lighthouse-ci-action"
+    "name": "treosh_lighthouse-ci-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trendoid",
-    "name": "trendoid_version-for-publishing"
+    "name": "trendoid_version-for-publishing",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TrellisCommerce",
-    "name": "TrellisCommerce_vercel-lighthouse-score-action"
+    "name": "TrellisCommerce_vercel-lighthouse-score-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "trejjam",
-    "name": "trejjam_npm-scope-action"
+    "name": "trejjam_npm-scope-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TREEcg",
-    "name": "TREEcg_LDES-Action"
+    "name": "TREEcg_LDES-Action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "treebeardtech",
-    "name": "treebeardtech_nbmake-action"
+    "name": "treebeardtech_nbmake-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "treasuredataps",
-    "name": "treasuredataps_td_wf_deploy"
+    "name": "treasuredataps_td_wf_deploy",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TravisSpomer",
-    "name": "TravisSpomer_create-redirects"
+    "name": "TravisSpomer_create-redirects",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "travisj",
-    "name": "travisj_build-number-action"
+    "name": "travisj_build-number-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "traversals-analytics-and-intelligence",
-    "name": "traversals-analytics-and-intelligence_file-reader-action"
+    "name": "traversals-analytics-and-intelligence_file-reader-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "travelperk",
-    "name": "travelperk_label-requires-reviews-action"
+    "name": "travelperk_label-requires-reviews-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "Trass3r",
-    "name": "Trass3r_setup-cpp"
+    "name": "Trass3r_setup-cpp",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "transparencylog",
-    "name": "transparencylog_publish-releases-asset-transparency-action"
+    "name": "transparencylog_publish-releases-asset-transparency-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "Transmitt0r",
-    "name": "Transmitt0r_build-marlin-action"
+    "name": "Transmitt0r_build-marlin-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "transferwise",
-    "name": "transferwise_actions-slack-notify"
+    "name": "transferwise_actions-slack-notify",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tracy-ash",
-    "name": "tracy-ash_gce-cloudsql-proxy-unix-socket-action"
+    "name": "tracy-ash_gce-cloudsql-proxy-unix-socket-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "Tracey-Tracy",
-    "name": "Tracey-Tracy_components-gha"
+    "name": "Tracey-Tracy_components-gha",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tr325",
-    "name": "tr325_github-actions-test-javascript-action"
+    "name": "tr325_github-actions-test-javascript-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tpluscode",
-    "name": "tpluscode_action-setup-lando"
+    "name": "tpluscode_action-setup-lando",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tpilvelis-gw",
-    "name": "tpilvelis-gw_rebuild-action"
+    "name": "tpilvelis-gw_rebuild-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tpbowden",
-    "name": "tpbowden_chonkbot"
+    "name": "tpbowden_chonkbot",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tpaschalis",
-    "name": "tpaschalis_s3-cp-action"
+    "name": "tpaschalis_s3-cp-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "toysmoon",
-    "name": "toysmoon_follow_branch"
+    "name": "toysmoon_follow_branch",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "touchlab-lab",
-    "name": "touchlab-lab_ktlint-action-setup"
+    "name": "touchlab-lab_ktlint-action-setup",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tottizhang212",
-    "name": "tottizhang212_MugenHelper"
+    "name": "tottizhang212_MugenHelper",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "toti-tui",
-    "name": "toti-tui_github-action-repository-timestamps"
+    "name": "toti-tui_github-action-repository-timestamps",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "totallymoney",
-    "name": "totallymoney_assign-reviewers-by-labels-action"
+    "name": "totallymoney_assign-reviewers-by-labels-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "toshimaru",
-    "name": "toshimaru_label-actions"
+    "name": "toshimaru_label-actions",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "Torwent",
-    "name": "Torwent_setup-simba"
+    "name": "Torwent_setup-simba",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "toru-takahashi",
-    "name": "toru-takahashi_treasure-workflow-actions"
+    "name": "toru-takahashi_treasure-workflow-actions",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "tortellini-tools",
-    "name": "tortellini-tools_action"
+    "name": "tortellini-tools_action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "owner": "TorqIT",
-    "name": "TorqIT_issue-management-action"
+    "name": "TorqIT_issue-management-action",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tork-a_ros-prerelease-job-action",
-    "owner": "tork-a"
+    "owner": "tork-a",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "TopVakantiehuizen_turborepo-serverless-framework-action",
-    "owner": "TopVakantiehuizen"
+    "owner": "TopVakantiehuizen",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "toppulous_update-manual-approval-issue",
-    "owner": "toppulous"
+    "owner": "toppulous",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "toppulous_create-manual-approval-issue",
-    "owner": "toppulous"
+    "owner": "toppulous",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tophat_commit-watch-action",
-    "owner": "tophat"
+    "owner": "tophat",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "topcodersonline_betterscan",
-    "owner": "topcodersonline"
+    "owner": "topcodersonline",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "TooMuch4U_actions-clean",
-    "owner": "TooMuch4U"
+    "owner": "TooMuch4U",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "toomasz_upload-artifact-action",
-    "owner": "toomasz"
+    "owner": "toomasz",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "toomasz_action-aws-cli",
-    "owner": "toomasz"
+    "owner": "toomasz",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tool3_publisher",
-    "owner": "tool3"
+    "owner": "tool3",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tool3_ncc",
-    "owner": "tool3"
+    "owner": "tool3",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tool3_docsify-action",
-    "owner": "tool3"
+    "owner": "tool3",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tool3_bump",
-    "owner": "tool3"
+    "owner": "tool3",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonynv_asciidoctor-action",
-    "owner": "tonynv"
+    "owner": "tonynv",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonynguyenit18_github-action-custom-vars",
-    "owner": "tonynguyenit18"
+    "owner": "tonynguyenit18",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonyhallett_workflow-run-conclusion-dispatch-action",
-    "owner": "tonyhallett"
+    "owner": "tonyhallett",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonyhallett_vstest-solution-action",
-    "owner": "tonyhallett"
+    "owner": "tonyhallett",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonyhallett_artifacts-url-comments",
-    "owner": "tonyhallett"
+    "owner": "tonyhallett",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "TonyBogdanov_zip",
-    "owner": "TonyBogdanov"
+    "owner": "TonyBogdanov",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonybaloney_pycharm-security",
-    "owner": "tonybaloney"
+    "owner": "tonybaloney",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
     "name": "tonybaloney_cppcheck-action",
-    "owner": "tonybaloney"
+    "owner": "tonybaloney",
+    "forkFound": true,
+    "actionType": {
+      "actionDockerType": "No file found",
+      "fileFound": "No file found",
+      "actionType": "No file found"
+    }
   },
   {
     "dependabot": null,
@@ -15801,6 +16454,506 @@
   {
     "name": "theahura_depcheck-action",
     "owner": "theahura",
+    "dependabot": null
+  },
+  {
+    "owner": "theaccordance",
+    "name": "theaccordance_balena-push",
+    "dependabot": null
+  },
+  {
+    "owner": "The24thDS",
+    "name": "The24thDS_stellaris-localisation-crowdin-fix",
+    "dependabot": null
+  },
+  {
+    "owner": "thclark",
+    "name": "thclark_coolname-generator-action",
+    "dependabot": null
+  },
+  {
+    "owner": "Thazz",
+    "name": "Thazz_rosinstall_credentials_action",
+    "dependabot": null
+  },
+  {
+    "owner": "thatsnotamuffin",
+    "name": "thatsnotamuffin_muffin-aws-kubectl",
+    "dependabot": null
+  },
+  {
+    "owner": "thatisuday",
+    "name": "thatisuday_go-cross-build",
+    "dependabot": null
+  },
+  {
+    "owner": "TharindaDilshan",
+    "name": "TharindaDilshan_ballerina-dependabot-action",
+    "dependabot": null
+  },
+  {
+    "owner": "thanksd",
+    "name": "thanksd_hello-action",
+    "dependabot": null
+  },
+  {
+    "owner": "thamognya",
+    "name": "thamognya_mirror-git-repo",
+    "dependabot": null
+  },
+  {
+    "owner": "thalleslmF",
+    "name": "thalleslmF_actions-license",
+    "dependabot": null
+  },
+  {
+    "owner": "thalesvon",
+    "name": "thalesvon_ecr-login",
+    "dependabot": null
+  },
+  {
+    "owner": "thaim",
+    "name": "thaim_redmine-integration-action",
+    "dependabot": null
+  },
+  {
+    "owner": "thadeu",
+    "name": "thadeu_easily-dokku-action",
+    "dependabot": null
+  },
+  {
+    "owner": "Th3Un1q3",
+    "name": "Th3Un1q3_kinda-contribute",
+    "dependabot": null
+  },
+  {
+    "owner": "th3c0d3br34ker",
+    "name": "th3c0d3br34ker_github-readme-info",
+    "dependabot": null
+  },
+  {
+    "owner": "th0th",
+    "name": "th0th_rancher-redeploy-workload",
+    "dependabot": null
+  },
+  {
+    "owner": "th0th",
+    "name": "th0th_notify-discord",
+    "dependabot": null
+  },
+  {
+    "owner": "tgymnich",
+    "name": "tgymnich_setup-swift",
+    "dependabot": null
+  },
+  {
+    "owner": "tgymnich",
+    "name": "tgymnich_publish-github-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tgymnich",
+    "name": "tgymnich_fork-sync",
+    "dependabot": null
+  },
+  {
+    "owner": "TGPSKI",
+    "name": "TGPSKI_name-generator-node-action",
+    "dependabot": null
+  },
+  {
+    "owner": "TGNThump",
+    "name": "TGNThump_factorio-publish-mod-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tgamauf",
+    "name": "tgamauf_cypress-parallel",
+    "dependabot": null
+  },
+  {
+    "owner": "tfromme",
+    "name": "tfromme_ticket-in-pr-title-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tf-gha",
+    "name": "tf-gha_chatops",
+    "dependabot": null
+  },
+  {
+    "owner": "tf-gha",
+    "name": "tf-gha_autoplan",
+    "dependabot": null
+  },
+  {
+    "owner": "tferreira",
+    "name": "tferreira_matterfy",
+    "dependabot": null
+  },
+  {
+    "owner": "tfausak",
+    "name": "tfausak_hlint-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tfausak",
+    "name": "tfausak_brittany-action",
+    "dependabot": null
+  },
+  {
+    "owner": "TFArmada",
+    "name": "TFArmada_stateGetter",
+    "dependabot": null
+  },
+  {
+    "owner": "tezz-io",
+    "name": "tezz-io_mongoexport",
+    "dependabot": null
+  },
+  {
+    "owner": "tezz-io",
+    "name": "tezz-io_genREADME",
+    "dependabot": null
+  },
+  {
+    "owner": "textileio",
+    "name": "textileio_github-action-buckets",
+    "dependabot": null
+  },
+  {
+    "owner": "textileio",
+    "name": "textileio_github-action-bucket-replicate",
+    "dependabot": null
+  },
+  {
+    "owner": "textileio",
+    "name": "textileio_cloudflare-update-dnslink",
+    "dependabot": null
+  },
+  {
+    "owner": "tetra-fox",
+    "name": "tetra-fox_ml-gen",
+    "dependabot": null
+  },
+  {
+    "owner": "tethysapp",
+    "name": "tethysapp_tethys-app-linter",
+    "dependabot": null
+  },
+  {
+    "owner": "tete1030",
+    "name": "tete1030_safe-debugger-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testthedocs",
+    "name": "testthedocs_github-pages-deploy-action",
+    "dependabot": null
+  },
+  {
+    "owner": "test-summary",
+    "name": "test-summary_action",
+    "dependabot": null
+  },
+  {
+    "owner": "test-room-7",
+    "name": "test-room-7_action-update-file",
+    "dependabot": null
+  },
+  {
+    "owner": "test-room-7",
+    "name": "test-room-7_action-publish-release-drafts",
+    "dependabot": null
+  },
+  {
+    "owner": "test-room-7",
+    "name": "test-room-7_action-create-v-docs",
+    "dependabot": null
+  },
+  {
+    "owner": "Test-Org-Jay",
+    "name": "Test-Org-Jay_test-PR-Metadata-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testomatio",
+    "name": "testomatio_check-tests",
+    "dependabot": null
+  },
+  {
+    "owner": "testkit-labs",
+    "name": "testkit-labs_action",
+    "dependabot": null
+  },
+  {
+    "owner": "testingbot",
+    "name": "testingbot_testingbot-tunnel-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testifysec",
+    "name": "testifysec_witness-install-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testifysec",
+    "name": "testifysec_testify-run-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testifysec",
+    "name": "testifysec_intoto-run-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testifysec",
+    "name": "testifysec_goreleaser-action",
+    "dependabot": null
+  },
+  {
+    "owner": "testhub-io",
+    "name": "testhub-io_testhub-io.action",
+    "dependabot": null
+  },
+  {
+    "owner": "testeraio",
+    "name": "testeraio_junit-xml-slack-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tespkg",
+    "name": "tespkg_action",
+    "dependabot": null
+  },
+  {
+    "owner": "TerrenceHo",
+    "name": "TerrenceHo_cache-always",
+    "dependabot": null
+  },
+  {
+    "owner": "terrarium-tf",
+    "name": "terrarium-tf_github-action",
+    "dependabot": null
+  },
+  {
+    "owner": "terraform-linters",
+    "name": "terraform-linters_tflint-load-config-action",
+    "dependabot": null
+  },
+  {
+    "owner": "terraform-linters",
+    "name": "terraform-linters_setup-tflint",
+    "dependabot": null
+  },
+  {
+    "owner": "terraform-gitlab-modules",
+    "name": "terraform-gitlab-modules_actions",
+    "dependabot": null
+  },
+  {
+    "owner": "terraform-compliance",
+    "name": "terraform-compliance_github_action",
+    "dependabot": null
+  },
+  {
+    "owner": "teroahonen-vungle",
+    "name": "teroahonen-vungle_tag-version-action",
+    "dependabot": null
+  },
+  {
+    "owner": "termux",
+    "name": "termux_upload-release-action",
+    "dependabot": null
+  },
+  {
+    "owner": "terencetcf",
+    "name": "terencetcf_github-actions-lcov-minimum-coverage-checker",
+    "dependabot": null
+  },
+  {
+    "owner": "teracyhq-incubator",
+    "name": "teracyhq-incubator_secret-manager-action",
+    "dependabot": null
+  },
+  {
+    "owner": "TerabyteTiger",
+    "name": "TerabyteTiger_action-happyPR",
+    "dependabot": null
+  },
+  {
+    "owner": "tensor-hq",
+    "name": "tensor-hq_eksctl-helm-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tenpureto",
+    "name": "tenpureto_propagate-changes-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tenna-llc",
+    "name": "tenna-llc_hrval-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tenhaus",
+    "name": "tenhaus_get-release-or-tag",
+    "dependabot": null
+  },
+  {
+    "owner": "TencentCloud",
+    "name": "TencentCloud_tke-cluster-credential-action",
+    "dependabot": null
+  },
+  {
+    "owner": "TencentCloud",
+    "name": "TencentCloud_cos-action",
+    "dependabot": null
+  },
+  {
+    "owner": "TencentCloud",
+    "name": "TencentCloud_cli-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tenable",
+    "name": "tenable_terrascan-action",
+    "dependabot": null
+  },
+  {
+    "owner": "Templum",
+    "name": "Templum_govulncheck-action",
+    "dependabot": null
+  },
+  {
+    "owner": "telstra",
+    "name": "telstra_openapi-spec-to-json-schema",
+    "dependabot": null
+  },
+  {
+    "owner": "teloscube",
+    "name": "teloscube_decaf-webapps-deployment-action",
+    "dependabot": null
+  },
+  {
+    "owner": "Tele-Train-Software-GmbH",
+    "name": "Tele-Train-Software-GmbH_http-server-action",
+    "dependabot": null
+  },
+  {
+    "owner": "TejasvOnly",
+    "name": "TejasvOnly_random-rickroll",
+    "dependabot": null
+  },
+  {
+    "owner": "tejasmr",
+    "name": "tejasmr_do-autopr",
+    "dependabot": null
+  },
+  {
+    "owner": "tegud",
+    "name": "tegud_serverless-github-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tegonal",
+    "name": "tegonal_workflow-helper",
+    "dependabot": null
+  },
+  {
+    "owner": "tegarimansyah",
+    "name": "tegarimansyah_doitlater",
+    "dependabot": null
+  },
+  {
+    "owner": "tegarimansyah",
+    "name": "tegarimansyah_docker_build_push",
+    "dependabot": null
+  },
+  {
+    "owner": "tefkah",
+    "name": "tefkah_todo-to-issue-action",
+    "dependabot": null
+  },
+  {
+    "owner": "teepsdonnelly",
+    "name": "teepsdonnelly_debt-collector",
+    "dependabot": null
+  },
+  {
+    "owner": "teeps-co",
+    "name": "teeps-co_composer-action",
+    "dependabot": null
+  },
+  {
+    "owner": "teddywilson",
+    "name": "teddywilson_shisito-markdown-validation",
+    "dependabot": null
+  },
+  {
+    "owner": "teddyking",
+    "name": "teddyking_dependency-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tedd",
+    "name": "tedd_publish-nuget-neo",
+    "dependabot": null
+  },
+  {
+    "owner": "tecosaur",
+    "name": "tecosaur_org-tangle-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tecosaur",
+    "name": "tecosaur_org-knit-action",
+    "dependabot": null
+  },
+  {
+    "owner": "tecoli-com",
+    "name": "tecoli-com_actions-use-homebrew-tools",
+    "dependabot": null
+  },
+  {
+    "owner": "tecoli-com",
+    "name": "tecoli-com_actions-use-any-tools",
+    "dependabot": null
+  },
+  {
+    "owner": "tecoli-com",
+    "name": "tecoli-com_actions-install-node-modules",
+    "dependabot": null
+  },
+  {
+    "owner": "TechWiz-3",
+    "name": "TechWiz-3_linksafe",
+    "dependabot": null
+  },
+  {
+    "owner": "techulus",
+    "name": "techulus_push-github-action",
+    "dependabot": null
+  },
+  {
+    "owner": "Techshift",
+    "name": "Techshift_mention-reviewers",
+    "dependabot": null
+  },
+  {
+    "owner": "techservicesillinois",
+    "name": "techservicesillinois_cache-validation",
+    "dependabot": null
+  },
+  {
+    "owner": "techrill88",
+    "name": "techrill88_azure_compliance_action",
+    "dependabot": null
+  },
+  {
+    "owner": "techouse",
+    "name": "techouse_vue-cli-plugin-s3-deploy-action-next",
     "dependabot": null
   }
 ]
