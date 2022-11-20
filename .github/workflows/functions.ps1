@@ -100,7 +100,7 @@ function RunForActions {
     SaveStatus -existingForks $existingForks
 
     # toggle for faster test runs
-    if (1 -eq 2) {
+    if (1 -eq 1) {
         ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
         Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
         "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
