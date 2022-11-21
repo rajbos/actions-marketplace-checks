@@ -343,9 +343,10 @@ try {
 
         $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
         if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
             Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
-                ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $action.owner -repo $action.name
+                ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $owner -repo $repo
 
                 if ($repo_updated_at) {
                     if (!$hasField) {
@@ -380,9 +381,9 @@ try {
         if (!$hasField -or ($null -eq $action.tagInfo)) {
             #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
-                $tagInfo = GetRepoTagInfo -owner $action.owner -repo $action.name
+                $tagInfo = GetRepoTagInfo -owner $owner -repo $repo
                 if (!$hasField) {
-                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($action.owner/$action.name)]"
+                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner/$repo)]"
                     
                     $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
                     $i++ | Out-Null
@@ -401,9 +402,9 @@ try {
         if (!$hasField -or ($null -eq $action.releaseInfo)) {
             #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
             try {
-                $releaseInfo = GetRepoReleases -owner $action.owner -repo $action.name
+                $releaseInfo = GetRepoReleases -owner $owner -repo $repo
                 if (!$hasField) {
-                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($action.owner/$action.name)]"
+                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner/$repo)]"
                     
                     $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
                     $i++ | Out-Null
@@ -421,10 +422,10 @@ try {
         if ($action.actionType.actionType -eq "Docker") {
             $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
             if (!$hasField -or (($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image")) {
-                Write-Host "$i/$max - Checking Docker base image information for [$($action.owner)/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
+                Write-Host "$i/$max - Checking Docker base image information for [$($owner)/$($repo)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
                 try {
                     # search for the docker file in the fork organization, since the original repo might already have seen updates
-                    $dockerBaseImage = GetRepoDockerBaseImage -owner $forkOrg -repo $action.name -actionType $action.actionType
+                    $dockerBaseImage = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType
                     if ($dockerBaseImage -ne "") {                    
                         if (!$hasField) {
                             Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
@@ -434,7 +435,7 @@ try {
                             $dockerBaseImageInfoAdded++ | Out-Null
                         }
                         else {
-                            Write-Host "Updating Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
+                            Write-Host "Updating Docker base image information object with image:[$dockerBaseImage] for [$($owner)/$($repo))]"
                             $action.actionType.dockerBaseImage = $dockerBaseImage
                         }
                     }

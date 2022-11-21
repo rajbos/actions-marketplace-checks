@@ -222,6 +222,18 @@ function GetForkedRepoName {
     return "$($owner)_$($repo)"    
 }
 
+function GetOrgActionInfo {
+    Param (
+        $forkedOwnerRepo
+    )
+
+    $forkedOwnerRepoParts = $forkedOwnerRepo.Split('_')
+    $owner = $forkedOwnerRepoParts[0]
+    $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
+
+    return $owner, $repo
+}
+
 function SplitUrlLastPart {
     Param (
         $url
