@@ -229,8 +229,9 @@ function VulnerabilityCalculations {
     )
     $averageHighAlerts = 0
     $averageCriticalAlerts = 0
-    if ($reposAnalyzed -eq 0) {
-        Write-Error "No repos analyzed"        
+    
+    if ($repoInformation.reposAnalyzed -eq 0) {
+        LogMessage "# No repos analyzed"        
     } 
     else {
         $averageHighAlerts = $repoInformation.highAlerts / $repoInformation.reposAnalyzed
@@ -328,6 +329,10 @@ function ReportInsightsInMarkdown {
 }
 
 function ReportAgeInsights {
+    if ($global:repoInfo -eq 0) {
+        # prevent division by 0 errors
+        return
+    }
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
     LogMessage "|Analyzed|Total: $($global:repoInfo)|Analyzed: $($repoInformation.reposAnalyzed) repos|100%|"
