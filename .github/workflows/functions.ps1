@@ -292,11 +292,6 @@ function ForkActionRepos {
             break
         }
 
-        # show every 100 executions a message
-        if (($counter % 100) -eq 1) {
-            Write-Host "Checked forked for $counter repos"
-        }
-
         ($owner, $repo) = $(SplitUrl $action.RepoUrl)
         # check if fork already exists
         $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
