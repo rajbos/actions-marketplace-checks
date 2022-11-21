@@ -135,7 +135,7 @@ function GetDependabotAlerts {
         }
 
         if ($repo.name -eq "" -or $null -eq $repo.name) {
-            Write-Host "Skipping repo with no name" $repo | ConvertTo-Json
+            Write-Debug "Skipping repo with no name" $repo | ConvertTo-Json
             continue
         }
 
@@ -392,7 +392,7 @@ function EnableDependabot {
       $existingFork
     )
     if ($existingFork.name -eq "" -or $null -eq $existingFork.name) {
-        Write-Host "No repo name found, skipping [$($existingFork.name)]" $existingFork | ConvertTo-Json
+        Write-Debug "No repo name found, skipping [$($existingFork.name)]" $existingFork | ConvertTo-Json
         return $false
     }
 

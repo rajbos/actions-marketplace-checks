@@ -146,7 +146,7 @@ function ApiCall {
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
             $rateLimitReset = $_.Exception.Response.Headers["X-RateLimit-Reset"]
             $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
-            if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 1) {
+            if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 10) {
                 # convert rateLimitReset from epoch to ms
                 $rateLimitResetInt = [int]$rateLimitReset[0]
                 $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))

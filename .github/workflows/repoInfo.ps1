@@ -337,7 +337,7 @@ try {
         }
 
         if (!$action.forkFound) {
-            Write-Host "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
+            Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
             continue
         }
 
