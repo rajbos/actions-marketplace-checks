@@ -359,7 +359,7 @@ function EnableDependabotForForkedActions {
 
         if (($null -ne $existingFork) -And ($null -eq $existingFork.dependabot)) {
             if (EnableDependabot $existingFork) {
-                Write-Debug "Dependabot enabled on [$repo]"
+                Write-Host "Dependabot enabled on [$repo]"
                 $existingFork.dependabot = $true
                 
                 if (Get-Member -inputobject $repo -name "vulnerabilityStatus" -Membertype Properties) {
