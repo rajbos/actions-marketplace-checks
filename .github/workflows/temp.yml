@@ -1,8 +1,0 @@
-on:
- push:
- 
-jobs:
- test:
-   runs-on: ubunutu-latest
-   steps:
-     - run: echo "Hellow world"
