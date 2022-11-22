@@ -51,7 +51,7 @@ jobs:
           # pull to make sure we have the latest contents and that the commit / push will succeed
           # still fails if these two files have been updated ofc.
 
-          git pull --quiet | Out-Null
+          git pull --quiet
           if [[ `git status --porcelain` ]]; then
             git config --global user.email "github_token@github.com"
             git config --global user.name "GITHUB_TOKEN"
