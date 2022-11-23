@@ -467,7 +467,7 @@ function ForkActionRepo {
             Set-Location ../.. | Out-Null
             # remove the temp directory to prevent disk build up
             Remove-Item -Path $tempDir/$repo -Recurse -Force | Out-Null
-            Write-Host " Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
+            Write-Host "Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"
 
             return $true
         }
