@@ -73,7 +73,7 @@ function GetForkedActionRepoList {
     # get all existing repos in target org
     #$repoUrl = "orgs/$forkOrg/repos?type=forks"
     $repoUrl = "orgs/$forkOrg/repos"
-    $repoResponse = ApiCall -method GET -url $repoUrl -body "{`"organization`":`"$forkOrg`"}"
+    $repoResponse = ApiCall -method GET -url $repoUrl -body "{`"organization`":`"$forkOrg`"}" -access_token $access_token_destination
     Write-Host "Found [$($repoResponse.Count)] existing repos in org [$forkOrg]"
     
     #foreach ($repo in $repoResponse) {
@@ -436,7 +436,7 @@ function ForkActionRepo {
     $forkUrl = "orgs/$forkOrg/repos"
     # call the fork api | CREATE repo
     $newRepoName = GetForkedRepoName -owner $owner -repo $repo
-    $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201
+    $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201 -access_token $access_token_destination
      
     # if temp directory does not exist, create it
     if (-not (Test-Path $tempDir)) {
@@ -480,7 +480,7 @@ function ForkActionRepo {
     else {
         # test if the repo already existed, to fix previous errors
         $url = "repos/$forkOrg/$newRepoName"
-        $status = ApiCall -method GET -url $url
+        $status = ApiCall -method GET -url $url -access_token $access_token_destination
         if ($null -ne $status) {
             Write-Host "Repo [$forkOrg/$newRepoName] already exists"
             return $true

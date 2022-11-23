@@ -6,10 +6,11 @@ function ApiCall {
         $expected,
         [int] $backOff = 5,
         [int] $maxResultCount = 0,
-        [int] $currentResultCount
+        [int] $currentResultCount,
+        $access_token
     )
     $headers = @{
-        Authorization = GetBasicAuthenticationHeader
+        Authorization = GetBasicAuthenticationHeader -access_token $access_token
     }
     if ($null -ne $body) {
         $headers.Add('Content-Type', 'application/json')
@@ -74,7 +75,7 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token
                     $response += $nextResult
                 }
             }            
@@ -95,7 +96,7 @@ function ApiCall {
                 Write-Host ""                
                 Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
         }
 
         if ($null -ne $expected) {
@@ -124,7 +125,7 @@ function ApiCall {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
         }
         else {
             Write-Host "Log message: $($messageData.message)"
@@ -141,7 +142,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
@@ -157,7 +158,7 @@ function ApiCall {
                     Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
                 }
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2)
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
         }
 
         if ($null -ne $expected)
@@ -188,6 +189,10 @@ function ApiCall {
 }
 
 function GetBasicAuthenticationHeader(){
+    Param (
+        $access_token
+    )
+
     $CredPair = "x:$access_token"
     $EncodedCredentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($CredPair))
     
@@ -258,8 +263,14 @@ function GetRateLimitInfo {
 
     #Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
     Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
-    Write-Host " - GraphQL: $($response.resources.graphql | ConvertTo-Json)"
+    #Write-Host " - GraphQL: $($response.resources.graphql | ConvertTo-Json)"
     #Write-Host " - GraphQL: $($response | ConvertTo-Json)"
+
+    if ($access_token -ne $access_token_destination) {
+        # check the ratelimit for the destination token as well:
+        $response = ApiCall -method GET -url $url -access_token $access_token_destination
+        Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"    
+    }
 }
 
 function SaveStatus {
