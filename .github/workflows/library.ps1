@@ -83,7 +83,7 @@ function ApiCall {
         
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
-        if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 1) {
+        if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
             # convert rateLimitReset from epoch to ms
             $rateLimitResetInt = [int]$rateLimitReset[0]
             $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
