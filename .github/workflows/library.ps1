@@ -4,10 +4,10 @@ function ApiCall {
         $url,
         $body,
         $expected,
+        [int] $currentResultCount,
         [int] $backOff = 5,
         [int] $maxResultCount = 0,
-        [int] $currentResultCount,
-        $access_token
+        $access_token = $env:GITHUB_TOKEN
     )
     $headers = @{
         Authorization = GetBasicAuthenticationHeader -access_token $access_token
