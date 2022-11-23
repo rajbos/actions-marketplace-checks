@@ -7,6 +7,8 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+#store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
+$env:GITHUB_TOKEN = $access_token
 $statusFile = "status.json"
 $failedStatusFile = "failedForks.json"
 Write-Host "Got an access token with a length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
