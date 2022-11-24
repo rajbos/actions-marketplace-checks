@@ -270,8 +270,8 @@ function GetRateLimitInfo {
 
     if ($access_token -ne $access_token_destination) {
         # check the ratelimit for the destination token as well:
-        $response = ApiCall -method GET -url $url -access_token $access_token_destination
-        Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"    
+        $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
+        Write-Host "Access token ratelimit info: $($response2.rate | ConvertTo-Json)"    
     }
 }
 
