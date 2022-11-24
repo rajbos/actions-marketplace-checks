@@ -190,7 +190,7 @@ function ApiCall {
 
 function GetBasicAuthenticationHeader(){
     Param (
-        $access_token
+        $access_token = $env:GITHUB_TOKEN
     )
 
     $CredPair = "x:$access_token"

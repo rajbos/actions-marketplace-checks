@@ -154,7 +154,7 @@ function GetDependabotAlerts {
         }
 
         Write-Debug "Loading vulnerability alerts for [$($repo.name)]"
-        $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name)
+        $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name) -access_token $access_token_destination
         if ($dependabotStatus.high -gt 0) {
             Write-Host "Found [$($dependabotStatus.high)] high alerts for repo [$($repo.name)]"
             $highAlerts++
@@ -195,7 +195,8 @@ function GetDependabotAlerts {
 function GetDependabotVulnerabilityAlerts {
     Param (
         $owner,
-        $repo
+        $repo,
+        $access_token = $env:GITHUB_TOKEN
     )
 
     $query = '
@@ -228,7 +229,7 @@ function GetDependabotVulnerabilityAlerts {
     
     $uri = "https://api.github.com/graphql"
     $requestHeaders = @{
-        Authorization = GetBasicAuthenticationHeader
+        Authorization = GetBasicAuthenticationHeader -access_token $access_token
     }
     
     Write-Debug "Loading vulnerability alerts for repo $repo"
