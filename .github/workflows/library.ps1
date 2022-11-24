@@ -166,9 +166,11 @@ function ApiCall {
             Write-Host "Expected status code [$expected] but got [$($_.Exception.Response.StatusCode)] for [$url]"
             if ($_.Exception.Response.StatusCode -eq $expected) {
                 # expected error
+                Write-Host "Returning true"
                 return $true
             }
             else {
+                Write-Host "Returning false"
                 return $false
             }
         }
