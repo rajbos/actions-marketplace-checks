@@ -240,8 +240,9 @@ foreach ($action in $status) {
 
     $hasField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
     if (!$hasField -or ($null -eq $action.actionType.actionType)) {
-        Write-Host "$i/$max - Checking action information for [$($action.owner)/$($action.name)]"
-        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $action.owner -repo $action.name
+        ($owner, $repo) = GetOrgActionInfo($action.name)
+        Write-Host "$i/$max - Checking action information for [$($owner)/$($name)]"
+        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $owner -repo $name
 
         If (!$hasField) {
             $actionType = @{
