@@ -154,7 +154,7 @@ function GetDependabotAlerts {
         }
 
         Write-Debug "Loading vulnerability alerts for [$($repo.name)]"
-        $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name) -access_token $access_token_destination
+        $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name -access_token $access_token_destination)
         if ($dependabotStatus.high -gt 0) {
             Write-Host "Found [$($dependabotStatus.high)] high alerts for repo [$($repo.name)]"
             $highAlerts++
