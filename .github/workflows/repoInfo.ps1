@@ -350,7 +350,7 @@ try {
 
                 if ($repo_updated_at) {
                     if (!$hasField) {
-                        Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner/$action.name)]"
+                        Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
                         $repoInfo = @{
                             archived = $repo_archived
                             disabled = $repo_disabled
@@ -383,7 +383,7 @@ try {
             try {
                 $tagInfo = GetRepoTagInfo -owner $owner -repo $repo
                 if (!$hasField) {
-                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner/$repo)]"
+                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
                     
                     $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
                     $i++ | Out-Null
@@ -404,7 +404,7 @@ try {
             try {
                 $releaseInfo = GetRepoReleases -owner $owner -repo $repo
                 if (!$hasField) {
-                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner/$repo)]"
+                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
                     
                     $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
                     $i++ | Out-Null
