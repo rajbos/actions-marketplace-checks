@@ -21564,7 +21564,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:29.3678741Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2020-03-11T13:53:14Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-02-12T14:24:36Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "WormJim_version-bump-action",
@@ -21583,7 +21591,49 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:29.4840684Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-06-24T15:14:01Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-20T13:54:32Z"
+    },
+    "tagInfo": [
+      "v0.0.8",
+      "0.0.1",
+      "0.0.2",
+      "0.0.3",
+      "0.0.4",
+      "0.0.5",
+      "0.0.6",
+      "0.0.7",
+      "0.0.8",
+      "0.0.9",
+      "0.0.10",
+      "0.0.15",
+      "0.1.0",
+      "0.2.0",
+      "0.2.1",
+      "0.3.0",
+      "0.3.2"
+    ],
+    "releaseInfo": [
+      "0.3.2",
+      "0.2.1",
+      "0.2.0",
+      "0.1.0",
+      "0.0.15",
+      "0.0.10",
+      "0.0.9",
+      "0.0.8",
+      "0.0.7",
+      "0.0.6",
+      "0.0.5",
+      "0.0.4",
+      "0.0.3",
+      "0.0.2",
+      "0.0.1"
+    ]
   },
   {
     "name": "WormJim_dispatch-workflow-action",
@@ -21602,7 +21652,51 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:29.5886839Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-04-29T14:49:30Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-04-29T14:49:52Z"
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.0.1",
+      "1.0.2",
+      "1.0.3",
+      "1.0.4",
+      "1.0.5",
+      "1.0.6",
+      "1.0.7",
+      "1.0.8",
+      "1.0.9",
+      "1.0.10",
+      "1.0.11",
+      "1.0.12",
+      "1.0.13",
+      "1.0.14",
+      "1.0.15",
+      "1.0.16"
+    ],
+    "releaseInfo": [
+      "1.0.16",
+      "1.0.15",
+      "1.0.14",
+      "1.0.13",
+      "1.0.12",
+      "1.0.11",
+      "1.0.10",
+      "1.0.9",
+      "1.0.8",
+      "1.0.7",
+      "1.0.6",
+      "1.0.5",
+      "1.0.4",
+      "1.0.3",
+      "1.0.2",
+      "1.0.1",
+      "1.0.0"
+    ]
   },
   {
     "name": "worldiety_chia",
@@ -21622,7 +21716,47 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:29.7038193Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-04T17:01:29Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-02-18T22:20:45Z"
+    },
+    "tagInfo": [
+      "0.0.1",
+      "0.0.2",
+      "0.0.3",
+      "0.0.4",
+      "0.0.5",
+      "0.0.6",
+      "0.0.7",
+      "0.0.8",
+      "0.0.9",
+      "0.0.10",
+      "0.0.11",
+      "0.0.12",
+      "0.0.13",
+      "0.0.14",
+      "0.0.15"
+    ],
+    "releaseInfo": [
+      "0.0.15",
+      "0.0.15",
+      "0.0.14",
+      "0.0.13",
+      "0.0.12",
+      "0.0.11",
+      "0.0.10",
+      "0.0.9",
+      "0.0.8",
+      "0.0.7",
+      "0.0.5",
+      "0.0.4",
+      "0.0.3",
+      "0.0.2",
+      "0.0.1"
+    ]
   },
   {
     "name": "worksome_jira-branch-name-validator-action",
@@ -21641,7 +21775,90 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:29.8074555Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-25T17:27:50Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-06-11T08:37:56Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0",
+      "v1.1",
+      "v1.2",
+      "v1.3",
+      "v1.4",
+      "v1.5.0",
+      "v1.5.1",
+      "v1.5.2",
+      "v1.6.0",
+      "v1.6.1",
+      "v1.6.2-rc1",
+      "v1.6.2-rc2",
+      "v1.6.2-rc3",
+      "v1.6.2-rc4",
+      "v1.6.2-rc5",
+      "v1.6.2-rc6",
+      "v1.6.2-rc7",
+      "v1.6.2-rc8",
+      "v1.6.2-rc9",
+      "v1.6.2-rc10",
+      "v1.6.2-rc11",
+      "v1.6.2-rc12",
+      "v1.6.2-rc13",
+      "v1.6.2-rc14",
+      "v1.6.2-rc15",
+      "v1.6.2-rc16",
+      "v1.6.2-rc17",
+      "v1.6.2-rc18",
+      "v1.6.2-rc19",
+      "v1.6.2-rc20",
+      "v1.6.2-rc21",
+      "v1.6.2-rc22",
+      "v1.6.2-rc23",
+      "v1.7.0",
+      "v1.7.2",
+      "v1.7.4",
+      "v1.7.5"
+    ],
+    "releaseInfo": [
+      "v1.7.2",
+      "v1.7.0",
+      "v1.6.2-rc23",
+      "v1.6.2-rc22",
+      "v1.6.2-rc21",
+      "v1.6.2-rc20",
+      "v1.6.2-rc19",
+      "v1.6.2-rc18",
+      "v1.6.2-rc17",
+      "v1.6.2-rc16",
+      "v1.6.2-rc15",
+      "v1.6.2-rc14",
+      "v1.6.2-rc9",
+      "v1.6.2-rc8",
+      "v1.6.2-rc7",
+      "v1.6.2-rc6",
+      "v1.6.2-rc5",
+      "v1.6.2-rc4",
+      "v1.6.2-rc3",
+      "v1.6.2-rc2",
+      "v1.6.2-rc13",
+      "v1.6.2-rc12",
+      "v1.6.2-rc11",
+      "v1.6.2-rc10",
+      "v1.6.2-rc1",
+      "v1.6.1",
+      "v1.6.0",
+      "v1.5.2",
+      "v1.5.1",
+      "v1.5.0",
+      "v1.4",
+      "v1.3",
+      "v1.2",
+      "v1.1",
+      "v1.0"
+    ]
   },
   {
     "name": "Workshop64_buildpulse-action",
@@ -21660,7 +21877,37 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:29.9148692Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-06-23T21:59:06Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-03-14T20:15:45Z"
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.2.0",
+      "v0.3.0",
+      "v0.4.0",
+      "v0.5.0",
+      "v0.6.0",
+      "v0.7.0",
+      "v0.8.0-pre",
+      "v0.8.0",
+      "v0.9.0"
+    ],
+    "releaseInfo": [
+      "v0.9.0",
+      "v0.8.0",
+      "v0.8.0-pre",
+      "v0.7.0",
+      "v0.6.0",
+      "v0.5.0",
+      "v0.4.0",
+      "v0.3.0",
+      "v0.2.0",
+      "v0.1.0"
+    ]
   },
   {
     "name": "worklifebeyond_hasura-cli-action",
@@ -21680,7 +21927,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.0398592Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2019-09-14T15:21:29Z",
+      "disabled": false,
+      "latest_release_published_at": "2019-09-14T01:36:14Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "workflow-actions_conventional-changelog-action",
@@ -21699,7 +21954,23 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.1419168Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-07-08T17:28:20Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-29T10:46:18Z"
+    },
+    "tagInfo": [
+      "main",
+      "v0.0.0.1",
+      "v0.0.1"
+    ],
+    "releaseInfo": [
+      "v0.0.1",
+      "v0.0.0.1",
+      "main"
+    ]
   },
   {
     "name": "workflow_nix-shell-action",
@@ -21718,7 +21989,29 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.2471044Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-10T08:09:40Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-16T18:40:01Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v3.0.1",
+      "v3.0.2",
+      "v3.0.3"
+    ],
+    "releaseInfo": [
+      "v3.0.3",
+      "v3.0.2",
+      "v3.0.1",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wooseopkim_unpublished-tags",
@@ -21737,7 +22030,22 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.3621148Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-31T16:08:18Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-29T06:00:24Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3"
+    ],
+    "releaseInfo": [
+      "v3",
+      "v2"
+    ]
   },
   {
     "name": "WoonHaKim_actions-limit-rate",
@@ -21756,7 +22064,22 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.4678283Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2020-08-04T00:38:01Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-04-15T03:46:22Z"
+    },
+    "tagInfo": [
+      "master",
+      "0.1.0",
+      "0.1.5"
+    ],
+    "releaseInfo": [
+      "0.1.5",
+      "master"
+    ]
   },
   {
     "name": "Woofenator_action-aws-iam-authenticator",
@@ -21775,7 +22098,26 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.5827246Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2020-11-17T09:13:46Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-11-17T09:14:31Z"
+    },
+    "tagInfo": [
+      "1",
+      "1.0.1",
+      "1.0.2",
+      "1.0.3",
+      "1.0.4"
+    ],
+    "releaseInfo": [
+      "1.0.4",
+      "1.0.3",
+      "1.0.2",
+      "1.0.1"
+    ]
   },
   {
     "name": "WoodenMaiden_sparql-virtuoso-action",
@@ -21794,7 +22136,21 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.6860309Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-27T14:58:26Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-25T14:43:15Z"
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.2.0"
+    ],
+    "releaseInfo": [
+      "v0.2.0",
+      "v0.1.0"
+    ]
   },
   {
     "name": "woocart_deploy-action",
@@ -21814,7 +22170,25 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.7840924Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-01T12:32:35Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-09-28T09:50:15Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v3",
+      "v4",
+      "v5"
+    ],
+    "releaseInfo": [
+      "v5",
+      "v4",
+      "v3",
+      "v1"
+    ]
   },
   {
     "name": "wollfish_cloudflare-purge-action",
@@ -21834,7 +22208,26 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:30.9086592Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-26T21:12:28Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": [
+      "v0.1.1",
+      "v0.1.3",
+      "v0.2.0",
+      "v0.3.0",
+      "v0.4.0",
+      "v0.5.0",
+      "v0.6.0",
+      "v0.7.0",
+      "v0.8.0",
+      "v0.9.0"
+    ],
+    "releaseInfo": "v0.4.0"
   },
   {
     "name": "WolleTD_clang-format-checker",
@@ -21853,7 +22246,30 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.0180413Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-11-23T21:10:39Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-28T17:56:34Z"
+    },
+    "tagInfo": [
+      "v1.0",
+      "v1.1",
+      "v1.2",
+      "v1.3",
+      "v1.4",
+      "v1.5",
+      "test",
+      "testdata",
+      "testdata2",
+      "v1.6",
+      "v1.7"
+    ],
+    "releaseInfo": [
+      "v1.7",
+      "v1.6"
+    ]
   },
   {
     "name": "WolframResearch_test-paclet",
@@ -21873,7 +22289,37 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.123473Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-08T16:51:15Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-17T03:27:08Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.7.1",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.10.0",
+      "v1.10.1",
+      "v1.10.2"
+    ],
+    "releaseInfo": [
+      "v1.10.2",
+      "v1.10.1",
+      "v1.10.0",
+      "v1.9.0",
+      "v1.8.0",
+      "v1.7.1",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "WolframResearch_check-paclet",
@@ -21893,7 +22339,45 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.2270891Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-08T16:50:17Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-17T03:26:59Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.6.0",
+      "v1.7.0",
+      "v1.7.1",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.10.0",
+      "v1.10.1",
+      "v1.10.2"
+    ],
+    "releaseInfo": [
+      "v1.10.2",
+      "v1.10.1",
+      "v1.10.0",
+      "v1.9.0",
+      "v1.8.0",
+      "v1.7.1",
+      "v1.7.0",
+      "v1.6.0",
+      "v1.5.0",
+      "v1.4.0",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "WolframResearch_build-paclet",
@@ -21913,7 +22397,43 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.3366784Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-02T23:25:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-17T03:27:01Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.6.0",
+      "v1.7.0",
+      "v1.7.1",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.10.0",
+      "v1.10.1",
+      "v1.10.2"
+    ],
+    "releaseInfo": [
+      "v1.10.2",
+      "v1.10.1",
+      "v1.10.0",
+      "v1.9.0",
+      "v1.8.0",
+      "v1.7.1",
+      "v1.7.0",
+      "v1.6.0",
+      "v1.5.0",
+      "v1.4.0",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wolfigster_rcon-action",
@@ -21932,7 +22452,22 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.4506586Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-04-13T08:31:45Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-04-13T21:16:38Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2"
+    ],
+    "releaseInfo": [
+      "v1.0.2",
+      "v1.0.1"
+    ]
   },
   {
     "name": "wolfia-app_wolfia-github-action",
@@ -21951,7 +22486,25 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.5570949Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-07T14:26:59Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-09T18:56:36Z"
+    },
+    "tagInfo": [
+      "v1.0.0-alpha",
+      "v1.0.1-alpha",
+      "v1.0.2-alpha",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.2-alpha",
+      "v1.0.1-alpha",
+      "v1.0.0-alpha"
+    ]
   },
   {
     "name": "WolfGear-Tech_Action-ParsePR",
@@ -21971,7 +22524,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.6564505Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-29T14:57:21Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-28T00:10:13Z"
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "name": "Wolemercy_heroku-django-s3-deploy",
@@ -21990,7 +22551,27 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.760978Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-18T06:34:48Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-11-02T01:57:07Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.4",
+      "v1.03",
+      "1.0.2"
+    ],
+    "releaseInfo": [
+      "v1.0.4",
+      "1.0.2",
+      "v1.0.1",
+      "v1.03",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wofsauge_Isaac-xmlvalidator-action",
@@ -22010,7 +22591,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.8669011Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-04T19:38:50Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-31T02:30:12Z"
+    },
+    "tagInfo": "V1.0",
+    "releaseInfo": "V1.0"
   },
   {
     "name": "wlkrm_auto-rebase-upstream-node",
@@ -22029,7 +22618,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:31.9783109Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-01-13T15:23:32Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": "v0.0.2",
+    "releaseInfo": "v0.0.2"
   },
   {
     "name": "wlixcc_SFTP-Deploy-Action",
@@ -22049,7 +22646,31 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.0910671Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-23T13:48:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-07-01T01:32:57Z"
+    },
+    "tagInfo": [
+      "v1.0",
+      "v1.2",
+      "v1.2.1",
+      "v1.2.2",
+      "v1.2.3",
+      "v1.2.4",
+      "1.1"
+    ],
+    "releaseInfo": [
+      "v1.2.4",
+      "v1.2.3",
+      "v1.2.2",
+      "v1.2.1",
+      "v1.2",
+      "1.1",
+      "v1.0"
+    ]
   },
   {
     "name": "wlixcc_pod-lib-update-action",
@@ -22068,7 +22689,22 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.2044585Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-30T04:53:36Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-02-24T07:52:58Z"
+    },
+    "tagInfo": [
+      "1.0.0-beta.1",
+      "1.0.0",
+      "1.0.1"
+    ],
+    "releaseInfo": [
+      "1.0.0",
+      "1.0.0-beta.1"
+    ]
   },
   {
     "name": "wlicamele-bw_pom-version-bump",
@@ -22088,7 +22724,22 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.3325538Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-06-29T19:25:43Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": [
+      "v0.1",
+      "v0.2",
+      "v.02"
+    ],
+    "releaseInfo": [
+      "v0.2",
+      "v0.1"
+    ]
   },
   {
     "name": "wktk_github-project-connect-action",
@@ -22107,7 +22758,26 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.5047576Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-15T22:09:57Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-09-06T03:06:04Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2"
+    ],
+    "releaseInfo": [
+      "v1.1.2",
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wktk_conflibot",
@@ -22126,7 +22796,32 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.6041761Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-27T03:23:23Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-04-26T03:29:50Z"
+    },
+    "tagInfo": [
+      "v0.0.0",
+      "v0.1.0",
+      "v0.2.0",
+      "v0.3.0",
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.1",
+      "v1.0.0",
+      "v0.3.0",
+      "v0.2.0",
+      "v0.1.0",
+      "v0.0.0"
+    ]
   },
   {
     "name": "wjftu_vuepress_1.x_compiler",
@@ -22146,7 +22841,23 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.7143547Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-12-13T12:31:53Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-12-13T12:29:48Z"
+    },
+    "tagInfo": [
+      "v1",
+      "1.0.0",
+      "1.0.1"
+    ],
+    "releaseInfo": [
+      "1.0.1",
+      "1.0.0",
+      "v1"
+    ]
   },
   {
     "name": "wjdp_htmltest-action",
@@ -22166,7 +22877,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.8316655Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-01T00:34:22Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": "v0.13.0-rc1",
+    "releaseInfo": "v0.13.0-rc1"
   },
   {
     "name": "wizzdi_wizzdi-action-tsc",
@@ -22185,7 +22904,51 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:32.9396934Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-06-29T15:49:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-06-29T15:50:07Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2",
+      "v1.1.3",
+      "v1.1.4",
+      "v1.1.5",
+      "v1.1.6",
+      "v1.1.7",
+      "v1.1.8",
+      "v1.1.9",
+      "v1.1.10",
+      "v1.1.11",
+      "v1.1.12",
+      "v1.1.13",
+      "v1.1.14",
+      "v1.1.15",
+      "v1.1.16",
+      "v1.1.17"
+    ],
+    "releaseInfo": [
+      "v1.1.17",
+      "v1.1.16",
+      "v1.1.15",
+      "v1.1.14",
+      "v1.1.13",
+      "v1.1.12",
+      "v1.1.11",
+      "v1.0.1"
+    ]
   },
   {
     "name": "wizofe_python-axblack-action",
@@ -22205,7 +22968,29 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.0645913Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-09-07T16:35:13Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": [
+      "0.1a",
+      "0.1b",
+      "0.2a",
+      "0.21a",
+      "0.22a",
+      "0.23a"
+    ],
+    "releaseInfo": [
+      "0.2a",
+      "0.23a",
+      "0.22a",
+      "0.21a",
+      "0.1b",
+      "0.1a"
+    ]
   },
   {
     "name": "Wizkas0_repo-score",
@@ -22224,7 +23009,21 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.1879607Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-05-14T04:12:54Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-04-30T15:35:07Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v0.0.1"
+    ]
   },
   {
     "name": "Wizkas0_PR-LabelGenerator",
@@ -22243,7 +23042,37 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.2995336Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-03-27T13:29:17Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-04-06T14:37:02Z"
+    },
+    "tagInfo": [
+      "0.1",
+      "0.2",
+      "0.3",
+      "0.4",
+      "0.5",
+      "0.6",
+      "0.7",
+      "0.8",
+      "1.0",
+      "1.0.1"
+    ],
+    "releaseInfo": [
+      "1.0.1",
+      "1.0",
+      "0.8",
+      "0.7",
+      "0.6",
+      "0.5",
+      "0.4",
+      "0.3",
+      "0.2",
+      "0.1"
+    ]
   },
   {
     "name": "wizhi_setup-task",
@@ -22262,7 +23091,18 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.4049377Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2020-06-27T23:40:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-06-27T23:42:55Z"
+    },
+    "tagInfo": [
+      "v1",
+      "1.0.0"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "name": "wizhi_setup-buf",
@@ -22281,7 +23121,21 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.5180838Z"
-    }
+    },
+    "repoInfo": {
+      "archived": true,
+      "updated_at": "2022-08-19T10:46:43Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-12-23T09:55:07Z"
+    },
+    "tagInfo": [
+      "v1",
+      "1.0.0",
+      "1.1.0",
+      "1.1.1",
+      "1.2.0"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "name": "wixplosives_b2",
@@ -22300,7 +23154,25 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.6320097Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-02-07T15:03:54Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-02-28T08:17:18Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4"
+    ],
+    "releaseInfo": [
+      "v4",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wixplosives_action-upload-to-s3",
@@ -22319,7 +23191,37 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.7431551Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-12-07T09:44:23Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-03-10T08:48:04Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v5",
+      "v6",
+      "v7",
+      "v8",
+      "v9",
+      "v10"
+    ],
+    "releaseInfo": [
+      "v10",
+      "v9",
+      "v8",
+      "v7",
+      "v6",
+      "v5",
+      "v4",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wixplosives_action-publish-test-metrics",
@@ -22338,7 +23240,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.8619724Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-02-07T12:32:13Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-01-19T17:39:11Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "wixplosives_action-publish-pr-comment",
@@ -22357,7 +23267,29 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:33.962833Z"
-    }
+    },
+    "repoInfo": {
+      "archived": true,
+      "updated_at": "2022-02-07T14:51:34Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-12-28T18:28:26Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v5",
+      "v6"
+    ],
+    "releaseInfo": [
+      "v6",
+      "v5",
+      "v4",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wixplosives_action-newrelic-report",
@@ -22376,7 +23308,27 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.0700595Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-31T06:51:15Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-12-17T15:52:55Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v5"
+    ],
+    "releaseInfo": [
+      "v5",
+      "v4",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "Wixonic_File-Lister",
@@ -22395,7 +23347,21 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.1714351Z"
-    }
+    },
+    "repoInfo": {
+      "archived": true,
+      "updated_at": "2022-11-12T08:19:44Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-04-20T14:33:55Z"
+    },
+    "tagInfo": [
+      "1.0",
+      "1.0.1"
+    ],
+    "releaseInfo": [
+      "1.0.1",
+      "1.0"
+    ]
   },
   {
     "name": "withyourtribe_action-hosting-deploy",
@@ -22414,7 +23380,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.2857314Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-07-07T23:48:54Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-19T14:17:12Z"
+    },
+    "tagInfo": "v0",
+    "releaseInfo": "v0"
   },
   {
     "name": "withlogicco_setup-compose-cli",
@@ -22433,7 +23407,23 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.4026448Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-04T07:46:31Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-04-19T07:16:50Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1",
+      "v1.2"
+    ],
+    "releaseInfo": [
+      "v1.2",
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "name": "withastro_action",
@@ -22452,7 +23442,45 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.5086597Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-22T10:21:04Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-29T14:47:29Z"
+    },
+    "tagInfo": [
+      "v0",
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2",
+      "v0.1.3",
+      "v0.1.4",
+      "v0.1.5",
+      "v0.1.6",
+      "v0.1.7",
+      "v0.1.8",
+      "v0.1.9-pre.0",
+      "v0.1.9-pre.1",
+      "v0.1.9-pre.2",
+      "v0.1.9"
+    ],
+    "releaseInfo": [
+      "v0.1.9",
+      "v0.1.9-pre.2",
+      "v0.1.9-pre.1",
+      "v0.1.9-pre.0",
+      "v0",
+      "v0.1.8",
+      "v0.1.7",
+      "v0.1.6",
+      "v0.1.5",
+      "v0.1.4",
+      "v0.1.3",
+      "v0.1.2",
+      "v0.1.1",
+      "v0.1.0"
+    ]
   },
   {
     "name": "wistia_publish-branch-to-npm",
@@ -22471,7 +23499,20 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.6239724Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-06-18T19:19:55Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-04-04T15:50:04Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0"
+    ],
+    "releaseInfo": "v1.0.0"
   },
   {
     "name": "wistia_parse-tool-versions",
@@ -22490,7 +23531,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.7606384Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-03-24T13:04:53Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-09-08T04:30:37Z"
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "name": "wistefan_validate-data-model",
@@ -22510,7 +23559,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:34.8781568Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-05-31T10:30:33Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-10T14:10:49Z"
+    },
+    "tagInfo": "0.0.0",
+    "releaseInfo": "0.0.0"
   },
   {
     "name": "wistefan_get-releases-by-semver",
@@ -22530,7 +23587,21 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.2356431Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-01-04T13:45:08Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-26T06:45:50Z"
+    },
+    "tagInfo": [
+      "0.0.0",
+      "0.0.1"
+    ],
+    "releaseInfo": [
+      "0.0.1",
+      "0.0.0"
+    ]
   },
   {
     "name": "wistefan_create-openapi-yaml",
@@ -22550,7 +23621,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.3379146Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-05-07T11:38:38Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-07T08:28:57Z"
+    },
+    "tagInfo": "0.0.0",
+    "releaseInfo": "0.0.0"
   },
   {
     "name": "wistefan_check-compatibility",
@@ -22570,7 +23649,15 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.4524098Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-05-26T14:05:35Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-26T08:14:18Z"
+    },
+    "tagInfo": "0.0.0",
+    "releaseInfo": "0.0.0"
   },
   {
     "name": "wiremind_helm-kubeval-action",
@@ -22589,7 +23676,29 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.5606291Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-18T21:50:48Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-18T20:58:17Z"
+    },
+    "tagInfo": [
+      "v1.0.0-alpha1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.2.1",
+      "v1.2.2"
+    ],
+    "releaseInfo": [
+      "v1.2.2",
+      "v1.2.1",
+      "v1.2.0",
+      "v1.1.0"
+    ]
   },
   {
     "name": "wireapp_github-action-wire-messenger",
@@ -22608,7 +23717,23 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.6585069Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-09-29T20:56:25Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-09-30T12:12:51Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v2.0.0"
+    ],
+    "releaseInfo": [
+      "v2.0.0",
+      "v1.0.0",
+      "v1"
+    ]
   },
   {
     "name": "WIPACrepo_wipac-dev-py-versions-action",
@@ -22627,7 +23752,23 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.7732437Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-03-18T20:55:38Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-16T21:10:58Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "name": "WIPACrepo_wipac-dev-py-setup-action",
@@ -22646,7 +23787,39 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.8798194Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-06-03T19:37:14Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-03T20:27:05Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1",
+      "v1.2",
+      "v1.3",
+      "v1.4",
+      "v1.5",
+      "v1.6",
+      "v1.7",
+      "v1.7.1",
+      "v1.8",
+      "v1.9"
+    ],
+    "releaseInfo": [
+      "v1.9",
+      "v1.8",
+      "v1.7.1",
+      "v1.7",
+      "v1.6",
+      "v1.5",
+      "v1.4",
+      "v1.3",
+      "v1.2",
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "name": "WIPACrepo_wipac-dev-mypy-action",
@@ -22665,7 +23838,21 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:35.9857206Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-03-18T18:11:16Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-26T17:30:31Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1"
+    ],
+    "releaseInfo": [
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "name": "wip_action",
@@ -22684,7 +23871,23 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:36.0911498Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-23T10:02:37Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-26T04:38:11Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0",
+      "v1.1.1"
+    ],
+    "releaseInfo": [
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wiomoc_miscc",
@@ -22703,7 +23906,27 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:36.1914801Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-01-10T12:29:39Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-12-05T15:52:56Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v0.0.5",
+      "v0.0.6"
+    ],
+    "releaseInfo": [
+      "v0.0.5",
+      "v0.0.4",
+      "v0.0.3",
+      "v0.0.2"
+    ]
   },
   {
     "name": "win-t_gh-action-docker-state",
@@ -22722,7 +23945,26 @@
       "high": 0,
       "critical": 0,
       "lastUpdated": "2022-11-20T16:42:36.2993978Z"
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-03T11:05:28Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-11T14:28:07Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6"
+    ],
+    "releaseInfo": [
+      "v1.0.6",
+      "v1.0.4"
+    ]
   },
   {
     "name": "winify-ag_setup-phraseapp",
@@ -22741,7 +23983,29 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.2489914Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-13T12:11:30Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-10-09T09:45:03Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v2",
+      "v2.0.0",
+      "v2.0.1",
+      "v2.1.0"
+    ],
+    "releaseInfo": [
+      "v2.1.0",
+      "v2.0.1",
+      "v2.0.0",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wow-actions_activity-report",
@@ -22760,7 +24024,31 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.3788068Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-20T09:08:46Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-17T03:23:58Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2"
+    ],
+    "releaseInfo": [
+      "v1.1.2",
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "WolframResearch_submit-paclet",
@@ -22780,7 +24068,29 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.4979887Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-09T15:06:29Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-17T03:27:06Z"
+    },
+    "tagInfo": [
+      "v1.7.1",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.10.0",
+      "v1.10.1",
+      "v1.10.2"
+    ],
+    "releaseInfo": [
+      "v1.10.2",
+      "v1.10.1",
+      "v1.10.0",
+      "v1.9.0",
+      "v1.8.0",
+      "v1.7.1"
+    ]
   },
   {
     "name": "wirsich-io_action-npm-package-export-vars",
@@ -22799,7 +24109,29 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.6198039Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-19T12:32:47Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-07-13T13:17:46Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v2.0.0",
+      "v2.1.0"
+    ],
+    "releaseInfo": [
+      "v2.1.0",
+      "v2.0.0",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0",
+      "v1"
+    ]
   },
   {
     "name": "wingify_slack-github-action",
@@ -22818,7 +24150,40 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.7402752Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-04T15:24:28Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-10-25T13:20:45Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.3.1",
+      "v1.3.2",
+      "v1.3.3",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.6.0",
+      "v1.7.0",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.10.0",
+      "v1.11.0",
+      "v1.12.0",
+      "v1.13.0",
+      "v1.14.0",
+      "v1.15.0-wingify",
+      "v1.15.0",
+      "v1.15.1-wingify"
+    ],
+    "releaseInfo": [
+      "v1.15.1-wingify",
+      "v1.15.0-wingify"
+    ]
   },
   {
     "name": "windyakin_delete-package-versions-keep-latest",
@@ -22837,7 +24202,23 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.8553953Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-10T06:58:33Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-12-24T02:47:49Z"
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.0.1",
+      "1.0.2"
+    ],
+    "releaseInfo": [
+      "1.0.2",
+      "1.0.1",
+      "1.0.0"
+    ]
   },
   {
     "name": "WindSekirun_check-title-wip-actions",
@@ -22856,7 +24237,27 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:52.978659Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-02-26T20:14:15Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-02-26T18:58:30Z"
+    },
+    "tagInfo": [
+      "v0",
+      "v0.1",
+      "v0.1.0",
+      "v0.1.1",
+      "v1",
+      "v1.0",
+      "v1.0.0"
+    ],
+    "releaseInfo": [
+      "v1.0.0",
+      "v0.1.1",
+      "v0.1.0"
+    ]
   },
   {
     "name": "windmill-labs_windmill-gh-action-deploy",
@@ -22875,7 +24276,37 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.11076Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-09T09:06:46Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-06-25T01:39:33Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v0.0.5",
+      "v0.0.6",
+      "v0.0.7",
+      "v0.0.8",
+      "v1.0.0",
+      "v2.0.0"
+    ],
+    "releaseInfo": [
+      "v2.0.0",
+      "v1.0.0",
+      "v0.0.8",
+      "v0.0.7",
+      "v0.0.6",
+      "v0.0.5",
+      "v0.0.4",
+      "v0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "name": "wilsonzlin_setup-b2",
@@ -22894,7 +24325,23 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.2344924Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-02-10T05:03:56Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-11-13T11:07:37Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3"
+    ],
+    "releaseInfo": [
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wilsonzlin_b2-upload-action",
@@ -22913,7 +24360,22 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.3727042Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-02T08:03:11Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-11-12T06:50:11Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wilsonwong1990_Org-reports-Actions",
@@ -22932,7 +24394,35 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.5054854Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-03-20T16:25:58Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-08-11T22:18:00Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v.1.1.0",
+      "v.1.1.1",
+      "v.1.1.2",
+      "v.1.1.3",
+      "v.1.1.4",
+      "v.1.1.5",
+      "v.1.1.6",
+      "v.1.1.7",
+      "v.1.1.8",
+      "v.1.1.9",
+      "v.1.1.10",
+      "v.1.1.11",
+      "v.1.2.0",
+      "v1.2.1"
+    ],
+    "releaseInfo": [
+      "v1.2.1",
+      "v.1.2.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "willstenzel_update-monday-status-action",
@@ -22951,7 +24441,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.6239695Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-15T19:14:07Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-04-22T06:02:00Z"
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "name": "willo32_google-drive-upload-action",
@@ -22970,7 +24468,26 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.7600831Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-12T19:15:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-07-21T16:50:30Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "williamhogman_kustomize-set-image-hook",
@@ -22989,7 +24506,30 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:53.8706241Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-01-05T17:15:25Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-09-12T11:57:47Z"
+    },
+    "tagInfo": [
+      "v1.0",
+      "v1.1",
+      "v1.2",
+      "v1.3",
+      "v1.4",
+      "v1.5",
+      "v1.6"
+    ],
+    "releaseInfo": [
+      "v1.5",
+      "v1.4",
+      "v1.3",
+      "v1.2",
+      "v1.1",
+      "v1.0"
+    ]
   },
   {
     "name": "williamhaw_setup-wiremock-action",
@@ -23008,7 +24548,23 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.0012815Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-09T08:34:06Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-03-31T07:44:32Z"
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2"
+    ],
+    "releaseInfo": [
+      "v0.1.2",
+      "v0.1.1",
+      "v0.1.0"
+    ]
   },
   {
     "name": "willgarcia_workflow-wait-action",
@@ -23027,7 +24583,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.1146644Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-29T13:15:37Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-07-17T12:43:19Z"
+    },
+    "tagInfo": [
+      "0.1.0-rc1",
+      "0.1.0"
+    ],
+    "releaseInfo": [
+      "0.1.0",
+      "0.1.0-rc1"
+    ]
   },
   {
     "name": "willfurstenau_r2-dir-upload",
@@ -23046,7 +24616,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.2321051Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-27T17:28:34Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-13T02:39:11Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "willcaul_jest-github-action",
@@ -23065,7 +24643,26 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.3566576Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-20T12:49:23Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-09-15T16:57:39Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v2",
+      "v2.0.0"
+    ],
+    "releaseInfo": [
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "WillBrennan_yaqti",
@@ -23084,7 +24681,44 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.4755075Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-25T19:54:46Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-07-27T14:26:50Z"
+    },
+    "tagInfo": [
+      "2021.07.26.01",
+      "2021.07.26.02",
+      "2021.07.26.03",
+      "2021.07.26.04",
+      "2021.07.26.05",
+      "2021.07.26.06-dev",
+      "2021.07.26.07-dev",
+      "2021.07.26.08-dev",
+      "2021.07.26.09-action-dev",
+      "2021.07.26.09-dev",
+      "2021.07.26.10-action-dev",
+      "2021.07.27",
+      "2021.07.27.0-dev",
+      "2021.07.27.1",
+      "2021.07.27.2",
+      "2021.07.29"
+    ],
+    "releaseInfo": [
+      "2021.07.29",
+      "2021.07.27.1",
+      "2021.07.27",
+      "2021.07.27.2",
+      "2021.07.27.0-dev",
+      "2021.07.26.10-action-dev",
+      "2021.07.26.09-dev",
+      "2021.07.26.09-action-dev",
+      "2021.07.26.08-dev",
+      "2021.07.26.07-dev",
+      "2021.07.26.06-dev"
+    ]
   },
   {
     "name": "WillAbides_setup-go-faster",
@@ -23103,7 +24737,41 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.6051714Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-29T16:15:39Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-17T16:30:48Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.3.1",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.6.0",
+      "v1.7.0",
+      "v1.8.0"
+    ],
+    "releaseInfo": [
+      "v1.8.0",
+      "v1.7.0",
+      "v1.6.0",
+      "v1.5.0",
+      "v1.4.0",
+      "v1.3.1",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "WillAbides_benchdiff-action",
@@ -23122,7 +24790,33 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.7120026Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-09T13:45:49Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-01-15T15:03:40Z"
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.2.0",
+      "v0.2.1",
+      "v0.2.2",
+      "v0.3.0",
+      "v0.3.1",
+      "v0.3.2",
+      "v0.3.3"
+    ],
+    "releaseInfo": [
+      "v0.3.3",
+      "v0.3.2",
+      "v0.3.1",
+      "v0.3.0",
+      "v0.2.2",
+      "v0.2.1",
+      "v0.2.0",
+      "v0.1.0"
+    ]
   },
   {
     "name": "Wild-Wits_steam-deploy",
@@ -23141,7 +24835,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.8230144Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-01T12:29:49Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-08-01T13:27:06Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "WiktorJ_github-tag-action",
@@ -23161,7 +24869,36 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:54.9468527Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2020-10-07T22:18:04Z",
+      "disabled": false,
+      "latest_release_published_at": "2019-10-28T13:01:48Z"
+    },
+    "tagInfo": [
+      "0.1.0",
+      "0.1.1",
+      "1.0.0",
+      "1.0.1",
+      "1.0.2",
+      "1.1.0",
+      "1.2.0",
+      "1.3.0",
+      "1.3.1",
+      "1.3.2",
+      "1.3.3",
+      "1.3.4",
+      "1.4.0",
+      "1.4.1",
+      "1.5.0",
+      "1.6.0",
+      "1.7.0",
+      "1.7.1",
+      "2.0.0",
+      "2.1.0"
+    ],
+    "releaseInfo": "2.0.0"
   },
   {
     "name": "WikiTeq_mediawiki-phpunit-action",
@@ -23180,7 +24917,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.0716105Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-29T16:06:13Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wifidoneright_go-action",
@@ -23200,7 +24951,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.2035417Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-12-10T02:52:56Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-12-10T02:45:07Z"
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "name": "widgetbook_widgetbook-hosting",
@@ -23220,7 +24979,57 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.3306229Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-06T06:25:00Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": [
+      "0.0.1",
+      "0.0.2",
+      "0.0.3",
+      "0.0.4",
+      "0.0.5",
+      "0.0.6",
+      "0.0.7",
+      "0.0.8",
+      "0.0.9",
+      "0.0.10",
+      "0.0.11",
+      "0.0.12",
+      "0.0.13",
+      "0.0.14",
+      "0.0.15",
+      "0.0.16",
+      "0.0.17",
+      "0.0.18",
+      "0.0.19",
+      "0.0.20",
+      "0.0.21",
+      "0.0.22",
+      "0.0.23",
+      "0.0.24"
+    ],
+    "releaseInfo": [
+      "0.0.24",
+      "0.0.23",
+      "0.0.14",
+      "0.0.13",
+      "0.0.12",
+      "0.0.11",
+      "0.0.10",
+      "0.0.9",
+      "0.0.8",
+      "0.0.7",
+      "0.0.6",
+      "0.0.5",
+      "0.0.4",
+      "0.0.3",
+      "0.0.2",
+      "0.0.1"
+    ]
   },
   {
     "name": "widdix_aws-cloudformation-github-deploy",
@@ -23239,7 +25048,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.4551292Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-04T19:52:12Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-21T12:14:39Z"
+    },
+    "tagInfo": [
+      "v2",
+      "v2.0.4"
+    ],
+    "releaseInfo": "v2.0.4"
   },
   {
     "name": "whywaita_setup-lxd",
@@ -23258,7 +25078,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.5856752Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-11-04T18:07:51Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-02-21T07:37:32Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "name": "whtsky_msgfmt-action",
@@ -23278,7 +25109,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.7103311Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": true,
+      "updated_at": "2021-06-27T12:48:40Z",
+      "disabled": false,
+      "latest_release_published_at": "2019-03-05T10:03:51Z"
+    },
+    "tagInfo": "20190305",
+    "releaseInfo": "20190305"
   },
   {
     "name": "whosydd_tag-from-version",
@@ -23297,7 +25136,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.8389023Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-09-12T13:52:21Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-09-12T13:53:30Z"
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.1.1"
+    ],
+    "releaseInfo": "v0.1.1"
   },
   {
     "name": "whoan_docker-build-with-cache-action",
@@ -23317,7 +25167,88 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:55.9622941Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-20T21:28:15Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-20T21:08:47Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v2",
+      "v2.0.0",
+      "v3",
+      "v3.0.0",
+      "v3.1.1",
+      "v4",
+      "v4.1.0",
+      "v4.1.1",
+      "v4.2.0",
+      "v5",
+      "v5.0.0",
+      "v5.0.1",
+      "v.5.1.0",
+      "v5.1.0",
+      "v5.2.0",
+      "v5.3.0",
+      "v5.3.1",
+      "v5.3.2",
+      "v5.3.3",
+      "v5.4.0",
+      "v5.4.1",
+      "v5.5.0",
+      "v5.6.0",
+      "v5.7.0",
+      "v5.8.0",
+      "v5.8.1",
+      "v5.9.0",
+      "v5.9.1",
+      "v5.9.2",
+      "v5.10.0",
+      "v5.11.0",
+      "v5.11.1",
+      "v6",
+      "v6.0",
+      "v6.0.0"
+    ],
+    "releaseInfo": [
+      "v6",
+      "v5.11.1",
+      "v5",
+      "v5.11.0",
+      "v5.10.0",
+      "v5.9.2",
+      "v5.9.1",
+      "v5.9.0",
+      "v5.8.1",
+      "v5.8.0",
+      "v5.7.0",
+      "v5.6.0",
+      "v5.5.0",
+      "v5.4.1",
+      "v5.4.0",
+      "v5.3.3",
+      "v5.3.2",
+      "v5.3.1",
+      "v5.3.0",
+      "v5.2.0",
+      "v5.1.0",
+      "v.5.1.0",
+      "v5.0.1",
+      "v5.0.0",
+      "v4.2.0",
+      "v4",
+      "v4.1.1",
+      "v4.1.0",
+      "v3",
+      "v3.0.0",
+      "v2.0.0",
+      "v2",
+      "v1.0.0",
+      "v1"
+    ]
   },
   {
     "name": "whitesunset_stale-watchdog-find-docs-action",
@@ -23336,7 +25267,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.0862695Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-01-29T12:56:49Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-01-20T09:40:16Z"
+    },
+    "tagInfo": "1.0.0",
+    "releaseInfo": "1.0.0"
   },
   {
     "name": "whitesunset_stale-watchdog-create-issues-action",
@@ -23355,7 +25294,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.227192Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-01-20T14:46:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-01-20T14:47:00Z"
+    },
+    "tagInfo": "1.0.0",
+    "releaseInfo": "1.0.0"
   },
   {
     "name": "whitesource_GitHubPackagesSecurityAction",
@@ -23374,7 +25321,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.3590853Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-21T13:07:25Z",
+      "disabled": false,
+      "latest_release_published_at": "2019-11-13T19:16:55Z"
+    },
+    "tagInfo": [
+      "19.10.1",
+      "19.10.2"
+    ],
+    "releaseInfo": "19.10.2"
   },
   {
     "name": "whisthq_update-appcast",
@@ -23393,7 +25351,22 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.4871472Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-28T16:24:16Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-08-28T16:20:54Z"
+    },
+    "tagInfo": [
+      "v0.1",
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2",
+      "v0.2",
+      "v0.2.0"
+    ],
+    "releaseInfo": "v0.1.2"
   },
   {
     "name": "whisperity_CodeChecker-Action",
@@ -23412,7 +25385,24 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.605689Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-16T08:55:09Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-15T15:20:53Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2"
+    ],
+    "releaseInfo": [
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "whimsyy_goaction",
@@ -23432,7 +25422,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.7242362Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-02-09T17:28:36Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-02-09T17:33:11Z"
+    },
+    "tagInfo": "twitter",
+    "releaseInfo": "twitter"
   },
   {
     "name": "Whiley_WhileyBuildAction",
@@ -23452,7 +25450,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.8475551Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-01-19T23:55:48Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-09-10T03:41:56Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "name": "whatwewant_action-robot-feishu",
@@ -23472,7 +25481,43 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:56.9904533Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-07-21T09:07:50Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-07-21T09:09:03Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v0.0.5",
+      "v0.0.6",
+      "v0.0.7",
+      "v0.0.8",
+      "v0.0.9",
+      "v0.0.10",
+      "v0.0.11",
+      "v0.0.12",
+      "v0.0.13"
+    ],
+    "releaseInfo": [
+      "v0.0.13",
+      "v0.0.12",
+      "v0.0.11",
+      "v0.0.10",
+      "v0.0.9",
+      "v0.0.8",
+      "v0.0.7",
+      "v0.0.6",
+      "v0.0.5",
+      "v0.0.4",
+      "v0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "name": "whatsllyorg_eks-helm-deploy-action",
@@ -23492,7 +25537,33 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.1081354Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-03-08T11:02:47Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-04-04T05:46:20Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v1",
+      "v1.0.0",
+      "v1.1.0-rc1",
+      "v1.1.0-rc2",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2",
+      "v1.1.3",
+      "v1.1.4",
+      "v1.1.5",
+      "v2",
+      "v3",
+      "v4"
+    ],
+    "releaseInfo": "v4"
   },
   {
     "name": "whatnick_wait-action",
@@ -23512,7 +25583,22 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.2281611Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-09T06:59:03Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-07-23T22:54:00Z"
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2"
+    ],
+    "releaseInfo": [
+      "v0.1.2",
+      "v0.1.1"
+    ]
   },
   {
     "name": "whalemare_action-dropbox",
@@ -23531,7 +25617,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.3513215Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-11T12:33:06Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-02T10:28:46Z"
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "name": "weyheyhey_create-dotenv-action",
@@ -23550,7 +25644,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.4779794Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-08-06T21:38:49Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-10T02:41:22Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "wethinkcode_github_action_slackbot",
@@ -23569,7 +25671,37 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.5983087Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-07-07T00:29:19Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2",
+      "v0.1.3",
+      "v0.1.4",
+      "v0.1.5",
+      "v0.1.6",
+      "v0.1.7",
+      "v0.1.8",
+      "v0.1.9",
+      "v0.2",
+      "v0.2.0"
+    ],
+    "releaseInfo": [
+      "v0.2",
+      "v0.1.9",
+      "v0.1.8",
+      "v0.1.5",
+      "v0.1.4",
+      "v0.1.3",
+      "v0.1.0"
+    ]
   },
   {
     "name": "wesleytodd_meeting-maker",
@@ -23588,7 +25720,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.7250148Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2020-10-30T05:38:21Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-04-06T05:47:05Z"
+    },
+    "tagInfo": [
+      "v0",
+      "v0.0",
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3"
+    ],
+    "releaseInfo": "v0"
   },
   {
     "name": "WesleyDucharme_action-update-vcpkg-repository",
@@ -23608,7 +25754,25 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.8532236Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-14T01:01:40Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-16T22:54:40Z"
+    },
+    "tagInfo": [
+      "v0.1",
+      "v0.2",
+      "v0.3",
+      "v0.4"
+    ],
+    "releaseInfo": [
+      "v0.4",
+      "v0.3",
+      "v0.2",
+      "v0.1"
+    ]
   },
   {
     "name": "wesleimp_action-publish-hex",
@@ -23628,7 +25792,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:57.9761961Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-11-03T10:54:45Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-01-08T14:03:37Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "wesjetpkg_checkout-runner",
@@ -23647,7 +25819,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.0991436Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-10-30T01:23:04Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-29T23:41:54Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "weseek_ghaction-docker-tags-by-semver",
@@ -23666,7 +25846,29 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.224342Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": true,
+      "updated_at": "2022-10-25T20:51:35Z",
+      "disabled": false,
+      "latest_release_published_at": "2019-12-04T21:22:48Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5"
+    ],
+    "releaseInfo": [
+      "v1.0.5",
+      "v1.0.4",
+      "v1.0.3",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wertycn_work-wechat-send-action",
@@ -23686,7 +25888,22 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.3466497Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-02-19T12:53:11Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-02-19T12:52:16Z"
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wertycn_kuboard-deploy-action",
@@ -23706,7 +25923,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.4759128Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-05-15T09:08:56Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-02-20T14:54:00Z"
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": "v1.0.1"
   },
   {
     "name": "whiteducksoftware_azure-arm-action-js",
@@ -23725,7 +25953,27 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.6045362Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": true,
+      "updated_at": "2022-11-12T10:58:24Z",
+      "disabled": false,
+      "latest_release_published_at": "2020-08-27T11:09:33Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v4.1"
+    ],
+    "releaseInfo": [
+      "v4.1",
+      "v4",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "XRTK_unity-setup",
@@ -23744,7 +25992,27 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.7332919Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-06T20:16:00Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-13T03:37:26Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "v5"
+    ],
+    "releaseInfo": [
+      "v5",
+      "v4",
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "yury-imbro-ox_ox-gh-action-test",
@@ -23763,7 +26031,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.8595585Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-07T08:44:23Z",
+      "disabled": false,
+      "latest_release_published_at": null
+    },
+    "tagInfo": "0.0.1",
+    "releaseInfo": "0.0.1"
   },
   {
     "name": "XRTK_activate-unity-license",
@@ -23782,7 +26058,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:58.9940822Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-07T05:05:38Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-20T17:08:48Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1"
+    ]
   },
   {
     "name": "wix-academy_github-lab-config-to-github-skills-readme-action",
@@ -23801,7 +26091,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.1107631Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-09T13:44:19Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-11-22T13:32:58Z"
+    },
+    "tagInfo": [
+      "v3.2",
+      "v4.2"
+    ],
+    "releaseInfo": [
+      "v4.2",
+      "v3.2"
+    ]
   },
   {
     "name": "werf_actions",
@@ -23820,7 +26124,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.2457295Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-17T17:23:24Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-11-30T13:54:56Z"
+    },
+    "tagInfo": "marketplace",
+    "releaseInfo": "marketplace"
   },
   {
     "name": "wenwuwu_action-electron-forge",
@@ -23839,7 +26151,32 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.384515Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-08-21T05:36:16Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-08-26T05:16:06Z"
+    },
+    "tagInfo": [
+      "v1.4.0",
+      "v1.4.1",
+      "v1.4.2",
+      "v1.4.3",
+      "v1.4.4",
+      "v1.4.5",
+      "v1.4.6",
+      "v1.4.7"
+    ],
+    "releaseInfo": [
+      "v1.4.7",
+      "v1.4.6",
+      "v1.4.5",
+      "v1.4.4",
+      "v1.4.3",
+      "v1.4.1",
+      "v1.4.0"
+    ]
   },
   {
     "name": "wenlianggg_ecr-public-action-arm64",
@@ -23859,7 +26196,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.4947565Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-09-24T21:10:23Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-09-24T21:03:17Z"
+    },
+    "tagInfo": "ver1",
+    "releaseInfo": "ver1"
   },
   {
     "name": "wendbv_calver-tag-action",
@@ -23878,7 +26223,18 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.6206553Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-24T10:07:40Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-01-06T13:47:26Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.1"
+    ],
+    "releaseInfo": "v1.0.1"
   },
   {
     "name": "wenchui_hello-world-docker-action",
@@ -23898,7 +26254,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.743144Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-06-21T02:53:20Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-02-25T02:03:56Z"
+    },
+    "tagInfo": [
+      "V0.1",
+      "obs0",
+      "v0",
+      "v0.2",
+      "v0.3"
+    ],
+    "releaseInfo": "v0.3"
   },
   {
     "name": "wemogy_terraform-action",
@@ -23917,7 +26287,34 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.8616214Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-11-16T19:20:22Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-24T15:10:56Z"
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.1.0",
+      "1.2.0",
+      "1.3.0",
+      "1.4.0",
+      "1.5.0",
+      "1.6.0",
+      "1.6.1",
+      "1.6.2"
+    ],
+    "releaseInfo": [
+      "1.6.2",
+      "1.6.0",
+      "1.5.0",
+      "1.4.0",
+      "1.3.0",
+      "1.2.0",
+      "1.1.0",
+      "1.0.0"
+    ]
   },
   {
     "name": "wemogy_publish-helm-chart-action",
@@ -23936,7 +26333,29 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:19:59.9879775Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-10-05T06:33:03Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-07-27T14:35:50Z"
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.0.1",
+      "1.1.0",
+      "1.1.1",
+      "1.1.2",
+      "1.1.3"
+    ],
+    "releaseInfo": [
+      "1.1.3",
+      "1.1.2",
+      "1.1.1",
+      "1.1.0",
+      "1.0.1",
+      "1.0.0"
+    ]
   },
   {
     "name": "wemogy_next-version-action",
@@ -23956,7 +26375,41 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.1706841Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-01-31T14:58:59Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-03-17T13:53:01Z"
+    },
+    "tagInfo": [
+      "0.1.0",
+      "0.1.1",
+      "0.1.2",
+      "0.1.3",
+      "0.1.4",
+      "0.1.5",
+      "0.1.6",
+      "1.0.0",
+      "1.0.1",
+      "1.0.2",
+      "2.0.1",
+      "2.0.2"
+    ],
+    "releaseInfo": [
+      "2.0.2",
+      "2.0.1",
+      "1.0.2",
+      "1.0.1",
+      "1.0.0",
+      "0.1.6",
+      "0.1.5",
+      "0.1.4",
+      "0.1.3",
+      "0.1.2",
+      "0.1.1",
+      "0.1.0"
+    ]
   },
   {
     "name": "wemogy_get-environment-action",
@@ -23975,7 +26428,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.3285258Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-11-02T19:20:31Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-11-02T19:35:53Z"
+    },
+    "tagInfo": "v2.0",
+    "releaseInfo": "v2.0"
   },
   {
     "name": "wemogy_aks-login-action",
@@ -23994,7 +26455,23 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.4552725Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-02-26T23:53:52Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-02-27T00:03:02Z"
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.1.0",
+      "1.1.1"
+    ],
+    "releaseInfo": [
+      "1.1.1",
+      "1.1.0",
+      "1.0.0"
+    ]
   },
   {
     "name": "wemake-services_wemake-python-styleguide",
@@ -24014,7 +26491,125 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.5689962Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-25T09:15:37Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-27T11:36:27Z"
+    },
+    "tagInfo": [
+      "0.0.2",
+      "0.0.3",
+      "0.0.4",
+      "0.0.5",
+      "0.0.6",
+      "0.0.7",
+      "0.0.8",
+      "0.0.9",
+      "0.0.10",
+      "0.0.11",
+      "0.0.12",
+      "0.0.13",
+      "0.0.14",
+      "0.0.15",
+      "0.0.16",
+      "0.1.0",
+      "0.2.0",
+      "0.3.0",
+      "0.4.0",
+      "0.5.0",
+      "0.5.1",
+      "0.6.0",
+      "0.6.1",
+      "0.6.2",
+      "0.6.3",
+      "0.7.0",
+      "0.7.1",
+      "0.8.0",
+      "0.8.1",
+      "0.9.0",
+      "0.9.1",
+      "0.10.0",
+      "0.11.0",
+      "0.11.1",
+      "0.12.0",
+      "0.12.1",
+      "0.12.2",
+      "0.12.3",
+      "0.12.4",
+      "0.12.5",
+      "0.13.0",
+      "0.13.1",
+      "0.13.2",
+      "0.13.3",
+      "0.13.4",
+      "0.14.0",
+      "0.14.1",
+      "0.15.0",
+      "0.15.1",
+      "0.15.2",
+      "0.15.3",
+      "0.16.0",
+      "0.16.1",
+      "0.17.0"
+    ],
+    "releaseInfo": [
+      "0.17.0",
+      "0.16.1",
+      "0.16.0",
+      "0.15.3",
+      "0.15.2",
+      "0.15.1",
+      "0.15.0",
+      "0.14.1",
+      "0.14.0",
+      "0.13.4",
+      "0.13.3",
+      "0.13.2",
+      "0.13.1",
+      "0.13.0",
+      "0.12.5",
+      "0.12.4",
+      "0.12.3",
+      "0.12.2",
+      "0.12.1",
+      "0.12.0",
+      "0.11.1",
+      "0.11.0",
+      "0.10.0",
+      "0.9.1",
+      "0.9.0",
+      "0.8.1",
+      "0.8.0",
+      "0.7.1",
+      "0.7.0",
+      "0.6.3",
+      "0.6.2",
+      "0.6.1",
+      "0.6.0",
+      "0.5.1",
+      "0.5.0",
+      "0.4.0",
+      "0.3.0",
+      "0.2.0",
+      "0.1.0",
+      "0.0.16",
+      "0.0.15",
+      "0.0.14",
+      "0.0.13",
+      "0.0.12",
+      "0.0.11",
+      "0.0.10",
+      "0.0.9",
+      "0.0.8",
+      "0.0.7",
+      "0.0.6",
+      "0.0.5",
+      "0.0.4",
+      "0.0.3",
+      "0.0.2"
+    ]
   },
   {
     "name": "wemake-services_dotenv-linter",
@@ -24034,7 +26629,35 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.6912159Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-21T06:10:24Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-09-20T20:07:19Z"
+    },
+    "tagInfo": [
+      "0.1.0",
+      "0.1.1",
+      "0.1.2",
+      "0.1.3",
+      "0.1.4",
+      "0.1.5",
+      "0.2.0",
+      "0.3.0",
+      "0.4.0"
+    ],
+    "releaseInfo": [
+      "0.4.0",
+      "0.3.0",
+      "0.2.0",
+      "0.1.5",
+      "0.1.4",
+      "0.1.3",
+      "0.1.2",
+      "0.1.1",
+      "0.1.0"
+    ]
   },
   {
     "name": "wemake-services_docker-image-size-limit",
@@ -24054,7 +26677,28 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.8100805Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-11-01T20:14:08Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-07-23T08:17:13Z"
+    },
+    "tagInfo": [
+      "0.1.0",
+      "0.1.1",
+      "0.1.2",
+      "0.2.0",
+      "0.3.0",
+      "0.4.0",
+      "0.4.1"
+    ],
+    "releaseInfo": [
+      "0.4.1",
+      "0.4.0",
+      "0.3.0",
+      "0.2.0"
+    ]
   },
   {
     "name": "weiyi0_jds",
@@ -24074,7 +26718,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:00.9371405Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-06-21T13:47:20Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-06-21T13:35:36Z"
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "name": "Weilbyte_steam-workshop-upload",
@@ -24094,7 +26746,21 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:01.0612039Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-09T01:34:42Z",
+      "disabled": false,
+      "latest_release_published_at": "2022-10-18T19:31:50Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1"
+    ],
+    "releaseInfo": [
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "name": "Weibye_action-internal-link-consistency",
@@ -24113,7 +26779,15 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:01.1992373Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2021-10-11T16:23:33Z",
+      "disabled": false,
+      "latest_release_published_at": "2021-05-30T14:11:34Z"
+    },
+    "tagInfo": "1.0.0",
+    "releaseInfo": "1.0.0"
   },
   {
     "name": "wei_wget",
@@ -24133,7 +26807,24 @@
       "high": 0,
       "lastUpdated": "2022-11-20T19:20:01.3235761Z",
       "critical": 0
-    }
+    },
+    "repoInfo": {
+      "archived": false,
+      "updated_at": "2022-09-27T19:21:15Z",
+      "disabled": false,
+      "latest_release_published_at": "2019-08-11T03:33:51Z"
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.1.0",
+      "v1.1.1"
+    ],
+    "releaseInfo": [
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "name": "wei_rclone",
@@ -77350,6 +80041,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:17.949243Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77360,6 +80057,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:18.1419911Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77370,6 +80073,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:18.364613Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77380,6 +80089,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:18.5621556Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77390,6 +80105,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:18.7674265Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77400,6 +80121,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:18.970968Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77410,6 +80137,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:19.1696424Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77420,6 +80153,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:19.3273859Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77430,6 +80169,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:19.5220929Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77440,6 +80185,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:19.715659Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77450,6 +80201,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:19.8753689Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77460,6 +80217,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:20.0673519Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77470,6 +80233,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:20.2644845Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77480,6 +80249,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:20.4422035Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77490,6 +80265,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:20.6167663Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77500,6 +80281,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:20.8188883Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77510,6 +80297,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.0001027Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77520,6 +80313,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.1758674Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77530,6 +80329,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.3537417Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77540,6 +80345,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.5291444Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77550,6 +80361,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.7367665Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77560,6 +80377,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.9458448Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77570,6 +80393,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:22.1426899Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77580,6 +80409,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:22.3230954Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77590,6 +80425,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:22.4971621Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77600,6 +80441,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:22.668805Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77610,6 +80457,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:22.8668452Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77620,6 +80473,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:23.0513681Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77630,6 +80489,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:23.2352003Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77640,6 +80505,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:23.3884912Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77650,6 +80521,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:23.5858326Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77660,6 +80537,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:23.781952Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77670,6 +80553,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:23.9656742Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77680,6 +80569,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:24.1631047Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77690,6 +80585,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:24.355337Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77700,6 +80601,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:24.5270911Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77710,6 +80617,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:24.7144864Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77720,6 +80633,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:24.9139408Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77730,6 +80649,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:25.0649108Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77740,6 +80665,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:25.2510728Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77750,6 +80681,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:25.45027Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77760,6 +80697,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:25.6195749Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77770,6 +80713,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:25.8500471Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77780,6 +80729,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:26.0215278Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77790,6 +80745,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:26.2002979Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77800,6 +80761,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:26.3901639Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77810,6 +80777,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:26.5663437Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77820,6 +80793,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:26.8014545Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77830,6 +80809,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:26.972482Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77840,6 +80825,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:27.1488753Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77850,6 +80841,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:27.3450202Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77860,6 +80857,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:27.5431088Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77870,6 +80873,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:27.736674Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77880,6 +80889,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:27.912126Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77890,6 +80905,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:28.0974599Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77900,6 +80921,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:28.2850007Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77910,6 +80937,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:28.4763183Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77920,6 +80953,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:28.6503276Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77930,6 +80969,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:28.8456389Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77940,6 +80985,12 @@
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:29.0080487Z",
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77950,6 +81001,12 @@
       "lastUpdated": "2022-11-25T01:04:15.807404Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77960,6 +81017,12 @@
       "lastUpdated": "2022-11-25T01:04:16.0405568Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77970,6 +81033,12 @@
       "lastUpdated": "2022-11-25T01:04:16.2663665Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77980,6 +81049,12 @@
       "lastUpdated": "2022-11-25T01:04:16.4955354Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -77990,6 +81065,12 @@
       "lastUpdated": "2022-11-25T01:04:16.7232471Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78000,6 +81081,12 @@
       "lastUpdated": "2022-11-25T01:04:17.0235547Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78010,6 +81097,12 @@
       "lastUpdated": "2022-11-25T01:04:17.2500659Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78020,6 +81113,12 @@
       "lastUpdated": "2022-11-25T01:04:17.4694111Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78030,6 +81129,12 @@
       "lastUpdated": "2022-11-25T01:04:17.6752819Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78040,6 +81145,12 @@
       "lastUpdated": "2022-11-25T01:04:17.8905579Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78050,6 +81161,12 @@
       "lastUpdated": "2022-11-25T01:04:18.1048039Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78060,6 +81177,12 @@
       "lastUpdated": "2022-11-25T01:04:18.3353264Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78070,6 +81193,12 @@
       "lastUpdated": "2022-11-25T01:04:18.5550647Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78080,6 +81209,12 @@
       "lastUpdated": "2022-11-25T01:04:18.796681Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78090,6 +81225,12 @@
       "lastUpdated": "2022-11-25T01:04:19.0161735Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78100,6 +81241,12 @@
       "lastUpdated": "2022-11-25T01:04:19.234489Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78110,6 +81257,12 @@
       "lastUpdated": "2022-11-25T01:04:19.4618528Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78120,6 +81273,12 @@
       "lastUpdated": "2022-11-25T01:04:19.6937588Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78130,6 +81289,12 @@
       "lastUpdated": "2022-11-25T01:04:19.9309999Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78140,6 +81305,12 @@
       "lastUpdated": "2022-11-25T01:04:20.1495537Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78150,6 +81321,12 @@
       "lastUpdated": "2022-11-25T01:04:20.3617644Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78160,6 +81337,12 @@
       "lastUpdated": "2022-11-25T01:04:20.5875509Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78170,6 +81353,12 @@
       "lastUpdated": "2022-11-25T01:04:20.8077016Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78180,6 +81369,12 @@
       "lastUpdated": "2022-11-25T01:04:21.0383275Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78190,6 +81385,12 @@
       "lastUpdated": "2022-11-25T01:04:21.2707005Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78200,6 +81401,12 @@
       "lastUpdated": "2022-11-25T01:04:21.4885242Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78210,6 +81417,12 @@
       "lastUpdated": "2022-11-25T01:04:21.6995332Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78220,6 +81433,12 @@
       "lastUpdated": "2022-11-25T01:04:21.9158859Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78230,6 +81449,12 @@
       "lastUpdated": "2022-11-25T01:04:22.1267119Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78240,6 +81465,12 @@
       "lastUpdated": "2022-11-25T01:04:22.3464737Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78250,6 +81481,12 @@
       "lastUpdated": "2022-11-25T01:04:22.5656263Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78260,6 +81497,12 @@
       "lastUpdated": "2022-11-25T01:04:22.7907353Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78270,6 +81513,12 @@
       "lastUpdated": "2022-11-25T01:04:23.0196031Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78280,6 +81529,12 @@
       "lastUpdated": "2022-11-25T01:04:23.2668625Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78290,6 +81545,12 @@
       "lastUpdated": "2022-11-25T01:04:23.4730842Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78300,6 +81561,12 @@
       "lastUpdated": "2022-11-25T01:04:23.7013514Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78310,6 +81577,12 @@
       "lastUpdated": "2022-11-25T01:04:23.9328482Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78320,6 +81593,12 @@
       "lastUpdated": "2022-11-25T01:04:24.1664751Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78330,6 +81609,12 @@
       "lastUpdated": "2022-11-25T01:04:24.3888338Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -78340,6 +81625,12 @@
       "lastUpdated": "2022-11-25T01:04:24.6232844Z",
       "high": 0,
       "critical": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -81945,796 +85236,2296 @@
   {
     "name": "northy_pdf-to-markdown-workflow",
     "dependabot": null,
-    "owner": "northy"
+    "owner": "northy",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:54.8017648Z"
+    }
   },
   {
     "name": "northflank_deploy-to-northflank",
     "dependabot": null,
-    "owner": "northflank"
+    "owner": "northflank",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:55.0200063Z"
+    }
   },
   {
     "name": "northflank_deploy-docker-image-on-northflank-action",
     "dependabot": null,
-    "owner": "northflank"
+    "owner": "northflank",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:55.2417368Z"
+    }
   },
   {
     "name": "norio-nomura_action-swiftlint",
     "dependabot": null,
-    "owner": "norio-nomura"
+    "owner": "norio-nomura",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:55.4592328Z"
+    }
   },
   {
     "name": "noraworld_release-menu",
     "dependabot": null,
-    "owner": "noraworld"
+    "owner": "noraworld",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:55.6694306Z"
+    }
   },
   {
     "name": "noraworld_git-flow-observer",
     "dependabot": null,
-    "owner": "noraworld"
+    "owner": "noraworld",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:55.8854255Z"
+    }
   },
   {
     "name": "nooose_custom-slack-message",
     "dependabot": null,
-    "owner": "nooose"
+    "owner": "nooose",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:56.116788Z"
+    }
   },
   {
     "name": "nookery_laravel-cp-env-action",
     "dependabot": null,
-    "owner": "nookery"
+    "owner": "nookery",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:56.3428538Z"
+    }
   },
   {
     "name": "nookery_env-replace-action",
     "dependabot": null,
-    "owner": "nookery"
+    "owner": "nookery",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:56.5731106Z"
+    }
   },
   {
     "name": "nomuken_setup-packer",
     "dependabot": null,
-    "owner": "nomuken"
+    "owner": "nomuken",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:56.796657Z"
+    }
   },
   {
     "name": "nolar_setup-k3d-k3s",
     "dependabot": null,
-    "owner": "nolar"
+    "owner": "nolar",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:57.0209206Z"
+    }
   },
   {
     "name": "nokamoto_merge-conflict-action",
     "dependabot": null,
-    "owner": "nokamoto"
+    "owner": "nokamoto",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:57.2525159Z"
+    }
   },
   {
     "name": "nohmad_lcov-report-action",
     "dependabot": null,
-    "owner": "nohmad"
+    "owner": "nohmad",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:57.4924089Z"
+    }
   },
   {
     "name": "nohmad_elastic-beanstalk-action",
     "dependabot": null,
-    "owner": "nohmad"
+    "owner": "nohmad",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:57.7267736Z"
+    }
   },
   {
     "name": "nohmad_aws-ssm-send-command-action",
     "dependabot": null,
-    "owner": "nohmad"
+    "owner": "nohmad",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:57.9608468Z"
+    }
   },
   {
     "name": "nohmad_aws-ssm-parameter-store-action",
     "dependabot": null,
-    "owner": "nohmad"
+    "owner": "nohmad",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:58.2086095Z"
+    }
   },
   {
     "name": "nofx11_pycaret-git-actions",
     "dependabot": null,
-    "owner": "nofx11"
+    "owner": "nofx11",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:58.4348702Z"
+    }
   },
   {
     "name": "noelzubin_aws-ecs-run-task",
     "dependabot": null,
-    "owner": "noelzubin"
+    "owner": "noelzubin",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:58.6782914Z"
+    }
   },
   {
     "name": "Noelware_s3-action",
     "dependabot": null,
-    "owner": "Noelware"
+    "owner": "Noelware",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:58.8938631Z"
+    }
   },
   {
     "name": "noelmace_spreadsheet-sync",
     "dependabot": null,
-    "owner": "noelmace"
+    "owner": "noelmace",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:59.1310116Z"
+    }
   },
   {
     "name": "NodeSecure_ci-action",
     "dependabot": null,
-    "owner": "NodeSecure"
+    "owner": "NodeSecure",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:59.3585933Z"
+    }
   },
   {
     "name": "nodenv_actions-setup-nodenv",
     "dependabot": null,
-    "owner": "nodenv"
+    "owner": "nodenv",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:59.5857859Z"
+    }
   },
   {
     "name": "nodenv_actions-node-version",
     "dependabot": null,
-    "owner": "nodenv"
+    "owner": "nodenv",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:41:59.8117833Z"
+    }
   },
   {
     "name": "nocturlab_setup-vlang-action",
     "dependabot": null,
-    "owner": "nocturlab"
+    "owner": "nocturlab",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:00.0360806Z"
+    }
   },
   {
     "name": "nocnoc-th-devops_github-actions-create-tag",
     "dependabot": null,
-    "owner": "nocnoc-th-devops"
+    "owner": "nocnoc-th-devops",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:00.2601133Z"
+    }
   },
   {
     "name": "nocnoc-th-devops_github-actions-codeartifact-token",
     "dependabot": null,
-    "owner": "nocnoc-th-devops"
+    "owner": "nocnoc-th-devops",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:00.4903063Z"
+    }
   },
   {
     "name": "nobrayner_discord-webhook",
     "dependabot": null,
-    "owner": "nobrayner"
+    "owner": "nobrayner",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:00.7168778Z"
+    }
   },
   {
     "name": "NobodyXu_dependencies-autoupdate",
     "dependabot": null,
-    "owner": "NobodyXu"
+    "owner": "NobodyXu",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:00.9298564Z"
+    }
   },
   {
     "name": "nobl9_nobl9-action",
     "dependabot": null,
-    "owner": "nobl9"
+    "owner": "nobl9",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:01.2753975Z"
+    }
   },
   {
     "name": "noah-software_django_action",
     "dependabot": null,
-    "owner": "noah-software"
+    "owner": "noah-software",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:01.4812547Z"
+    }
   },
   {
     "name": "noahreinalter_regex-match-file",
     "dependabot": null,
-    "owner": "noahreinalter"
+    "owner": "noahreinalter",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:01.7409321Z"
+    }
   },
   {
     "name": "NoahDragon_action-push-repo-as-subdirectory-in-another-repo",
     "dependabot": null,
-    "owner": "NoahDragon"
+    "owner": "NoahDragon",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:01.9791221Z"
+    }
   },
   {
     "name": "no0dles_hammerkit-github-action",
     "dependabot": null,
-    "owner": "no0dles"
+    "owner": "no0dles",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:02.2248053Z"
+    }
   },
   {
     "name": "nnichols_maven-version-bump-action",
     "dependabot": null,
-    "owner": "nnichols"
+    "owner": "nnichols",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:02.4416439Z"
+    }
   },
   {
     "name": "nnichols_leiningen-dependency-update-action",
     "dependabot": null,
-    "owner": "nnichols"
+    "owner": "nnichols",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:02.6599298Z"
+    }
   },
   {
     "name": "nnichols_clojure-vulnerability-check-action",
     "dependabot": null,
-    "owner": "nnichols"
+    "owner": "nnichols",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:03.0479161Z"
+    }
   },
   {
     "name": "nnichols_clojure-lint-action",
     "dependabot": null,
-    "owner": "nnichols"
+    "owner": "nnichols",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:03.288939Z"
+    }
   },
   {
     "name": "nnichols_clojure-dependency-update-action",
     "dependabot": null,
-    "owner": "nnichols"
+    "owner": "nnichols",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:03.5311548Z"
+    }
   },
   {
     "name": "nnhy_mysql-action",
     "dependabot": null,
-    "owner": "nnhy"
+    "owner": "nnhy",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:03.7502445Z"
+    }
   },
   {
     "name": "nnanto_schemacodeman",
     "dependabot": null,
-    "owner": "nnanto"
+    "owner": "nnanto",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:04.0527577Z"
+    }
   },
   {
     "name": "nmilon-cf_github-action-helm-wireguard",
     "dependabot": null,
-    "owner": "nmilon-cf"
+    "owner": "nmilon-cf",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:04.4546014Z"
+    }
   },
   {
     "name": "nmcc_actions-gitversion",
     "dependabot": null,
-    "owner": "nmcc"
+    "owner": "nmcc",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:04.6922548Z"
+    }
   },
   {
     "name": "nmasur_latest-ecr-image-tag",
     "dependabot": null,
-    "owner": "nmasur"
+    "owner": "nmasur",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:04.9365517Z"
+    }
   },
   {
     "name": "n-makoto_hatena-entry-poster",
     "dependabot": null,
-    "owner": "n-makoto"
+    "owner": "n-makoto",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:05.1532921Z"
+    }
   },
   {
     "name": "NLTGit_aicf-action",
     "dependabot": null,
-    "owner": "NLTGit"
+    "owner": "NLTGit",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:05.3893912Z"
+    }
   },
   {
     "name": "nlemeshko_actions-fortu-refresh",
     "dependabot": null,
-    "owner": "nlemeshko"
+    "owner": "nlemeshko",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:05.6246563Z"
+    }
   },
   {
     "name": "nlamirault_helm-kubeconform-action",
     "dependabot": null,
-    "owner": "nlamirault"
+    "owner": "nlamirault",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:05.8614459Z"
+    }
   },
   {
     "name": "nk-o_action-wordpress-plugin-deploy",
     "dependabot": null,
-    "owner": "nk-o"
+    "owner": "nk-o",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:06.0923718Z"
+    }
   },
   {
     "name": "nk-o_action-envato-ftp-deploy",
     "dependabot": null,
-    "owner": "nk-o"
+    "owner": "nk-o",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:06.319075Z"
+    }
   },
   {
     "name": "njgibbon_fend",
     "dependabot": null,
-    "owner": "njgibbon"
+    "owner": "njgibbon",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:06.5846518Z"
+    }
   },
   {
     "name": "nizarmah_auto-minify",
     "dependabot": null,
-    "owner": "nizarmah"
+    "owner": "nizarmah",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:06.8205177Z"
+    }
   },
   {
     "name": "nixel2007_sonarcloud-github-action",
     "dependabot": null,
-    "owner": "nixel2007"
+    "owner": "nixel2007",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:07.116Z"
+    }
   },
   {
     "name": "nixel2007_branch-name",
     "dependabot": null,
-    "owner": "nixel2007"
+    "owner": "nixel2007",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:07.3406383Z"
+    }
   },
   {
     "name": "nixbuild_nix-quick-install-action",
     "dependabot": null,
-    "owner": "nixbuild"
+    "owner": "nixbuild",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:07.5728545Z"
+    }
   },
   {
     "name": "nixbuild_nixbuild-action",
     "dependabot": null,
-    "owner": "nixbuild"
+    "owner": "nixbuild",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:07.7852671Z"
+    }
   },
   {
     "name": "Nivl_voorhees-github-action",
     "dependabot": null,
-    "owner": "Nivl"
+    "owner": "Nivl",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:08.0291381Z"
+    }
   },
   {
     "name": "nivisi_dart_pull_request_use_case_validator",
     "dependabot": null,
-    "owner": "nivisi"
+    "owner": "nivisi",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:08.2638075Z"
+    }
   },
   {
     "name": "niubilitytools_publish-to-nuget.org",
     "dependabot": null,
-    "owner": "niubilitytools"
+    "owner": "niubilitytools",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:08.4834774Z"
+    }
   },
   {
     "name": "niubilitytools_publish-nuget",
     "dependabot": null,
-    "owner": "niubilitytools"
+    "owner": "niubilitytools",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:08.7023125Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "Satellite-Galaxy",
-    "name": "Satellite-Galaxy_HostListCompiler-Action"
+    "name": "Satellite-Galaxy_HostListCompiler-Action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:08.9392419Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nitinsh99",
-    "name": "nitinsh99_checkstyle-action"
+    "name": "nitinsh99_checkstyle-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:09.1599416Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nisshii0313",
-    "name": "nisshii0313_action"
+    "name": "nisshii0313_action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:09.3767502Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nishtahir",
-    "name": "nishtahir_upload-updraft"
+    "name": "nishtahir_upload-updraft",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:09.5944078Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NishkarshRaj",
-    "name": "NishkarshRaj_Maven_Actions"
+    "name": "NishkarshRaj_Maven_Actions",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:09.8172201Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NishkarshRaj",
-    "name": "NishkarshRaj_eleventh-june"
+    "name": "NishkarshRaj_eleventh-june",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:10.06185Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NishkarshRaj",
-    "name": "NishkarshRaj_Dockerize-Actions"
+    "name": "NishkarshRaj_Dockerize-Actions",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:10.2963773Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NishkarshRaj",
-    "name": "NishkarshRaj_Computer-Graphics"
+    "name": "NishkarshRaj_Computer-Graphics",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:10.5219544Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nishidayuya",
-    "name": "nishidayuya_codeclimate-test-reporter"
+    "name": "nishidayuya_codeclimate-test-reporter",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:10.7452493Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NishanthShankar",
-    "name": "NishanthShankar_codepush-action"
+    "name": "NishanthShankar_codepush-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:10.9862345Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nirinchev",
-    "name": "nirinchev_verify-todo"
+    "name": "nirinchev_verify-todo",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:11.2074751Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "niravpatel27",
-    "name": "niravpatel27_gh-action-spdx-sbom-generator"
+    "name": "niravpatel27_gh-action-spdx-sbom-generator",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:11.4274293Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "Niraj-Kamdar",
-    "name": "Niraj-Kamdar_manylinux-wheel-builder"
+    "name": "Niraj-Kamdar_manylinux-wheel-builder",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:11.6769768Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "ninotosh",
-    "name": "ninotosh_check-github-repo-latest-version"
+    "name": "ninotosh_check-github-repo-latest-version",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:11.8967069Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "ninosaurus",
-    "name": "ninosaurus_eslint-check"
+    "name": "ninosaurus_eslint-check",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:12.1479669Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiNiyas",
-    "name": "NiNiyas_ntfy-action"
+    "name": "NiNiyas_ntfy-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:12.3581704Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "Nimbleway",
-    "name": "Nimbleway_nomad-deploy-action"
+    "name": "Nimbleway_nomad-deploy-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:12.5831009Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nimblehq",
-    "name": "nimblehq_branch-tag-action"
+    "name": "nimblehq_branch-tag-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:12.8199274Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nilp0inter",
-    "name": "nilp0inter_search-legal-headers"
+    "name": "nilp0inter_search-legal-headers",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:13.039119Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikwotton",
-    "name": "nikwotton_Max-Commit-Count"
+    "name": "nikwotton_Max-Commit-Count",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:13.2723192Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikosch86",
-    "name": "nikosch86_github-action-eks-kubectl"
+    "name": "nikosch86_github-action-eks-kubectl",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:13.5322842Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NikoBergemann",
-    "name": "NikoBergemann_action-sbt-test-report"
+    "name": "NikoBergemann_action-sbt-test-report",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:13.7557707Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiklasMerz",
-    "name": "NiklasMerz_netlify-analytics-collector"
+    "name": "NiklasMerz_netlify-analytics-collector",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:13.9717156Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiklasMerz",
-    "name": "NiklasMerz_github-deployment-action"
+    "name": "NiklasMerz_github-deployment-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:14.2298274Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiklasLehnfeld",
-    "name": "NiklasLehnfeld_flutter-version-number-action"
+    "name": "NiklasLehnfeld_flutter-version-number-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:14.4569577Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiklasLehnfeld",
-    "name": "NiklasLehnfeld_flutter-android-build-action"
+    "name": "NiklasLehnfeld_flutter-android-build-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:14.6814936Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiklasEi",
-    "name": "NiklasEi_wasm-opt-action"
+    "name": "NiklasEi_wasm-opt-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:14.9099072Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikita-volkov",
-    "name": "nikita-volkov_yc-cli.github-action"
+    "name": "nikita-volkov_yc-cli.github-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:15.1740143Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikita-volkov",
-    "name": "nikita-volkov_edit-cabal-version.github-action"
+    "name": "nikita-volkov_edit-cabal-version.github-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:15.4131562Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikitasavinov",
-    "name": "nikitasavinov_messagebird-sms-action"
+    "name": "nikitasavinov_messagebird-sms-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:15.6551066Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikitasavinov",
-    "name": "nikitasavinov_checkstyle-action"
+    "name": "nikitasavinov_checkstyle-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:15.8923939Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NikitaGlukhi",
-    "name": "NikitaGlukhi_heroku-pipelines-promoting"
+    "name": "NikitaGlukhi_heroku-pipelines-promoting",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:16.1214359Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NikitaGlukhi",
-    "name": "NikitaGlukhi_firebase-clone-channels"
+    "name": "NikitaGlukhi_firebase-clone-channels",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:16.3511319Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikhilbadyal",
-    "name": "nikhilbadyal_telegram-forwarder"
+    "name": "nikhilbadyal_telegram-forwarder",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:16.5694465Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikhilbadyal",
-    "name": "nikhilbadyal_ghaction-rm-releases"
+    "name": "nikhilbadyal_ghaction-rm-releases",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:16.7889803Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikhilaii93",
-    "name": "nikhilaii93_pr-autobuild"
+    "name": "nikhilaii93_pr-autobuild",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:17.0392332Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NikeNano",
-    "name": "NikeNano_kubeflow-github-action"
+    "name": "NikeNano_kubeflow-github-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:17.2627305Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikeee",
-    "name": "nikeee_setup-pandoc"
+    "name": "nikeee_setup-pandoc",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:17.4895629Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikeee",
-    "name": "nikeee_docfx-action"
+    "name": "nikeee_docfx-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:17.7393683Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nikaera",
-    "name": "nikaera_sync-zenn-with-dev-action"
+    "name": "nikaera_sync-zenn-with-dev-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:18.5812371Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nijel",
-    "name": "nijel_rabbitmq-action"
+    "name": "nijel_rabbitmq-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:18.8684681Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nigzht",
-    "name": "nigzht_code-sign-action"
+    "name": "nigzht_code-sign-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:19.079853Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "Nightwind-Developments",
-    "name": "Nightwind-Developments_debian-packer"
+    "name": "Nightwind-Developments_debian-packer",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:19.3070258Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "Nightwind-Developments",
-    "name": "Nightwind-Developments_debian-control-file-builder"
+    "name": "Nightwind-Developments_debian-control-file-builder",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:19.5514759Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nightstory",
-    "name": "nightstory_setup-xcodegen"
+    "name": "nightstory_setup-xcodegen",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:19.7860617Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nightstory",
-    "name": "nightstory_replace-env"
+    "name": "nightstory_replace-env",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:20.030151Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nightstory",
-    "name": "nightstory_deployments-action"
+    "name": "nightstory_deployments-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:20.2538111Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nightfallai",
-    "name": "nightfallai_nightfall_dlp_action"
+    "name": "nightfallai_nightfall_dlp_action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:20.4977544Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiftyStack",
-    "name": "NiftyStack_appstore-connect-authenticate-with-key-action"
+    "name": "NiftyStack_appstore-connect-authenticate-with-key-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:20.7461918Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nifetency",
-    "name": "nifetency_nife-actions"
+    "name": "nifetency_nife-actions",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:20.9799553Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nielsvaneck",
-    "name": "nielsvaneck_render-md-mermaid"
+    "name": "nielsvaneck_render-md-mermaid",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:21.1963372Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nielsdelestinne",
-    "name": "nielsdelestinne_jekyll-build"
+    "name": "nielsdelestinne_jekyll-build",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:21.4287572Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "Nidhi-Patel20",
-    "name": "Nidhi-Patel20_open-issue"
+    "name": "Nidhi-Patel20_open-issue",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:21.6570249Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "niden",
-    "name": "niden_actions-memcached"
+    "name": "niden_actions-memcached",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:22.3247886Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nida",
-    "name": "nida_go-release-action"
+    "name": "nida_go-release-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:22.5402964Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicupavel",
-    "name": "nicupavel_action-files-version-increment"
+    "name": "nicupavel_action-files-version-increment",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:22.753837Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicolaspearson",
-    "name": "nicolaspearson_docker.publish.github.action"
+    "name": "nicolaspearson_docker.publish.github.action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:22.9717395Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicolasdonoso",
-    "name": "nicolasdonoso_build-ecr-repo"
+    "name": "nicolasdonoso_build-ecr-repo",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:23.1893834Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NicoG60",
-    "name": "NicoG60_simple-template-renderer"
+    "name": "NicoG60_simple-template-renderer",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:23.4319208Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicledomaS",
-    "name": "nicledomaS_cmake_build_action"
+    "name": "nicledomaS_cmake_build_action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:23.6661569Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nick-zh",
-    "name": "nick-zh_composer"
+    "name": "nick-zh_composer",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:23.9192313Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickscript0",
-    "name": "nickscript0_flat"
+    "name": "nickscript0_flat",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:24.13125Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickSchimek",
-    "name": "NickSchimek_deploy_jamstack_action"
+    "name": "NickSchimek_deploy_jamstack_action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:24.3918927Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickorlow",
-    "name": "nickorlow_nws-pull-new-image"
+    "name": "nickorlow_nws-pull-new-image",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:24.6178746Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickofthyme",
-    "name": "nickofthyme_object-remap"
+    "name": "nickofthyme_object-remap",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:24.8337883Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickofthyme",
-    "name": "nickofthyme_checkout-node-setup"
+    "name": "nickofthyme_checkout-node-setup",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:25.0807497Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklinnell",
-    "name": "nicklinnell_dnsimple-create-record"
+    "name": "nicklinnell_dnsimple-create-record",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:25.3167413Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickLiffen",
-    "name": "NickLiffen_notify-correct-ase"
+    "name": "NickLiffen_notify-correct-ase",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:25.5635421Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickLiffen",
-    "name": "NickLiffen_ghas-licence"
+    "name": "NickLiffen_ghas-licence",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:25.7733475Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickLiffen",
-    "name": "NickLiffen_create-sales-ops-issue"
+    "name": "NickLiffen_create-sales-ops-issue",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:26.0076728Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickLiffen",
-    "name": "NickLiffen_compare-releases"
+    "name": "NickLiffen_compare-releases",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:26.2599304Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickLiffen",
-    "name": "NickLiffen_check-slash-command-approval"
+    "name": "NickLiffen_check-slash-command-approval",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:26.4895177Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-repo-metrics-action"
+    "name": "nicklegan_github-org-repo-metrics-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:26.7162937Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-repo-collaborator-action"
+    "name": "nicklegan_github-org-repo-collaborator-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:26.9504653Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-member-email-action"
+    "name": "nicklegan_github-org-member-email-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:27.1810044Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-member-contribution-action"
+    "name": "nicklegan_github-org-member-contribution-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:27.4254571Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-git-audit-log-for-repos-action"
+    "name": "nicklegan_github-org-git-audit-log-for-repos-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:27.6373789Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-git-audit-log-for-members-action"
+    "name": "nicklegan_github-org-git-audit-log-for-members-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:27.8725492Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-code-frequency-action"
+    "name": "nicklegan_github-org-code-frequency-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:28.0989269Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklegan",
-    "name": "nicklegan_github-org-authorization-action"
+    "name": "nicklegan_github-org-authorization-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:28.325872Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklasfrahm",
-    "name": "nicklasfrahm_scp-action"
+    "name": "nicklasfrahm_scp-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:28.5597456Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nicklasfrahm",
-    "name": "nicklasfrahm_k3se"
+    "name": "nicklasfrahm_k3se",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:28.7885926Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickhstr",
-    "name": "nickhstr_action-setup-mage"
+    "name": "nickhstr_action-setup-mage",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:29.0298037Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickhstr",
-    "name": "nickhstr_action-setup-golangci-lint"
+    "name": "nickhstr_action-setup-golangci-lint",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:29.2855921Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickgronow",
-    "name": "nickgronow_kubectl"
+    "name": "nickgronow_kubectl",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:29.5079598Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickgronow",
-    "name": "nickgronow_deploy-to-gcr"
+    "name": "nickgronow_deploy-to-gcr",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:29.7863106Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nick-fields",
-    "name": "nick-fields_slacktion"
+    "name": "nick-fields_slacktion",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:29.9968147Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nick-fields",
-    "name": "nick-fields_retry"
+    "name": "nick-fields_retry",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:30.2389681Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nick-fields",
-    "name": "nick-fields_private-action-loader"
+    "name": "nick-fields_private-action-loader",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:30.4493767Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nick-fields",
-    "name": "nick-fields_persist-action-data"
+    "name": "nick-fields_persist-action-data",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:30.6989399Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NickCrews",
-    "name": "NickCrews_gotoraptor"
+    "name": "NickCrews_gotoraptor",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:30.958297Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickatnight",
-    "name": "nickatnight_slack-code-coverage-action"
+    "name": "nickatnight_slack-code-coverage-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:31.1875961Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickatnight",
-    "name": "nickatnight_releases-action"
+    "name": "nickatnight_releases-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:31.4016864Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nickatnight",
-    "name": "nickatnight_export-version-file-action"
+    "name": "nickatnight_export-version-file-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:31.6474187Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nichevision",
-    "name": "nichevision_sharefile-upload-artifact"
+    "name": "nichevision_sharefile-upload-artifact",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:31.8947516Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nichedao",
-    "name": "nichedao_action-update-version"
+    "name": "nichedao_action-update-version",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:32.1247592Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiceLabs",
-    "name": "NiceLabs_rclone-action"
+    "name": "NiceLabs_rclone-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:32.3739112Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "NiccoMlt",
-    "name": "NiccoMlt_setup-antlr4"
+    "name": "NiccoMlt_setup-antlr4",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:32.6081785Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nic-6443",
-    "name": "nic-6443_action-tmate"
+    "name": "nic-6443_action-tmate",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:32.8466988Z"
+    }
   },
   {
     "dependabot": null,
     "owner": "nhomble",
-    "name": "nhomble_groupme-notify-action"
+    "name": "nhomble_groupme-notify-action",
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:33.0984572Z"
+    }
+  },
+  {
+    "name": "Syndelis_cbindgen-action",
+    "owner": "Syndelis",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:33.3303375Z"
+    }
+  },
+  {
+    "name": "nholden_modified-file-filter-action",
+    "owner": "nholden",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:33.5631864Z"
+    }
+  },
+  {
+    "name": "nhn_toast-ui.detect-runtime-error-actions",
+    "owner": "nhn",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:33.7918227Z"
+    }
+  },
+  {
+    "name": "nhevia_discord-styled-releases",
+    "owner": "nhevia",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:34.0287879Z"
+    }
+  },
+  {
+    "name": "nhedger_package-vscode-extension",
+    "owner": "nhedger",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:34.2544324Z"
+    }
+  },
+  {
+    "name": "nhatthm_govanityrender-action",
+    "owner": "nhatthm",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:34.4744482Z"
+    }
+  },
+  {
+    "name": "nhatthm_gherkin-lint-action",
+    "owner": "nhatthm",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:34.7024916Z"
+    }
+  },
+  {
+    "name": "nhartland_love-build",
+    "owner": "nhartland",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:34.9137205Z"
+    }
+  },
+  {
+    "name": "nhantrantrong_cypress-test-results",
+    "owner": "nhantrantrong",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:35.1479916Z"
+    }
+  },
+  {
+    "name": "nhalstead_validate-json-action",
+    "owner": "nhalstead",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:35.3634201Z"
+    }
+  },
+  {
+    "name": "nhalase_create-google-application-credentials-json",
+    "owner": "nhalase",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:35.5806107Z"
+    }
+  },
+  {
+    "name": "ngworker_angular-versions-action",
+    "owner": "ngworker",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:35.8091587Z"
+    }
+  },
+  {
+    "name": "nguyenvanuyn96_str-find-and-replace-action",
+    "owner": "nguyenvanuyn96",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:36.0523807Z"
+    }
+  },
+  {
+    "name": "nguyenvanuyn96_str-find-action",
+    "owner": "nguyenvanuyn96",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:36.2846316Z"
+    }
+  },
+  {
+    "name": "nguyenquyhy_zip-release",
+    "owner": "nguyenquyhy",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:36.5333912Z"
+    }
+  },
+  {
+    "name": "ngs-lang_ngs",
+    "owner": "ngs-lang",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:36.7455012Z"
+    }
+  },
+  {
+    "name": "ngs_go-release.action",
+    "owner": "ngs",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:36.9697315Z"
+    }
+  },
+  {
+    "name": "ngoishi_autoML",
+    "owner": "ngoishi",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:37.1895772Z"
+    }
+  },
+  {
+    "name": "ngocsangyem_cypress-reporter",
+    "owner": "ngocsangyem",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:37.4243878Z"
+    }
+  },
+  {
+    "name": "ngocquyhoang_laravel-deploy",
+    "owner": "ngocquyhoang",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:37.6490055Z"
+    }
+  },
+  {
+    "name": "ngmy_phive-install-action",
+    "owner": "ngmy",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:37.8942473Z"
+    }
+  },
+  {
+    "name": "nginxinc_nginx-for-azure-deploy-action",
+    "owner": "nginxinc",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:38.1054421Z"
+    }
+  },
+  {
+    "name": "ngeri_version-bump",
+    "owner": "ngeri",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:38.3201593Z"
+    }
+  },
+  {
+    "name": "ngeri_prepare-signing",
+    "owner": "ngeri",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:38.5471383Z"
+    }
+  },
+  {
+    "name": "ng-easy_npm-setup",
+    "owner": "ng-easy",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:38.7683385Z"
+    }
+  },
+  {
+    "name": "ngduc_vercel-deploy-action",
+    "owner": "ngduc",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:38.997358Z"
+    }
+  },
+  {
+    "name": "ngduc_clean-up-action",
+    "owner": "ngduc",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:39.2297017Z"
+    }
+  },
+  {
+    "name": "ngalaiko_bazel-action",
+    "owner": "ngalaiko",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:39.4738384Z"
+    }
+  },
+  {
+    "name": "nfsc-tommy_axios",
+    "owner": "nfsc-tommy",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:39.6958817Z"
+    }
+  },
+  {
+    "name": "nf-s_gcs-bucket-sync-action",
+    "owner": "nf-s",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:39.9287082Z"
+    }
+  },
+  {
+    "name": "nf-core_tower-action",
+    "owner": "nf-core",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:40.1823166Z"
+    }
+  },
+  {
+    "name": "nf-core_setup-nextflow",
+    "owner": "nf-core",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:40.4212482Z"
+    }
+  },
+  {
+    "name": "neyron163_gajira-todo",
+    "owner": "neyron163",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:40.6436136Z"
+    }
+  },
+  {
+    "name": "nexys-system_gh-actions-spa-test",
+    "owner": "nexys-system",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:40.8892686Z"
+    }
+  },
+  {
+    "name": "nexys-system_gh-actions-docker-spa",
+    "owner": "nexys-system",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:41.1135039Z"
+    }
+  },
+  {
+    "name": "nexys-system_gh-actions-docker-node",
+    "owner": "nexys-system",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:41.3395467Z"
+    }
+  },
+  {
+    "name": "NexusPHP_no-merge-commits",
+    "owner": "NexusPHP",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:41.5731974Z"
+    }
+  },
+  {
+    "name": "nexus-actions_create-nexus-staging-repo",
+    "owner": "nexus-actions",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:41.7947138Z"
+    }
+  },
+  {
+    "name": "nexthink-cloud_aws-sigv4-action",
+    "owner": "nexthink-cloud",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:42.0368195Z"
+    }
+  },
+  {
+    "name": "Nexmo_release-to-noticeable-action",
+    "owner": "Nexmo",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:42.2618892Z"
+    }
+  },
+  {
+    "name": "newtykins_osu-profile",
+    "owner": "newtykins",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "critical": 0,
+      "high": 0,
+      "lastUpdated": "2022-11-25T09:42:42.8136988Z"
+    }
+  },
+  {
+    "name": "newrelic_wiki-sync-action",
+    "owner": "newrelic",
+    "dependabot": null
+  },
+  {
+    "name": "newrelic_validate-nerdpack-action",
+    "owner": "newrelic",
+    "dependabot": null
+  },
+  {
+    "name": "newrelic_repolinter-action",
+    "owner": "newrelic",
+    "dependabot": null
+  },
+  {
+    "name": "newrelic_junit-reporter-action",
+    "owner": "newrelic",
+    "dependabot": null
+  },
+  {
+    "name": "newrelic_deployment-marker-action",
+    "owner": "newrelic",
+    "dependabot": null
+  },
+  {
+    "name": "newkdev_setup-depot-tools",
+    "owner": "newkdev",
+    "dependabot": null
+  },
+  {
+    "name": "new-adventure-aerolite_hello-world-javascript-action",
+    "owner": "new-adventure-aerolite",
+    "dependabot": null
+  },
+  {
+    "name": "Nevvulo_upsert-json",
+    "owner": "Nevvulo",
+    "dependabot": null
+  },
+  {
+    "name": "Nevvulo_hashnode-publisher",
+    "owner": "Nevvulo",
+    "dependabot": null
+  },
+  {
+    "name": "Nevvulo_dev-to-publisher",
+    "owner": "Nevvulo",
+    "dependabot": null
+  },
+  {
+    "name": "neverendingqs_gh-action-tag-on-npm-version",
+    "owner": "neverendingqs",
+    "dependabot": null
+  },
+  {
+    "name": "neverendingqs_gh-action-node-update-deps",
+    "owner": "neverendingqs",
+    "dependabot": null
+  },
+  {
+    "name": "neverendingqs_gh-action-node-bump-version-pr",
+    "owner": "neverendingqs",
+    "dependabot": null
+  },
+  {
+    "name": "nev7n_wait_for_response",
+    "owner": "nev7n",
+    "dependabot": null
+  },
+  {
+    "name": "neuvector_scan-action",
+    "owner": "neuvector",
+    "dependabot": null
+  },
+  {
+    "name": "neurogenomics_rworkflows",
+    "owner": "neurogenomics",
+    "dependabot": null
+  },
+  {
+    "name": "NeuraLegion_wait-for",
+    "owner": "NeuraLegion",
+    "dependabot": null
+  },
+  {
+    "name": "NeuraLegion_stop-scan",
+    "owner": "NeuraLegion",
+    "dependabot": null
+  },
+  {
+    "name": "NeuraLegion_run-scan",
+    "owner": "NeuraLegion",
+    "dependabot": null
+  },
+  {
+    "name": "netwerk-digitaal-erfgoed_bikeshed-action",
+    "owner": "netwerk-digitaal-erfgoed",
+    "dependabot": null
+  },
+  {
+    "name": "netsparker_Netsparker-Cloud-GitHub-Actions",
+    "owner": "netsparker",
+    "dependabot": null
+  },
+  {
+    "name": "netsells_update-flutter-packages",
+    "owner": "netsells",
+    "dependabot": null
+  },
+  {
+    "name": "netf_helm-eks-action",
+    "owner": "netf",
+    "dependabot": null
+  },
+  {
+    "name": "net-engine_github-repository-sync-action",
+    "owner": "net-engine",
+    "dependabot": null
+  },
+  {
+    "name": "netcreaties_has-one-of-label",
+    "owner": "netcreaties",
+    "dependabot": null
+  },
+  {
+    "name": "Netail_webhook-notifier",
+    "owner": "Netail",
+    "dependabot": null
+  },
+  {
+    "name": "nermur_antora-lunr-site-action",
+    "owner": "nermur",
+    "dependabot": null
+  },
+  {
+    "name": "nerdyscout_kicad-exports",
+    "owner": "nerdyscout",
+    "dependabot": null
+  },
+  {
+    "name": "nerdify_ping-action",
+    "owner": "nerdify",
+    "dependabot": null
+  },
+  {
+    "name": "nerdify_envoyer-action",
+    "owner": "nerdify",
+    "dependabot": null
+  },
+  {
+    "name": "nerd4ever_ssh-action",
+    "owner": "nerd4ever",
+    "dependabot": null
+  },
+  {
+    "name": "neoz-technologies_code-sign-action",
+    "owner": "neoz-technologies",
+    "dependabot": null
+  },
+  {
+    "name": "neoxia_is-workspace-affected",
+    "owner": "neoxia",
+    "dependabot": null
+  },
+  {
+    "name": "Neosperience_vendorito",
+    "owner": "Neosperience",
+    "dependabot": null
+  },
+  {
+    "name": "neosec-com_kubectl-aws-eks",
+    "owner": "neosec-com",
+    "dependabot": null
+  },
+  {
+    "name": "neonidian_teams-notify-build-status",
+    "owner": "neonidian",
+    "dependabot": null
+  },
+  {
+    "name": "neondatabase_delete-branch-action",
+    "owner": "neondatabase",
+    "dependabot": null
+  },
+  {
+    "name": "neolution-ch_action-release-notifier",
+    "owner": "neolution-ch",
+    "dependabot": null
+  },
+  {
+    "name": "neohelden_notary-action",
+    "owner": "neohelden",
+    "dependabot": null
+  },
+  {
+    "name": "neofinancial_coverage-upload-action",
+    "owner": "neofinancial",
+    "dependabot": null
+  },
+  {
+    "name": "neochae1_upload-test-result",
+    "owner": "neochae1",
+    "dependabot": null
+  },
+  {
+    "name": "neobrains_space-deployment-github-action",
+    "owner": "neobrains",
+    "dependabot": null
+  },
+  {
+    "name": "nemeaXYZ_webp-optimizer",
+    "owner": "nemeaXYZ",
+    "dependabot": null
+  },
+  {
+    "name": "Nelyx_action-calver",
+    "owner": "Nelyx",
+    "dependabot": null
+  },
+  {
+    "name": "nelsonjchen_gh-pages-pelican-action",
+    "owner": "nelsonjchen",
+    "dependabot": null
+  },
+  {
+    "name": "nelonoel_surge-sh-teardown",
+    "owner": "nelonoel",
+    "dependabot": null
+  },
+  {
+    "name": "nelonoel_branch-name",
+    "owner": "nelonoel",
+    "dependabot": null
+  },
+  {
+    "name": "nektro_actions-setup-zigmod",
+    "owner": "nektro",
+    "dependabot": null
+  },
+  {
+    "name": "NekomiyaKumi_YTB-Combiner",
+    "owner": "NekomiyaKumi",
+    "dependabot": null
+  },
+  {
+    "name": "NekitCorp_yandex-storage-website-action",
+    "owner": "NekitCorp",
+    "dependabot": null
+  },
+  {
+    "name": "NejcZdovc_comment-pr",
+    "owner": "NejcZdovc",
+    "dependabot": null
+  },
+  {
+    "name": "NejcZdovc_bundle-size-diff",
+    "owner": "NejcZdovc",
+    "dependabot": null
+  },
+  {
+    "name": "neilpeterson_action-create-blueprint",
+    "owner": "neilpeterson",
+    "dependabot": null
+  },
+  {
+    "name": "neilpeterson_action-assign-blueprint",
+    "owner": "neilpeterson",
+    "dependabot": null
+  },
+  {
+    "name": "neil-empey_changes",
+    "owner": "neil-empey",
+    "dependabot": null
+  },
+  {
+    "name": "negz_create-tag",
+    "owner": "negz",
+    "dependabot": null
+  },
+  {
+    "name": "neg4n_version-bump",
+    "owner": "neg4n",
+    "dependabot": null
+  },
+  {
+    "name": "nefrob_pr-description",
+    "owner": "nefrob",
+    "dependabot": null
+  },
+  {
+    "name": "Nef10_lcov-reporter-action",
+    "owner": "Nef10",
+    "dependabot": null
   }
 ]
