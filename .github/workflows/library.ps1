@@ -273,6 +273,10 @@ function GetRateLimitInfo {
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
         Write-Host "Access token ratelimit info: $($response2.rate | ConvertTo-Json)"    
     }
+
+    if ($response.rate.limit -eq 60) {
+        throw "Rate limit is 60, this is not enough to run this script, check the token that is used"
+    }
 }
 
 function SaveStatus {
