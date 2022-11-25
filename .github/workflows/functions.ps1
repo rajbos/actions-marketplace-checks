@@ -101,7 +101,7 @@ function RunForActions {
     # do the work
 
     #TODO: check for existing repos first, or update the status.json with existing repos
-    #($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
+    ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Count)] repos"
     "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" >> $env:GITHUB_STEP_SUMMARY
@@ -109,7 +109,7 @@ function RunForActions {
 
     # toggle for faster test runs
     if (1 -eq 1) {
-        #($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+        ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
         Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
         "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
 
