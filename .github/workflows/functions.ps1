@@ -375,6 +375,11 @@ function ForkActionRepos {
     Write-Host "Found [$($actionsToProcess.Count)] actions still to process for forking"
 
     # get existing forks with owner/repo values instead of full urls
+    # declar variables outside of the loop to make it faster
+    $owner = $null
+    $repo = $null
+    $forkedRepoName = $null
+    $existingFork = $null
     foreach ($action in $actionsToProcess) {
         if ($i -ge $max) {
             # do not run to long
