@@ -383,9 +383,11 @@ function EnableDependabotForForkedActions {
 
     Write-Host "Enabling dependabot on forked repos"
     # filter the actions to the ones we still need to enable dependabot for
+    # todo: make faster!
     $actionsToProcess = $actions | Where-Object { 
         ($owner, $repo) = SplitUrl -url $_.RepoUrl
-        $existingFork = $existingForks | Where-Object { $_.name -eq $repo -And $_.owner -eq $owner }
+        $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+        $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
         if ($null -ne $existingFork) {
             if ($null -eq $existingFork.dependabot) {
                 return $true
@@ -419,7 +421,7 @@ function EnableDependabotForForkedActions {
                 $i++ | Out-Null
 
                 # back off just a little
-                Start-Sleep 2 
+                #Start-Sleep 2 
             }
             else {
                 # could not enable dependabot for some reason. Store it as false so we can skip it next time and save execution time
