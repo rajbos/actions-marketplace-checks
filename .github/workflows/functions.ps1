@@ -409,6 +409,7 @@ function ForkActionRepos {
                     else {
                         # let's store a list of failed forks
                         Write-Host "Failed to fork repo [$owner/$repo]"
+                        Write-Host "failedForks object type: $($failedForks.GetType())"
                         $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
                         $failedForks.Add($failedFork)
                     }
@@ -612,6 +613,8 @@ $forkOrg = "actions-marketplace-validations"
 
 # load the list of forked repos
 ($existingForks, $failedForks) = GetForkedActionRepos
+Write-Host "existingForks object type: $($existingForks.GetType())"
+Write-Host "failedForks object type: $($failedForks.GetType())"
 
 # run the functions for all actions
 $existingForks = RunForActions -actions $actions -existingForks $existingForks -failedForks $failedForks
