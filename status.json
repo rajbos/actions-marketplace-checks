@@ -37574,7 +37574,7 @@
     ]
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "owner": "WIPACrepo",
     "name": "WIPACrepo_wipac-dev-project-action",
     "forkFound": true,
@@ -66025,7 +66025,15 @@
       "lastUpdated": "2022-11-21T13:56:22.8492376Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-07T17:24:35Z",
+      "disabled": false,
+      "updated_at": "2022-11-04T17:29:49Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "swiftpackages",
@@ -66041,7 +66049,29 @@
       "lastUpdated": "2022-11-21T13:56:22.9854758Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-16T14:28:39Z",
+      "disabled": false,
+      "updated_at": "2022-10-27T03:04:08Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2",
+      "v1.1.3",
+      "v2.0.0",
+      "v2.1.0"
+    ],
+    "releaseInfo": [
+      "v2.1.0",
+      "v2.0.0",
+      "v1.1.3"
+    ]
   },
   {
     "owner": "swift-nav",
@@ -66057,7 +66087,21 @@
       "lastUpdated": "2022-11-21T13:56:23.1116625Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-04T01:28:49Z",
+      "disabled": false,
+      "updated_at": "2022-07-27T01:29:15Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1"
+    ]
   },
   {
     "owner": "SwiftDocOrg",
@@ -66073,7 +66117,43 @@
       "lastUpdated": "2022-11-21T13:56:23.2525563Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-01T22:50:51Z",
+      "disabled": false,
+      "updated_at": "2022-11-26T14:26:46Z",
+      "archived": true
+    },
+    "tagInfo": [
+      "0.0.1",
+      "0.0.2",
+      "0.0.3",
+      "0.0.4",
+      "0.1.0",
+      "0.1.1",
+      "1.0.0-beta.1",
+      "1.0.0-beta.2",
+      "1.0.0-beta.3",
+      "1.0.0-beta.4",
+      "1.0.0-beta.5",
+      "1.0.0-beta.6",
+      "1.0.0-rc.1"
+    ],
+    "releaseInfo": [
+      "1.0.0-rc.1",
+      "1.0.0-beta.6",
+      "1.0.0-beta.5",
+      "1.0.0-beta.4",
+      "1.0.0-beta.3",
+      "1.0.0-beta.2",
+      "1.0.0-beta.1",
+      "0.1.1",
+      "0.1.0",
+      "0.0.4",
+      "0.0.3",
+      "0.0.2",
+      "0.0.1"
+    ]
   },
   {
     "owner": "SwiftDocOrg",
@@ -66089,7 +66169,15 @@
       "lastUpdated": "2022-11-21T13:56:23.3755732Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-01-20T13:11:42Z",
+      "disabled": false,
+      "updated_at": "2022-11-06T11:13:05Z",
+      "archived": true
+    },
+    "tagInfo": "1.0.0",
+    "releaseInfo": "1.0.0"
   },
   {
     "owner": "swiftdiaries",
@@ -66105,7 +66193,18 @@
       "lastUpdated": "2022-11-21T13:56:23.5084105Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2022-10-25T04:41:34Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0"
+    ],
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "swift-actions",
@@ -66121,7 +66220,66 @@
       "lastUpdated": "2022-11-21T13:56:23.6259591Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-31T07:40:41Z",
+      "disabled": false,
+      "updated_at": "2022-11-05T14:45:56Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.6.0",
+      "v1.7.0",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.9.1",
+      "v1.10.0",
+      "v1.11.0",
+      "v1.12.0",
+      "v1.13.0",
+      "v1.13.1",
+      "v1.14.0",
+      "v1.15.0",
+      "v1.16.0",
+      "v1.17.0",
+      "v1.18.0",
+      "v1.19.0"
+    ],
+    "releaseInfo": [
+      "v1.19.0",
+      "v1.18.0",
+      "v1.17.0",
+      "v1.16.0",
+      "v1.15.0",
+      "v1.14.0",
+      "v1.13.1",
+      "v1.13.0",
+      "v1.12.0",
+      "v1.11.0",
+      "v1.10.0",
+      "v1.9.1",
+      "v1.9.0",
+      "v1.8.0",
+      "v1.7.0",
+      "v1.6.0",
+      "v1.5.0",
+      "v1.4.0",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.1",
+      "v1.0.0",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "swichers",
@@ -66137,7 +66295,15 @@
       "lastUpdated": "2022-11-21T13:56:23.7507269Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-28T09:41:49Z",
+      "disabled": false,
+      "updated_at": "2022-04-28T09:42:38Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "s-weigand",
@@ -66153,7 +66319,38 @@
       "lastUpdated": "2022-11-21T13:56:23.8718223Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-29T16:33:18Z",
+      "disabled": false,
+      "updated_at": "2022-01-04T09:28:39Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.1.0",
+      "v0.1.0",
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.4",
+      "v1.0.3",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "s-weigand",
@@ -66169,7 +66366,46 @@
       "lastUpdated": "2022-11-21T13:56:23.9979315Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-27T22:32:29Z",
+      "disabled": false,
+      "updated_at": "2022-11-24T05:43:12Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6",
+      "v1.0.7",
+      "v1.1.0",
+      "v1.1.1",
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6",
+      "v1.0.7",
+      "v1.1.0",
+      "v1.1.1"
+    ],
+    "releaseInfo": [
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.7",
+      "v1.0.6",
+      "v1.0.5",
+      "v1.0.4",
+      "v1.0.3",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "sweeetland",
@@ -66185,7 +66421,24 @@
       "lastUpdated": "2022-11-21T13:56:24.122399Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-05T20:30:11Z",
+      "disabled": false,
+      "updated_at": "2022-03-24T01:19:08Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.2",
+      "v1.0.1"
+    ]
   },
   {
     "owner": "Swechhya",
@@ -66201,7 +66454,23 @@
       "lastUpdated": "2022-11-21T13:56:24.2745072Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-07-12T06:43:52Z",
+      "disabled": false,
+      "updated_at": "2022-08-24T21:04:45Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0",
+      "v1.1",
+      "v1.2"
+    ],
+    "releaseInfo": [
+      "v1.2",
+      "v1.1",
+      "v1.0"
+    ]
   },
   {
     "owner": "swdotcom",
@@ -66217,7 +66486,24 @@
       "lastUpdated": "2022-11-21T13:56:24.4056109Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-11-06T22:52:46Z",
+      "disabled": false,
+      "updated_at": "2022-08-25T18:28:10Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.1.0",
+      "v1.2.0"
+    ],
+    "releaseInfo": [
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "swdotcom",
@@ -66233,7 +66519,25 @@
       "lastUpdated": "2022-11-21T13:56:24.5254672Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-01-21T21:15:16Z",
+      "disabled": false,
+      "updated_at": "2022-01-08T02:33:08Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.1",
+      "v1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "Swatinem",
@@ -66249,7 +66553,41 @@
       "lastUpdated": "2022-11-21T13:56:24.6557344Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-11-09T19:16:42Z",
+      "disabled": false,
+      "updated_at": "2022-11-26T08:16:32Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v2",
+      "v2.0.0",
+      "v2.0.1",
+      "v2.0.2",
+      "v2.1.0",
+      "v2.2.0"
+    ],
+    "releaseInfo": [
+      "v2.2.0",
+      "v2.1.0",
+      "v2.0.2",
+      "v2.0.1",
+      "v2.0.0",
+      "v1.4.0",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "Swatinem",
@@ -66265,7 +66603,15 @@
       "lastUpdated": "2022-11-21T13:56:24.7850381Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-02-28T12:58:25Z",
+      "disabled": false,
+      "updated_at": "2022-09-29T17:37:28Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "swamirara",
@@ -66281,7 +66627,21 @@
       "lastUpdated": "2022-11-21T13:56:24.9197207Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-07T16:14:12Z",
+      "disabled": false,
+      "updated_at": "2022-09-07T15:21:31Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.0.1"
+    ],
+    "releaseInfo": [
+      "1.0.1",
+      "1.0.0"
+    ]
   },
   {
     "owner": "swade1987",
@@ -66297,7 +66657,23 @@
       "lastUpdated": "2022-11-21T13:56:25.0321444Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-22T10:38:53Z",
+      "disabled": false,
+      "updated_at": "2022-11-05T21:39:57Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3"
+    ],
+    "releaseInfo": [
+      "v0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "owner": "swade1987",
@@ -66313,7 +66689,32 @@
       "lastUpdated": "2022-11-21T13:56:25.1678307Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-28T15:50:40Z",
+      "disabled": false,
+      "updated_at": "2021-12-07T15:07:03Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1-alpha",
+      "v0.0.2-alpha",
+      "v0.0.3-alpha",
+      "v0.0.4-alpha",
+      "v0.0.4",
+      "v0.0.5",
+      "v0.0.6-rc.1",
+      "v0.0.6",
+      "v0.0.7"
+    ],
+    "releaseInfo": [
+      "v0.0.7",
+      "v0.0.6",
+      "v0.0.6-rc.1",
+      "v0.0.5",
+      "v0.0.4",
+      "v0.0.4-alpha"
+    ]
   },
   {
     "owner": "sv-tools",
@@ -66329,7 +66730,29 @@
       "lastUpdated": "2022-11-21T13:56:25.28352Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-19T15:34:59Z",
+      "disabled": false,
+      "updated_at": "2021-12-10T22:12:40Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v1.4.1"
+    ],
+    "releaseInfo": [
+      "v1.4.1",
+      "v1.4.0",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "sv-tools",
@@ -66345,7 +66768,23 @@
       "lastUpdated": "2022-11-21T13:56:25.4190027Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-19T15:40:10Z",
+      "disabled": false,
+      "updated_at": "2021-12-10T22:12:20Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2"
+    ],
+    "releaseInfo": [
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "svrooij",
@@ -66361,7 +66800,15 @@
       "lastUpdated": "2022-11-21T13:56:25.6714085Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-02T16:20:09Z",
+      "disabled": false,
+      "updated_at": "2022-11-17T10:05:29Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "sv-oss",
@@ -66377,7 +66824,18 @@
       "lastUpdated": "2022-11-21T13:56:25.7850559Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-03T23:42:35Z",
+      "disabled": false,
+      "updated_at": "2022-02-03T23:24:15Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0",
+      "v0.1.0"
+    ],
+    "releaseInfo": "v0.1.0"
   },
   {
     "owner": "tripteki",
@@ -66393,7 +66851,15 @@
       "lastUpdated": "2022-11-21T13:56:26.0443522Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-11-22T11:00:19Z",
+      "disabled": false,
+      "updated_at": "2022-11-20T10:10:04Z",
+      "archived": false
+    },
+    "tagInfo": "1.0.0",
+    "releaseInfo": "1.0.0"
   },
   {
     "owner": "svikramjeet",
@@ -66409,7 +66875,27 @@
       "lastUpdated": "2022-11-21T13:56:26.1946516Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-10T10:32:28Z",
+      "disabled": false,
+      "updated_at": "2022-09-15T06:48:25Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "0.1",
+      "0.2",
+      "0.3",
+      "0.3.1",
+      "0.3.2"
+    ],
+    "releaseInfo": [
+      "0.3.2",
+      "0.3.1",
+      "0.3",
+      "0.2",
+      "0.1"
+    ]
   },
   {
     "owner": "svikramjeet",
@@ -66425,7 +66911,83 @@
       "lastUpdated": "2022-11-21T13:56:26.381144Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-05-27T11:39:32Z",
+      "disabled": false,
+      "updated_at": "2020-05-27T11:39:01Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0",
+      "v1.1",
+      "v1.2",
+      "v1.3",
+      "v1.4",
+      "v1.5",
+      "v1.6",
+      "v1.7",
+      "v1.8",
+      "v1.9",
+      "v1.10",
+      "v2.0",
+      "v2.1",
+      "v2.2",
+      "v2.3",
+      "v2.4",
+      "v2.5",
+      "v2.6",
+      "v2.7",
+      "v2.8",
+      "v2.9",
+      "v2.9.1",
+      "v2.9.2",
+      "v2.9.3",
+      "v2.9.4",
+      "v3.0",
+      "v3.0.1",
+      "v3.0.2",
+      "v3.0.3",
+      "v3.0.4",
+      "v3.0.5",
+      "v3.0.6",
+      "1.0",
+      "1.5"
+    ],
+    "releaseInfo": [
+      "v3.0.6",
+      "v3.0.5",
+      "v3.0.4",
+      "v3.0.3",
+      "v3.0.2",
+      "v3.0.1",
+      "v3.0",
+      "v2.9.4",
+      "v2.9.3",
+      "v2.9.2",
+      "v2.9.1",
+      "v2.9",
+      "v2.8",
+      "v2.7",
+      "v2.6",
+      "v2.5",
+      "v2.4",
+      "v2.3",
+      "v2.2",
+      "v2.1",
+      "v2.0",
+      "v1.10",
+      "v1.9",
+      "v1.8",
+      "v1.7",
+      "v1.6",
+      "v1.5",
+      "v1.4",
+      "v1.3",
+      "v1.2",
+      "v1.1",
+      "v1.0"
+    ]
   },
   {
     "owner": "svikramjeet",
@@ -66441,7 +67003,15 @@
       "lastUpdated": "2022-11-21T13:56:26.5133748Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2019-09-22T05:29:11Z",
+      "disabled": false,
+      "updated_at": "2022-09-14T18:47:05Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "svenstaro",
@@ -66457,7 +67027,36 @@
       "lastUpdated": "2022-11-21T13:56:26.6891236Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-07-19T11:00:55Z",
+      "disabled": false,
+      "updated_at": "2022-11-26T07:03:04Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "latest",
+      "v2",
+      "1.0.0",
+      "1.1.0",
+      "1.1.1",
+      "1.1.2",
+      "1.1.3",
+      "1.1.4",
+      "1.1.5",
+      "2.0.0",
+      "2.0.1"
+    ],
+    "releaseInfo": [
+      "2.0.1",
+      "2.0.0",
+      "1.1.5",
+      "1.1.4",
+      "1.1.3",
+      "1.1.1",
+      "1.1.0",
+      "1.0.0"
+    ]
   },
   {
     "owner": "svemu",
@@ -66473,7 +67072,22 @@
       "lastUpdated": "2022-11-21T13:56:26.8242296Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-11-11T19:39:29Z",
+      "disabled": false,
+      "updated_at": "2022-11-11T20:26:57Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.1",
+      "v1.2",
+      "v1.3"
+    ],
+    "releaseInfo": [
+      "v1.3",
+      "v1.2"
+    ]
   },
   {
     "owner": "SvanBoxel",
@@ -66489,7 +67103,23 @@
       "lastUpdated": "2022-11-21T13:56:26.9375176Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-25T13:18:26Z",
+      "disabled": false,
+      "updated_at": "2022-11-04T10:07:36Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2"
+    ],
+    "releaseInfo": [
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "SvanBoxel",
@@ -66505,7 +67135,25 @@
       "lastUpdated": "2022-11-21T13:56:27.0745178Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-02-11T21:35:55Z",
+      "disabled": false,
+      "updated_at": "2022-06-22T11:30:12Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.0.1",
+      "1.0.2",
+      "1.0.3"
+    ],
+    "releaseInfo": [
+      "1.0.3",
+      "1.0.2",
+      "1.0.1",
+      "1.0.0"
+    ]
   },
   {
     "owner": "SvanBoxel",
@@ -66521,7 +67169,21 @@
       "lastUpdated": "2022-11-21T13:56:27.201535Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-03-11T14:30:18Z",
+      "disabled": false,
+      "updated_at": "2022-05-16T18:05:34Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "alpha",
+      "0.1.0"
+    ],
+    "releaseInfo": [
+      "0.1.0",
+      "alpha"
+    ]
   },
   {
     "owner": "SvanBoxel",
@@ -66537,7 +67199,27 @@
       "lastUpdated": "2022-11-21T13:56:27.3336144Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-30T08:03:34Z",
+      "disabled": false,
+      "updated_at": "2022-11-12T14:34:52Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "1.0.0",
+      "1.1",
+      "1.2.0",
+      "1.3.0",
+      "1.4.0"
+    ],
+    "releaseInfo": [
+      "1.4.0",
+      "1.3.0",
+      "1.2.0",
+      "1.1",
+      "1.0.0"
+    ]
   },
   {
     "owner": "SvanBoxel",
@@ -66553,7 +67235,23 @@
       "lastUpdated": "2022-11-21T13:56:27.4711299Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-15T15:02:25Z",
+      "disabled": false,
+      "updated_at": "2022-11-17T17:07:22Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "0.1",
+      "0.2",
+      "0.3"
+    ],
+    "releaseInfo": [
+      "0.3",
+      "0.2",
+      "0.1"
+    ]
   },
   {
     "owner": "suzuki-shunsuke",
@@ -66569,7 +67267,23 @@
       "lastUpdated": "2022-11-21T13:56:27.5912715Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-04T11:29:31Z",
+      "disabled": false,
+      "updated_at": "2022-11-04T15:44:18Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2"
+    ],
+    "releaseInfo": [
+      "v0.1.2",
+      "v0.1.1",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "suyash",
@@ -66585,7 +67299,15 @@
       "lastUpdated": "2022-11-21T13:56:27.7218965Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-12-13T12:18:19Z",
+      "disabled": false,
+      "updated_at": "2022-01-01T16:27:48Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "Suvink",
@@ -66601,7 +67323,15 @@
       "lastUpdated": "2022-11-21T13:56:27.8403537Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-03-27T18:00:06Z",
+      "disabled": false,
+      "updated_at": "2022-06-26T21:57:59Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "suve",
@@ -66617,7 +67347,29 @@
       "lastUpdated": "2022-11-21T13:56:27.971614Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-11-11T10:52:23Z",
+      "disabled": false,
+      "updated_at": "2022-11-02T19:37:47Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.2.0",
+      "v0.3.0",
+      "v0.3.1",
+      "v0.3.2",
+      "v0.4.0"
+    ],
+    "releaseInfo": [
+      "v0.4.0",
+      "v0.3.2",
+      "v0.3.1",
+      "v0.3.0",
+      "v0.2.0",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "Sutil",
@@ -66633,7 +67385,40 @@
       "lastUpdated": "2022-11-21T13:56:28.1040608Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-10T20:50:38Z",
+      "disabled": false,
+      "updated_at": "2022-10-24T01:59:02Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v0.0.5",
+      "v0.0.6",
+      "v0.0.7",
+      "v0.0.8",
+      "v0.0.9",
+      "v0.0.10",
+      "v0.0.11",
+      "v0.0.12",
+      "v0.0.13",
+      "v0.0.14",
+      "v0.0.15",
+      "v0.0.16",
+      "v0.0.17",
+      "v0.0.18",
+      "v01.00.00",
+      "v01.00.01",
+      "v01.00.02"
+    ],
+    "releaseInfo": [
+      "v01.00.02",
+      "v01.00.00"
+    ]
   },
   {
     "owner": "susisu",
@@ -66649,7 +67434,36 @@
       "lastUpdated": "2022-11-21T13:56:28.2165631Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-29T16:42:03Z",
+      "disabled": false,
+      "updated_at": "2022-02-07T11:53:27Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2",
+      "v1.1.3",
+      "v1.1.4",
+      "v1.1.5"
+    ],
+    "releaseInfo": [
+      "v1.1.5",
+      "v1.1.4",
+      "v1.1.3",
+      "v1.1.2",
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "sushi-su",
@@ -66665,7 +67479,15 @@
       "lastUpdated": "2022-11-21T13:56:28.3569494Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-30T12:41:36Z",
+      "disabled": false,
+      "updated_at": "2022-06-30T07:49:52Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "sushichop",
@@ -66681,7 +67503,22 @@
       "lastUpdated": "2022-11-21T13:56:28.4897794Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-27T15:19:32Z",
+      "disabled": false,
+      "updated_at": "2022-02-12T09:27:14Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "SusanDoggie",
@@ -66697,7 +67534,15 @@
       "lastUpdated": "2022-11-21T13:56:28.6229782Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-16T02:17:27Z",
+      "disabled": false,
+      "updated_at": "2022-08-19T04:51:34Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "SusanDoggie",
@@ -66713,7 +67558,15 @@
       "lastUpdated": "2022-11-21T13:56:28.7438554Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-24T08:50:06Z",
+      "disabled": false,
+      "updated_at": "2022-03-24T07:07:49Z",
+      "archived": false
+    },
+    "tagInfo": "0.0.1",
+    "releaseInfo": "0.0.1"
   },
   {
     "owner": "surrsurus",
@@ -66729,7 +67582,20 @@
       "lastUpdated": "2022-11-21T13:56:28.8800692Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-16T19:23:41Z",
+      "disabled": false,
+      "updated_at": "2022-05-16T18:58:48Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1",
+      "v1.2",
+      "v1.3"
+    ],
+    "releaseInfo": "v1.3"
   },
   {
     "owner": "sureshg",
@@ -66745,7 +67611,32 @@
       "lastUpdated": "2022-11-21T13:56:29.0942562Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-14T18:31:00Z",
+      "disabled": false,
+      "updated_at": "2022-06-19T23:52:42Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v2.1",
+      "v2.2",
+      "v2.3",
+      "v2.4",
+      "v2.5",
+      "v2.6"
+    ],
+    "releaseInfo": [
+      "v2.6",
+      "v2.5",
+      "v2.4",
+      "v2.3",
+      "v2.2",
+      "v2.1",
+      "v2"
+    ]
   },
   {
     "owner": "surbhirverma",
@@ -66761,7 +67652,23 @@
       "lastUpdated": "2022-11-21T13:56:29.2226499Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-09T22:05:50Z",
+      "disabled": false,
+      "updated_at": "2021-06-14T20:12:40Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3"
+    ],
+    "releaseInfo": [
+      "v3",
+      "v2",
+      "v1"
+    ]
   },
   {
     "owner": "SuprGames",
@@ -66777,7 +67684,15 @@
       "lastUpdated": "2022-11-21T13:56:29.36791Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-08-10T15:17:50Z",
+      "disabled": false,
+      "updated_at": "2022-09-24T06:50:08Z",
+      "archived": false
+    },
+    "tagInfo": "v1.77",
+    "releaseInfo": "v1.77"
   },
   {
     "owner": "supplypike",
@@ -66793,7 +67708,25 @@
       "lastUpdated": "2022-11-21T13:56:29.503867Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-09-15T15:07:02Z",
+      "disabled": false,
+      "updated_at": "2022-11-12T17:30:08Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0-beta",
+      "v1.0.1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1",
+      "v1.0.1",
+      "v1.0.0-beta"
+    ]
   },
   {
     "owner": "supplypike",
@@ -66809,7 +67742,21 @@
       "lastUpdated": "2022-11-21T13:56:29.6595269Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-13T19:57:27Z",
+      "disabled": false,
+      "updated_at": "2022-05-17T08:04:03Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1"
+    ]
   },
   {
     "owner": "supermean-org",
@@ -66825,7 +67772,15 @@
       "lastUpdated": "2022-11-21T13:56:29.7766071Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-24T03:19:01Z",
+      "disabled": false,
+      "updated_at": "2022-09-05T03:09:31Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "supermanner",
@@ -66841,7 +67796,21 @@
       "lastUpdated": "2022-11-21T13:56:29.9225161Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2019-12-22T08:01:59Z",
+      "disabled": false,
+      "updated_at": "2022-03-03T20:13:53Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "superman66",
@@ -66857,7 +67826,15 @@
       "lastUpdated": "2022-11-21T13:56:30.060333Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-02-17T14:34:25Z",
+      "disabled": false,
+      "updated_at": "2022-11-17T05:19:57Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "superliuwr",
@@ -66873,7 +67850,21 @@
       "lastUpdated": "2022-11-21T13:56:30.1720985Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-04-23T07:13:48Z",
+      "disabled": false,
+      "updated_at": "2020-04-23T07:09:43Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0-go1.13.4",
+      "v1.0.0",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0"
+    ],
+    "releaseInfo": "v1.0.0-go1.13.4"
   },
   {
     "owner": "SuperHuangXu",
@@ -66889,7 +67880,15 @@
       "lastUpdated": "2022-11-21T13:56:30.4150134Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-29T03:00:58Z",
+      "disabled": false,
+      "updated_at": "2022-04-28T03:42:25Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "superfly",
@@ -66905,7 +67904,21 @@
       "lastUpdated": "2022-11-21T13:56:30.550022Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-08T18:28:22Z",
+      "disabled": false,
+      "updated_at": "2022-11-19T01:15:41Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "latest",
+      "v1",
+      "1.0",
+      "1.0.0",
+      "1.1"
+    ],
+    "releaseInfo": "1.0.0"
   },
   {
     "owner": "superfly",
@@ -66921,7 +67934,25 @@
       "lastUpdated": "2022-11-21T13:56:30.7206229Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-04T22:50:52Z",
+      "disabled": false,
+      "updated_at": "2022-11-25T23:47:23Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "1.0",
+      "1.1",
+      "1.2",
+      "1.3"
+    ],
+    "releaseInfo": [
+      "1.3",
+      "1.2",
+      "1.1",
+      "1.0"
+    ]
   },
   {
     "owner": "supercrafter100",
@@ -66937,7 +67968,15 @@
       "lastUpdated": "2022-11-21T13:56:30.8462055Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-11T19:06:35Z",
+      "disabled": false,
+      "updated_at": "2021-10-19T06:47:45Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "superbrothers",
@@ -66953,7 +67992,18 @@
       "lastUpdated": "2022-11-21T13:56:30.9806073Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-02-16T12:51:41Z",
+      "disabled": false,
+      "updated_at": "2021-06-13T14:48:59Z",
+      "archived": true
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0"
+    ],
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "suo",
@@ -66969,7 +68019,15 @@
       "lastUpdated": "2022-11-21T13:56:31.1225003Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2019-09-07T20:06:31Z",
+      "disabled": false,
+      "updated_at": "2022-11-26T22:29:45Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "sunstone-dev",
@@ -66985,7 +68043,15 @@
       "lastUpdated": "2022-11-21T13:56:31.25792Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2019-11-12T17:25:01Z",
+      "disabled": false,
+      "updated_at": "2019-11-12T17:25:15Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "SunshineCTF",
@@ -67001,7 +68067,28 @@
       "lastUpdated": "2022-11-21T13:56:31.4108675Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-15T04:21:20Z",
+      "disabled": false,
+      "updated_at": "2022-03-15T04:21:00Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1",
+      "v1.2",
+      "v1.3",
+      "v1.4",
+      "1.3"
+    ],
+    "releaseInfo": [
+      "v1.4",
+      "v1.3",
+      "v1.2",
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "owner": "sunnysid3up",
@@ -67017,7 +68104,32 @@
       "lastUpdated": "2022-11-21T13:56:31.5410728Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-09-18T05:48:57Z",
+      "disabled": false,
+      "updated_at": "2022-11-24T15:55:51Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1-alpha",
+      "v0.1-beta.1",
+      "v0.1-beta.2",
+      "v0.1-beta.3",
+      "v0.1-beta.4",
+      "v0.1-beta.5",
+      "v0.1-beta.6",
+      "v0.1-beta.7"
+    ],
+    "releaseInfo": [
+      "v0.1-beta.7",
+      "v0.1-beta.6",
+      "v0.1-beta.5",
+      "v0.1-beta.4",
+      "v0.1-beta.3",
+      "v0.1-beta.2",
+      "v0.1-beta.1"
+    ]
   },
   {
     "owner": "sunny4249",
@@ -67033,7 +68145,18 @@
       "lastUpdated": "2022-11-21T13:56:31.6873451Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-18T07:54:16Z",
+      "disabled": false,
+      "updated_at": "2021-10-18T08:18:03Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2"
+    ],
+    "releaseInfo": "v0.0.2"
   },
   {
     "owner": "sunny0826",
@@ -67049,7 +68172,29 @@
       "lastUpdated": "2022-11-21T13:56:31.8105437Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-25T03:04:31Z",
+      "disabled": false,
+      "updated_at": "2021-03-25T03:03:42Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v0.0.5",
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2",
+      "v0.1.3",
+      "v0.1.4",
+      "v0.1.5",
+      "v0.1.6",
+      "v0.1.7"
+    ],
+    "releaseInfo": "v0.1.7"
   },
   {
     "owner": "sunilagarwal22-zz",
@@ -67065,7 +68210,21 @@
       "lastUpdated": "2022-11-21T13:56:31.9419109Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-06-04T17:54:21Z",
+      "disabled": false,
+      "updated_at": "2021-09-26T07:00:50Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "FirstCut",
+      "2.0"
+    ],
+    "releaseInfo": [
+      "2.0",
+      "FirstCut"
+    ]
   },
   {
     "owner": "sunilagarwal22",
@@ -67081,7 +68240,15 @@
       "lastUpdated": "2022-11-21T13:56:32.0618971Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-11-25T17:12:40Z",
+      "disabled": false,
+      "updated_at": "2020-11-25T17:12:01Z",
+      "archived": false
+    },
+    "tagInfo": "1.0",
+    "releaseInfo": "1.0"
   },
   {
     "owner": "sumup-bank",
@@ -67097,7 +68264,18 @@
       "lastUpdated": "2022-11-21T13:56:32.1957576Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-08T11:59:22Z",
+      "disabled": false,
+      "updated_at": "2022-08-19T14:57:29Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "owner": "sumup-bank",
@@ -67113,7 +68291,15 @@
       "lastUpdated": "2022-11-21T13:56:32.3202868Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-10T14:43:43Z",
+      "disabled": false,
+      "updated_at": "2022-07-01T00:02:30Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "sumitgsh",
@@ -67129,7 +68315,21 @@
       "lastUpdated": "2022-11-21T13:56:32.4412819Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-17T07:29:49Z",
+      "disabled": false,
+      "updated_at": "2021-06-17T09:28:54Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "1",
+      "1.0"
+    ],
+    "releaseInfo": [
+      "1.0",
+      "1"
+    ]
   },
   {
     "owner": "sumeetweb",
@@ -67145,7 +68345,22 @@
       "lastUpdated": "2022-11-21T13:56:32.5616246Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-14T06:11:50Z",
+      "disabled": false,
+      "updated_at": "2022-07-14T05:56:51Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "serverless",
+      "1.66",
+      "3.19"
+    ],
+    "releaseInfo": [
+      "3.19",
+      "1.66"
+    ]
   },
   {
     "owner": "sulthonzh",
@@ -67161,7 +68376,23 @@
       "lastUpdated": "2022-11-21T13:56:32.71761Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2022-08-15T04:31:43Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0-beta",
+      "v0.1.1-beta",
+      "v0.1.2-beta"
+    ],
+    "releaseInfo": [
+      "v0.1.2-beta",
+      "v0.1.1-beta",
+      "v0.1.0-beta"
+    ]
   },
   {
     "owner": "sultansoy",
@@ -67177,7 +68408,15 @@
       "lastUpdated": "2022-11-21T13:56:32.8619342Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-01-22T20:46:21Z",
+      "disabled": false,
+      "updated_at": "2022-07-23T20:58:08Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "sultann",
@@ -67193,7 +68432,15 @@
       "lastUpdated": "2022-11-21T13:56:32.9862536Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-12-15T20:07:43Z",
+      "disabled": false,
+      "updated_at": "2022-09-06T09:51:54Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "suleimanabubakar",
@@ -67209,7 +68456,15 @@
       "lastUpdated": "2022-11-21T13:56:33.1182485Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-09T20:20:07Z",
+      "disabled": false,
+      "updated_at": "2022-05-10T06:17:44Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "sukot1",
@@ -67225,7 +68480,15 @@
       "lastUpdated": "2022-11-21T13:56:33.2253919Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-21T10:33:45Z",
+      "disabled": false,
+      "updated_at": "2022-01-20T13:23:13Z",
+      "archived": false
+    },
+    "tagInfo": "v0.01",
+    "releaseInfo": "v0.01"
   },
   {
     "owner": "sukki37",
@@ -67241,7 +68504,15 @@
       "lastUpdated": "2022-11-21T13:56:33.3496221Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-14T10:39:59Z",
+      "disabled": false,
+      "updated_at": "2022-07-18T02:52:50Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "sujaykundu777",
@@ -67257,7 +68528,25 @@
       "lastUpdated": "2022-11-21T13:56:33.482788Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-10-14T20:06:39Z",
+      "disabled": false,
+      "updated_at": "2022-09-01T06:08:10Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "1.0.1-beta",
+      "1.0.2",
+      "1.0.3"
+    ],
+    "releaseInfo": [
+      "1.0.3",
+      "1.0.2",
+      "1.0.1-beta",
+      "v1"
+    ]
   },
   {
     "owner": "SuibianP",
@@ -67273,7 +68562,21 @@
       "lastUpdated": "2022-11-21T13:56:33.6033308Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2022-06-02T11:03:20Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.1.1"
+    ],
+    "releaseInfo": [
+      "v0.1.1",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "suharshan",
@@ -67289,7 +68592,15 @@
       "lastUpdated": "2022-11-21T13:56:33.7418533Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2022-07-14T07:28:07Z",
+      "archived": false
+    },
+    "tagInfo": "v1-alpha.2",
+    "releaseInfo": "v1-alpha.2"
   },
   {
     "owner": "sugarmanz",
@@ -67305,7 +68616,27 @@
       "lastUpdated": "2022-11-21T13:56:33.8767957Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2022-04-28T23:05:46Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4",
+      "v0.0.5"
+    ],
+    "releaseInfo": [
+      "v0.0.5",
+      "v0.0.4",
+      "v0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "owner": "sugarandmagic",
@@ -67321,7 +68652,27 @@
       "lastUpdated": "2022-11-21T13:56:34.0095786Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-07-02T12:22:51Z",
+      "disabled": false,
+      "updated_at": "2022-02-09T08:52:43Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v4",
+      "1.0.0"
+    ],
+    "releaseInfo": [
+      "v4",
+      "v3",
+      "v2",
+      "1.0.0",
+      "v1"
+    ]
   },
   {
     "owner": "sue445",
@@ -67337,7 +68688,35 @@
       "lastUpdated": "2022-11-21T13:56:34.1241273Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-12-13T23:58:02Z",
+      "disabled": false,
+      "updated_at": "2021-01-17T23:03:29Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v1.4.1",
+      "v1.5.0",
+      "v1.5.1",
+      "v1.5.2"
+    ],
+    "releaseInfo": [
+      "v1.5.2",
+      "v1.5.1",
+      "v1.5.0",
+      "v1.4.1",
+      "v1.4.0",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "sudosubin",
@@ -67353,7 +68732,21 @@
       "lastUpdated": "2022-11-21T13:56:34.2596883Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-25T10:20:35Z",
+      "disabled": false,
+      "updated_at": "2021-06-25T10:16:30Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "sudosubin",
@@ -67369,7 +68762,27 @@
       "lastUpdated": "2022-11-21T13:56:34.3851317Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2021-06-25T10:26:46Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.1.1",
+      "v0.1.2",
+      "v0.1.3",
+      "v0.1.4"
+    ],
+    "releaseInfo": [
+      "v0.1.4",
+      "v0.1.3",
+      "v0.1.2",
+      "v0.1.1",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "sudosubin",
@@ -67385,7 +68798,21 @@
       "lastUpdated": "2022-11-21T13:56:34.5248872Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-25T10:21:51Z",
+      "disabled": false,
+      "updated_at": "2022-06-30T22:36:11Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "su-dont",
@@ -67401,7 +68828,23 @@
       "lastUpdated": "2022-11-21T13:56:34.6680196Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-07T01:03:06Z",
+      "disabled": false,
+      "updated_at": "2022-09-22T19:46:07Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0",
+      "v2.0",
+      "v2.1"
+    ],
+    "releaseInfo": [
+      "v2.1",
+      "v2.0",
+      "v1.0"
+    ]
   },
   {
     "owner": "sudomateo",
@@ -67417,7 +68860,18 @@
       "lastUpdated": "2022-11-21T13:56:34.8090476Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-04-11T05:23:57Z",
+      "disabled": false,
+      "updated_at": "2022-07-02T17:24:19Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0"
+    ],
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "sudo-bot",
@@ -67433,7 +68887,15 @@
       "lastUpdated": "2022-11-21T13:56:34.9425855Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2021-01-13T01:43:25Z",
+      "archived": false
+    },
+    "tagInfo": "latest",
+    "releaseInfo": "latest"
   },
   {
     "owner": "sudo-bot",
@@ -67449,7 +68911,31 @@
       "lastUpdated": "2022-11-21T13:56:35.0663651Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-07-10T13:58:25Z",
+      "disabled": false,
+      "updated_at": "2022-07-10T13:58:53Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.5",
+      "v1.0.4",
+      "v1.0.3",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "sudo-bot",
@@ -67465,7 +68951,15 @@
       "lastUpdated": "2022-11-21T13:56:35.1761916Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-12-21T22:29:50Z",
+      "disabled": false,
+      "updated_at": "2020-12-28T13:00:43Z",
+      "archived": false
+    },
+    "tagInfo": "latest",
+    "releaseInfo": "latest"
   },
   {
     "owner": "sudo-bot",
@@ -67481,7 +68975,25 @@
       "lastUpdated": "2022-11-21T13:56:35.3275075Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-04-05T00:27:35Z",
+      "disabled": false,
+      "updated_at": "2022-10-06T14:30:01Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4"
+    ],
+    "releaseInfo": [
+      "v1.0.4",
+      "v1.0.3",
+      "v1.0.2",
+      "v1.0.1"
+    ]
   },
   {
     "owner": "sudo-bot",
@@ -67497,7 +69009,23 @@
       "lastUpdated": "2022-11-21T13:56:35.448849Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-12-12T17:08:51Z",
+      "disabled": false,
+      "updated_at": "2022-11-25T12:00:44Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "dev",
+      "latest",
+      "v5"
+    ],
+    "releaseInfo": [
+      "v5",
+      "latest",
+      "dev"
+    ]
   },
   {
     "owner": "sudo-bot",
@@ -67513,7 +69041,15 @@
       "lastUpdated": "2022-11-21T13:56:35.5747856Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-28T12:04:57Z",
+      "disabled": false,
+      "updated_at": "2022-09-05T00:30:41Z",
+      "archived": false
+    },
+    "tagInfo": "latest",
+    "releaseInfo": "latest"
   },
   {
     "owner": "sudo-bot",
@@ -67529,7 +69065,15 @@
       "lastUpdated": "2022-11-21T13:56:35.7334265Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-11-15T13:35:20Z",
+      "disabled": false,
+      "updated_at": "2022-11-16T19:24:59Z",
+      "archived": false
+    },
+    "tagInfo": "latest",
+    "releaseInfo": "latest"
   },
   {
     "owner": "suceda",
@@ -67561,7 +69105,79 @@
       "lastUpdated": "2022-11-21T13:56:35.9584699Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-12T23:34:28Z",
+      "disabled": false,
+      "updated_at": "2022-11-26T17:05:51Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.3.1",
+      "v1.3.2",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.5.1",
+      "v1.5.2",
+      "v1.5.3",
+      "v2",
+      "v2.0.1",
+      "v2.0.2",
+      "v2.0.3",
+      "v2.0.4",
+      "v2.1.0",
+      "v2.2.0",
+      "v2.2.1",
+      "v2.3.0",
+      "v2.4.0",
+      "v2.5.0",
+      "v2.6.0",
+      "v2.6.1",
+      "v2.6.2",
+      "v2.7.0",
+      "v2.7.1",
+      "v2.8.0"
+    ],
+    "releaseInfo": [
+      "v2.8.0",
+      "v2.7.1",
+      "v2.7.0",
+      "v2.6.2",
+      "v2.6.1",
+      "v2.6.0",
+      "v2.5.0",
+      "v2.4.0",
+      "v2.3.0",
+      "v2.2.1",
+      "v2.2.0",
+      "v2.1.0",
+      "v2.0.4",
+      "v2.0.3",
+      "v2.0.2",
+      "v2.0.1",
+      "v1.5.3",
+      "v1.5.2",
+      "v1.5.1",
+      "v1.5.0",
+      "v1.4.0",
+      "v1.3.2",
+      "v1.3.1",
+      "v1.3.0",
+      "v1.2.0",
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "Submitty",
@@ -67577,7 +69193,21 @@
       "lastUpdated": "2022-11-21T13:56:36.0895566Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-07-22T15:41:44Z",
+      "disabled": false,
+      "updated_at": "2021-07-22T15:40:24Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.0",
+      "v1.0.0"
+    ],
+    "releaseInfo": [
+      "v1.0.0",
+      "v0.0.0"
+    ]
   },
   {
     "owner": "SublimeText",
@@ -67593,7 +69223,25 @@
       "lastUpdated": "2022-11-21T13:56:36.2288931Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-06-08T00:33:41Z",
+      "disabled": false,
+      "updated_at": "2021-11-02T21:18:36Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v2.0",
+      "v2.1"
+    ],
+    "releaseInfo": [
+      "v2.1",
+      "v2.0",
+      "v2",
+      "v1"
+    ]
   },
   {
     "owner": "subic",
@@ -67609,7 +69257,21 @@
       "lastUpdated": "2022-11-21T13:56:36.3619019Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-03-09T15:45:14Z",
+      "disabled": false,
+      "updated_at": "2022-09-22T11:10:26Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.1"
+    ],
+    "releaseInfo": [
+      "v1.1",
+      "v1"
+    ]
   },
   {
     "owner": "subhamX",
@@ -67625,7 +69287,15 @@
       "lastUpdated": "2022-11-21T13:56:36.5172063Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-08-11T10:33:51Z",
+      "disabled": false,
+      "updated_at": "2022-06-03T14:03:06Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0-alpha",
+    "releaseInfo": "v1.0.0-alpha"
   },
   {
     "owner": "subhamX",
@@ -67641,7 +69311,15 @@
       "lastUpdated": "2022-11-21T13:56:36.6297821Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-09-15T16:22:53Z",
+      "disabled": false,
+      "updated_at": "2022-11-21T03:30:05Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "subhamX",
@@ -67657,7 +69335,15 @@
       "lastUpdated": "2022-11-21T13:56:36.7453922Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-03-23T09:22:08Z",
+      "disabled": false,
+      "updated_at": "2022-04-30T17:59:12Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "Subatomic-Agency",
@@ -67673,7 +69359,45 @@
       "lastUpdated": "2022-11-21T13:56:36.8628748Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-07T19:29:32Z",
+      "disabled": false,
+      "updated_at": "2022-10-06T21:26:01Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "main",
+      "0.0.1",
+      "0.0.2",
+      "0.0.3",
+      "0.0.4",
+      "0.0.5",
+      "0.0.6",
+      "0.0.7",
+      "0.0.8",
+      "0.0.9",
+      "0.1.0",
+      "0.1.1",
+      "0.1.2",
+      "0.1.3"
+    ],
+    "releaseInfo": [
+      "0.1.3",
+      "0.1.2",
+      "0.1.1",
+      "0.1.0",
+      "0.0.9",
+      "0.0.8",
+      "0.0.7",
+      "0.0.6",
+      "0.0.5",
+      "0.0.4",
+      "0.0.3",
+      "0.0.2",
+      "0.0.1",
+      "main"
+    ]
   },
   {
     "owner": "StyleShit",
@@ -67689,7 +69413,15 @@
       "lastUpdated": "2022-11-21T13:56:36.9977204Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-04-22T08:01:40Z",
+      "disabled": false,
+      "updated_at": "2021-04-22T07:57:12Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "styfle",
@@ -67705,7 +69437,49 @@
       "lastUpdated": "2022-11-21T13:56:37.1221581Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-12T13:00:03Z",
+      "disabled": false,
+      "updated_at": "2022-11-26T21:34:04Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "0.1.1",
+      "0.2.0",
+      "0.3.0",
+      "0.3.1",
+      "0.3.2",
+      "0.4.0",
+      "0.4.1",
+      "0.5.0",
+      "0.6.0",
+      "0.7.0",
+      "0.8.0",
+      "0.9.0",
+      "0.9.1",
+      "0.10.0",
+      "0.10.1",
+      "0.11.0"
+    ],
+    "releaseInfo": [
+      "0.11.0",
+      "0.10.1",
+      "0.10.0",
+      "0.9.1",
+      "0.9.0",
+      "0.8.0",
+      "0.7.0",
+      "0.6.0",
+      "0.5.0",
+      "0.4.1",
+      "0.4.0",
+      "0.3.2",
+      "0.3.1",
+      "0.3.0",
+      "0.2.0",
+      "0.1.1"
+    ]
   },
   {
     "owner": "sturlabragason",
@@ -67721,7 +69495,18 @@
       "lastUpdated": "2022-11-21T13:56:37.2615055Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-23T19:04:52Z",
+      "disabled": false,
+      "updated_at": "2022-10-12T07:22:38Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "owner": "sturdy-dev",
@@ -67737,7 +69522,48 @@
       "lastUpdated": "2022-11-21T13:56:37.391202Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-12T14:24:09Z",
+      "disabled": false,
+      "updated_at": "2022-11-25T13:12:48Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.2.0",
+      "v2.0.0",
+      "v2.0.1",
+      "v2.1.0",
+      "v2.2.0",
+      "v2.3.0",
+      "v2.4.0",
+      "v2.4.1",
+      "v2.4.2",
+      "v2.5.0",
+      "v2.5.1",
+      "v2.6.0"
+    ],
+    "releaseInfo": [
+      "v2.6.0",
+      "v2.5.1",
+      "v2.4.2",
+      "v2.4.1",
+      "v2.4.0",
+      "v2.3.0",
+      "v2.2.0",
+      "v2.1.0",
+      "v2.0.1",
+      "v2.0.0",
+      "v1.2.0",
+      "v1.1.1",
+      "v1.1.0",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "StupidRepo",
@@ -67769,7 +69595,24 @@
       "lastUpdated": "2022-11-21T13:56:37.6891708Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-12T15:53:48Z",
+      "disabled": false,
+      "updated_at": "2022-10-12T15:48:14Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "0.0.1",
+      "1"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1",
+      "0.0.1"
+    ]
   },
   {
     "owner": "StudistCorporation",
@@ -67785,7 +69628,15 @@
       "lastUpdated": "2022-11-21T13:56:37.8426782Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-19T03:42:38Z",
+      "disabled": false,
+      "updated_at": "2022-10-19T03:40:26Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "Studio-41",
@@ -67801,7 +69652,23 @@
       "lastUpdated": "2022-11-21T13:56:37.9486413Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-07T11:24:42Z",
+      "disabled": false,
+      "updated_at": "2022-03-07T11:31:04Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "owner": "Studio-41",
@@ -67817,7 +69684,28 @@
       "lastUpdated": "2022-11-21T13:56:38.1195983Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-02-07T17:45:12Z",
+      "disabled": false,
+      "updated_at": "2022-04-07T21:35:15Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6",
+      "v1.0.7",
+      "v1.0.8",
+      "v1.0.9",
+      "v1.0.10"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "owner": "Studio-41",
@@ -67833,7 +69721,21 @@
       "lastUpdated": "2022-11-21T13:56:38.258316Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-03-04T14:21:46Z",
+      "disabled": false,
+      "updated_at": "2022-03-04T14:24:33Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4"
+    ],
+    "releaseInfo": "v1"
   },
   {
     "owner": "sttor",
@@ -67849,7 +69751,46 @@
       "lastUpdated": "2022-11-21T13:56:38.3924221Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-05-11T01:52:40Z",
+      "disabled": false,
+      "updated_at": "2022-11-23T05:29:06Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0",
+      "v1.0.0",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2",
+      "v1.1.3",
+      "v1.1.4",
+      "v1.2.0",
+      "v1.3.0",
+      "v1.4.0",
+      "v1.5.0",
+      "v1.6.0",
+      "v1.7.0",
+      "v1.8.0",
+      "v1.9.0",
+      "v1.10.0",
+      "v1.11.0",
+      "v1.12.0",
+      "v1.13.0",
+      "v1.14.0"
+    ],
+    "releaseInfo": [
+      "v1.14.0",
+      "v1.13.0",
+      "v1.12.0",
+      "v1.11.0",
+      "v1.10.0",
+      "v1.9.0",
+      "v1.8.0",
+      "v1.7.0"
+    ]
   },
   {
     "owner": "strumwolf",
@@ -67865,7 +69806,35 @@
       "lastUpdated": "2022-11-21T13:56:38.5059715Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-19T12:32:02Z",
+      "disabled": false,
+      "updated_at": "2022-11-23T12:53:15Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.01",
+      "v1.1.0",
+      "v2",
+      "v2.0.0",
+      "v2.0.1",
+      "v2.1.0",
+      "v2.2.0",
+      "v2.2.1",
+      "v2.2.3"
+    ],
+    "releaseInfo": [
+      "v2.2.3",
+      "v2.2.1",
+      "v2.2.0",
+      "v2.1.0",
+      "v2.0.1",
+      "v2.0.0",
+      "v1.1.0",
+      "v1.01"
+    ]
   },
   {
     "owner": "StruggleYang",
@@ -67881,7 +69850,25 @@
       "lastUpdated": "2022-11-21T13:56:38.6173419Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-10-20T06:28:04Z",
+      "disabled": false,
+      "updated_at": "2022-10-20T10:57:39Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "1.0.2",
+      "1.0.3",
+      "1.0.4",
+      "1.0.5",
+      "2.0.0-beta.1",
+      "2.0.0"
+    ],
+    "releaseInfo": [
+      "2.0.0-beta.1",
+      "2.0.0"
+    ]
   },
   {
     "owner": "structr",
@@ -67897,7 +69884,15 @@
       "lastUpdated": "2022-11-21T13:56:38.7445656Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-08-31T09:37:56Z",
+      "disabled": false,
+      "updated_at": "2022-08-31T11:49:27Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "StrongMonkey",
@@ -67913,7 +69908,21 @@
       "lastUpdated": "2022-11-21T13:56:38.8731336Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-04-09T19:50:48Z",
+      "disabled": false,
+      "updated_at": "2020-06-14T19:06:30Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2"
+    ],
+    "releaseInfo": [
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "owner": "StrongMonkey",
@@ -67929,7 +69938,23 @@
       "lastUpdated": "2022-11-21T13:56:39.0097594Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-05-08T19:39:28Z",
+      "disabled": false,
+      "updated_at": "2020-06-14T19:06:26Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3"
+    ],
+    "releaseInfo": [
+      "v0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "owner": "strobes-co",
@@ -67945,7 +69970,25 @@
       "lastUpdated": "2022-11-21T13:56:39.1360776Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": null,
+      "disabled": false,
+      "updated_at": "2022-02-03T09:04:59Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v0.0.2",
+      "v0.0.3",
+      "v0.0.4"
+    ],
+    "releaseInfo": [
+      "v0.0.4",
+      "v0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "owner": "striwensko",
@@ -67961,7 +70004,15 @@
       "lastUpdated": "2022-11-21T13:56:39.2520018Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-04T19:38:36Z",
+      "disabled": false,
+      "updated_at": "2021-05-05T05:24:47Z",
+      "archived": false
+    },
+    "tagInfo": "v1",
+    "releaseInfo": "v1"
   },
   {
     "owner": "striwensko",
@@ -67977,7 +70028,26 @@
       "lastUpdated": "2022-11-21T13:56:39.3694214Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-05-04T18:45:23Z",
+      "disabled": false,
+      "updated_at": "2021-05-04T18:42:56Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2",
+      "v3",
+      "v3.0",
+      "1",
+      "2"
+    ],
+    "releaseInfo": [
+      "v3.0",
+      "v2",
+      "1"
+    ]
   },
   {
     "owner": "stripethree",
@@ -67993,7 +70063,28 @@
       "lastUpdated": "2022-11-21T13:56:39.5074979Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-07-20T16:18:28Z",
+      "disabled": false,
+      "updated_at": "2022-06-21T12:51:53Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.0.1",
+      "v1",
+      "v1.0.0",
+      "v2",
+      "v2.0.0",
+      "v2.0.1",
+      "v2.1.0"
+    ],
+    "releaseInfo": [
+      "v2.1.0",
+      "v2.0.1",
+      "v2.0.0",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "String-Obj",
@@ -68009,7 +70100,37 @@
       "lastUpdated": "2022-11-21T13:56:39.6205311Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-06T15:50:36Z",
+      "disabled": false,
+      "updated_at": "2022-09-06T14:23:18Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1",
+      "v1.0.2",
+      "v1.0.3",
+      "v1.0.4",
+      "v1.0.5",
+      "v1.0.6",
+      "v1.0.7",
+      "v1.0.8",
+      "v1.0.9"
+    ],
+    "releaseInfo": [
+      "v1.0.9",
+      "v1.0.8",
+      "v1.0.7",
+      "v1.0.6",
+      "v1.0.5",
+      "v1.0.4",
+      "v1.0.3",
+      "v1.0.2",
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "stringbean",
@@ -68025,7 +70146,30 @@
       "lastUpdated": "2022-11-21T13:56:39.7406901Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-14T19:57:50Z",
+      "disabled": false,
+      "updated_at": "2022-05-25T17:25:49Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0",
+      "v1",
+      "v1.0.0",
+      "v1.1.0-alpha",
+      "v2",
+      "v2.0",
+      "v2.0.0-beta",
+      "v2.0.0",
+      "v2.0.1"
+    ],
+    "releaseInfo": [
+      "v2.0.1",
+      "v2.0.0",
+      "v2.0.0-beta",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "stringbean",
@@ -68041,7 +70185,24 @@
       "lastUpdated": "2022-11-21T13:56:39.8608202Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-01-14T19:22:18Z",
+      "disabled": false,
+      "updated_at": "2022-01-15T12:17:00Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0",
+      "v0.1.0",
+      "v1",
+      "v1.0",
+      "v1.0.0"
+    ],
+    "releaseInfo": [
+      "v1.0.0",
+      "v0.1.0"
+    ]
   },
   {
     "owner": "strazto",
@@ -68057,7 +70218,21 @@
       "lastUpdated": "2022-11-21T13:56:40.0022986Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-04T09:29:20Z",
+      "disabled": false,
+      "updated_at": "2022-06-04T06:39:06Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v0.1.0",
+      "v0.2.0",
+      "v0.2.1",
+      "v0.2.2",
+      "v0.2.2.9000"
+    ],
+    "releaseInfo": "v0.2.2.9000"
   },
   {
     "owner": "strazto",
@@ -68073,7 +70248,29 @@
       "lastUpdated": "2022-11-21T13:56:40.1173298Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-04T05:41:23Z",
+      "disabled": false,
+      "updated_at": "2022-06-04T05:29:09Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0",
+      "v1.1.1",
+      "v1.1.2",
+      "v1.1.3",
+      "v1.1.4",
+      "v1.1.5",
+      "v1.1.6",
+      "v1.2.0",
+      "v1.2.1",
+      "v1.2.2",
+      "v1.2.3",
+      "v1.2.4"
+    ],
+    "releaseInfo": "v1.2.4"
   },
   {
     "owner": "stphnwlsh",
@@ -68089,7 +70286,21 @@
       "lastUpdated": "2022-11-21T13:56:40.2364159Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2021-11-29T22:48:04Z",
+      "disabled": false,
+      "updated_at": "2022-06-21T12:45:23Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v2"
+    ],
+    "releaseInfo": [
+      "v2",
+      "v1"
+    ]
   },
   {
     "owner": "stormwarning",
@@ -68105,7 +70316,43 @@
       "lastUpdated": "2022-11-21T13:56:40.3621894Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-03-13T03:58:38Z",
+      "disabled": false,
+      "updated_at": "2022-10-04T04:00:55Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1",
+      "v1.0",
+      "v1.0.0",
+      "v2",
+      "v2.0",
+      "v2.0.0",
+      "v2.0.1",
+      "v2.1",
+      "v2.1.0",
+      "v3",
+      "v3.0",
+      "v3.0.0",
+      "v3.1",
+      "v3.1.0",
+      "v3.1.1",
+      "v4",
+      "v4.0",
+      "v4.0.0",
+      "v4.0.1"
+    ],
+    "releaseInfo": [
+      "v3.1.1",
+      "v3.1.0",
+      "v3.0.0",
+      "v2.1.0",
+      "v2.0.1",
+      "v2.0.0",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "stoplightio",
@@ -68121,7 +70368,74 @@
       "lastUpdated": "2022-11-21T13:56:40.5251233Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-06-07T17:23:18Z",
+      "disabled": false,
+      "updated_at": "2022-08-25T19:51:02Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "latest",
+      "v0.0.1",
+      "v0.0.2",
+      "v0.1.0",
+      "v0.1.1",
+      "v0.2.0",
+      "v0.3.0",
+      "v0.4.0",
+      "v0.5.0",
+      "v0.5.1",
+      "v0.5.2",
+      "v0.5.3",
+      "v0.5.4",
+      "v0.5.5",
+      "v0.6.0",
+      "v0.6.1",
+      "v0.7.0",
+      "v0.7.1",
+      "v0.7.2",
+      "v0.7.3",
+      "v0.8.0",
+      "v0.8.1",
+      "v0.8.2",
+      "v0.8.3",
+      "v0.8.4",
+      "v0.8.5",
+      "v0.8.6",
+      "v0.8.7",
+      "v0.8.8",
+      "0.0.1",
+      "0.0.3"
+    ],
+    "releaseInfo": [
+      "v0.8.8",
+      "v0.8.7",
+      "v0.8.3",
+      "v0.8.2",
+      "v0.8.1",
+      "v0.8.0",
+      "v0.7.3",
+      "v0.7.2",
+      "v0.7.1",
+      "v0.7.0",
+      "v0.6.1",
+      "v0.6.0",
+      "v0.5.5",
+      "v0.5.4",
+      "v0.5.3",
+      "v0.5.2",
+      "v0.5.1",
+      "v0.5.0",
+      "v0.4.0",
+      "v0.3.0",
+      "v0.2.0",
+      "v0.1.1",
+      "v0.1.0",
+      "0.0.3",
+      "v0.0.2",
+      "v0.0.1"
+    ]
   },
   {
     "owner": "stopa323",
@@ -68137,7 +70451,15 @@
       "lastUpdated": "2022-11-21T13:56:40.6420927Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-06-29T17:46:21Z",
+      "disabled": false,
+      "updated_at": "2022-10-12T19:19:34Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0",
+    "releaseInfo": "v1.0"
   },
   {
     "owner": "stone-home",
@@ -68153,7 +70475,15 @@
       "lastUpdated": "2022-11-21T13:56:40.7756065Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2022-09-23T15:26:17Z",
+      "disabled": false,
+      "updated_at": "2022-09-23T14:46:40Z",
+      "archived": false
+    },
+    "tagInfo": "v1.0.0",
+    "releaseInfo": "v1.0.0"
   },
   {
     "owner": "stoneG",
@@ -68169,7 +70499,21 @@
       "lastUpdated": "2022-11-21T13:56:40.8993038Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2020-09-22T23:46:25Z",
+      "disabled": false,
+      "updated_at": "2020-09-21T23:40:28Z",
+      "archived": false
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.1.0"
+    ],
+    "releaseInfo": [
+      "v1.1.0",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "stoe",
@@ -68185,7 +70529,21 @@
       "lastUpdated": "2022-11-21T13:56:41.0203086Z",
       "critical": 0,
       "high": 0
-    }
+    },
+    "repoInfo": {
+      "latest_release_published_at": "2019-04-09T16:07:15Z",
+      "disabled": false,
+      "updated_at": "2021-01-02T14:09:16Z",
+      "archived": true
+    },
+    "tagInfo": [
+      "v1.0.0",
+      "v1.0.1"
+    ],
+    "releaseInfo": [
+      "v1.0.1",
+      "v1.0.0"
+    ]
   },
   {
     "owner": "stoe",
@@ -77580,7 +79938,7 @@
     }
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "YunaBraska_java-version",
     "owner": "YunaBraska",
     "forkFound": true,
@@ -79180,7 +81538,7 @@
     }
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "owner": "vulteria",
     "name": "vulteria_vulrep-cli",
     "forkFound": true,
@@ -82382,7 +84740,7 @@
   {
     "owner": "vickmu",
     "name": "vickmu_py-lambda-action-v3",
-    "dependabot": null,
+    "dependabot": true,
     "forkFound": true,
     "actionType": {
       "actionDockerType": "No file found",
@@ -85580,7 +87938,7 @@
     }
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "name": "wechorg_hello-world-docker-action",
     "owner": "wechorg",
     "forkFound": true,
@@ -87181,7 +89539,7 @@
   },
   {
     "owner": "wzykubek",
-    "dependabot": null,
+    "dependabot": true,
     "name": "wzykubek_action-flake8",
     "forkFound": true,
     "actionType": {
@@ -93581,7 +95939,7 @@
   },
   {
     "name": "zyactions_verify-changed-files",
-    "dependabot": null,
+    "dependabot": true,
     "owner": "zyactions",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -98381,7 +100739,7 @@
   },
   {
     "owner": "Wuemeli",
-    "dependabot": null,
+    "dependabot": true,
     "name": "Wuemeli_thankyou-action",
     "vulnerabilityStatus": {
       "high": 0,
@@ -98397,7 +100755,7 @@
   },
   {
     "owner": "Wuemeli",
-    "dependabot": null,
+    "dependabot": true,
     "name": "Wuemeli_all-in-one-action",
     "vulnerabilityStatus": {
       "high": 0,
@@ -103182,7 +105540,7 @@
   {
     "name": "ymktmk_operate-k6-crd",
     "owner": "ymktmk",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "high": 0,
       "lastUpdated": "2022-11-24T23:14:21.5291444Z",
@@ -106380,7 +108738,7 @@
     }
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "owner": "valonsogit",
     "name": "valonsogit_secrets-token-selector",
     "vulnerabilityStatus": {
@@ -106396,7 +108754,7 @@
     }
   },
   {
-    "dependabot": null,
+    "dependabot": true,
     "owner": "valitydev",
     "name": "valitydev_action-autotag",
     "vulnerabilityStatus": {
@@ -115683,6 +118041,12 @@
       "lastUpdated": "2022-11-25T10:56:59.3087735Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115693,6 +118057,12 @@
       "lastUpdated": "2022-11-25T10:56:59.4169522Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115703,6 +118073,12 @@
       "lastUpdated": "2022-11-25T10:56:59.5357289Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115713,6 +118089,12 @@
       "lastUpdated": "2022-11-25T10:56:59.6502201Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115723,6 +118105,12 @@
       "lastUpdated": "2022-11-25T10:56:59.7663879Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115733,6 +118121,12 @@
       "lastUpdated": "2022-11-25T10:56:59.8813406Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115743,6 +118137,12 @@
       "lastUpdated": "2022-11-25T10:56:59.9900714Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115753,6 +118153,12 @@
       "lastUpdated": "2022-11-25T10:57:00.1538144Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115763,6 +118169,12 @@
       "lastUpdated": "2022-11-25T10:57:00.2993743Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115773,6 +118185,12 @@
       "lastUpdated": "2022-11-25T10:57:00.4137385Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115783,6 +118201,12 @@
       "lastUpdated": "2022-11-25T10:57:00.5412184Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115793,6 +118217,12 @@
       "lastUpdated": "2022-11-25T10:57:00.6692864Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115803,6 +118233,12 @@
       "lastUpdated": "2022-11-25T10:57:00.7823181Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115813,6 +118249,12 @@
       "lastUpdated": "2022-11-25T10:57:00.9075024Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115823,6 +118265,12 @@
       "lastUpdated": "2022-11-25T10:57:01.0369966Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115833,6 +118281,12 @@
       "lastUpdated": "2022-11-25T10:57:01.1953696Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115843,6 +118297,12 @@
       "lastUpdated": "2022-11-25T10:57:01.3059453Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115853,6 +118313,12 @@
       "lastUpdated": "2022-11-25T10:57:01.4540781Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115863,6 +118329,12 @@
       "lastUpdated": "2022-11-25T10:57:01.5879607Z",
       "critical": 0,
       "high": 0
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115873,6 +118345,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:32.9422013Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115883,6 +118361,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.0557665Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115893,6 +118377,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.1584814Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115903,6 +118393,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.2625734Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115913,6 +118409,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.3702752Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115923,6 +118425,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.4738697Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115933,6 +118441,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.568442Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115943,6 +118457,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.6857313Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115953,6 +118473,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.7822584Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115963,6 +118489,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.8787328Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115973,6 +118505,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:33.9872002Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115983,6 +118521,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.0750117Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -115993,6 +118537,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.1694064Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116003,6 +118553,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.2760822Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116013,6 +118569,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.3713651Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116023,6 +118585,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.4711463Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116033,6 +118601,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.6130331Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116043,6 +118617,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.7126138Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116053,6 +118633,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.81828Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116063,6 +118649,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:34.9199116Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116073,6 +118665,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.019774Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116083,6 +118681,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.1364891Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116093,6 +118697,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.2391444Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116103,6 +118713,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.3419669Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116113,6 +118729,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.4533801Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116123,6 +118745,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.5517057Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116133,6 +118761,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.6599913Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116143,6 +118777,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.7666646Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116153,6 +118793,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.8574279Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116163,6 +118809,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:35.9569724Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116173,6 +118825,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.0662497Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116183,6 +118841,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.1729299Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116193,6 +118857,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.2894262Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116203,6 +118873,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.3920165Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116213,6 +118889,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.4867595Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116223,6 +118905,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.5982827Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116233,6 +118921,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.7100474Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116243,6 +118937,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.8095922Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116253,6 +118953,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:36.91606Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116263,6 +118969,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.0222407Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116273,6 +118985,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.1201526Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116283,6 +119001,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.2147569Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116293,6 +119017,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.3095275Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116303,6 +119033,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.4076891Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116313,6 +119049,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.5253257Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116323,6 +119065,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.6050621Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116333,6 +119081,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.7089974Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116343,6 +119097,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.8143615Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116353,6 +119113,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:37.9161455Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116363,6 +119129,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.0019757Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116373,6 +119145,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.096711Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116383,6 +119161,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.1931353Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116393,6 +119177,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.2924474Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116403,6 +119193,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.3974004Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116413,6 +119209,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.4945437Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116423,6 +119225,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.6139065Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116433,6 +119241,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.7043525Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116443,6 +119257,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.8000071Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116453,6 +119273,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:38.9319539Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116463,6 +119289,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:39.0465877Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116473,6 +119305,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:39.1598061Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116483,6 +119321,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:39.2637321Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116493,6 +119337,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:39.3809181Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116503,6 +119353,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:39.7205747Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116513,6 +119369,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.0029096Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116523,6 +119385,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.1090204Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116533,6 +119401,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.2186759Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116543,6 +119417,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.3212895Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116553,6 +119433,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.4220971Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116563,6 +119449,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.5187882Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116573,6 +119465,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.620646Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116583,6 +119481,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.7161868Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116593,6 +119497,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.8449114Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116603,6 +119513,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:40.9515002Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116613,6 +119529,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.066112Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116623,6 +119545,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.1750039Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116633,6 +119561,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.2694495Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116643,6 +119577,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.3646242Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116653,6 +119593,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.5102809Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116663,6 +119609,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.6135899Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -116673,6 +119625,12 @@
       "critical": 0,
       "high": 0,
       "lastUpdated": "2022-11-25T12:48:41.7341808Z"
+    },
+    "forkFound": true,
+    "actionType": {
+      "fileFound": "No repo found",
+      "actionDockerType": "No repo found",
+      "actionType": "No repo found"
     }
   },
   {
@@ -117867,7 +120825,7 @@
   },
   {
     "owner": "zzamboni",
-    "dependabot": null,
+    "dependabot": true,
     "name": "zzamboni_elvish-installer",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117877,7 +120835,7 @@
   },
   {
     "owner": "zlus",
-    "dependabot": null,
+    "dependabot": true,
     "name": "zlus_action-extract-issues",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117887,7 +120845,7 @@
   },
   {
     "owner": "zkoppert",
-    "dependabot": null,
+    "dependabot": true,
     "name": "zkoppert_advanced-security-enforcer",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117897,7 +120855,7 @@
   },
   {
     "owner": "zharinov",
-    "dependabot": null,
+    "dependabot": true,
     "name": "zharinov_clj-toolbox",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117907,7 +120865,7 @@
   },
   {
     "owner": "zgosalvez",
-    "dependabot": null,
+    "dependabot": true,
     "name": "zgosalvez_github-actions-ensure-sha-pinned-actions",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117917,7 +120875,7 @@
   },
   {
     "owner": "zbeekman",
-    "dependabot": null,
+    "dependabot": true,
     "name": "zbeekman_EditorConfig-Action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117927,7 +120885,7 @@
   },
   {
     "owner": "yyoshiki41",
-    "dependabot": null,
+    "dependabot": true,
     "name": "yyoshiki41_ecs-run-task-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117937,7 +120895,7 @@
   },
   {
     "owner": "yusufbiberoglu",
-    "dependabot": null,
+    "dependabot": true,
     "name": "yusufbiberoglu_symfony-elasticsearch",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117947,7 +120905,7 @@
   },
   {
     "owner": "yousufkalim",
-    "dependabot": null,
+    "dependabot": true,
     "name": "yousufkalim_eslint-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117957,7 +120915,7 @@
   },
   {
     "owner": "yogonza524",
-    "dependabot": null,
+    "dependabot": true,
     "name": "yogonza524_ejs-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117967,7 +120925,7 @@
   },
   {
     "owner": "yavinenana",
-    "dependabot": null,
+    "dependabot": true,
     "name": "yavinenana_gha-docker-push-ecr",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117977,7 +120935,7 @@
   },
   {
     "owner": "YannickAaron",
-    "dependabot": null,
+    "dependabot": true,
     "name": "YannickAaron_scw-easy-container-redeploy",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117987,7 +120945,7 @@
   },
   {
     "owner": "Yan-Jobs",
-    "dependabot": null,
+    "dependabot": true,
     "name": "Yan-Jobs_action-electron-builder",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -117997,7 +120955,7 @@
   },
   {
     "owner": "yabe-diverta",
-    "dependabot": null,
+    "dependabot": true,
     "name": "yabe-diverta_e2e-sequential-puppeteer-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118007,7 +120965,7 @@
   },
   {
     "owner": "xSAVIKx",
-    "dependabot": null,
+    "dependabot": true,
     "name": "xSAVIKx_artifact-exists-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118017,7 +120975,7 @@
   },
   {
     "owner": "xcpep",
-    "dependabot": null,
+    "dependabot": true,
     "name": "xcpep_aws-ecr-push-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118027,7 +120985,7 @@
   },
   {
     "owner": "wow-rp-addons",
-    "dependabot": null,
+    "dependabot": true,
     "name": "wow-rp-addons_actions-editorconfig-check",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118037,7 +120995,7 @@
   },
   {
     "owner": "world-mastery",
-    "dependabot": null,
+    "dependabot": true,
     "name": "world-mastery_ecs-check-image-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118047,7 +121005,7 @@
   },
   {
     "owner": "williammartin",
-    "dependabot": null,
+    "dependabot": true,
     "name": "williammartin_empty-gcs-bucket",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118057,7 +121015,7 @@
   },
   {
     "owner": "wdzeng",
-    "dependabot": null,
+    "dependabot": true,
     "name": "wdzeng_chrome-extension",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118067,7 +121025,7 @@
   },
   {
     "owner": "wangsijie",
-    "dependabot": null,
+    "dependabot": true,
     "name": "wangsijie_restart-aliyun-eci",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118077,7 +121035,7 @@
   },
   {
     "owner": "vijayp23",
-    "dependabot": null,
+    "dependabot": true,
     "name": "vijayp23_deploy-gae-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118087,7 +121045,7 @@
   },
   {
     "owner": "vgaidarji",
-    "dependabot": null,
+    "dependabot": true,
     "name": "vgaidarji_android-github-actions-emulator",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118097,7 +121055,7 @@
   },
   {
     "owner": "vesoft-inc",
-    "dependabot": null,
+    "dependabot": true,
     "name": "vesoft-inc_repo-tag-info",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118107,7 +121065,7 @@
   },
   {
     "owner": "vedaprakashms",
-    "dependabot": null,
+    "dependabot": true,
     "name": "vedaprakashms_quasar_electron_build",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118117,7 +121075,7 @@
   },
   {
     "owner": "v1v",
-    "dependabot": null,
+    "dependabot": true,
     "name": "v1v_elastic-agent-action",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -118127,7 +121085,7 @@
   },
   {
     "owner": "V0ldek",
-    "dependabot": null,
+    "dependabot": true,
     "name": "V0ldek_modify-label",
     "vulnerabilityStatus": {
       "critical": 0,
@@ -121918,7 +124876,7 @@
   {
     "name": "vbem_flatten-contexts",
     "owner": "vbem",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:05.9083343Z",
       "high": 0,
@@ -121928,7 +124886,7 @@
   {
     "name": "VaultVulp_lektor-action",
     "owner": "VaultVulp",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:06.0895246Z",
       "high": 0,
@@ -121938,7 +124896,7 @@
   {
     "name": "VaultVulp_gp-docker-action",
     "owner": "VaultVulp",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:06.2838733Z",
       "high": 0,
@@ -121948,7 +124906,7 @@
   {
     "name": "VaultVulp_action-pipenv",
     "owner": "VaultVulp",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:06.4970114Z",
       "high": 0,
@@ -121958,7 +124916,7 @@
   {
     "name": "varunsridharan_action-wp-textdomain",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:06.7168308Z",
       "high": 0,
@@ -121968,7 +124926,7 @@
   {
     "name": "varunsridharan_action-wp-pot-generator",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:06.9147347Z",
       "high": 0,
@@ -121978,7 +124936,7 @@
   {
     "name": "varunsridharan_action-wp-org-deploy",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:07.1169537Z",
       "high": 0,
@@ -121988,7 +124946,7 @@
   {
     "name": "varunsridharan_action-wp-org-assets-update",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:07.3782891Z",
       "high": 0,
@@ -121998,7 +124956,7 @@
   {
     "name": "varunsridharan_action-repository-roster",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:07.5831093Z",
       "high": 0,
@@ -122008,7 +124966,7 @@
   {
     "name": "varunsridharan_action-repository-meta",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:07.7859855Z",
       "high": 0,
@@ -122018,7 +124976,7 @@
   {
     "name": "varunsridharan_action-hashnode-blog",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:07.983646Z",
       "high": 0,
@@ -122028,7 +124986,7 @@
   {
     "name": "varunsridharan_action-github-workflow-sync",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:08.1877997Z",
       "high": 0,
@@ -122038,7 +124996,7 @@
   {
     "name": "varunsridharan_action-gitea-mirror",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:08.3823192Z",
       "high": 0,
@@ -122048,7 +125006,7 @@
   {
     "name": "varunsridharan_action-gh-latest-repo",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:08.5929984Z",
       "high": 0,
@@ -122058,7 +125016,7 @@
   {
     "name": "varunsridharan_action-envato-uploader",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:08.7909933Z",
       "high": 0,
@@ -122068,7 +125026,7 @@
   {
     "name": "varunsridharan_action-envato-publisher",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:08.9869876Z",
       "high": 0,
@@ -122078,7 +125036,7 @@
   {
     "name": "varunsridharan_action-dynamic-readme",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:09.171205Z",
       "high": 0,
@@ -122088,7 +125046,7 @@
   {
     "name": "varunsridharan_action-apigen",
     "owner": "varunsridharan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:09.3926114Z",
       "high": 0,
@@ -122098,7 +125056,7 @@
   {
     "name": "varun-bst_release-action",
     "owner": "varun-bst",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:09.5906426Z",
       "high": 0,
@@ -122108,7 +125066,7 @@
   {
     "name": "Varriount_fvtt-autopublish",
     "owner": "Varriount",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:09.8011709Z",
       "high": 0,
@@ -122118,7 +125076,7 @@
   {
     "name": "variantdev_variant-action",
     "owner": "variantdev",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:10.0222096Z",
       "high": 0,
@@ -122128,7 +125086,7 @@
   {
     "name": "variantdev_setup-variant",
     "owner": "variantdev",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:10.2036153Z",
       "high": 0,
@@ -122138,7 +125096,7 @@
   {
     "name": "variantdev_setup-go-actions",
     "owner": "variantdev",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:10.4113635Z",
       "high": 0,
@@ -122148,7 +125106,7 @@
   {
     "name": "variantdev_mod-action",
     "owner": "variantdev",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:10.6131352Z",
       "high": 0,
@@ -122158,7 +125116,7 @@
   {
     "name": "vargiuscuola_gen-sh-unittest",
     "owner": "vargiuscuola",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:10.8029289Z",
       "high": 0,
@@ -122168,7 +125126,7 @@
   {
     "name": "vargiuscuola_genshdoc",
     "owner": "vargiuscuola",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:10.9942887Z",
       "high": 0,
@@ -122178,7 +125136,7 @@
   {
     "name": "vapier_coverity-scan-action",
     "owner": "vapier",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:11.1850889Z",
       "high": 0,
@@ -122188,7 +125146,7 @@
   {
     "name": "vanstinator_re-run-open-prs-on-base-update",
     "owner": "vanstinator",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:11.3800045Z",
       "high": 0,
@@ -122198,7 +125156,7 @@
   {
     "name": "Vankka_pr-target-branch-action",
     "owner": "Vankka",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:11.5894926Z",
       "high": 0,
@@ -122208,7 +125166,7 @@
   {
     "name": "vanesyan_setup-dart",
     "owner": "vanesyan",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:11.7985062Z",
       "high": 0,
@@ -122218,7 +125176,7 @@
   {
     "name": "vanekj_validate-json-action",
     "owner": "vanekj",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:11.98627Z",
       "high": 0,
@@ -122228,7 +125186,7 @@
   {
     "name": "vandot_lodns-action",
     "owner": "vandot",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:12.1802257Z",
       "high": 0,
@@ -122238,7 +125196,7 @@
   {
     "name": "VandeurenGlenn_action-electron-kit",
     "owner": "VandeurenGlenn",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:12.3914553Z",
       "high": 0,
@@ -122248,7 +125206,7 @@
   {
     "name": "Vampire_setup-wsl",
     "owner": "Vampire",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:12.5991806Z",
       "high": 0,
@@ -122258,7 +125216,7 @@
   {
     "name": "valtyr_pandoc-action",
     "owner": "valtyr",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:12.7841885Z",
       "high": 0,
@@ -122268,7 +125226,7 @@
   {
     "name": "ValkyrienSkies_Minecraft-Architectury-Testing",
     "owner": "ValkyrienSkies",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:12.976306Z",
       "high": 0,
@@ -122278,7 +125236,7 @@
   {
     "name": "valist-io_valist-github-action",
     "owner": "valist-io",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:13.1799705Z",
       "high": 0,
@@ -122288,7 +125246,7 @@
   {
     "name": "valicm_appimage-bash",
     "owner": "valicm",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:13.3832418Z",
       "high": 0,
@@ -122298,7 +125256,7 @@
   {
     "name": "valerianpereira_backup-action",
     "owner": "valerianpereira",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:13.5904448Z",
       "high": 0,
@@ -122308,7 +125266,7 @@
   {
     "name": "valerauko_wrike-ist",
     "owner": "valerauko",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:13.7734524Z",
       "high": 0,
@@ -122318,7 +125276,7 @@
   {
     "name": "ValentinVignal_action-json-keys",
     "owner": "ValentinVignal",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:13.9714233Z",
       "high": 0,
@@ -122328,7 +125286,7 @@
   {
     "name": "ValentinVignal_action-dart-analyze",
     "owner": "ValentinVignal",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:14.1789064Z",
       "high": 0,
@@ -122338,7 +125296,7 @@
   {
     "name": "valadas_set-dnn-manifest-versions",
     "owner": "valadas",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:14.38101Z",
       "high": 0,
@@ -122348,7 +125306,7 @@
   {
     "name": "valadas_get-version-from-dnn-manifest",
     "owner": "valadas",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:14.5951611Z",
       "high": 0,
@@ -122358,7 +125316,7 @@
   {
     "name": "valadas_get-release-branch-version",
     "owner": "valadas",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:14.8082997Z",
       "high": 0,
@@ -122368,7 +125326,7 @@
   {
     "name": "valadas_dnn-platform-get-version",
     "owner": "valadas",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:15.0093547Z",
       "high": 0,
@@ -122378,7 +125336,7 @@
   {
     "name": "vakus_dotnet-deployment-versioning",
     "owner": "vakus",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:15.2169443Z",
       "high": 0,
@@ -122388,7 +125346,7 @@
   {
     "name": "vaibhav-sarwade-404_dynamic-input-stringifier-action",
     "owner": "vaibhav-sarwade-404",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:15.4270406Z",
       "high": 0,
@@ -122398,7 +125356,7 @@
   {
     "name": "vaibhav-jain_spectral-action",
     "owner": "vaibhav-jain",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:15.6411625Z",
       "high": 0,
@@ -122408,7 +125366,7 @@
   {
     "name": "VaibhavChidrawar_merge-schedule-action",
     "owner": "VaibhavChidrawar",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:15.8424187Z",
       "high": 0,
@@ -122418,7 +125376,7 @@
   {
     "name": "vaggeliskls_lyx2pdf-action",
     "owner": "vaggeliskls",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:16.0386994Z",
       "high": 0,
@@ -122428,7 +125386,7 @@
   {
     "name": "vafleite_repository-mirroring-action",
     "owner": "vafleite",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:16.2335612Z",
       "high": 0,
@@ -122438,7 +125396,7 @@
   {
     "name": "vafinvr_template-env-action",
     "owner": "vafinvr",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:16.4173495Z",
       "high": 0,
@@ -122448,7 +125406,7 @@
   {
     "name": "VadimDez_weather-action",
     "owner": "VadimDez",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:16.6266152Z",
       "high": 0,
@@ -122458,7 +125416,7 @@
   {
     "name": "vaccovecrana_gitflow-oss-java-slim",
     "owner": "vaccovecrana",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:16.8554987Z",
       "high": 0,
@@ -122468,7 +125426,7 @@
   {
     "name": "vacare_anofuss-upload",
     "owner": "vacare",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:17.0577137Z",
       "high": 0,
@@ -122478,7 +125436,7 @@
   {
     "name": "v7labs_update-linear-labels-action",
     "owner": "v7labs",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:17.2489575Z",
       "high": 0,
@@ -122488,7 +125446,7 @@
   {
     "name": "v3xlabs_edgeserver-upload",
     "owner": "v3xlabs",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:17.4418586Z",
       "high": 0,
@@ -122498,7 +125456,7 @@
   {
     "name": "v1dhun_subfinder-action",
     "owner": "v1dhun",
-    "dependabot": null,
+    "dependabot": true,
     "vulnerabilityStatus": {
       "lastUpdated": "2022-11-27T01:01:17.6398613Z",
       "high": 0,
@@ -122868,276 +125826,1551 @@
   {
     "name": "UnsafePointer_cmake-clang-ninja-build-github-action",
     "owner": "UnsafePointer",
-    "dependabot": null
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:19.5000233Z"
+    }
   },
   {
     "name": "Uno-Takashi_Lizard-Runner",
     "owner": "Uno-Takashi",
-    "dependabot": null
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:19.6785953Z"
+    }
   },
   {
     "name": "UnlyEd_github-action-store-variable",
     "owner": "UnlyEd",
-    "dependabot": null
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:19.8582231Z"
+    }
   },
   {
     "name": "UnlyEd_github-action-deploy-on-vercel",
     "owner": "UnlyEd",
-    "dependabot": null
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:20.0712889Z"
+    }
   },
   {
     "name": "UnlyEd_github-action-await-vercel",
     "owner": "UnlyEd",
-    "dependabot": null
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:20.2678953Z"
+    }
   },
   {
     "name": "university-of-york_ds-devtool-setEnvVars",
     "dependabot": null,
-    "owner": "university-of-york"
+    "owner": "university-of-york",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:20.4578706Z"
+    }
   },
   {
     "name": "UnitTestBot_UTBotJava-action",
     "dependabot": null,
-    "owner": "UnitTestBot"
+    "owner": "UnitTestBot",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:20.6316923Z"
+    }
   },
   {
     "name": "unionai-oss_flyte-register-action",
     "dependabot": null,
-    "owner": "unionai-oss"
+    "owner": "unionai-oss",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:20.8127161Z"
+    }
   },
   {
     "name": "unionai-oss_flytectl-setup-action",
     "dependabot": null,
-    "owner": "unionai-oss"
+    "owner": "unionai-oss",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:20.9910554Z"
+    }
   },
   {
     "name": "unimonkiez_cuda-toolkit",
     "dependabot": null,
-    "owner": "unimonkiez"
+    "owner": "unimonkiez",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:21.1789097Z"
+    }
   },
   {
     "name": "unifly-aero_aci-deploy",
     "dependabot": null,
-    "owner": "unifly-aero"
+    "owner": "unifly-aero",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:21.3614083Z"
+    }
   },
   {
     "name": "UnicornGlobal_trufflehog-actions-scan",
     "dependabot": null,
-    "owner": "UnicornGlobal"
+    "owner": "UnicornGlobal",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:21.5613179Z"
+    }
   },
   {
     "name": "UnicornGlobal_spellcheck-github-actions",
     "dependabot": null,
-    "owner": "UnicornGlobal"
+    "owner": "UnicornGlobal",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:21.7485246Z"
+    }
   },
   {
     "name": "UnicornGlobal_shopify-theme-lint-action",
     "dependabot": null,
-    "owner": "UnicornGlobal"
+    "owner": "UnicornGlobal",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:21.9269037Z"
+    }
   },
   {
     "name": "UnicornGlobal_has-changes-action",
     "dependabot": null,
-    "owner": "UnicornGlobal"
+    "owner": "UnicornGlobal",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:22.1155146Z"
+    }
   },
   {
     "name": "UnicornGlobal_get-run-metadata",
     "dependabot": null,
-    "owner": "UnicornGlobal"
+    "owner": "UnicornGlobal",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:22.2962366Z"
+    }
   },
   {
     "name": "unickq_send-to-allure-docker-service-action",
     "dependabot": null,
-    "owner": "unickq"
+    "owner": "unickq",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:22.5285582Z"
+    }
   },
   {
     "name": "unfor19_replacer-action",
     "dependabot": null,
-    "owner": "unfor19"
+    "owner": "unfor19",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:22.7230797Z"
+    }
   },
   {
     "name": "unfor19_release-action",
     "dependabot": null,
-    "owner": "unfor19"
+    "owner": "unfor19",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:22.9238979Z"
+    }
   },
   {
     "name": "unfor19_hero-action",
     "dependabot": null,
-    "owner": "unfor19"
+    "owner": "unfor19",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:23.1198271Z"
+    }
   },
   {
     "name": "undownding_VuePagesAction",
     "dependabot": null,
-    "owner": "undownding"
+    "owner": "undownding",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:23.3461566Z"
+    }
   },
   {
     "name": "underwindfall_create-release-with-debugapk",
     "dependabot": null,
-    "owner": "underwindfall"
+    "owner": "underwindfall",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:23.5330313Z"
+    }
   },
   {
     "name": "undergroundwires_bump-everywhere",
     "dependabot": null,
-    "owner": "undergroundwires"
+    "owner": "undergroundwires",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:23.7243187Z"
+    }
   },
   {
     "name": "unavailable-username_veracode-community-uploadandscan-action",
     "dependabot": null,
-    "owner": "unavailable-username"
+    "owner": "unavailable-username",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:23.9186864Z"
+    }
   },
   {
     "name": "unacast_actions-github-deployment-status",
     "dependabot": null,
-    "owner": "unacast"
+    "owner": "unacast",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:24.1038502Z"
+    }
   },
   {
     "name": "umutphp_wp-vulnerability-check-github-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:24.325477Z"
+    }
   },
   {
     "name": "umutphp_sensiolabs-security-checker-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:24.5116959Z"
+    }
   },
   {
     "name": "umutphp_php-var-dump-check-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:24.6924064Z"
+    }
   },
   {
     "name": "umutphp_php-psecio-parse-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:24.8687418Z"
+    }
   },
   {
     "name": "umutphp_phpmetrics-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:25.0725571Z"
+    }
   },
   {
     "name": "umutphp_php-magic-number-check-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:25.2698006Z"
+    }
   },
   {
     "name": "umutphp_hacker-laws-action",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:25.516777Z"
+    }
   },
   {
     "name": "umutphp_github-action-dynamic-profile-page",
     "dependabot": null,
-    "owner": "umutphp"
+    "owner": "umutphp",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:25.7112349Z"
+    }
   },
   {
     "name": "umuthan_video-converter",
     "dependabot": null,
-    "owner": "umuthan"
+    "owner": "umuthan",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:25.9286083Z"
+    }
   },
   {
     "name": "Umio-Yasuno_gh_pages-sitemap-ping",
     "dependabot": null,
-    "owner": "Umio-Yasuno"
+    "owner": "Umio-Yasuno",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:26.1117696Z"
+    }
   },
   {
     "name": "umgefahren_hackathon-action",
     "dependabot": null,
-    "owner": "umgefahren"
+    "owner": "umgefahren",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:26.2914289Z"
+    }
   },
   {
     "name": "UmbHost_umbhost-web-deploy",
     "dependabot": null,
-    "owner": "UmbHost"
+    "owner": "UmbHost",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:26.471175Z"
+    }
   },
   {
     "name": "umani_changed-files",
     "dependabot": null,
-    "owner": "umani"
+    "owner": "umani",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:26.642053Z"
+    }
   },
   {
     "name": "umami-ware_pr-guard",
     "dependabot": null,
-    "owner": "umami-ware"
+    "owner": "umami-ware",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:26.8231445Z"
+    }
   },
   {
     "name": "umahmood_pushover-actions",
     "dependabot": null,
-    "owner": "umahmood"
+    "owner": "umahmood",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:27.0116014Z"
+    }
   },
   {
     "name": "ulises-jeremias_github-actions-aur-publish",
     "dependabot": null,
-    "owner": "ulises-jeremias"
+    "owner": "ulises-jeremias",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:27.1948429Z"
+    }
   },
   {
     "name": "Ulferno_upload-to-roblox",
     "dependabot": null,
-    "owner": "Ulferno"
+    "owner": "Ulferno",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:27.3953393Z"
+    }
   },
   {
     "name": "ulaval_azure-blob-copy-action",
     "dependabot": null,
-    "owner": "ulaval"
+    "owner": "ulaval",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:27.5782597Z"
+    }
   },
   {
     "name": "UKnowWhoIm_django-test-action",
     "dependabot": null,
-    "owner": "UKnowWhoIm"
+    "owner": "UKnowWhoIm",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:27.8014623Z"
+    }
   },
   {
     "name": "ukautz_github-action-npm-scope-syncer",
     "dependabot": null,
-    "owner": "ukautz"
+    "owner": "ukautz",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:28.0403649Z"
+    }
   },
   {
     "name": "uibcdf_action-html-dir-to-gh-pages",
     "dependabot": null,
-    "owner": "uibcdf"
+    "owner": "uibcdf",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:28.2246884Z"
+    }
   },
   {
     "name": "uibcdf_action-build-and-upload-conda-packages",
     "dependabot": null,
-    "owner": "uibcdf"
+    "owner": "uibcdf",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:28.4149216Z"
+    }
   },
   {
     "name": "uhyo_please-star-first",
     "dependabot": null,
-    "owner": "uhyo"
+    "owner": "uhyo",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:28.6124874Z"
+    }
   },
   {
     "name": "uhobeike_ros-melodic-clang-tidy-review",
     "dependabot": null,
-    "owner": "uhobeike"
+    "owner": "uhobeike",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:28.8030188Z"
+    }
   },
   {
     "name": "ugurtemiz_datadog-synthetic-action",
     "dependabot": null,
-    "owner": "ugurtemiz"
+    "owner": "ugurtemiz",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:29.0003082Z"
+    }
   },
   {
     "name": "ufoo68_line-push-message",
     "dependabot": null,
-    "owner": "ufoo68"
+    "owner": "ufoo68",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:29.1822291Z"
+    }
   },
   {
     "name": "UffizziCloud_update-preview-action",
     "dependabot": null,
-    "owner": "UffizziCloud"
+    "owner": "UffizziCloud",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:29.3714562Z"
+    }
   },
   {
     "name": "UffizziCloud_preview-action",
     "dependabot": null,
-    "owner": "UffizziCloud"
+    "owner": "UffizziCloud",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:29.5574775Z"
+    }
   },
   {
     "name": "UffizziCloud_delete-preview-action",
     "dependabot": null,
-    "owner": "UffizziCloud"
+    "owner": "UffizziCloud",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:29.7703933Z"
+    }
   },
   {
     "name": "uesteibar_reviewer-lottery",
     "dependabot": null,
-    "owner": "uesteibar"
+    "owner": "uesteibar",
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:29.9954295Z"
+    }
+  },
+  {
+    "owner": "w9jds",
+    "name": "w9jds_setup-firebase",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:30.2016276Z"
+    }
+  },
+  {
+    "owner": "vacare",
+    "name": "vacare_anofuss-remote",
+    "dependabot": true,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:30.4063002Z"
+    }
+  },
+  {
+    "owner": "ueki-tomohiro",
+    "name": "ueki-tomohiro_flutter-test-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:30.6017676Z"
+    }
+  },
+  {
+    "owner": "udondan",
+    "name": "udondan_ver2doc",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:30.7931771Z"
+    }
+  },
+  {
+    "owner": "udondan",
+    "name": "udondan_jsii-publish",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:30.9729047Z"
+    }
+  },
+  {
+    "owner": "udondan",
+    "name": "udondan_cdk-nodejs",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:31.2029465Z"
+    }
+  },
+  {
+    "owner": "uditgaurav",
+    "name": "uditgaurav_kubernetes-chaos",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:31.3934515Z"
+    }
+  },
+  {
+    "owner": "uditgaurav",
+    "name": "uditgaurav_k8s-actions",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:31.6269015Z"
+    }
+  },
+  {
+    "owner": "uditgaurav",
+    "name": "uditgaurav_docker-linter",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:31.8061145Z"
+    }
+  },
+  {
+    "owner": "ubuntudroid",
+    "name": "ubuntudroid_automerge-labeler",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:31.9882047Z"
+    }
+  },
+  {
+    "owner": "ubik2",
+    "name": "ubik2_validate-json-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:32.1982582Z"
+    }
+  },
+  {
+    "owner": "ubie-oss",
+    "name": "ubie-oss_logrocket-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:32.3959965Z"
+    }
+  },
+  {
+    "owner": "ubie-oss",
+    "name": "ubie-oss_delete-source-map-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:32.5875555Z"
+    }
+  },
+  {
+    "owner": "u0324020",
+    "name": "u0324020_actions-helloword",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:32.7637939Z"
+    }
+  },
+  {
+    "owner": "tzzs",
+    "name": "tzzs_server-shell",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:32.9431378Z"
+    }
+  },
+  {
+    "owner": "tzkhan",
+    "name": "tzkhan_pr-update-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:33.1424946Z"
+    }
+  },
+  {
+    "owner": "tzafrirben",
+    "name": "tzafrirben_babashka-docker-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:33.3181754Z"
+    }
+  },
+  {
+    "owner": "typilus",
+    "name": "typilus_typilus-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:33.5130278Z"
+    }
+  },
+  {
+    "owner": "Typeform",
+    "name": "Typeform_siesta",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:33.6837613Z"
+    }
+  },
+  {
+    "owner": "Typeform",
+    "name": "Typeform_labeler",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:33.8812031Z"
+    }
+  },
+  {
+    "owner": "typeable",
+    "name": "typeable_compaREST",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:34.0801486Z"
+    }
+  },
+  {
+    "owner": "tyntec",
+    "name": "tyntec_github-action-sms",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:34.2863539Z"
+    }
+  },
+  {
+    "owner": "tylermurry",
+    "name": "tylermurry_github-pr-landmine",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:34.538496Z"
+    }
+  },
+  {
+    "owner": "TylerLeonhardt",
+    "name": "TylerLeonhardt_first-interaction-pwsh",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:34.7197969Z"
+    }
+  },
+  {
+    "owner": "Tyler887",
+    "name": "Tyler887_TypeScript-GitHub-Actions",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:34.9193094Z"
+    }
+  },
+  {
+    "owner": "Tyler887",
+    "name": "Tyler887_PS-Runner",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:35.1159735Z"
+    }
+  },
+  {
+    "owner": "Tyler887",
+    "name": "Tyler887_jekyllbuild",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:35.3083538Z"
+    }
+  },
+  {
+    "owner": "TykTechnologies",
+    "name": "TykTechnologies_packagecloud-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:35.5035926Z"
+    }
+  },
+  {
+    "owner": "TykTechnologies",
+    "name": "TykTechnologies_go-plugin-compiler-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:35.7012456Z"
+    }
+  },
+  {
+    "owner": "tyirvine",
+    "name": "tyirvine_Unity-Actions-Autoformat",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:35.9003281Z"
+    }
+  },
+  {
+    "owner": "tycrek-archive",
+    "name": "tycrek-archive_issue-labeler",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:36.0829681Z"
+    }
+  },
+  {
+    "owner": "ty0x2333",
+    "name": "ty0x2333_cocoapods-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:36.3152648Z"
+    }
+  },
+  {
+    "owner": "twyla-ai",
+    "name": "twyla-ai_action-auth0-deploy-cli",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:36.4914641Z"
+    }
+  },
+  {
+    "owner": "TWoolhouse",
+    "name": "TWoolhouse_setup-vulkan-sdk",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:36.7033397Z"
+    }
+  },
+  {
+    "owner": "two-pack",
+    "name": "two-pack_redmine-plugin-test-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:36.8922299Z"
+    }
+  },
+  {
+    "owner": "twitter-together",
+    "name": "twitter-together_action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:37.0987738Z"
+    }
+  },
+  {
+    "owner": "TwistoPayments",
+    "name": "TwistoPayments_github-repo-replicator",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:37.281727Z"
+    }
+  },
+  {
+    "owner": "twistedpair",
+    "name": "twistedpair_codeship-env-adapter",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:37.5171148Z"
+    }
+  },
+  {
+    "owner": "Twingate",
+    "name": "Twingate_github-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:37.7423413Z"
+    }
+  },
+  {
+    "owner": "twilio-labs",
+    "name": "twilio-labs_actions-sms",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:37.9329123Z"
+    }
+  },
+  {
+    "owner": "TwiggyBuffalo",
+    "name": "TwiggyBuffalo_create-npmrc",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:38.1146577Z"
+    }
+  },
+  {
+    "owner": "twiddler",
+    "name": "twiddler_is-my-docker-parent-image-out-of-date",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:38.3018106Z"
+    }
+  },
+  {
+    "owner": "twfahey1",
+    "name": "twfahey1_setup-docksal",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:38.4791585Z"
+    }
+  },
+  {
+    "owner": "TwentyFourMinutes",
+    "name": "TwentyFourMinutes_PublishNuget",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:38.6687477Z"
+    }
+  },
+  {
+    "owner": "twentyfourg",
+    "name": "twentyfourg_vault-aws-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:38.8418175Z"
+    }
+  },
+  {
+    "owner": "tw3lveparsecs",
+    "name": "tw3lveparsecs_github-actions-set-variables",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:39.0736026Z"
+    }
+  },
+  {
+    "owner": "tvrcgo",
+    "name": "tvrcgo_upload-to-oss",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:39.2799564Z"
+    }
+  },
+  {
+    "owner": "tvrcgo",
+    "name": "tvrcgo_deploy-to-docker",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:39.4731779Z"
+    }
+  },
+  {
+    "owner": "tvdias",
+    "name": "tvdias_github-tagger",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:39.6655005Z"
+    }
+  },
+  {
+    "owner": "tush-tr",
+    "name": "tush-tr_setup-jmeter",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:39.8675296Z"
+    }
+  },
+  {
+    "owner": "turtlesec-no",
+    "name": "turtlesec-no_get-ninja",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:40.0621589Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_infersharpaction",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:40.2480904Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_DevSkim-Action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:40.4580251Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_databricks-import-notebook",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:40.6403403Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_android-app-size-diff",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:40.8326973Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_action-python",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:41.027044Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_action-publish-symbols",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:41.2236437Z"
+    }
+  },
+  {
+    "owner": "microsoft",
+    "name": "microsoft_action-armttk",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:41.4117952Z"
+    }
+  },
+  {
+    "owner": "MicroFocus",
+    "name": "MicroFocus_lrc-gh-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:41.6136478Z"
+    }
+  },
+  {
+    "owner": "micnncim",
+    "name": "micnncim_action-lgtm-reaction",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:41.789719Z"
+    }
+  },
+  {
+    "owner": "micnncim",
+    "name": "micnncim_action-label-syncer",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:41.9786349Z"
+    }
+  },
+  {
+    "owner": "mickfeech",
+    "name": "mickfeech_firestore-emulator-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:42.1631332Z"
+    }
+  },
+  {
+    "owner": "mickeygoussetorg",
+    "name": "mickeygoussetorg_trigger-jenkins-job",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:42.3721253Z"
+    }
+  },
+  {
+    "owner": "mickeygoussetorg",
+    "name": "mickeygoussetorg_get-a-dad-joke",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:42.5707614Z"
+    }
+  },
+  {
+    "owner": "mickem",
+    "name": "mickem_gh-action-bump-maven-version",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:42.7568883Z"
+    }
+  },
+  {
+    "owner": "mickem",
+    "name": "mickem_clean-after-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:42.9550197Z"
+    }
+  },
+  {
+    "owner": "mickaelandrieu",
+    "name": "mickaelandrieu_psalm-ga",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:43.1503171Z"
+    }
+  },
+  {
+    "owner": "mickaelandrieu",
+    "name": "mickaelandrieu_phpqa-ga",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:43.3336331Z"
+    }
+  },
+  {
+    "owner": "michpohl",
+    "name": "michpohl_expose-artifacts",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:43.5701926Z"
+    }
+  },
+  {
+    "owner": "michpohl",
+    "name": "michpohl_expose-android-build.gradle-version-code-and-name",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:43.7522694Z"
+    }
+  },
+  {
+    "owner": "michpohl",
+    "name": "michpohl_action-concatenate-strings",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:43.972811Z"
+    }
+  },
+  {
+    "owner": "michmich112",
+    "name": "michmich112_version-bumper",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:44.1456611Z"
+    }
+  },
+  {
+    "owner": "michmich112",
+    "name": "michmich112_extract-version",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:44.3296892Z"
+    }
+  },
+  {
+    "owner": "MichinaoShimizu",
+    "name": "MichinaoShimizu_workflow-time-report",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:44.5164258Z"
+    }
+  },
+  {
+    "owner": "michelmelo",
+    "name": "michelmelo_slim-phpunit-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:44.6970786Z"
+    }
+  },
+  {
+    "owner": "michelmelo",
+    "name": "michelmelo_merge-branch",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:44.8932976Z"
+    }
+  },
+  {
+    "owner": "michelmelo",
+    "name": "michelmelo_laravel-phpunit-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:45.0693721Z"
+    }
+  },
+  {
+    "owner": "michcio1234",
+    "name": "michcio1234_heroku-run",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:45.2418474Z"
+    }
+  },
+  {
+    "owner": "michalvankodev",
+    "name": "michalvankodev_copy-issue-labels",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:45.4190312Z"
+    }
+  },
+  {
+    "owner": "michal-h21",
+    "name": "michal-h21_make4ht-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:45.6230285Z"
+    }
+  },
+  {
+    "owner": "michaelw90",
+    "name": "michaelw90_PHP-Lint",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:45.8128811Z"
+    }
+  },
+  {
+    "owner": "MichaelVoelkel",
+    "name": "MichaelVoelkel_code-sign-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:46.0235468Z"
+    }
+  },
+  {
+    "owner": "MichaelsJP",
+    "name": "MichaelsJP_conda-package-publish-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:46.2019027Z"
+    }
+  },
+  {
+    "owner": "michaelpeterswa",
+    "name": "michaelpeterswa_rust-wasm-pack-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:46.3918544Z"
+    }
+  },
+  {
+    "owner": "MichaelMULLER",
+    "name": "MichaelMULLER_highlight-scan-github-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:46.582838Z"
+    }
+  },
+  {
+    "owner": "MichaelMelena",
+    "name": "MichaelMelena_remove-artifacts",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:46.775458Z"
+    }
+  },
+  {
+    "owner": "MichaelMelena",
+    "name": "MichaelMelena_list-artifacts",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:46.9696652Z"
+    }
+  },
+  {
+    "owner": "michaelhenry",
+    "name": "michaelhenry_swifty-code-coverage",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:47.1669017Z"
+    }
+  },
+  {
+    "owner": "michaelhenry",
+    "name": "michaelhenry_deploy-to-cocoapods-github-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:47.3471469Z"
+    }
+  },
+  {
+    "owner": "michaelhenry",
+    "name": "michaelhenry_create-report",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:47.5401325Z"
+    }
+  },
+  {
+    "owner": "michaelfindlater",
+    "name": "michaelfindlater_get-container-mtu",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:47.7189593Z"
+    }
+  },
+  {
+    "owner": "michaelcontento",
+    "name": "michaelcontento_credly2hugo-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:47.9285417Z"
+    }
+  },
+  {
+    "owner": "michaelbammeke",
+    "name": "michaelbammeke_cf-stack-drift",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:48.1104603Z"
+    }
+  },
+  {
+    "owner": "Michael2MacDonald",
+    "name": "Michael2MacDonald_Discord-Message-Updater",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:48.2905599Z"
+    }
+  },
+  {
+    "owner": "michael-spengler",
+    "name": "michael-spengler_github-action-cicd",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:48.4921857Z"
+    }
+  },
+  {
+    "owner": "michael-crawford",
+    "name": "michael-crawford_open-issue",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:48.739448Z"
+    }
+  },
+  {
+    "owner": "micalevisk",
+    "name": "micalevisk_last-issue-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:48.9300269Z"
+    }
+  },
+  {
+    "owner": "micael-grilo",
+    "name": "micael-grilo_airflow-dags-test-action",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:49.111542Z"
+    }
+  },
+  {
+    "owner": "mi-kas",
+    "name": "mi-kas_kover-report",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:49.3356746Z"
+    }
+  },
+  {
+    "owner": "mhriemers",
+    "name": "mhriemers_setup-metatrader",
+    "dependabot": null,
+    "vulnerabilityStatus": {
+      "high": 0,
+      "critical": 0,
+      "lastUpdated": "2022-11-27T02:44:49.5258502Z"
+    }
   }
 ]
