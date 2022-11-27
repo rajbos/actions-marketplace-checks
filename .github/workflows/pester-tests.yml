@@ -1,5 +1,11 @@
+name: Run Pester tests
+
 on:
   push:
+
+defaults:
+  run:
+    shell: pwsh
 
 jobs:
   pester-tests:
