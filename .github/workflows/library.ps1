@@ -312,22 +312,25 @@ function FilterActionsToProcess {
     )
 
     # flatten the list for faster processing
-    $actionsToProcess = FlattenActionsList -actions $actionsToProcess
+    $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
     $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
+    $lastIndex = 0
     $actionsToProcess = $actionsToProcess | ForEach-Object { 
         $forkedRepoName = $_.forkedRepoName
         $found = $false
         # for loop since the existingForksNames is a sorted array
-        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
+        for ($j = $lastIndex; $j -lt $existingForksNames.Count; $j++) {
             if ($existingForksNames[$j] -eq $forkedRepoName) {
                 $found = $true
+                $lastIndex = $j
                 break
             }
             # check first letter, since we sorted we do not need to go any further
             if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
-                break
+                $lastIndex = $j
+                break                
             }
         }
         if (!$found) {
@@ -344,6 +347,8 @@ function FilterActionsToProcessDependabot {
         $existingForks
     )
 
+    # flatten the list for faster processing
+    $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
     $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
@@ -376,26 +381,50 @@ function FilterActionsToProcessDependabot {
     return $actionsToProcess
 }
 
-function FlattenActionsList {
+function FilterActionsToProcessDependabot-Improved {
     Param (
-        $actions
+        $actionsToProcess,
+        $existingForks
     )
-    # get a full list with the info we actually need
-    $flattenedList = $actions | ForEach-Object {            
-        ($owner, $repo) = SplitUrl -url $_.RepoUrl
-        $action = @{
-            owner = $owner
-            repo = $repo
-            forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+
+    # flatten the list for faster processing
+    $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
+    # for faster searching, convert to single string array instead of objects
+    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
+    $j = 0
+    $existingFork = $null
+    $forkedRepoName = ""
+    $found = $false
+    $lastIndex = 0
+    $actionsToProcess = $actionsToProcess | ForEach-Object { 
+        $forkedRepoName = $_.forkedRepoName
+        $found = $false
+        # for loop since the existingForksNames is a sorted array
+        for ($j = $lastIndex = 0; $j -lt $existingForksNames.Count; $j++) {
+            if ($existingForksNames[$j] -eq $forkedRepoName) {
+                $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
+                if ($existingFork.dependabot) {
+                    $found = $true
+                    $lastIndex = $j
+                }
+                break
+            }
+            # check first letter, since we sorted we do not need to go any further
+            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
+                $lastIndex = $j
+                break
+            }
         }
-        return $action
+        if (!$found) {
+           return $_
+        }
     }
 
-    return $flattenedList
+    return $actionsToProcess
 }
 
-
-function FlattenActionsListImproved {
+function FlattenActionsList {
     Param (
         $actions
     )
@@ -408,38 +437,17 @@ function FlattenActionsListImproved {
     }
 
     # get a full list with the info we actually need
-    $flattenedList = $actions | ForEach-Object {            
-        ($owner, $repo) = SplitUrl -url $_.RepoUrl
-         $action = @{
-             owner = $owner
-             repo = $repo
-             forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
-         }
-        return $action
+    $flattenedList = $actions | ForEach-Object {
+        if ($_.RepoUrl){
+            ($owner, $repo) = SplitUrl -url $_.RepoUrl
+            $action = @{
+                owner = $owner
+                repo = $repo
+                forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+            }
+            return $action
+        }
     }
 
     return $flattenedList
-}
-
-
-function FlattenActionsListImproved2 {
-    Param (
-        $actions
-    )
-    $owner = ""
-    $repo = ""
-    $results = New-Object System.Collections.ArrayList
-
-    # get a full list with the info we actually need
-    $actions | ForEach-Object {            
-        ($owner, $repo) = SplitUrl -url $_.RepoUrl
-         $action = @{
-             owner = $owner
-             repo = $repo
-             forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
-         }
-         $results += $action
-    }
-
-    return $results
 }

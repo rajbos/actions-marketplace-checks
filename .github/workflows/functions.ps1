@@ -367,7 +367,6 @@ function EnableDependabotForForkedActions {
     Write-Host "Enabling dependabot on forked repos"
     # filter the actions to the ones we still need to enable dependabot for
     # todo: make faster!
-    $actionsToProcess = FlattenActionsList -actions $actions
     $actionsToProcess = FilterActionsToProcessDependabot -actions $actionsToProcess -existingForks $existingForks
     
     # $actionsToProcess = $actions | Where-Object { 
