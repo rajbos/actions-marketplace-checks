@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Get current actions list
+        run: |
+          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
       
       - name: Install Pester
         run: Install-Module -Name Pester -Force
