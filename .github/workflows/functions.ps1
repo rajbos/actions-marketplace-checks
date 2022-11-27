@@ -278,6 +278,8 @@ function ForkActionRepos {
     $max = $existingForks.Count + $numberOfReposToDo
     $newlyForkedRepos = 0
     $counter = 0
+    # convert to a collection so we are able to add new items to it
+    $failedForks = {$failedForks}.Invoke()    
 
     if (($null -ne $actions) -And ($null -ne $existingForks) -And ($existingForks.Count -gt 0)) {
         Write-Host "Filtering repos to the ones we still need to fork"
