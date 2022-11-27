@@ -1,0 +1,14 @@
+on:
+  push:
+
+jobs:
+  pester-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Pester
+        run: Install-Module -Name Pester -Force
+
+      - name: Run Pester Tests
+        run: Invoke-Pester -Output Detailed

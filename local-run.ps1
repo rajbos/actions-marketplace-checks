@@ -5,8 +5,9 @@ if ((Test-Path $actionsFile)) {
 else {
     $actions=$null
 }
-./.github/workflows/functions.ps1 -actions $actions -numberofReposToDo 50
+#./.github/workflows/functions.ps1 -actions $actions -numberofReposToDo 50
 #./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo 50
 #./.github/workflows/report.ps1 -actions $actions
 
 #./.github/workflows/cleanup-all-repos.ps1 -numberOfReposToDo 90
+./tests/filtering_tests.ps1 -actions $actions

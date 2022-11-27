@@ -267,89 +267,6 @@ function GetDependabotVulnerabilityAlerts {
     }
 }
 
-function FlattenActionsList {
-    Param (
-        $actions
-    )
-    # get a full list with the info we actually need
-    $flattenedList = $actions | ForEach-Object {            
-        ($owner, $repo) = SplitUrl -url $_.RepoUrl
-        $action = @{
-            owner = $owner
-            repo = $repo
-            forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
-        }
-        return $action
-    }
-
-    return $flattenedList
-}
-
-function FilterActionsToProcess {
-    Param (
-        $actionsToProcess,
-        $existingForks
-    )
-
-    # for faster searching, convert to single string array instead of objects
-    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
-    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
-    $actionsToProcess = $actionsToProcess | ForEach-Object { 
-        $forkedRepoName = $_.forkedRepoName
-        $found = $false
-        # for loop since the existingForksNames is a sorted array
-        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
-            if ($existingForksNames[$j] -eq $forkedRepoName) {
-                $found = $true
-                break
-            }
-            # check first letter, since we sorted we do not need to go any further
-            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
-                break
-            }
-        }
-        if (!$found) {
-           return $_
-        }
-    }
-
-    return $actionsToProcess
-}
-
-function FilterActionsToProcessDependabot {
-    Param (
-        $actionsToProcess,
-        $existingForks
-    )
-
-    # for faster searching, convert to single string array instead of objects
-    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
-    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
-    $actionsToProcess = $actionsToProcess | ForEach-Object { 
-        $forkedRepoName = $_.forkedRepoName
-        $found = $false
-        # for loop since the existingForksNames is a sorted array
-        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
-            if ($existingForksNames[$j] -eq $forkedRepoName) {
-                $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
-                if ($existingFork.dependabot) {
-                    $found = $true
-                }
-                break
-            }
-            # check first letter, since we sorted we do not need to go any further
-            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
-                break
-            }
-        }
-        if (!$found) {
-           return $_
-        }
-    }
-
-    return $actionsToProcess
-}
-
 function ForkActionRepos {
     Param (
         $actions,
@@ -365,7 +282,6 @@ function ForkActionRepos {
     if (($null -ne $actions) -And ($null -ne $existingForks) -And ($existingForks.Count -gt 0)) {
         Write-Host "Filtering repos to the ones we still need to fork"
 
-        $actionsToProcess = FlattenActionsList -actions $actions
         $actionsToProcess = FilterActionsToProcess -actions $actionsToProcess -existingForks $existingForks
     }
     else {
@@ -396,7 +312,14 @@ function ForkActionRepos {
         if ($null -eq $existingFork) {
             if (($null -ne $failedFork) -Or $failedFork.timesFailed -lt 5) {        
                 Write-Host "$i/$max Checking repo [$owner/$repo]"
-                $forkResult = ForkActionRepo -owner $owner -repo $repo
+                try {
+                    $forkResult = ForkActionRepo -owner $owner -repo $repo
+                }
+                catch {
+                    # exception occured, break and continue with next repo
+                    # exeption logged in the ForkActionRepo function
+                    continue
+                }
                 if ($forkResult) {
                     # add the repo to the list of existing forks
                     Write-Debug "Repo forked"
@@ -474,7 +397,7 @@ function EnableDependabotForForkedActions {
 
         if (($null -ne $existingFork) -And ($null -eq $existingFork.dependabot)) {
             if (EnableDependabot $existingFork) {
-                Write-Host "Dependabot enabled on [$repo]"
+                Write-Host "Dependabot enabled on [$forkOrg/$($existingFork.name)]"
                 $existingFork.dependabot = $true
                 
                 if (Get-Member -inputobject $repo -name "vulnerabilityStatus" -Membertype Properties) {

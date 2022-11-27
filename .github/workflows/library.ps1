@@ -304,3 +304,142 @@ function SaveStatus {
         Write-Host "Saved"
     }
 }
+
+function FilterActionsToProcess {
+    Param (
+        $actionsToProcess,
+        $existingForks
+    )
+
+    # flatten the list for faster processing
+    $actionsToProcess = FlattenActionsList -actions $actionsToProcess
+    # for faster searching, convert to single string array instead of objects
+    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
+    $actionsToProcess = $actionsToProcess | ForEach-Object { 
+        $forkedRepoName = $_.forkedRepoName
+        $found = $false
+        # for loop since the existingForksNames is a sorted array
+        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
+            if ($existingForksNames[$j] -eq $forkedRepoName) {
+                $found = $true
+                break
+            }
+            # check first letter, since we sorted we do not need to go any further
+            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
+                break
+            }
+        }
+        if (!$found) {
+           return $_
+        }
+    }
+
+    return $actionsToProcess
+}
+
+function FilterActionsToProcessDependabot {
+    Param (
+        $actionsToProcess,
+        $existingForks
+    )
+
+    # for faster searching, convert to single string array instead of objects
+    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
+    $j = 0
+    $existingFork = $null
+    $forkedRepoName = ""
+    $found = $false
+    $actionsToProcess = $actionsToProcess | ForEach-Object { 
+        $forkedRepoName = $_.forkedRepoName
+        $found = $false
+        # for loop since the existingForksNames is a sorted array
+        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
+            if ($existingForksNames[$j] -eq $forkedRepoName) {
+                $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
+                if ($existingFork.dependabot) {
+                    $found = $true
+                }
+                break
+            }
+            # check first letter, since we sorted we do not need to go any further
+            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
+                break
+            }
+        }
+        if (!$found) {
+           return $_
+        }
+    }
+
+    return $actionsToProcess
+}
+
+function FlattenActionsList {
+    Param (
+        $actions
+    )
+    # get a full list with the info we actually need
+    $flattenedList = $actions | ForEach-Object {            
+        ($owner, $repo) = SplitUrl -url $_.RepoUrl
+        $action = @{
+            owner = $owner
+            repo = $repo
+            forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+        }
+        return $action
+    }
+
+    return $flattenedList
+}
+
+
+function FlattenActionsListImproved {
+    Param (
+        $actions
+    )
+    $owner = ""
+    $repo = ""
+    $action = @{
+        owner = ""
+        repo = ""
+        forkedRepoName = ""
+    }
+
+    # get a full list with the info we actually need
+    $flattenedList = $actions | ForEach-Object {            
+        ($owner, $repo) = SplitUrl -url $_.RepoUrl
+         $action = @{
+             owner = $owner
+             repo = $repo
+             forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+         }
+        return $action
+    }
+
+    return $flattenedList
+}
+
+
+function FlattenActionsListImproved2 {
+    Param (
+        $actions
+    )
+    $owner = ""
+    $repo = ""
+    $results = New-Object System.Collections.ArrayList
+
+    # get a full list with the info we actually need
+    $actions | ForEach-Object {            
+        ($owner, $repo) = SplitUrl -url $_.RepoUrl
+         $action = @{
+             owner = $owner
+             repo = $repo
+             forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+         }
+         $results += $action
+    }
+
+    return $results
+}
