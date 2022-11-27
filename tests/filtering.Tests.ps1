@@ -8,6 +8,7 @@ BeforeAll {
     $global:status = $null
     $global:failedForks = $null
 
+    $actionsFile = "actions.json"
     $statusFile = "status.json"
     $failedForksFile = "failedForks.json"
 

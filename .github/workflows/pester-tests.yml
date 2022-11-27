@@ -16,16 +16,16 @@ jobs:
       - name: Install Pester
         run: Install-Module -Name Pester -Force
 
-      # - name: Run Pester Tests
-      #   run: Invoke-Pester -Output Detailed
+      - name: Run Pester Tests
+        run: Invoke-Pester -Output Detailed
 
-      - name: Run tests
-        run: |
-          $actionsFile = "actions.json"
-          if ((Test-Path $actionsFile)) {
-              $actions=(Get-Content $actionsFile | ConvertFrom-Json)
-          }
-          else {
-              trhow "actions.json not found"
-          }
-          ./tests/filtering.Tests.ps1 -actions $actions
+      # - name: Run tests
+      #   run: |
+      #     $actionsFile = "actions.json"
+      #     if ((Test-Path $actionsFile)) {
+      #         $actions=(Get-Content $actionsFile | ConvertFrom-Json)
+      #     }
+      #     else {
+      #         trhow "actions.json not found"
+      #     }
+      #     ./tests/filtering.Tests.ps1 -actions $actions
