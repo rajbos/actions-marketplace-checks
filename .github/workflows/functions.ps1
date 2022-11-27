@@ -38,6 +38,7 @@ function GetForkedActionRepos {
         }
         
         Write-Host "Found $($status.Count) existing repos in status file"
+        Write-Host "Found $($failedForks.Count) existing records in the failed forks file"
     }
     else {
         # build up status from scratch
@@ -279,12 +280,38 @@ function ForkActionRepos {
     $counter = 0
 
     if (($null -ne $actions) -And ($null -ne $existingForks) -And ($existingForks.Count -gt 0)) {
-        # TODO: fix the filtering here with owner and repo
         Write-Host "Filtering repos to the ones we still need to fork"
-        # filter the actions list down to the set we still need to fork (not knwon in the existingForks list)
-        $actionsToProcess = $actions | Where-Object { 
+
+        # get a full list with the info we actually need
+        $actionsToProcess = $actions | ForEach-Object {            
             ($owner, $repo) = SplitUrl -url $_.RepoUrl
-            return $existingForks.name -notcontains $repo -And $failedForks.owner -notcontains $owner
+            $action = @{
+                owner = $owner
+                repo = $repo
+                forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+            }
+            return $action
+        }
+        # for faster searching, convert to single string array instead of objects
+        $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+        # filter the actions list down to the set we still need to fork (not known in the existingForks list)
+        $actionsToProcess = $actionsToProcess | ForEach-Object { 
+            $forkedRepoName = $_.forkedRepoName
+            $found = $false
+            # for loop since the existingForksNames is a sorted array
+            for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
+                if ($existingForksNames[$j] -eq $forkedRepoName) {
+                    $found = $true
+                    break
+                }
+                # check first letter, since we sorted we do not need to go any further
+                if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
+                    break
+                }
+            }
+            if (!$found) {
+               return $_
+            }
         }
     }
     else {
@@ -301,10 +328,11 @@ function ForkActionRepos {
             break
         }
 
-        ($owner, $repo) = $(SplitUrl $action.RepoUrl)
         # check if fork already exists
-        $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+        $forkedRepoName = $action.forkedRepoName
         $existingFork = $existingForks | Where-Object {$_.name -eq $forkedRepoName}
+        $owner = $action.owner
+        $repo = $action.repo
         $failedFork = $failedForks | Where-Object {$_.name -eq $repo -And $_.owner -eq $owner}
         if ($null -eq $existingFork) {
             if (($null -ne $failedFork) -Or $failedFork.timesFailed -lt 5) {        
@@ -325,7 +353,7 @@ function ForkActionRepos {
                         $failedFork.timesFailed++ | Out-Null
                     }
                     else {
-                    # let's store a list of failed forks
+                        # let's store a list of failed forks
                         Write-Host "Failed to fork repo [$owner/$repo]"
                         $failedFork = @{ name = $repo; owner = $owner; timesFailed = 0 }
                         $failedForks.Add($failedFork)
@@ -354,7 +382,18 @@ function EnableDependabotForForkedActions {
     $dependabotEnabled = 0
 
     Write-Host "Enabling dependabot on forked repos"
-    foreach ($action in $actions) {
+    # filter the actions to the ones we still need to enable dependabot for
+    $actionsToProcess = $actions | Where-Object { 
+        ($owner, $repo) = SplitUrl -url $_.RepoUrl
+        $existingFork = $existingForks | Where-Object { $_.name -eq $repo -And $_.owner -eq $owner }
+        if ($null -ne $existingFork) {
+            if ($null -eq $existingFork.dependabot) {
+                return $true
+            }
+        }
+        #return $existingForks.name -contains $repo -And $existingForks.owner -contains $owner
+    }
+    foreach ($action in $actionsToProcess) {
 
         if ($i -ge $max) {
             # do not run to long
@@ -437,10 +476,17 @@ function ForkActionRepo {
         return $false
     }
 
+    # check if the destination repo already exists
+    $newRepoName = GetForkedRepoName -owner $owner -repo $repo
+    $url = "repos/$forkOrg/$newRepoName"
+    $status = ApiCall -method GET -url $url -body $null -expected 200
+    if ($status -eq $true) {
+        Write-Host "Repo [$forkOrg/$newRepoName] already exists"
+        return $true
+    }
+
     # fork the action repository to the actions-marketplace-validations organization on github
     $forkUrl = "orgs/$forkOrg/repos"
-    # call the fork api | CREATE repo
-    $newRepoName = GetForkedRepoName -owner $owner -repo $repo
     $forkResponse = ApiCall -method POST -url $forkUrl -body "{`"name`":`"$newRepoName`"}" -expected 201 -access_token $access_token_destination
      
     # if temp directory does not exist, create it
