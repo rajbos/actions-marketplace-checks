@@ -10,4 +10,4 @@ else {
 #./.github/workflows/report.ps1 -actions $actions
 
 #./.github/workflows/cleanup-all-repos.ps1 -numberOfReposToDo 90
-./tests/filtering_tests.ps1 -actions $actions
+./tests/filtering.Tests.ps1 -actions $actions
