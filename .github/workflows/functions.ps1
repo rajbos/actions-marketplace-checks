@@ -284,7 +284,7 @@ function ForkActionRepos {
     if (($null -ne $actions) -And ($null -ne $existingForks) -And ($existingForks.Count -gt 0)) {
         Write-Host "Filtering repos to the ones we still need to fork"
 
-        $actionsToProcess = FilterActionsToProcess -actions $actionsToProcess -existingForks $existingForks
+        $actionsToProcess = FilterActionsToProcess -actions $actions -existingForks $existingForks
     }
     else {
         $actionsToProcess = $actions
