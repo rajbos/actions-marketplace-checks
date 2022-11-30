@@ -2,6 +2,9 @@ name: Run Pester tests
 
 on:
   push:
+    paths:
+    - .github/workflows/*.ps1
+    - .github/tests/*.ps1
 
 defaults:
   run:
