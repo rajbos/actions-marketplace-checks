@@ -49,7 +49,7 @@ function EnableDependabotForForkedActions {
             continue
         }
         if (EnableDependabot $existingFork) {
-            Write-Host "Dependabot enabled for [$($existingFork.repoUrl)]"
+            Write-Host "$i - Dependabot enabled for [$($existingFork.name)]"
             $i++ | Out-Null
             $dependabotEnabled++ | Out-Null
         }
