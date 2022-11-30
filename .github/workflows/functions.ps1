@@ -63,17 +63,6 @@ function GetForkedActionRepos {
     return ($status, $failedForks)
 }
 
-function GetDependabotStatus {
-    Param (
-        $owner,
-        $repo        
-    )
-
-    $url = "repos/$owner/$repo/vulnerability-alerts"
-    $status = ApiCall -method GET -url $url -body $null -expected 204
-    return $status
-}
-
 function GetForkedActionRepoList {
     # get all existing repos in target org
     #$repoUrl = "orgs/$forkOrg/repos?type=forks"
@@ -109,7 +98,7 @@ function RunForActions {
     SaveStatus -existingForks $existingForks
 
     # toggle for faster test runs
-    if (1 -eq 1) {
+    if (1 -eq 1) {  
         ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
         Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
         "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
@@ -423,32 +412,6 @@ function EnableDependabotForForkedActions {
         }             
     }    
     return ($existingForks, $dependabotEnabled)
-}
-
-function EnableDependabot {
-    Param ( 
-      $existingFork
-    )
-    if ($existingFork.name -eq "" -or $null -eq $existingFork.name) {
-        Write-Debug "No repo name found, skipping [$($existingFork.name)]" $existingFork | ConvertTo-Json
-        return $false
-    }
-
-    # enable dependabot if not enabled yet
-    if ($null -eq $existingFork.dependabot) {
-        Write-Debug "Enabling Dependabot for [$($existingFork.name)]"
-        $url = "repos/$forkOrg/$($existingFork.name)/vulnerability-alerts"
-        $status = ApiCall -method PUT -url $url -body $null -expected 204
-        if ($status -eq $true) {
-            return $true
-        }
-        else {
-            Write-Host "Failed to enable dependabot for [$($existingFork.name)]"
-        }
-        return $status
-    }
-
-    return $false
 }
 
 $tempDir = "mirroredRepos"
