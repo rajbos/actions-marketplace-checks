@@ -209,6 +209,8 @@ function GetDependabotVulnerabilityAlerts {
                 nodes {
                     createdAt
                     dismissedAt
+                    fixedAt
+                    dependencyScope
                     securityVulnerability {
                         package {
                             name
@@ -244,6 +246,8 @@ function GetDependabotVulnerabilityAlerts {
     $moderate=0
     $high=0
     $critical=0
+    # todo: check for dismissed or fixed alerts: if we start regularly updating the repo, there might be old reports that are not relevant anymore for the analysis
+    # todo: group by $node.dependencyScope [DEVELOPMENT, RUNTIME]
     foreach ($node in $nodes) {
         #Write-Host "Found $($node.securityVulnerability.advisory.severity)"
         #Write-Host $node.securityVulnerability.advisory.severity
