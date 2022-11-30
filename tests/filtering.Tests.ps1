@@ -53,7 +53,11 @@ Describe "FlattenActionsList" {
         $command = { $actionsResult = FlattenActionsList -actions $actions }
         $measureResult = (Measure-Command $command).TotalSeconds
         Write-Host "Flatten call duration in seconds [$measureResult]"
+        $actions.Count | Should -BeGreaterThan 0
+        $actionsResult.Count | Should -BeGreaterThan 0
+
         $actionsResult.Count | Should -Be $actions.Count
+        $actionsResult.Count | Should -BeLessOrEqual $actions.Count
 
         $expectedAction = $actions[0]
         # prep for expected result
