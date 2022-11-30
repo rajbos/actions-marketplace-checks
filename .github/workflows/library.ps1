@@ -488,3 +488,24 @@ function EnableDependabot {
 
     return $false
 }
+
+function Test-AccessTokens {
+    Param (
+        [string] $accessToken,
+        [string] $access_token_destination,
+        [int] $numberOfReposToDo
+    )
+    #store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
+    if ($access_token) {
+        $env:GITHUB_TOKEN = $access_token
+    }
+    Write-Host "Got an access token with a length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
+
+    if ($access_token_destination -ne $access_token) {
+        Write-Host "Got an access token for the destination with a length of [$($access_token_destination.Length)]"
+    }
+
+    if ($access_token.Length -eq 0) {
+        throw "No access token provided, please provide one!"
+    }
+}

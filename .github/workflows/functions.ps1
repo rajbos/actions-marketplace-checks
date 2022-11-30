@@ -7,17 +7,10 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
-#store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
-if ($access_token) {
-    $env:GITHUB_TOKEN = $access_token
-}
 $statusFile = "status.json"
 $failedStatusFile = "failedForks.json"
-Write-Host "Got an access token with a length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
 
-if ($access_token_destination -ne $access_token) {
-    Write-Host "Got an access token for the destination with a length of [$($access_token_destination.Length)]"
-}
+Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 function GetForkedActionRepos {
 

@@ -7,6 +7,8 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+
 function RunForAllForkedActions {
     Param (
         $existingForks,

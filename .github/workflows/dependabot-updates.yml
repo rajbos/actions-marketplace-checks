@@ -44,4 +44,4 @@ jobs:
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
 
            # fork repos and load Dependabot status
-           ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+           ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
