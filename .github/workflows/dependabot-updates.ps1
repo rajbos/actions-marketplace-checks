@@ -19,9 +19,7 @@ function RunForAllForkedActions {
     # filter actions list to only the ones with a repoUrl
     "Found [$($existingForks.Count)] forks to check" >> $env:GITHUB_STEP_SUMMARY
 
-    ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
-    Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
-    "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
+    EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
 
     # todo: store this state in a separate file
     #SaveStatus -existingForks $existingForks
@@ -34,8 +32,8 @@ function EnableDependabotForForkedActions {
         [int] $numberOfReposToDo
     )
 
-    $i = $existingForks.Length
-    $max = $existingForks.Length + $numberOfReposToDo
+    $i = 0
+    $max = $numberOfReposToDo
     $dependabotEnabled = 0
 
     foreach ($existingFork in $existingForks) {
@@ -57,6 +55,7 @@ function EnableDependabotForForkedActions {
     }
 
     Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
+    "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
 }
 
 RunForAllForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
