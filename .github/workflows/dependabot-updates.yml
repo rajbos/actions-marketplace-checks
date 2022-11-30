@@ -38,10 +38,10 @@ jobs:
       - shell: pwsh
         name: Gotta enable 'em all
         run: |
-           $actions=(cat actions.json | ConvertFrom-Json)
-           Write-Host "Found [$($actions.Length)] actions in the datafile"
+           $existingForks=(cat status.json | ConvertFrom-Json)
+           Write-Host "Found [$($existingForks.Length)] actions in the status file"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
-           
+
            # fork repos and load Dependabot status
-           ./.github/workflows/dependabot-updates.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+           ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}

@@ -26,4 +26,19 @@ function RunForAllForkedActions {
     #return $existingForks
 }
 
+function EnableDependabotForForkedActions {
+    Param (
+        $existingForks,
+        [int] $numberOfReposToDo
+    )
+
+    foreach ($existingFork in $existingForks) {
+        if ($existingFork.dependabotEnabled -or ($existingFork.dependabotEnabled -eq $true)) {
+            Write-Host "Dependabot already enabled for [$($existingFork.repoUrl)]" #todo: convert to Write-Debug
+            continue
+        }
+        EnableDependabot $existingFork
+    }
+}
+
 RunForAllForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
