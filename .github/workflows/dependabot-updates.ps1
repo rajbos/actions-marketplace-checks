@@ -34,13 +34,29 @@ function EnableDependabotForForkedActions {
         [int] $numberOfReposToDo
     )
 
+    $i = $existingForks.Length
+    $max = $existingForks.Length + $numberOfReposToDo
+    $dependabotEnabled = 0
+
     foreach ($existingFork in $existingForks) {
+
+        if ($i -ge $max) {
+            # do not run to long
+            break            
+            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+        }
+
         if ($existingFork.dependabotEnabled -or ($existingFork.dependabotEnabled -eq $true)) {
             Write-Host "Dependabot already enabled for [$($existingFork.repoUrl)]" #todo: convert to Write-Debug
             continue
         }
-        EnableDependabot $existingFork
+        if (EnableDependabot $existingFork) {
+            $i++ | Out-Null
+            $dependabotEnabled++ | Out-Null
+        }
     }
+
+    Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
 }
 
 RunForAllForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
