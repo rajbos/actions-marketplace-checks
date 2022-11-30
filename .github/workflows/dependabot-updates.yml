@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - .github/workflows/dependabot-updates.yml
+      - .github/workflows/dependabot-updates.ps1
 
   #schedule:
      #- cron: '*/60 * * * *'
