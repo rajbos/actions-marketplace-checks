@@ -7,9 +7,6 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
-$statusFile = "status.json"
-$failedStatusFile = "failedForks.json"
-
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 function GetForkedActionRepos {
@@ -407,8 +404,6 @@ function EnableDependabotForForkedActions {
     return ($existingForks, $dependabotEnabled)
 }
 
-$tempDir = "mirroredRepos"
-
 function ForkActionRepo {
     Param (
         $owner,
@@ -496,9 +491,6 @@ function ForkActionRepo {
 
 Write-Host "Got $($actions.Length) actions"
 GetRateLimitInfo
-
-# default variables
-$forkOrg = "actions-marketplace-validations"
 
 # load the list of forked repos
 ($existingForks, $failedForks) = GetForkedActionRepos

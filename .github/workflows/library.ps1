@@ -1,3 +1,11 @@
+
+# default variables
+$forkOrg = "actions-marketplace-validations"
+$tempDir = "mirroredRepos"
+$actionsFile = "actions.json"
+$statusFile = "status.json"
+$failedStatusFile = "failedForks.json"
+
 function ApiCall {
     Param (
         $method,
