@@ -264,7 +264,12 @@ foreach ($action in $status) {
             $action.actionType.actionType = $actionTypeResult
             $action.actionType.fileFound = $fileFoundResult
             $action.actionType.actionDockerType = $actionDockerTypeResult
-            $action.actionType.nodeVersion = $nodeVersion
+            if (!$hasNodeVersionField) {
+                $action.actionType | Add-Member -Name nodeVersion -Value $nodeVersion -MemberType NoteProperty
+            }
+            else {
+                $action.actionType.nodeVersion = $nodeVersion
+            }
         }
 
     }
