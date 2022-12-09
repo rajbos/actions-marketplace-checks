@@ -256,7 +256,7 @@ function GetInfo {
         }
 
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
-        $hasNodeVersionField = Get-Member -inputobject $action -name "actionType.nodeVersion" -Membertype Properties
+        $hasNodeVersionField = $null -ne $action.actionType.nodeVersion
         $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
