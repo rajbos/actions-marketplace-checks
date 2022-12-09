@@ -256,7 +256,7 @@ function GetInfo {
         }
 
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
-        $hasNodeVersionField = Get-Member -inputobject $action.actionType -name "nodeVersion" -Membertype Properties
+        $hasNodeVersionField = Get-Member -inputobject $action -name "actionType.nodeVersion" -Membertype Properties
         $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
@@ -541,7 +541,7 @@ function Run {
     ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
     SaveStatus -existingForks $status
     # todo: upload the new actions list, since this was cleaned up with no longer existing repos
-    
+
     GetRateLimitInfo
 }
 
