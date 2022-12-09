@@ -408,7 +408,7 @@ function GetMoreInfo {
                             owner = $owner
                             repo = $repo
                         }
-                        $originalRepoDoesNotExists.Add($actionNoLongerExists)
+                        $originalRepoDoesNotExists.Add($actionNoLongerExists) | Out-Null
                         continue
                     }
 
