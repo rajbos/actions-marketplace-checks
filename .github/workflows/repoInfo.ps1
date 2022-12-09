@@ -184,7 +184,7 @@ function CheckForInfoUpdateNeeded {
     }
     
     # check nodeVersion field missing or not filled actionType in it    
-    if (("No file found" -eq $action.actionType.actionType)) {
+    if (("No file found" -eq $action.actionType.actionType) -or ("No repo found" -eq $action.actionType.actionType)) {
         return $true
     }
 
@@ -279,7 +279,7 @@ function GetInfo {
                 $action.actionType.fileFound = $fileFoundResult
                 $action.actionType.actionDockerType = $actionDockerTypeResult
                 if (!$hasNodeVersionField) {
-                    $action.actionType | Add-Member -Name nodeVersion -Value $nodeVersion -MemberType NoteProperty
+                    $action.actionType | Add-Member -Name nodeVersion -Value $nodeVersion -MemberType NoteProperty -Force
                 }
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
