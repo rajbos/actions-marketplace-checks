@@ -2,15 +2,13 @@
 # Get new data from Dependabot
 # Store the data in the repo for later use
 
-name: Analyze
+name: Get repo info
 
 on:
   push:
     paths:
       - .github/workflows/repo-info.yml
-      - .github/workflows/functions.ps1
       - .github/workflows/repoInfo.ps1
-      - .github/workflows/library.ps1
 
   schedule:
      #- cron: '*/60 * * * *'
@@ -23,7 +21,7 @@ env:
   numberOfReposToDoRepoInfo: 100
     
 jobs:
-  check-em-all:
+  get-repo-information:
     concurrency: there-can-be-only-one
     runs-on: ubuntu-latest
     steps:
