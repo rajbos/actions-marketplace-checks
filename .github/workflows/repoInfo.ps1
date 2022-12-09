@@ -18,7 +18,7 @@ function GetRepoInfo {
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
-        return ($null, $null, $null)
+        return ($null, $null, $null, $null, $null)
     }
 
     $url = "/repos/$owner/$repo"
@@ -36,7 +36,7 @@ function GetRepoInfo {
     }
     catch {
         Write-Error "Error loading repository info for [$owner/$repo]: $($_.Exception.Message)"
-        return ($null, $null, $null, $_.Exception.Response.StatusCode)
+        return ($null, $null, $null, $null, $_.Exception.Response.StatusCode)
     }
 }
 
@@ -360,7 +360,7 @@ function GetMoreInfo {
     $memberUpdate = 0 
     $dockerBaseImageInfoAdded = 0
     # store the repos that no longer exists
-    $originalRepoDoesNotExists = @()
+    $originalRepoDoesNotExists = New-Object System.Collections.ArrayList
     try {
         foreach ($action in $existingForks) {
 
@@ -381,13 +381,14 @@ function GetMoreInfo {
                 Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo
-                    if ($statusCode -and ($statusCode -eq 404)) {
+                    if ($statusCode -and ($statusCode -eq "NotFound")) {
                         # todo: remove this repo from the list (and push it back into the original actions list!)
-                        $originalRepoDoesNotExists += @{
-                            action = $action.name
+                        $actionNoLongerExists = @{
+                            action = $($action.name)
                             owner = $owner
                             repo = $repo
                         }
+                        $originalRepoDoesNotExists.Add($actionNoLongerExists)
                     }
 
                     if ($repo_updated_at) {
@@ -496,21 +497,35 @@ function GetMoreInfo {
 
     Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
     $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
-    Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded"
-    "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+    Write-Message -message "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" -logToSummary $true
 
     $hasTagInfo = $($status | Where-Object {$null -ne $_.tagInfo})
-    Write-Host "Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded"
-    "Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+    Write-Message -message "Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" -logToSummary $true
 
     $hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
-    Write-Host "Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded"
-    "Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+    Write-Message -message "Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" -logToSummary $true
 
-    Write-Host "Docker base image information added for [$dockerBaseImageInfoAdded] actions"
-    "Docker base image information added for [$dockerBaseImageInfoAdded] actions" >> $env:GITHUB_STEP_SUMMARY
+    Write-Message -message "Docker base image information added for [$dockerBaseImageInfoAdded] actions"  -logToSummary $true
 
-    return $existingForks
+    Write-Host "Starting the cleanup with [$($status.Length)] actions and [$($existingForks.Length)] forks and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
+    foreach ($action in $originalRepoDoesNotExists) {
+        # remove the action from the actions lists
+
+        # find the action based on the $action.action field
+        # this remove currently fails: "Collection was of a fixed size"
+        #$repoUrl = $action["owner"] + "/" + $action["repo"]
+        #$existingAction = $actions | Where-Object {$_.RepoUrl -eq $repoUrl}
+        #$actions.Remove($existingAction)
+
+        # remove the action from the status list
+        # this remove currently fails: "Collection was of a fixed size"
+        # $repoName = $action["owner"] + "_" + $action["repo"]
+        # $existingFork = $existingForks | Where-Object {$_.name -eq $repoName}
+        # $existingForks.Remove($existingFork)
+    }
+    Write-Host "Ended the cleanup with [$($status.Length)] actions and [$($existingForks.Length)] forks"
+
+    return ($actions, $existingForks)
 }
 
 function Run {
@@ -519,12 +534,13 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    $existingForks = GetInfo -existingForks $existingForks
+    #$existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
-    SaveStatus -existingForks $status
-    
-    #$existingForks = GetMoreInfo -existingForks $existingForks
     #SaveStatus -existingForks $status
+    
+    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
+    SaveStatus -existingForks $status
+    # todo: upload the new actions list, since this was cleaned up with no longer existing repos
     GetRateLimitInfo
 }
 
