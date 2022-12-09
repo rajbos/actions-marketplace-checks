@@ -246,8 +246,8 @@ foreach ($action in $status) {
     $hasNodeVersionField = Get-Member -inputobject $action.actionType -name "nodeVersion" -Membertype Properties
     if (!$hasField -or ($null -eq $action.actionType.actionType) -or ("No file found" -eq $action.actionType.actionType) -or !$hasNodeVersionField) {
         ($owner, $repo) = GetOrgActionInfo($action.name)
-        Write-Host "$i/$max - Checking action information for [$($owner)/$($name)]"
-        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $name
+        Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
+        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo
 
         If (!$hasField) {
             $actionType = @{
