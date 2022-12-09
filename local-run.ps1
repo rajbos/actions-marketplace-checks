@@ -13,4 +13,4 @@ else {
 #./tests/filtering.Tests.ps1 -actions $actions
 
 $existingForks=(Get-Content "status.json" | ConvertFrom-Json)
-#./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo 10
+./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo 10

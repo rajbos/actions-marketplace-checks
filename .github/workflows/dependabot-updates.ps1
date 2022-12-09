@@ -45,11 +45,12 @@ function EnableDependabotForForkedActions {
         }
 
         if ($existingFork.dependabotEnabled -or ($existingFork.dependabotEnabled -eq $true)) {
-            Write-Host "Dependabot already enabled for [$($existingFork.repoUrl)]" #todo: convert to Write-Debug
+            Write-Host "Dependabot already enabled for [$($existingFork.name)]" #todo: convert to Write-Debug
             continue
         }
         if (EnableDependabot $existingFork) {
             Write-Host "$i - Dependabot enabled for [$($existingFork.name)]"
+            $existingFork | Add-Member -Name dependabotEnabled -Value $true -MemberType NoteProperty
             $i++ | Out-Null
             $dependabotEnabled++ | Out-Null
         }

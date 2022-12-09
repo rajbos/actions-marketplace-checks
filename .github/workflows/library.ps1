@@ -279,7 +279,7 @@ function GetRateLimitInfo {
     if ($access_token -ne $access_token_destination) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
-        Write-Host "Access token ratelimit info: $($response2.rate | ConvertTo-Json)"    
+        Write-Message -message "Access token ratelimit info: $($response2.rate | ConvertTo-Json)" -logToSummary $true
     }
 
     if ($response.rate.limit -eq 60) {
@@ -515,5 +515,16 @@ function Test-AccessTokens {
 
     if ($access_token.Length -eq 0) {
         throw "No access token provided, please provide one!"
+    }
+}
+
+function Write-Message {
+    Param (
+        [string] $message,
+        [boolean] $logToSummary = $false
+    )
+    Write-Host $message
+    if ($logToSummary) {
+        $message >> $env:GITHUB_STEP_SUMMARY
     }
 }
