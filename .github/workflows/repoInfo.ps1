@@ -392,13 +392,16 @@ function GetMoreInfo {
                 continue
             }
 
+            # load info that is needed for most checks
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+
             $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
-                ($owner, $repo) = GetOrgActionInfo($action.name)
                 Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
+                        $action.forkFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
                         $actionNoLongerExists = @{
                             action = $($action.name)
@@ -406,6 +409,7 @@ function GetMoreInfo {
                             repo = $repo
                         }
                         $originalRepoDoesNotExists.Add($actionNoLongerExists)
+                        continue
                     }
 
                     if ($repo_updated_at) {
@@ -555,9 +559,9 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    $existingForks = GetInfo -existingForks $existingForks
+    #$existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
-    SaveStatus -existingForks $existingForks
+    #SaveStatus -existingForks $existingForks
     
     # make it findable in the log to see where the second part starts
     Write-Host ""
@@ -567,8 +571,8 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    #($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
-    #SaveStatus -existingForks $existingForks
+    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
+    SaveStatus -existingForks $existingForks
     # todo: upload the new actions list, since this was cleaned up with no longer existing repos
 
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
