@@ -534,13 +534,14 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    #$existingForks = GetInfo -existingForks $existingForks
+    $existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
-    #SaveStatus -existingForks $status
+    SaveStatus -existingForks $status
     
     ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
     SaveStatus -existingForks $status
     # todo: upload the new actions list, since this was cleaned up with no longer existing repos
+    
     GetRateLimitInfo
 }
 
