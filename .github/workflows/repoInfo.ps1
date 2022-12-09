@@ -308,6 +308,11 @@ function GetDockerBaseImageNameFromContent {
     param (
         $dockerFileContent
     )
+
+    if ($null -eq $dockerFileContent -or "" -eq $dockerFileContent) {
+        return ""
+    }
+    
     # find first line with FROM in the Dockerfile
     $lines = $dockerFileContent.Split("`n") 
     $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
