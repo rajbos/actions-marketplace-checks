@@ -284,6 +284,7 @@ function GetInfo {
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
+                $i++ | Out-Null
             }
 
         }
