@@ -189,6 +189,10 @@ function CheckForInfoUpdateNeeded {
         $hasNodeVersionField
     )
 
+    # skip actions where we cannot find the fork anymore
+    if (!$action.ForkFound) {
+        return $false
+    }
     # check actionType field missing or not filled actionType in it
     if (!$hasActionTypeField -or ($null -eq $action.actionType.actionType)) {
         return $true
