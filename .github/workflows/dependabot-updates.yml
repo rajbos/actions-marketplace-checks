@@ -1,5 +1,5 @@
 # Enable Dependabot for all forked repos
-name: EnableDependabot
+name: Enable Dependabot
 
 on:
   push:
@@ -13,7 +13,7 @@ on:
 
   workflow_dispatch:
 
-env:
+env: 
   numberOfReposToDo: 100
   numberOfReposToDoRepoInfo: 100
 

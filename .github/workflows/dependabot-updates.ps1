@@ -59,4 +59,8 @@ function EnableDependabotForForkedActions {
     "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
 }
 
+GetRateLimitInfo
 RunForAllForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+SaveStatus -existingForks $existingForks
+
+GetRateLimitInfo
