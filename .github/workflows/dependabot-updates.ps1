@@ -54,8 +54,8 @@ function EnableDependabotForForkedActions {
     Write-Message -message "Enabled Dependabot on [$($dependabotEnabled)] repos" -logToSummary $true
 }
 
-GetRateLimitInfo
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 RunForAllForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
 SaveStatus -existingForks $existingForks
 
-GetRateLimitInfo
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination

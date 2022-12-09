@@ -131,7 +131,7 @@ function ApiCall {
         if ($messageData.message -eq "was submitted too quickly") {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
-            GetRateLimitInfo
+            GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
         }
         else {
@@ -267,6 +267,10 @@ function SplitUrlLastPart {
 }
 
 function GetRateLimitInfo {
+    Param (
+        $access_token,
+        $access_token_destination
+    )
     $url = "rate_limit"	
     $response = ApiCall -method GET -url $url
 

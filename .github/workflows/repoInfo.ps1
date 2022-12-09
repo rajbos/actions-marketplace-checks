@@ -546,8 +546,12 @@ function GetMoreInfo {
 }
 
 function Run {
+    Param (
+        $access_token, 
+        $access_token_destination
+    )
     Write-Host "Got $($actions.Length) actions to get the repo information for"    
-    GetRateLimitInfo
+    GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
@@ -555,12 +559,20 @@ function Run {
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
     
-    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
-    SaveStatus -existingForks $existingForks
+    # make it findable in the log to see where the second part starts
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    #($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
+    #SaveStatus -existingForks $existingForks
     # todo: upload the new actions list, since this was cleaned up with no longer existing repos
 
-    GetRateLimitInfo
+    GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 }
 
 # main call
-Run
+Run -access_token $access_token _destination $access_token_destination
