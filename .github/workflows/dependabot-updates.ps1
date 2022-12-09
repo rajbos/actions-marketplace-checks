@@ -15,15 +15,9 @@ function RunForAllForkedActions {
         [int] $numberOfReposToDo
     )
 
-    Write-Host "Running for [$($existingForks.Count)] forks"
-    # filter actions list to only the ones with a repoUrl
-    "Found [$($existingForks.Count)] forks to check" >> $env:GITHUB_STEP_SUMMARY
-
+    Write-Message -message "Running for [$($existingForks.Count)] forks"  -logToSummary $true
+    
     EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
-
-    # todo: store this state in a separate file
-    #SaveStatus -existingForks $existingForks
-    #return $existingForks
 }
 
 function EnableDependabotForForkedActions {
@@ -57,8 +51,7 @@ function EnableDependabotForForkedActions {
         }
     }
 
-    Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
-    "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
+    Write-Message -message "Enabled Dependabot on [$($dependabotEnabled)] repos" -logToSummary $true
 }
 
 GetRateLimitInfo

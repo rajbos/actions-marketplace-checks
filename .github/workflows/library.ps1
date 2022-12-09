@@ -99,8 +99,7 @@ function ApiCall {
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
                 $message = "Rate limit is low or hit [$rateLimitRemaining], waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing. Continuing at [$oUNIXDate UTC]"
-                Write-Host $message
-                $message >> $env:GITHUB_STEP_SUMMARY
+                Write-Message -message $message -logToSummary $true
                 Write-Host ""                
                 Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
             }
@@ -303,7 +302,7 @@ function SaveStatus {
 
         # get number of forks that have repo information
         $existingForksWithRepoInfo = $existingForks | Where-Object { $_.repoInfo -And ($null -ne $_.repoInfo.updated_at) }
-        "Found [$($existingForksWithRepoInfo.Length) out of $($existingForks.Length)] repos that have repo information" >> GITHUB_STEP_SUMMARY
+        Write-Message -message "Found [$($existingForksWithRepoInfo.Length) out of $($existingForks.Length)] repos that have repo information" -logToSummary $true
     }
 
     if ($failedForks) {
