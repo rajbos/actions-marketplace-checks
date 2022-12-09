@@ -129,7 +129,7 @@ function GetActionType {
                 }
                 catch {
                     # todo: search for a docker file
-                    return ("No file found", "No file found", "No file found")
+                    return ("No file found", "No file found", "No file found", $null)
                 }
             }
         }
