@@ -473,7 +473,8 @@ function GetDependabotStatus {
 
 function EnableDependabot {
     Param ( 
-      $existingFork
+      $existingFork,
+      $access_token_destination
     )
     if ($existingFork.name -eq "" -or $null -eq $existingFork.name) {
         Write-Debug "No repo name found, skipping [$($existingFork.name)]" $existingFork | ConvertTo-Json
@@ -484,7 +485,7 @@ function EnableDependabot {
     if ($null -eq $existingFork.dependabot) {
         Write-Debug "Enabling Dependabot for [$($existingFork.name)]"
         $url = "repos/$forkOrg/$($existingFork.name)/vulnerability-alerts"
-        $status = ApiCall -method PUT -url $url -body $null -expected 204
+        $status = ApiCall -method PUT -url $url -body $null -expected 204 -access_token $access_token_destination
         if ($status -eq $true) {
             return $true
         }

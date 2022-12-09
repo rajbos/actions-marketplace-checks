@@ -380,7 +380,7 @@ function EnableDependabotForForkedActions {
         $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
 
         if (($null -ne $existingFork) -And ($null -eq $existingFork.dependabot)) {
-            if (EnableDependabot $existingFork) {
+            if (EnableDependabot -existingFork $existingFork -access_token_destination $access_token_destination) {
                 Write-Host "Dependabot enabled on [$forkOrg/$($existingFork.name)]"
                 $existingFork.dependabot = $true
                 
