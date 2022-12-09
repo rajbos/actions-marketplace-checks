@@ -84,11 +84,11 @@ function GetActionType {
     )
 
     if ($null -eq $owner) {
-        return ("No owner found", "No owner found", "No owner found")
+        return ("No owner found", "No owner found", "No owner found", $null)
     }
 
     if ($null -eq $repo) {
-        return ("No repo found", "No repo found", "No repo found")
+        return ("No repo found", "No repo found", "No repo found", $null)
     }
 
     # check repo for action.yml or action.yaml
