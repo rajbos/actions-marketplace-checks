@@ -15,4 +15,4 @@ $numberofReposToDo = 10
 #./tests/filtering.Tests.ps1 -actions $actions
 
 $existingForks=(Get-Content "status.json" | ConvertFrom-Json)
-./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo $numberofReposToDo
+#./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo $numberofReposToDo

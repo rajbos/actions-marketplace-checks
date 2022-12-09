@@ -28,15 +28,15 @@ function GetRepoInfo {
         try {
             $url = "/repos/$owner/$repo/releases/latest"
             $release = ApiCall -method GET -url $url
-            return ($response.archived, $response.disabled, $response.updated_at, $release.published_at)
+            return ($response.archived, $response.disabled, $response.updated_at, $release.published_at, $null)
         }
         catch {
-            return ($response.archived, $response.disabled, $response.updated_at, $null)
+            return ($response.archived, $response.disabled, $response.updated_at, $null, $null)
         }
     }
     catch {
         Write-Error "Error loading repository info for [$owner/$repo]: $($_.Exception.Message)"
-        return ($null, $null, $null)
+        return ($null, $null, $null, $_.Exception.Response.StatusCode)
     }
 }
 
@@ -171,108 +171,125 @@ function GetActionType {
     return ($actionType, $fileFound, $actionDockerType, $nodeVersion)
 }
 
-$statusFile = "status.json"
+function CheckForInfoUpdateNeeded {
+    Param (
+        $action,
+        $hasActionTypeField,
+        $hasNodeVersionField
+    )
 
-Write-Host "Got $($actions.Length) actions to get the status information for"
-GetRateLimitInfo
-
-# default variables
-$forkOrg = "actions-marketplace-validations"
-$status = $null
-if (Test-Path $statusFile) {
-    Write-Host "Using existing status file"
-    $status = Get-Content $statusFile | ConvertFrom-Json
+    # check actionType field missing or not filled actionType in it
+    if (!$hasActionTypeField -or ($null -eq $action.actionType.actionType)) {
+        return $true
+    }
     
-    Write-Host "Found $($status.Count) existing repos in status file"
-}
-else {
-    Write-Error "Cannot find status file, halting execution"
-    return
-}
-
-# get information from the action files
-$i = $status.Length
-$max = $status.Length + ($numberOfReposToDo * 2)
-foreach ($action in $status) {
-
-    if ($i -ge $max) {
-        # do not run to long
-        Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
-        break
+    # check nodeVersion field missing or not filled actionType in it    
+    if (("No file found" -eq $action.actionType.actionType)) {
+        return $true
     }
 
-    # back fill the 'owner' field with info from the fork
-    $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
-    if (!$hasField) {
-        $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
-        if ($hasField -and !$action.forkFound) {
-            # skip this one to prevent us from keeping checking on erroneous repos
-            continue
-        }
-        # load owner from repo info out of the fork
-        Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
-        $url = "/repos/$forkOrg/$($action.name)"
-        try {
-            $response = ApiCall -method GET -url $url
-            if ($response -and $response.parent) {
-                # load owner info from parent
-                $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
-                $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
-            } else {
-                # new entry with leading owner name
-                $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
-                $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
-            }
-        }
-        catch {
-            Write-Host "Error getting repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
-            $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
-            if (!$hasField) {
-                $action | Add-Member -Name forkFound -Value $false -MemberType NoteProperty
-            }
-        }
+    # check nodeVersion field missing for Node actionType
+    if (("Node" -eq $action.actionType.actionType) -and !$hasNodeVersionField) {
+        return $true
     }
-    else {
-        # owner field is filled, let's check if forkFound field already exists
-        $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+
+    return $false
+}
+
+function GetInfo {
+    Param (
+        $existingForks
+    )
+    # default variables
+    $forkOrg = "actions-marketplace-validations"
+
+    # get information from the action files
+    $i = $existingForks.Length
+    $max = $existingForks.Length + ($numberOfReposToDo * 2)
+    foreach ($action in $existingForks) {
+
+        if ($i -ge $max) {
+            # do not run to long
+            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+            break
+        }
+
+        # back fill the 'owner' field with info from the fork
+        $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
         if (!$hasField) {
-            # owner is known, so this fork exists
-            $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
-            $i++ | Out-Null
-        }
-    }
-
-    $hasField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
-    $hasNodeVersionField = Get-Member -inputobject $action.actionType -name "nodeVersion" -Membertype Properties
-    if (!$hasField -or ($null -eq $action.actionType.actionType) -or ("No file found" -eq $action.actionType.actionType) -or !$hasNodeVersionField) {
-        ($owner, $repo) = GetOrgActionInfo($action.name)
-        Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
-        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo
-
-        If (!$hasField) {
-            $actionType = @{
-                actionType = $actionTypeResult 
-                fileFound = $fileFoundResult
-                actionDockerType = $actionDockerTypeResult
-                nodeVersion = $nodeVersion
+            $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+            if ($hasField -and !$action.forkFound) {
+                # skip this one to prevent us from keeping checking on erroneous repos
+                continue
             }
-
-            $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
-            $i++ | Out-Null
+            # load owner from repo info out of the fork
+            Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
+            $url = "/repos/$forkOrg/$($action.name)"
+            try {
+                $response = ApiCall -method GET -url $url
+                if ($response -and $response.parent) {
+                    # load owner info from parent
+                    $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
+                    $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+                } else {
+                    # new entry with leading owner name
+                    $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
+                    $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+                }
+            }
+            catch {
+                Write-Host "Error getting repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+                $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+                if (!$hasField) {
+                    $action | Add-Member -Name forkFound -Value $false -MemberType NoteProperty
+                }
+            }
         }
         else {
-            $action.actionType.actionType = $actionTypeResult
-            $action.actionType.fileFound = $fileFoundResult
-            $action.actionType.actionDockerType = $actionDockerTypeResult
-            if (!$hasNodeVersionField) {
-                $action.actionType | Add-Member -Name nodeVersion -Value $nodeVersion -MemberType NoteProperty
-            }
-            else {
-                $action.actionType.nodeVersion = $nodeVersion
+            # owner field is filled, let's check if forkFound field already exists
+            $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+            if (!$hasField) {
+                # owner is known, so this fork exists
+                $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+                $i++ | Out-Null
             }
         }
 
+        $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
+        $hasNodeVersionField = Get-Member -inputobject $action.actionType -name "nodeVersion" -Membertype Properties
+        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField
+        if ($updateNeeded) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
+            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo
+
+            If (!$hasActionTypeField) {
+                $actionType = @{
+                    actionType = $actionTypeResult 
+                    fileFound = $fileFoundResult
+                    actionDockerType = $actionDockerTypeResult
+                    nodeVersion = $nodeVersion
+                }
+
+                $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
+                $i++ | Out-Null
+            }
+            else {
+                $action.actionType.actionType = $actionTypeResult
+                $action.actionType.fileFound = $fileFoundResult
+                $action.actionType.actionDockerType = $actionDockerTypeResult
+                if (!$hasNodeVersionField) {
+                    $action.actionType | Add-Member -Name nodeVersion -Value $nodeVersion -MemberType NoteProperty
+                }
+                else {
+                    $action.actionType.nodeVersion = $nodeVersion
+                }
+            }
+
+        }
     }
+
+    return $existingForks
 }
 
 function GetDockerBaseImageNameFromContent {
@@ -328,128 +345,72 @@ function GetRepoDockerBaseImage {
 
     return $dockerBaseImage
 }
-# save status in case the next part goes wrong, then we did not do all these calls for nothing
-SaveStatus -existingForks $status
 
-# get repo information
-$i = $status.Length
-$max = $status.Length + ($numberOfReposToDo * 4)
-$hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
-Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
-"Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
-$memberAdded = 0
-$memberUpdate = 0 
-$dockerBaseImageInfoAdded = 0
-try {
-    foreach ($action in $status) {
+function GetMoreInfo {
+    param (
+        $existingForks
+    )
+    # get repo information
+    $i = $existingForks.Length
+    $max = $existingForks.Length + ($numberOfReposToDo * 4)
+    $hasRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo})
+    Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
+    "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+    $memberAdded = 0
+    $memberUpdate = 0 
+    $dockerBaseImageInfoAdded = 0
+    # store the repos that no longer exists
+    $originalRepoDoesNotExists = @()
+    try {
+        foreach ($action in $existingForks) {
 
-        if ($i -ge $max) {
-            # do not run to long
-            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
-            break
-        }
-
-        if (!$action.forkFound) {
-            Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
-            continue
-        }
-
-        $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-        if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
-            ($owner, $repo) = GetOrgActionInfo($action.name)
-            Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
-            try {
-                ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at) = GetRepoInfo -owner $owner -repo $repo
-
-                if ($repo_updated_at) {
-                    if (!$hasField) {
-                        Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
-                        $repoInfo = @{
-                            archived = $repo_archived
-                            disabled = $repo_disabled
-                            updated_at = $repo_updated_at
-                            latest_release_published_at = $latest_release_published_at
-                        }
-
-                        $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
-                        $memberAdded++ | Out-Null
-                        $i++ | Out-Null
-                    }
-                    else {
-                        Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
-                        $action.repoInfo.archived = $repo_archived
-                        $action.repoInfo.disabled = $repo_disabled
-                        $action.repoInfo.updated_at = $repo_updated_at
-                        $action.repoInfo.latest_release_published_at = $latest_release_published_at
-                        $memberUpdate++ | Out-Null
-                    }
-                }
+            if ($i -ge $max) {
+                # do not run to long
+                Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+                break
             }
-            catch {
-                # continue with next one
-            }
-        }
 
-        $hasField = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
-        if (!$hasField -or ($null -eq $action.tagInfo)) {
-            #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
-            try {
-                $tagInfo = GetRepoTagInfo -owner $owner -repo $repo
-                if (!$hasField) {
-                    Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
-                    
-                    $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
-                    $i++ | Out-Null
-                }
-                else {
-                    #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
-                    $action.tagInfo = $tagInfo
-                }
+            if (!$action.forkFound) {
+                Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
+                continue
             }
-            catch {
-                # continue with next one
-            }
-        }
 
-        $hasField = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
-        if (!$hasField -or ($null -eq $action.releaseInfo)) {
-            #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
-            try {
-                $releaseInfo = GetRepoReleases -owner $owner -repo $repo
-                if (!$hasField) {
-                    Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
-                    
-                    $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
-                    $i++ | Out-Null
-                }
-                else {
-                    #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
-                    $action.releaseInfo = $releaseInfo
-                }
-            }
-            catch {
-                # continue with next one
-            }
-        }
-
-        if ($action.actionType.actionType -eq "Docker") {
-            $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
-            if (!$hasField -or (($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image")) {
-                Write-Host "$i/$max - Checking Docker base image information for [$($owner)/$($repo)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
+            $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
+                ($owner, $repo) = GetOrgActionInfo($action.name)
+                Write-Host "$i/$max - Checking action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    # search for the docker file in the fork organization, since the original repo might already have seen updates
-                    $dockerBaseImage = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType
-                    if ($dockerBaseImage -ne "") {                    
+                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo
+                    if ($statusCode -and ($statusCode -eq 404)) {
+                        # todo: remove this repo from the list (and push it back into the original actions list!)
+                        $originalRepoDoesNotExists += @{
+                            action = $action.name
+                            owner = $owner
+                            repo = $repo
+                        }
+                    }
+
+                    if ($repo_updated_at) {
                         if (!$hasField) {
-                            Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
-                            
-                            $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
+                            Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
+                            $repoInfo = @{
+                                archived = $repo_archived
+                                disabled = $repo_disabled
+                                updated_at = $repo_updated_at
+                                latest_release_published_at = $latest_release_published_at
+                            }
+
+                            $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                            $memberAdded++ | Out-Null
                             $i++ | Out-Null
-                            $dockerBaseImageInfoAdded++ | Out-Null
                         }
                         else {
-                            Write-Host "Updating Docker base image information object with image:[$dockerBaseImage] for [$($owner)/$($repo))]"
-                            $action.actionType.dockerBaseImage = $dockerBaseImage
+                            Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
+                            $action.repoInfo.archived = $repo_archived
+                            $action.repoInfo.disabled = $repo_disabled
+                            $action.repoInfo.updated_at = $repo_updated_at
+                            $action.repoInfo.latest_release_published_at = $latest_release_published_at
+                            $memberUpdate++ | Out-Null
                         }
                     }
                 }
@@ -457,29 +418,115 @@ try {
                     # continue with next one
                 }
             }
+
+            $hasField = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
+            if (!$hasField -or ($null -eq $action.tagInfo)) {
+                #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                try {
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo
+                    if (!$hasField) {
+                        Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
+                        
+                        $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+                        $i++ | Out-Null
+                    }
+                    else {
+                        #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
+                        $action.tagInfo = $tagInfo
+                    }
+                }
+                catch {
+                    # continue with next one
+                }
+            }
+
+            $hasField = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
+            if (!$hasField -or ($null -eq $action.releaseInfo)) {
+                #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                try {
+                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo
+                    if (!$hasField) {
+                        Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
+                        
+                        $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+                        $i++ | Out-Null
+                    }
+                    else {
+                        #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                        $action.releaseInfo = $releaseInfo
+                    }
+                }
+                catch {
+                    # continue with next one
+                }
+            }
+
+            if ($action.actionType.actionType -eq "Docker") {
+                $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
+                if (!$hasField -or (($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image")) {
+                    Write-Host "$i/$max - Checking Docker base image information for [$($owner)/$($repo)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
+                    try {
+                        # search for the docker file in the fork organization, since the original repo might already have seen updates
+                        $dockerBaseImage = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType
+                        if ($dockerBaseImage -ne "") {                    
+                            if (!$hasField) {
+                                Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
+                                
+                                $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
+                                $i++ | Out-Null
+                                $dockerBaseImageInfoAdded++ | Out-Null
+                            }
+                            else {
+                                Write-Host "Updating Docker base image information object with image:[$dockerBaseImage] for [$($owner)/$($repo))]"
+                                $action.actionType.dockerBaseImage = $dockerBaseImage
+                            }
+                        }
+                    }
+                    catch {
+                        # continue with next one
+                    }
+                }
+            }
         }
     }
+    catch {
+        Write-Host "Error getting all repo info: $($_.Exception.Message)"
+        Write-Host "Continuing"
+    }
+
+    Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
+    $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
+    Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded"
+    "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+
+    $hasTagInfo = $($status | Where-Object {$null -ne $_.tagInfo})
+    Write-Host "Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded"
+    "Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+
+    $hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
+    Write-Host "Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded"
+    "Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+
+    Write-Host "Docker base image information added for [$dockerBaseImageInfoAdded] actions"
+    "Docker base image information added for [$dockerBaseImageInfoAdded] actions" >> $env:GITHUB_STEP_SUMMARY
+
+    return $existingForks
 }
-catch {
-    Write-Host "Error getting all repo info: $($_.Exception.Message)"
-    Write-Host "Continuing"
+
+function Run {
+    Write-Host "Got $($actions.Length) actions to get the repo information for"    
+    GetRateLimitInfo
+
+    ($existingForks, $failedForks) = GetForkedActionRepos
+
+    $existingForks = GetInfo -existingForks $existingForks
+    # save status in case the next part goes wrong, then we did not do all these calls for nothing
+    SaveStatus -existingForks $status
+    
+    #$existingForks = GetMoreInfo -existingForks $existingForks
+    #SaveStatus -existingForks $status
+    GetRateLimitInfo
 }
 
-Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
-$hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
-Write-Host "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded"
-"Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
-
-$hasTagInfo = $($status | Where-Object {$null -ne $_.tagInfo})
-Write-Host "Loaded repository information, ended with [$($hasTagInfo.Length)] already loaded"
-"Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
-
-$hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
-Write-Host "Loaded repository information, ended with [$($hasReleaseInfo.Length)] already loaded"
-"Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
-
-Write-Host "Docker base image information added for [$dockerBaseImageInfoAdded] actions"
-"Docker base image information added for [$dockerBaseImageInfoAdded] actions" >> $env:GITHUB_STEP_SUMMARY
-
-SaveStatus -existingForks $status
-GetRateLimitInfo
+# main call
+Run

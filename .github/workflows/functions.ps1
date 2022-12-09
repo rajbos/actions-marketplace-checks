@@ -9,50 +9,6 @@ Param (
 
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
-function GetForkedActionRepos {
-
-    # if file exists, read it
-    $status = $null
-    if (Test-Path $statusFile) {
-        Write-Host "Using existing status file"
-        $status = Get-Content $statusFile | ConvertFrom-Json
-        if (Test-Path $failedStatusFile) {
-            $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
-            if ($null -eq $failedForks) {
-                # init empty list
-                $failedForks = New-Object System.Collections.ArrayList
-            }
-        }
-        else {
-            $failedForks = New-Object System.Collections.ArrayList
-        }
-        
-        Write-Host "Found $($status.Count) existing repos in status file"
-        Write-Host "Found $($failedForks.Count) existing records in the failed forks file"
-    }
-    else {
-        # build up status from scratch
-        Write-Host "Loading current forks and status from scratch"
-
-        # get all existing repos in target org
-        $forkedRepos = GetForkedActionRepoList
-        Write-Host "Found $($forkedRepos.Count) existing repos in target org"
-        # convert list of forkedRepos to a new array with only the name of the repo
-        $status = New-Object System.Collections.ArrayList
-        foreach ($repo in $forkedRepos) {
-            $status.Add(@{name = $repo.name; dependabot = $null}) | Out-Null
-        }
-        Write-Host "Found $($status.Count) existing repos in target org"
-        # for each repo, get the Dependabot status
-        foreach ($repo in $status) {
-            $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name)
-        }
-        
-        $failedForks = New-Object System.Collections.ArrayList
-    }
-    return ($status, $failedForks)
-}
-
 function GetForkedActionRepoList {
     # get all existing repos in target org
     #$repoUrl = "orgs/$forkOrg/repos?type=forks"
@@ -494,8 +450,8 @@ GetRateLimitInfo
 
 # load the list of forked repos
 ($existingForks, $failedForks) = GetForkedActionRepos
-Write-Host "existingForks object type: $($existingForks.GetType())"
-Write-Host "failedForks object type: $($failedForks.GetType())"
+#Write-Host "existingForks object type: $($existingForks.GetType())"
+#Write-Host "failedForks object type: $($failedForks.GetType())"
 
 # run the functions for all actions
 $existingForks = RunForActions -actions $actions -existingForks $existingForks -failedForks $failedForks
