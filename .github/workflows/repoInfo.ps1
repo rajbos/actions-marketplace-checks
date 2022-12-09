@@ -205,7 +205,7 @@ function GetInfo {
 
     # get information from the action files
     $i = $existingForks.Length
-    $max = $existingForks.Length + ($numberOfReposToDo * 2)
+    $max = $existingForks.Length + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
 
         if ($i -ge $max) {
@@ -352,7 +352,7 @@ function GetMoreInfo {
     )
     # get repo information
     $i = $existingForks.Length
-    $max = $existingForks.Length + ($numberOfReposToDo * 4)
+    $max = $existingForks.Length + ($numberOfReposToDo * 1)
     $hasRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo})
     Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
     "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
