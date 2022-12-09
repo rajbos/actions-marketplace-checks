@@ -1,10 +1,13 @@
 Param (
   $actions,
   $numberOfReposToDo = 10,
-  $access_token = $env:GITHUB_TOKEN
+  $access_token = $env:GITHUB_TOKEN,
+  $access_token_destination = $env:GITHUB_TOKEN
 )
 
 . $PSScriptRoot/library.ps1
+
+Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 Import-Module powershell-yaml -Force
 
