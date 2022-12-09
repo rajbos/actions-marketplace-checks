@@ -118,8 +118,19 @@ function GetActionType {
                 return ($actionType, $fileFound, $actionDockerType)
             }
             catch {
-                # no files found
-                return ("No file found", "No file found", "No file found")
+                try {
+                    $url = "/repos/$owner/$repo/contents/dockerfile"
+                    $response = ApiCall -method GET -url $url
+                    $fileFound = "dockerfile"
+                    $actionDockerType = "Dockerfile"
+                    $actionType = "Docker"
+        
+                    return ($actionType, $fileFound, $actionDockerType)
+                }
+                catch {
+                    # todo: search for a docker file
+                    return ("No file found", "No file found", "No file found")
+                }
             }
         }
     }
