@@ -481,7 +481,7 @@ function EnableDependabot {
     }
 
     # enable dependabot if not enabled yet
-    if ($null -eq $existingFork.dependabot) {
+    if ($null -eq $existingFork.dependabotEnabled) {
         Write-Host "Enabling Dependabot for [$($existingFork.name)]"
         $url = "repos/$forkOrg/$($existingFork.name)/vulnerability-alerts"
         $status = ApiCall -method PUT -url $url -body $null -expected 204 -access_token $access_token_destination
