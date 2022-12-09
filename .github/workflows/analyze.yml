@@ -9,8 +9,6 @@ on:
     paths:
       - .github/workflows/analyze.yml
       - .github/workflows/functions.ps1
-      - .github/workflows/repoInfo.ps1
-      - .github/workflows/library.ps1
 
   schedule:
      #- cron: '*/60 * * * *'

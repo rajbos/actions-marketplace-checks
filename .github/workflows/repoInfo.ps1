@@ -155,6 +155,7 @@ function GetActionType {
     else {
         if ($using -like "node*") {
             $actionType = "Node"
+            $nodeVersion = $using.Replace("node", "")
         }
         elseif ($using -like "composite*") {
             $actionType = "Composite"
@@ -164,7 +165,7 @@ function GetActionType {
         }
     }
 
-    return ($actionType, $fileFound, $actionDockerType)
+    return ($actionType, $fileFound, $actionDockerType, $nodeVersion)
 }
 
 $statusFile = "status.json"
@@ -239,16 +240,18 @@ foreach ($action in $status) {
     }
 
     $hasField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
-    if (!$hasField -or ($null -eq $action.actionType.actionType)) {
+    $hasNodeVersionField = Get-Member -inputobject $action.actionType -name "nodeVersion" -Membertype Properties
+    if (!$hasField -or ($null -eq $action.actionType.actionType) -or ("No file found" -eq $action.actionType.actionType) -or !$hasNodeVersionField) {
         ($owner, $repo) = GetOrgActionInfo($action.name)
         Write-Host "$i/$max - Checking action information for [$($owner)/$($name)]"
-        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult) = GetActionType -owner $owner -repo $name
+        ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $name
 
         If (!$hasField) {
             $actionType = @{
                 actionType = $actionTypeResult 
                 fileFound = $fileFoundResult
                 actionDockerType = $actionDockerTypeResult
+                nodeVersion = $nodeVersion
             }
 
             $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
@@ -258,6 +261,7 @@ foreach ($action in $status) {
             $action.actionType.actionType = $actionTypeResult
             $action.actionType.fileFound = $fileFoundResult
             $action.actionType.actionDockerType = $actionDockerTypeResult
+            $action.actionType.nodeVersion = $nodeVersion
         }
 
     }
