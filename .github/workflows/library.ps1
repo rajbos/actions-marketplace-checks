@@ -271,7 +271,7 @@ function GetRateLimitInfo {
     $response = ApiCall -method GET -url $url
 
     #Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
-    Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
+    Write-Message -message "Ratelimit info: $($response.rate | ConvertTo-Json)"  -logToSummary $true
     #Write-Host " - GraphQL: $($response.resources.graphql | ConvertTo-Json)"
     #Write-Host " - GraphQL: $($response | ConvertTo-Json)"
 
