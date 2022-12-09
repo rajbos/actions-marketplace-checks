@@ -517,18 +517,18 @@ function GetMoreInfo {
     }
 
     Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
-    $hasRepoInfo = $($status | Where-Object {$null -ne $_.repoInfo})
+    $hasRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo})
     Write-Message -message "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" -logToSummary $true
 
-    $hasTagInfo = $($status | Where-Object {$null -ne $_.tagInfo})
+    $hasTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo})
     Write-Message -message "Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" -logToSummary $true
 
-    $hasReleaseInfo = $($status | Where-Object {$null -ne $_.releaseInfo})
+    $hasReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo})
     Write-Message -message "Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" -logToSummary $true
 
     Write-Message -message "Docker base image information added for [$dockerBaseImageInfoAdded] actions"  -logToSummary $true
 
-    Write-Host "Starting the cleanup with [$($status.Length)] actions and [$($existingForks.Length)] forks and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
+    Write-Host "Starting the cleanup with [$($existingForks.Length)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
     foreach ($action in $originalRepoDoesNotExists) {
         # remove the action from the actions lists
 
@@ -544,9 +544,10 @@ function GetMoreInfo {
         # $existingFork = $existingForks | Where-Object {$_.name -eq $repoName}
         # $existingForks.Remove($existingFork)
     }
-    Write-Host "Ended the cleanup with [$($status.Length)] actions and [$($existingForks.Length)] forks"
+    Write-Host "Ended the cleanup with [$($existingForks.Length)] actions"
 
-    return ($actions, $existingForks)
+    #return ($actions, $existingForks) ? where does this $actions come from?
+    return ($null, $existingForks)
 }
 
 function Run {
@@ -559,9 +560,9 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    #$existingForks = GetInfo -existingForks $existingForks
+    $existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
-    #SaveStatus -existingForks $existingForks
+    SaveStatus -existingForks $existingForks
     
     # make it findable in the log to see where the second part starts
     Write-Host ""
