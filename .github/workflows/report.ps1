@@ -297,7 +297,7 @@ function GroupNodeVersionsAndCount {
             $nodeVersionCount.Add($nodeVersion, 1)
         }
     }
-
+    $nodeVersionCount = ($nodeVersionCount.GetEnumerator() | Sort-Object Key)
     return $nodeVersionCount
 }
 
@@ -305,12 +305,7 @@ function ReportInsightsInMarkdown {
     param (
         [RepoInformation] $repoInformation
     )
-    if (!$logSummary) {
-        # do not report locally
-        return
-    }
-
-    GroupNodeVersionsAndCount -nodeVersions $global:nodeVersions
+    $nodeVersionCount = GroupNodeVersionsAndCount -nodeVersions $global:nodeVersions
 
     LogMessage "## Action type"
     LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
@@ -322,8 +317,10 @@ function ReportInsightsInMarkdown {
     LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
     LogMessage "  C-->F[$remoteDockerfile Remote image]"
     LogMessage "  A-->G[$unknownActionType Unknown]"
-    foreach($nodeVersion in $nodeVersionCount.Keys) {        
-        LogMessage "  B-->H[$($nodeVersionCount[$nodeVersion]) Node$nodeVersion"
+    $currentLetter = 7 # start at H
+    foreach ($nodeVersion in $nodeVersionCount) {
+        LogMessage "  B-->$([char]($currentLetter+65))[$($nodeVersion.Key) Node $($nodeVersion.Value)]"
+        $currentLetter++
     }
     LogMessage "``````"
     LogMessage ""
@@ -337,10 +334,6 @@ function ReportInsightsInMarkdown {
     LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
     $dockerPercentage = [math]::Round($global:dockerFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->D[$dockerFile Dockerfile - $dockerPercentage%]"
-    LogMessage "``````"
-    LogMessage ""
-    LogMessage "## Action runner setup"
-    LogMessage "How is the action runner setup? The runner can be setup to use a specific version of Node or Docker. The runner can also be setup to use
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
@@ -389,7 +382,6 @@ function ReportAgeInsights {
     LogMessage ""
     LogMessage "Average age: $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days"
     LogMessage "Archived repos: $global:archived"
-
 }
 
 # call the report functions
