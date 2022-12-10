@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - .github/workflows/report.yml
+      - .github/workflows/report.ps1
 
   schedule:
     - cron: '1 9 * * *'
