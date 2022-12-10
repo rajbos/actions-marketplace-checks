@@ -44,6 +44,7 @@ $global:sumDaysOld = 0
 $global:archived = 0
 # string array to hold all used docker base images:
 $global:dockerBaseImages = @()
+$global:nodeVersions = @()
 
 function GetVulnerableInfo {
     Param (
@@ -83,7 +84,6 @@ function AnalyzeActionInformation {
     Param (
         $actions
     )
-
     
     $repoInformation = New-Object RepoInformation
     # analyze action type, definition and age
@@ -108,6 +108,8 @@ function AnalyzeActionInformation {
             }
             elseif ($action.actionType.actionType -eq "Node") {
                 $global:nodeBasedActions++
+
+                $global:nodeVersions += $action.actionType.nodeVersion
             }        
             elseif ($action.actionType.actionType -eq "Composite") {
                 $global:compositeAction++
@@ -280,6 +282,25 @@ function ReportVulnChartInMarkdown {
     LogMessage "``````"
 }
 
+function GroupNodeVersionsAndCount {
+    Param (
+        $nodeVersions
+    )
+
+    # count items per node version
+    $nodeVersionCount = @{}
+    foreach ($nodeVersion in $nodeVersions) {
+        if ($nodeVersionCount.ContainsKey($nodeVersion)) {
+            $nodeVersionCount[$nodeVersion]++
+        }
+        else {
+            $nodeVersionCount.Add($nodeVersion, 1)
+        }
+    }
+
+    return $nodeVersionCount
+}
+
 function ReportInsightsInMarkdown {
     param (
         [RepoInformation] $repoInformation
@@ -288,6 +309,8 @@ function ReportInsightsInMarkdown {
         # do not report locally
         return
     }
+
+    GroupNodeVersionsAndCount -nodeVersions $global:nodeVersions
 
     LogMessage "## Action type"
     LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
@@ -299,6 +322,25 @@ function ReportInsightsInMarkdown {
     LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
     LogMessage "  C-->F[$remoteDockerfile Remote image]"
     LogMessage "  A-->G[$unknownActionType Unknown]"
+    foreach($nodeVersion in $nodeVersionCount.Keys) {        
+        LogMessage "  B-->H[$($nodeVersionCount[$nodeVersion]) Node$nodeVersion"
+    }
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "## Action definition setup"
+    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    $ymlPercentage = [math]::Round($global:actionYmlFile/$repoInformation.reposAnalyzed * 100 , 1)
+    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
+    $yamlPercentage = [math]::Round($global:actionYamlFile/$repoInformation.reposAnalyzed * 100 , 1)
+    LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
+    $dockerPercentage = [math]::Round($global:dockerFile/$repoInformation.reposAnalyzed * 100 , 1)
+    LogMessage "  A-->D[$dockerFile Dockerfile - $dockerPercentage%]"
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "## Action runner setup"
+    LogMessage "How is the action runner setup? The runner can be setup to use a specific version of Node or Docker. The runner can also be setup to use
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
@@ -359,11 +401,12 @@ ReportInsightsInMarkdown -repoInformation $repoInformation
 
 # filter actions to the ones owned by GitHub
 $githubActions = $actions | Where-Object { $_.owner -eq "github" -or $_.owner -eq "actions" }
+# reset node versions
+$global:nodeVersions = @()
 $github_RepoInformation = AnalyzeActionInformation -actions $githubactions
 # report information:
 VulnerabilityCalculations -repoInformation $repoInformation -github_RepoInformation $github_RepoInformation
 ReportVulnChartInMarkdown -chartTitle "actions" -actions $actions -repoInformation $repoInformation
-
 
 # reset everything for just the Node actions
 $nodeBasedActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node")}
