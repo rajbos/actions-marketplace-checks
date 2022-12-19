@@ -57,8 +57,8 @@ function EnableDependabotForForkedActions {
 }
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
-# $existingForks = RunForAllForkedActions -existingForks $actions -numberOfReposToDo $numberOfReposToDo
-# SaveStatus -existingForks $existingForks
+$existingForks = RunForAllForkedActions -existingForks $actions -numberOfReposToDo $numberOfReposToDo
+SaveStatus -existingForks $existingForks
 
 $existingForks = GetDependabotAlerts -existingForks $actions -numberOfReposToDo $numberOfReposToDo
 SaveStatus -existingForks $existingForks
