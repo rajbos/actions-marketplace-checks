@@ -629,15 +629,17 @@ function GetDependabotVulnerabilityAlerts {
     foreach ($node in $nodes) {
         #Write-Host "Found $($node.securityVulnerability.advisory.severity)"
         #Write-Host $node.securityVulnerability.advisory.severity
-        switch ($node.securityVulnerability.advisory.severity) {            
-            "MODERATE" {
-                $moderate++
-            }
-            "HIGH" {
-                $high++
-            }
-            "CRITICAL" {
-                $critical++
+        if ($node.dependencyScope -eq "RUNTIME") {
+            switch ($node.securityVulnerability.advisory.severity) {            
+                "MODERATE" {
+                    $moderate++
+                }
+                "HIGH" {
+                    $high++
+                }
+                "CRITICAL" {
+                    $critical++
+                }
             }
         }
     }
