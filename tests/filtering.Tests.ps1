@@ -55,8 +55,6 @@ Describe "FlattenActionsList" {
         Write-Host "Flatten call duration in seconds [$measureResult]"
         $actions.Count | Should -BeGreaterThan 0
         $actionsResult.Count | Should -BeGreaterThan 0
-
-        $actionsResult.Count | Should -Be $actions.Count
         $actionsResult.Count | Should -BeLessOrEqual $actions.Count
 
         $expectedAction = $actions[0]
