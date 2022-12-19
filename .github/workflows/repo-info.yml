@@ -12,7 +12,7 @@ on:
 
   schedule:
      #- cron: '*/60 * * * *'
-     - cron: '1 */1 * * *'
+     - cron: '20 */1 * * *'
 
   workflow_dispatch:
 

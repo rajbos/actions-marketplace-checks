@@ -7,9 +7,9 @@ on:
       - .github/workflows/dependabot-updates.yml
       - .github/workflows/dependabot-updates.ps1
 
-  #schedule:
+  schedule:
      #- cron: '*/60 * * * *'
-     #- cron: '1 */1 * * *'
+     - cron: '40 */1 * * *'
 
   workflow_dispatch:
 
@@ -19,7 +19,7 @@ env:
 
 jobs:
   enable-em-all:
-    concurrency: there-can-be-only-one-dependabot
+    concurrency: there-can-be-only-one
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
