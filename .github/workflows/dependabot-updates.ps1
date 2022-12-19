@@ -17,7 +17,8 @@ function RunForAllForkedActions {
 
     Write-Message -message "Running for [$($existingForks.Count)] forks"  -logToSummary $true
     
-    EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+    $existingForks = EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+    return $existingForks
 }
 
 function EnableDependabotForForkedActions {
@@ -52,13 +53,14 @@ function EnableDependabotForForkedActions {
     }
 
     Write-Message -message "Enabled Dependabot on [$($dependabotEnabled)] repos" -logToSummary $true
+    return $existingForks
 }
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
-RunForAllForkedActions -existingForks $actions -numberOfReposToDo $numberOfReposToDo
-SaveStatus -existingForks $existingForks
+# $existingForks = RunForAllForkedActions -existingForks $actions -numberOfReposToDo $numberOfReposToDo
+# SaveStatus -existingForks $existingForks
 
-$existingForks = GetDependabotAlerts -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+$existingForks = GetDependabotAlerts -existingForks $actions -numberOfReposToDo $numberOfReposToDo
 SaveStatus -existingForks $existingForks
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination

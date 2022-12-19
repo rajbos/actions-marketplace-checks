@@ -573,6 +573,82 @@ function GetDependabotAlerts {
     return $existingForks
 }
 
+function GetDependabotVulnerabilityAlerts {
+    Param (
+        $owner,
+        $repo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+
+    $query = '
+    query($name:String!, $owner:String!){
+        repository(name: $name, owner: $owner) {
+            vulnerabilityAlerts(first: 100) {
+                nodes {
+                    createdAt
+                    dismissedAt
+                    fixedAt
+                    dependencyScope
+                    securityVulnerability {
+                        package {
+                            name
+                        }
+                        advisory {
+                            description
+                            severity
+                        }
+                    }
+                }
+            }
+        }
+    }'
+    
+    $variables = "
+        {
+            ""owner"": ""$owner"",
+            ""name"": ""$repo""
+        }
+        "
+    
+    $uri = "https://api.github.com/graphql"
+    $requestHeaders = @{
+        Authorization = GetBasicAuthenticationHeader -access_token $access_token
+    }
+    
+    Write-Debug "Loading vulnerability alerts for repo $repo"
+    $response = (Invoke-GraphQLQuery -Query $query -Variables $variables -Uri $uri -Headers $requestHeaders -Raw | ConvertFrom-Json)
+    #Write-Host ($response | ConvertTo-Json)
+    $nodes = $response.data.repository.vulnerabilityAlerts.nodes
+    #Write-Host "Found [$($nodes.Count)] vulnerability alerts"
+    #Write-Host $nodes | ConvertTo-Json
+    $moderate=0
+    $high=0
+    $critical=0
+    # todo: check for dismissed or fixed alerts: if we start regularly updating the repo, there might be old reports that are not relevant anymore for the analysis
+    # todo: group by $node.dependencyScope [DEVELOPMENT, RUNTIME]
+    foreach ($node in $nodes) {
+        #Write-Host "Found $($node.securityVulnerability.advisory.severity)"
+        #Write-Host $node.securityVulnerability.advisory.severity
+        switch ($node.securityVulnerability.advisory.severity) {            
+            "MODERATE" {
+                $moderate++
+            }
+            "HIGH" {
+                $high++
+            }
+            "CRITICAL" {
+                $critical++
+            }
+        }
+    }
+    #Write-Host "Dependabot status: " $($response | ConvertTo-Json -Depth 10)
+    return @{
+        moderate = $moderate
+        high = $high
+        critical = $critical
+    }
+}
+
 function Test-AccessTokens {
     Param (
         [string] $accessToken,
