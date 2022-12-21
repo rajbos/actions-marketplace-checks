@@ -507,7 +507,7 @@ function GetDependabotAlerts {
         [int] $numberOfReposToDo
     )
 
-    Write-Host "Loading vulnerability alerts for repos"
+    Write-Message -message "Loading vulnerability alerts for repos" -logToSummary $true
 
     $i = $existingForks.Length
     $max = $existingForks.Length + $numberOfReposToDo
@@ -531,12 +531,12 @@ function GetDependabotAlerts {
         if ($repo.vulnerabilityStatus) {
             $timeDiff = [DateTime]::UtcNow.Subtract($repo.vulnerabilityStatus.lastUpdated)
             if ($timeDiff.Hours -lt 72) {
-                Write-Debug "Skipping repo [$($repo.name)] as it was checked less than 72 hours ago"
+                Write-Host "Skipping repo [$($repo.name)] as it was checked less than 72 hours ago"
                 continue
             }
         }
 
-        Write-Debug "Loading vulnerability alerts for [$($repo.name)]"
+        Write-Host "$i / $max Loading vulnerability alerts for [$($repo.name)]"
         $dependabotStatus = $(GetDependabotVulnerabilityAlerts -owner $forkOrg -repo $repo.name -access_token $access_token_destination)
         if ($dependabotStatus.high -gt 0) {
             Write-Host "Found [$($dependabotStatus.high)] high alerts for repo [$($repo.name)]"
@@ -567,8 +567,8 @@ function GetDependabotAlerts {
         $i++ | Out-Null
     }
 
-    Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($highAlerts)] high alerts"
-    Write-Host "Found [$($vulnerableRepos)] repos with a total of [$($criticalAlerts)] critical alerts"
+    Write-Message -message "Found [$($vulnerableRepos)] new repos with a total of [$($highAlerts)] repos with high alerts" -logToSummary $true
+    Write-Message -message "Found [$($vulnerableRepos)] new repos with a total of [$($criticalAlerts)] repos with critical alerts" -logToSummary $true
 
     return $existingForks
 }
