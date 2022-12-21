@@ -515,6 +515,7 @@ function GetDependabotAlerts {
     $highAlerts = 0
     $criticalAlerts = 0
     $vulnerableRepos = 0
+    $skipping = 0
     foreach ($repo in $existingForks) {
 
         if ($i -ge $max) {
@@ -531,7 +532,8 @@ function GetDependabotAlerts {
         if ($repo.vulnerabilityStatus) {
             $timeDiff = [DateTime]::UtcNow.Subtract($repo.vulnerabilityStatus.lastUpdated)
             if ($timeDiff.Hours -lt 72) {
-                Write-Host "Skipping repo [$($repo.name)] as it was checked less than 72 hours ago"
+                Write-Debug "Skipping repo [$($repo.name)] as it was checked less than 72 hours ago"
+                $skipping++
                 continue
             }
         }
@@ -567,6 +569,7 @@ function GetDependabotAlerts {
         $i++ | Out-Null
     }
 
+    Write-Message -message "Skipped [$($skipping)] repos as they were checked less than 72 hours ago" -logToSummary $true
     Write-Message -message "Found [$($vulnerableRepos)] new repos with a total of [$($highAlerts)] repos with high alerts" -logToSummary $true
     Write-Message -message "Found [$($vulnerableRepos)] new repos with a total of [$($criticalAlerts)] repos with critical alerts" -logToSummary $true
 
