@@ -35,24 +35,11 @@ function RunForActions {
     Write-Host "Found [$($actions.Count)] actions with a repoUrl"
     "Found [$($actions.Count)] actions with a repoUrl" >> $env:GITHUB_STEP_SUMMARY
     # do the work
-
-    #TODO: check for existing repos first, or update the status.json with existing repos
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
     Write-Host "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Count)] repos"
     "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Length)] repos" >> $env:GITHUB_STEP_SUMMARY
     SaveStatus -existingForks $existingForks
-
-    # toggle for faster test runs
-    if (1 -eq 2) {  # moving this to a separate workflow
-        ($existingForks, $dependabotEnabled) = EnableDependabotForForkedActions -actions $actions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
-        Write-Host "Enabled Dependabot on [$($dependabotEnabled)] repos"
-        "Enabled Dependabot on [$($dependabotEnabled)] repos" >> $env:GITHUB_STEP_SUMMARY
-
-        SaveStatus -existingForks $existingForks
-
-        $existingForks = GetDependabotAlerts -existingForks $existingForks
-    }
 
     return $existingForks
 }
@@ -264,9 +251,20 @@ function ForkActionRepo {
             Set-Location $repo  | Out-Null
             git remote remove origin  | Out-Null
             git remote add origin "https://x:$access_token@github.com/$forkOrg/$($newRepoName).git"  | Out-Null
+
             $branchName = $(git branch --show-current)
             Write-Host "Pushing to branch [$($branchName)]"
             git push --set-upstream origin $branchName | Out-Null
+
+            # inject the CodeQL file
+            Write-Host "Injecting CodeQL file"
+            $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
+            # copy the file to the repo
+            Copy-Item -Path $codeQLFile -Destination $tempDir\.github\workflows\codeql-analysis-injected.yml -Force | Out-Null
+            git add $tempDir\.github\workflows\codeql-analysis-injected.yml
+            git commit -m "Inject CodeQL file" | Out-Null
+            git push | Out-Null
+
             # back to normal repo
             Set-Location ../.. | Out-Null
             # remove the temp directory to prevent disk build up

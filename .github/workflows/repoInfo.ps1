@@ -270,6 +270,24 @@ function GetInfo {
             }
         }
 
+        # check when the mirror was last updated
+        $hasField = Get-Member -inputobject $action -name "mirrorLastUpdated" -Membertype Properties
+        if (!$hasField) {
+            # load owner from repo info out of the fork
+            Write-Host "Loading last updated repo information for fork [$forkOrg/$($action.name)]"
+            $url = "/repos/$forkOrg/$($action.name)"
+            try {
+                $response = ApiCall -method GET -url $url
+                if ($response -and $response.updated_at) {
+                    # add the new field
+                    $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
+                }
+            }
+            catch {
+                Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+            }
+        }
+
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
         $hasNodeVersionField = $null -ne $action.actionType.nodeVersion
         $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField
