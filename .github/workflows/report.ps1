@@ -321,7 +321,7 @@ function ReportInsightsInMarkdown {
     foreach ($nodeVersion in $nodeVersionCount) {
         # calculate percentage of node version
         $percentage = [math]::Round($nodeVersion.Value/$nodeBasedActions * 100 , 1)
-        LogMessage "  B-->$([char]($currentLetter+65))[$($nodeVersion.Key) Node $($nodeVersion.Value) - $percentage%]"
+        LogMessage "  B-->$([char]($currentLetter+65))[$($nodeVersion.Value) Node $($nodeVersion.Key) - $percentage%]"
         $currentLetter++
     }
     LogMessage "``````"
