@@ -30,7 +30,7 @@ $global:remoteDockerfile = 0
 $global:actionYmlFile = 0
 $global:actionYamlFile = 0
 $global:actionDockerFile = 0
-$global:actiondockerFile = 0
+$global:actiondDockerFile = 0
 $global:compositeAction = 0
 $global:unknownActionType = 0
 $global:repoInfo = 0
@@ -130,7 +130,7 @@ function AnalyzeActionInformation {
                 $global:actionDockerFile++
             }
             elseif ($action.actionType.fileFound -eq "dockerfile") {
-                $global:actiondockerFile++
+                $global:actiondDockerFile++
             }
         }
         else {
@@ -339,9 +339,9 @@ function ReportInsightsInMarkdown {
     $yamlPercentage = [math]::Round($global:actionYamlFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
     $DockerPercentage = [math]::Round($global:actionDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->D[$dockerFile Dockerfile - $DockerPercentage%]"
-    $dockerPercentage = [math]::Round($global:actiondockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->E[$dockerFile Dockerfile - $dockerPercentage%]"
+    LogMessage "  A-->D[$global:actionDockerFile Dockerfile - $DockerPercentage%]"
+    $dDockerPercentage = [math]::Round($global:actiondDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
+    LogMessage "  A-->E[$global:actiondDockerFile Dockerfile - $dDockerPercentage%]"
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Docker based actions, most used base images: "
