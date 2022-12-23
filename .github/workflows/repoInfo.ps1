@@ -281,6 +281,7 @@ function GetInfo {
                 if ($response -and $response.updated_at) {
                     # add the new field
                     $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
+                    $i++ | Out-Null
                 }
             }
             catch {
