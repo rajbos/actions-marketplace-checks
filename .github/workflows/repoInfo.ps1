@@ -274,7 +274,7 @@ function GetInfo {
         $hasField = Get-Member -inputobject $action -name "mirrorLastUpdated" -Membertype Properties
         if (!$hasField) {
             # load owner from repo info out of the fork
-            Write-Host "Loading last updated repo information for fork [$forkOrg/$($action.name)]"
+            Write-Host "$i / $max - Loading last updated repo information for fork [$forkOrg/$($action.name)]"
             $url = "/repos/$forkOrg/$($action.name)"
             try {
                 $response = ApiCall -method GET -url $url
