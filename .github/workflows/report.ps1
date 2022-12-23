@@ -30,6 +30,7 @@ $global:remoteDockerfile = 0
 $global:actionYmlFile = 0
 $global:actionYamlFile = 0
 $global:actionDockerFile = 0
+$global:actiondockerFile = 0
 $global:compositeAction = 0
 $global:unknownActionType = 0
 $global:repoInfo = 0
@@ -127,6 +128,9 @@ function AnalyzeActionInformation {
             }
             elseif ($action.actionType.fileFound -eq "Dockerfile") {
                 $global:actionDockerFile++
+            }
+            elseif ($action.actionType.fileFound -eq "dockerfile") {
+                $global:actiondockerFile++
             }
         }
         else {
@@ -327,30 +331,17 @@ function ReportInsightsInMarkdown {
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
-    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
+    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, dockerfile or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     $ymlPercentage = [math]::Round($global:actionYmlFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
+    LogMessage "  A[$($repoInformation.reposAnalyzed) actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
     $yamlPercentage = [math]::Round($global:actionYamlFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
-    $dockerPercentage = [math]::Round($global:dockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->D[$dockerFile Dockerfile - $dockerPercentage%]"
-    LogMessage "``````"
-    LogMessage ""
-    LogMessage "## Action definition setup"
-    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
-    LogMessage "``````mermaid"
-    LogMessage "flowchart LR"
-    $ymlPercentage = [math]::Round($global:actionYmlFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A[$reposAnalyzed Actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
-    $yamlPercentage = [math]::Round($global:actionYamlFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
-    $dockerPercentage = [math]::Round($global:actionDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->D[$actionDockerFile Dockerfile - $dockerPercentage%]"
-    $unknownActionDefinitionCount = $global:reposAnalyzed - $global:actionYmlFile - $global:actionYamlFile - $global:actionDockerFile
-    $unknownActionPercentage = [math]::Round($repoInformation.unknownActionDefinitionCount/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->E[$unknownActionDefinitionCount Unknown - $unknownActionPercentage%]"
+    $DockerPercentage = [math]::Round($global:actionDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
+    LogMessage "  A-->D[$dockerFile Dockerfile - $DockerPercentage%]"
+    $dockerPercentage = [math]::Round($global:actiondockerFile/$repoInformation.reposAnalyzed * 100 , 1)
+    LogMessage "  A-->E[$dockerFile Dockerfile - $dockerPercentage%]"
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Docker based actions, most used base images: "
