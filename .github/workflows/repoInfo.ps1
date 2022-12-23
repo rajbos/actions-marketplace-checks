@@ -241,7 +241,7 @@ function GetInfo {
             Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
             $url = "/repos/$forkOrg/$($action.name)"
             try {
-                $response = ApiCall -method GET -url $url
+                $response = ApiCall -method GET -url $url -token_destination $access_token_destination
                 if ($response -and $response.parent) {
                     # load owner info from parent
                     $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
@@ -277,7 +277,7 @@ function GetInfo {
             Write-Host "$i / $max - Loading last updated repo information for fork [$forkOrg/$($action.name)]"
             $url = "/repos/$forkOrg/$($action.name)"
             try {
-                $response = ApiCall -method GET -url $url
+                $response = ApiCall -method GET -url $url -token_destination $access_token_destination
                 if ($response -and $response.updated_at) {
                     # add the new field
                     $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
