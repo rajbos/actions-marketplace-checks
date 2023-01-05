@@ -128,7 +128,6 @@ function GetActionType {
                     return ($actionType, $fileFound, $actionDockerType)
                 }
                 catch {
-                    # todo: search for a docker file
                     return ("No file found", "No file found", "No file found", $null)
                 }
             }
