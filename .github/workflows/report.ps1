@@ -341,7 +341,7 @@ function ReportInsightsInMarkdown {
     $DockerPercentage = [math]::Round($global:actionDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
     LogMessage "  A-->D[$global:actionDockerFile Dockerfile - $DockerPercentage%]"
     $dDockerPercentage = [math]::Round($global:actiondDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->E[$global:actiondDockerFile Dockerfile - $dDockerPercentage%]"
+    LogMessage "  A-->E[$global:actiondDockerFile dockerfile - $dDockerPercentage%]"
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Docker based actions, most used base images: "
