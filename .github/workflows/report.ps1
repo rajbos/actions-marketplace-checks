@@ -126,10 +126,10 @@ function AnalyzeActionInformation {
             elseif ($action.actionType.fileFound -eq "action.yaml") {
                 $global:actionYamlFile++
             }
-            elseif ($action.actionType.fileFound -eq "Dockerfile") {
+            elseif ($action.actionType.fileFound -ceq "Dockerfile") {
                 $global:actionDockerFile++
             }
-            elseif ($action.actionType.fileFound -eq "dockerfile") {
+            elseif ($action.actionType.fileFound -ceq "dockerfile") {
                 $global:actiondDockerFile++
             }
         }
