@@ -504,7 +504,7 @@ function GetMoreInfo {
                 try {
                     $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name
                     if (!$hasField) {
-                        Write-Host "Adding secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($repo)]"
+                        Write-Host "Adding secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($action.name)]"
                         
                         $action | Add-Member -Name secretScanningEnabled -Value $secretScanningEnabled -MemberType NoteProperty
                         $i++ | Out-Null
