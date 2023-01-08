@@ -6,8 +6,6 @@ $actionsFile = "actions.json"
 $statusFile = "status.json"
 $failedStatusFile = "failedForks.json"
 
-. $PSScriptRoot/library.ps1
-
 function ApiCall {
     Param (
         $method,
