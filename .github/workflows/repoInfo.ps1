@@ -629,7 +629,7 @@ function GetFoundSecretCount {
         }
     }
     foreach ($alertType in $alertTypes.Keys) {
-        Write-Message "| $($alertType) | [$($alertTypes[$alertType])] |" -logToSummary $true
+        Write-Message "| $($alertType) | $($alertTypes[$alertType]) |" -logToSummary $true
     }
 
     # summarize the number of alerts per repository    
@@ -638,7 +638,7 @@ function GetFoundSecretCount {
 
     }
     Write-Message "" -logToSummary $true
-    Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories"
+    Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
 }
 
 function Run {
