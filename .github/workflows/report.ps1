@@ -5,6 +5,7 @@ Param (
 
 Write-Host "Found [$($actions.Count)] actions to report on"
 Write-Host "Log summary path: [$logSummary]"
+. $PSScriptRoot/library.ps1
 
 class RepoInformation
 {
