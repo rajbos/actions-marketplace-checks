@@ -1,6 +1,7 @@
 Param (
   $actions,
-  $logSummary
+  $logSummary,
+  $access_token_destination
 )
 
 Write-Host "Found [$($actions.Count)] actions to report on"
