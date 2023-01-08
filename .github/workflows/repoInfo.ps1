@@ -632,13 +632,9 @@ function GetFoundSecretCount {
         Write-Message "| $($alertType) | $($alertTypes[$alertType]) |" -logToSummary $true
     }
 
-    # summarize the number of alerts per repository    
-    foreach ($alert in $alertsResult) {
-        $totalAlerts += $alert.number
-
-    }
     Write-Message "" -logToSummary $true
     Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
+    Write-Message "" -logToSummary $true
 }
 
 function Run {
@@ -651,7 +647,7 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    $existingForks = GetInfo -existingForks $existingForks
+#    $existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
     
@@ -663,7 +659,7 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
+#    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
     SaveStatus -existingForks $existingForks
 
     GetFoundSecretCount
