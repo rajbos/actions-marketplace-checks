@@ -611,12 +611,14 @@ function GetFoundSecretCount {
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
 
     $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
-    Write-Message ""
-    Write-Message "## Secret scanning alerts"
+    Write-Message "" -logToSummary $true
+    Write-Message "## Secret scanning alerts" -logToSummary $true
     $totalAlerts = 0
     
     # summarize the number of alerts per secret_type_display_name
     $alertTypes = @{}
+    Write-Message "|Alert type| Count |" -logToSummary $true
+    Write-Message "|---| ---: |" -logToSummary $true
     foreach ($alert in $alertsResult) {
         $totalAlerts += $alert.number
         if ($alertTypes.ContainsKey($alert.secret_type_display_name)) {
@@ -627,7 +629,7 @@ function GetFoundSecretCount {
         }
     }
     foreach ($alertType in $alertTypes.Keys) {
-        Write-Message "Found [$($alertTypes[$alertType])] [$($alertType)] alerts"
+        Write-Message "| $($alertType) | [$($alertTypes[$alertType])] |" -logToSummary $true
     }
 
     # summarize the number of alerts per repository    
@@ -635,6 +637,7 @@ function GetFoundSecretCount {
         $totalAlerts += $alert.number
 
     }
+    Write-Message "" -logToSummary $true
     Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories"
 }
 
