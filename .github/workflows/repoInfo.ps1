@@ -500,7 +500,7 @@ function GetMoreInfo {
 
             $hasField = Get-Member -inputobject $action -name "secretScanningEnabled" -Membertype Properties
             if (!$hasField -or ($null -eq $action.secretScanningEnabled) -or !$action.secretScanningEnabled) {
-                #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                Write-Host "$i/$max - Enabling secret scanning information for [$forkOrg/$($action.name)]. hasField: [$hasField], action.secretScanningEnabled: [$($action.secretScanningEnabled)]]"
                 try {
                     $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name
                     if (!$hasField) {
@@ -510,7 +510,7 @@ function GetMoreInfo {
                         $i++ | Out-Null
                     }
                     else {
-                        #Write-Host "Updating secret scanning information object with tags:[$($secretScanningEnabled)] for [$($forkOrg)/$($repo)]"
+                        Write-Host "Updating secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($repo)]"
                         $action.secretScanningEnabled = $secretScanningEnabled
                     }
                 }
