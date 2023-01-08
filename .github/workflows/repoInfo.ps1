@@ -351,8 +351,8 @@ function GetDockerBaseImageNameFromContent {
 
 function GetRepoDockerBaseImage {
     Param (
-        $owner,
-        $repo,
+        [string] $owner,
+        [string] $repo,
         $actionType
     )
 
@@ -383,6 +383,19 @@ function GetRepoDockerBaseImage {
     }
 
     return $dockerBaseImage
+}
+
+function EnableSecretScanning {
+    param (
+        [string] $owner,
+        [string] $repo
+    )
+
+    $url = "/repos/$owner/$repo"
+    $body = "{""security_and_analysis"": {""secret_scanning"": {""status"": ""enabled""}}}"
+    $patchResult = ApiCall -method PATCH -url $url -body $body -token_destination $access_token_destination -expected 200
+
+    return $patchResult
 }
 
 function GetMoreInfo {
@@ -477,6 +490,27 @@ function GetMoreInfo {
                     else {
                         #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
                         $action.tagInfo = $tagInfo
+                    }
+                }
+                catch {
+                    # continue with next one
+                }
+            }
+
+            $hasField = Get-Member -inputobject $action -name "secretScanningEnabled" -Membertype Properties
+            if (!$hasField -or ($null -eq $action.secretScanningEnabled) -or !$action.secretScanningEnabled) {
+                #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                try {
+                    $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name
+                    if (!$hasField) {
+                        Write-Host "Adding secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($repo)]"
+                        
+                        $action | Add-Member -Name secretScanningEnabled -Value $secretScanningEnabled -MemberType NoteProperty
+                        $i++ | Out-Null
+                    }
+                    else {
+                        #Write-Host "Updating secret scanning information object with tags:[$($secretScanningEnabled)] for [$($forkOrg)/$($repo)]"
+                        $action.secretScanningEnabled = $secretScanningEnabled
                     }
                 }
                 catch {
