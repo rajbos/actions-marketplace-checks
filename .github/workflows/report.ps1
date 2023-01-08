@@ -412,4 +412,4 @@ ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeAc
 
 GetTagReleaseInfo
 
-GetFoundSecretCount
+GetFoundSecretCount -access_token_destination $access_token_destination

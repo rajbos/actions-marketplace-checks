@@ -676,6 +676,9 @@ function Test-AccessTokens {
 }
 
 function GetFoundSecretCount {
+    Param (
+        [string] $access_token_destination
+    )
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
 
     $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
