@@ -11,6 +11,9 @@ Test-AccessTokens -accessToken $accessToken -access_token_destination $access_to
 
 Import-Module powershell-yaml -Force
 
+# default variables
+$forkOrg = "actions-marketplace-validations"
+
 function GetRepoInfo {
     Param (
         $owner,
@@ -214,8 +217,6 @@ function GetInfo {
     Param (
         $existingForks
     )
-    # default variables
-    $forkOrg = "actions-marketplace-validations"
 
     # get information from the action files
     $i = $existingForks.Length
@@ -606,6 +607,13 @@ function GetMoreInfo {
     return ($null, $existingForks)
 }
 
+function GetFoundSecretCount {
+    $url = "/orgs/$forkOrg/secret-scanning/alerts"
+
+    $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
+    Write-Message "Found [$($alertsResult.nr)] alerts for the organization"
+}
+
 function Run {
     Param (
         $access_token, 
@@ -624,14 +632,14 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    Write-Host ""
+    Write-Host "Calling for more info"
     Write-Host ""
     Write-Host ""
     Write-Host ""
     ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
     SaveStatus -existingForks $existingForks
-    # todo: upload the new actions list, since this was cleaned up with no longer existing repos
 
+    GetFoundSecretCount
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 }
 
