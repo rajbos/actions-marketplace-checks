@@ -410,3 +410,5 @@ foreach ($action in $compositeActions) {
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions -repoInformation $compositeRepoInformation
 
 GetTagReleaseInfo
+
+GetFoundSecretCount
