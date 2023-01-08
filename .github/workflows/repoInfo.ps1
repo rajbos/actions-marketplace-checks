@@ -611,7 +611,31 @@ function GetFoundSecretCount {
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
 
     $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
-    Write-Message "Found [$($alertsResult.nr)] alerts for the organization"
+    Write-Message ""
+    Write-Message "## Secret scanning alerts"
+    $totalAlerts = 0
+    
+    # summarize the number of alerts per secret_type_display_name
+    $alertTypes = @{}
+    foreach ($alert in $alertsResult) {
+        $totalAlerts += $alert.number
+        if ($alertTypes.ContainsKey($alert.secret_type_display_name)) {
+            $alertTypes[$alert.secret_type_display_name] += $alert.number
+        }
+        else {
+            $alertTypes.Add($alert.secret_type_display_name, $alert.number)
+        }
+    }
+    foreach ($alertType in $alertTypes.Keys) {
+        Write-Message "Found [$($alertTypes[$alertType])] [$($alertType)] alerts"
+    }
+
+    # summarize the number of alerts per repository    
+    foreach ($alert in $alertsResult) {
+        $totalAlerts += $alert.number
+
+    }
+    Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories"
 }
 
 function Run {
@@ -624,7 +648,7 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    $existingForks = GetInfo -existingForks $existingForks
+#    $existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
     
@@ -636,7 +660,7 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
+ #   ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
     SaveStatus -existingForks $existingForks
 
     GetFoundSecretCount
