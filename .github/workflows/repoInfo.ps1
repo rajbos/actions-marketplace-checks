@@ -651,7 +651,7 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-#    $existingForks = GetInfo -existingForks $existingForks
+    $existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
     
@@ -663,7 +663,7 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
- #   ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
+    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks
     SaveStatus -existingForks $existingForks
 
     GetFoundSecretCount
