@@ -232,11 +232,6 @@ function GetInfo {
         $url = "/repos/$forkOrg/$($action.name)"
         try {
             $response = ApiCall -method GET -url $url -token_destination $access_token_destination
-            if ($response -and $response.updated_at) {
-                # add the new field
-                $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
-                $i++ | Out-Null
-            }
         }
         catch {
             Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
@@ -276,14 +271,15 @@ function GetInfo {
         # check when the mirror was last updated
         $hasField = Get-Member -inputobject $action -name "mirrorLastUpdated" -Membertype Properties
         if (!$hasField) {
-            # load owner from repo info out of the fork
-            Write-Host "$i / $max - Loading last updated repo information for fork [$forkOrg/$($action.name)]"
             
             if ($response -and $response.updated_at) {
                 # add the new field
                 $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
                 $i++ | Out-Null
             }
+        }
+        else {
+            $action.mirrorLastUpdated = $response.updated_at
         }
 
         # store repo size
