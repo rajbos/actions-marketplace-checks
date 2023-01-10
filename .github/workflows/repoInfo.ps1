@@ -229,6 +229,20 @@ function GetInfo {
             break
         }
 
+        $url = "/repos/$forkOrg/$($action.name)"
+        try {
+            $response = ApiCall -method GET -url $url -token_destination $access_token_destination
+            if ($response -and $response.updated_at) {
+                # add the new field
+                $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
+                $i++ | Out-Null
+            }
+        }
+        catch {
+            Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+            continue
+        }
+
         # back fill the 'owner' field with info from the fork
         $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
         if (!$hasField) {
@@ -239,9 +253,6 @@ function GetInfo {
             }
             # load owner from repo info out of the fork
             Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
-            $url = "/repos/$forkOrg/$($action.name)"
-            try {
-                $response = ApiCall -method GET -url $url -token_destination $access_token_destination
                 if ($response -and $response.parent) {
                     # load owner info from parent
                     $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
@@ -251,23 +262,6 @@ function GetInfo {
                     $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
                     $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
                 }
-
-                # store repo size
-                $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
-                if (!$hasField) {
-                    $action | Add-Member -Name repoSize -Value $response.size -MemberType NoteProperty
-                }
-                else {
-                    $action.repoSize = $response.size
-                }
-            }
-            catch {
-                Write-Host "Error getting repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
-                $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
-                if (!$hasField) {
-                    $action | Add-Member -Name forkFound -Value $false -MemberType NoteProperty
-                }
-            }
         }
         else {
             # owner field is filled, let's check if forkFound field already exists
@@ -284,18 +278,21 @@ function GetInfo {
         if (!$hasField) {
             # load owner from repo info out of the fork
             Write-Host "$i / $max - Loading last updated repo information for fork [$forkOrg/$($action.name)]"
-            $url = "/repos/$forkOrg/$($action.name)"
-            try {
-                $response = ApiCall -method GET -url $url -token_destination $access_token_destination
-                if ($response -and $response.updated_at) {
-                    # add the new field
-                    $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
-                    $i++ | Out-Null
-                }
+            
+            if ($response -and $response.updated_at) {
+                # add the new field
+                $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
+                $i++ | Out-Null
             }
-            catch {
-                Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
-            }
+        }
+
+        # store repo size
+        $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
+        if (!$hasField) {
+            $action | Add-Member -Name repoSize -Value $response.size -MemberType NoteProperty
+        }
+        else {
+            $action.repoSize = $response.size
         }
 
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
