@@ -48,7 +48,9 @@ $global:archived = 0
 # string array to hold all used docker base images:
 $global:dockerBaseImages = @()
 $global:nodeVersions = @()
-
+$global:maxRepoSize = 0
+$global:sumRepoSize = 0
+$global:countRepoSize = 0
 function GetVulnerableInfo {
     Param (
         $action,
@@ -133,6 +135,14 @@ function AnalyzeActionInformation {
             }
             elseif ($action.actionType.fileFound -ceq "dockerfile") {
                 $global:actiondDockerFile++
+            }
+
+            if ($action.repoSize) {
+                if ($action.repoSize -gt $global:maxRepoSize) {
+                    $global:maxRepoSize = $action.repoSize
+                }
+                $global:sumRepoSize = $action.repoSize
+                $global:countRepoSize++
             }
         }
         else {
@@ -377,6 +387,18 @@ function ReportAgeInsights {
     LogMessage ""
     LogMessage "Average age: $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days"
     LogMessage "Archived repos: $global:archived"
+
+    LogMessage ""
+    LogMessage "## Action's repo size"
+    LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
+    LogMessage "|Description|Info|"
+    LogMessage "|---|---:|"
+    
+    LogMessage "|Analyzed|Total: $($global:repoInfo)"
+    LogMessage "|Analyzed|Analyzed: $($global:countRepoSize) repos|"
+    LogMessage "|Average size| $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 1)) Mib|"
+    LogMessage "|Largest size| $([math]::Round($global:maxRepoSize / 1024, 1)) Mib|"
+    
 }
 
 # call the report functions
