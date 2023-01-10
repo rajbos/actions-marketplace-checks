@@ -388,17 +388,17 @@ function ReportAgeInsights {
     LogMessage "Average age: $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days"
     LogMessage "Archived repos: $global:archived"
 
-    LogMessage ""
-    LogMessage "## Action's repo size"
-    LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
-    LogMessage "|Description|Info|"
-    LogMessage "|---|---:|"
-    
-    LogMessage "|Analyzed|Total: $($global:repoInfo)"
-    LogMessage "|Analyzed|Analyzed: $($global:countRepoSize) repos|"
-    LogMessage "|Average size| $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 1)) Mib|"
-    LogMessage "|Largest size| $([math]::Round($global:maxRepoSize / 1024, 1)) Mib|"
-    
+    if ($global:countRepoSize -gt 0) {
+        LogMessage ""
+        LogMessage "## Action's repo size"
+        LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
+        LogMessage "|Description|Info|"
+        LogMessage "|---|---:|"    
+        LogMessage "|Analyzed|Total: $($global:repoInfo)"
+        LogMessage "|Analyzed|Analyzed: $($global:countRepoSize) repos|"
+        LogMessage "|Average size| $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 1)) Mib|"
+        LogMessage "|Largest size| $([math]::Round($global:maxRepoSize / 1024, 1)) Mib|"
+    }
 }
 
 # call the report functions
