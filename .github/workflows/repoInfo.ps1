@@ -251,6 +251,15 @@ function GetInfo {
                     $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
                     $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
                 }
+
+                # store repo size
+                $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
+                if (!$hasField) {
+                    $action | Add-Member -Name repoSize -Value $response.size -MemberType NoteProperty
+                }
+                else {
+                    $action.repoSize = $response.size
+                }
             }
             catch {
                 Write-Host "Error getting repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
