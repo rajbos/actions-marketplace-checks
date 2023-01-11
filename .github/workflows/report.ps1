@@ -51,6 +51,7 @@ $global:nodeVersions = @()
 $global:maxRepoSize = 0
 $global:sumRepoSize = 0
 $global:countRepoSize = 0
+$global:countRepoSizeBiggerThen100Mb = 0
 function GetVulnerableInfo {
     Param (
         $action,
@@ -143,6 +144,10 @@ function AnalyzeActionInformation {
                 }
                 $global:sumRepoSize = $action.repoSize
                 $global:countRepoSize++
+
+                if (($action.repoSize / 1024) -gt 100) {
+                    $global:countRepoSizeBiggerThen100Mb++
+                }
             }
         }
         else {
@@ -394,10 +399,12 @@ function ReportAgeInsights {
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
         LogMessage "|Description|Info|"
         LogMessage "|---|---:|"    
-        LogMessage "|Analyzed|Total: $($global:repoInfo)"
-        LogMessage "|Analyzed|Analyzed: $($global:countRepoSize) repos|"
-        LogMessage "|Average size| $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 1)) Mib|"
-        LogMessage "|Largest size| $([math]::Round($global:maxRepoSize / 1024, 1)) Mib|"
+        LogMessage "|Total|$($global:repoInfo)"
+        LogMessage "|Analyzed|$($global:countRepoSize)|"
+        LogMessage "|Sum reposizes|$($global:sumRepoSize)|"
+        LogMessage "|Repos > 100Mib|$($global:countRepoSizeBiggerThen100Mb)|"
+        LogMessage "|Average size| $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) Mib|"
+        LogMessage "|Largest size| $([math]::Round( $global:maxRepoSize / 1024, 2)) Mib|"
     }
 }
 
