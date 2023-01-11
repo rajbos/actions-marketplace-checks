@@ -401,7 +401,7 @@ function ReportAgeInsights {
         LogMessage "|---            | ---:|"    
         LogMessage "|Total          | $($global:repoInfo)"
         LogMessage "|Analyzed       | $($global:countRepoSize)|"
-        LogMessage "|Sum reposizes  | $($global:sumRepoSize) MiB|"
+        LogMessage "|Sum reposizes  | $([math]::Round($global:sumRepoSize / 1024, 0)) GiB|"
         LogMessage "|Repos > 100MiB | $($global:countRepoSizeBiggerThen100Mb)|"
         LogMessage "|Average size   | $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) MiB|"
         LogMessage "|Largest size   | $([math]::Round( $global:maxRepoSize / 1024, 2)) MiB|"
