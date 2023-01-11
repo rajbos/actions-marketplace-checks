@@ -142,7 +142,7 @@ function AnalyzeActionInformation {
                 if ($action.repoSize -gt $global:maxRepoSize) {
                     $global:maxRepoSize = $action.repoSize
                 }
-                $global:sumRepoSize = $action.repoSize
+                $global:sumRepoSize += $action.repoSize
                 $global:countRepoSize++
 
                 if (($action.repoSize / 1024) -gt 100) {
@@ -397,14 +397,14 @@ function ReportAgeInsights {
         LogMessage ""
         LogMessage "## Action's repo size"
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
-        LogMessage "|Description|Info|"
-        LogMessage "|---|---:|"    
-        LogMessage "|Total|$($global:repoInfo)"
-        LogMessage "|Analyzed|$($global:countRepoSize)|"
-        LogMessage "|Sum reposizes|$($global:sumRepoSize)|"
-        LogMessage "|Repos > 100Mib|$($global:countRepoSizeBiggerThen100Mb)|"
-        LogMessage "|Average size| $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) Mib|"
-        LogMessage "|Largest size| $([math]::Round( $global:maxRepoSize / 1024, 2)) Mib|"
+        LogMessage "|Description    | Info|"
+        LogMessage "|---            | ---:|"    
+        LogMessage "|Total          | $($global:repoInfo)"
+        LogMessage "|Analyzed       | $($global:countRepoSize)|"
+        LogMessage "|Sum reposizes  | $($global:sumRepoSize) MiB|"
+        LogMessage "|Repos > 100MiB | $($global:countRepoSizeBiggerThen100Mb)|"
+        LogMessage "|Average size   | $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) MiB|"
+        LogMessage "|Largest size   | $([math]::Round( $global:maxRepoSize / 1024, 2)) MiB|"
     }
 }
 
