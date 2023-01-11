@@ -213,6 +213,21 @@ function CheckForInfoUpdateNeeded {
     return $false
 }
 
+function MakeRepoInfoCall {
+    Param (
+        $action,
+        $forkOrg
+    )
+    $url = "/repos/$forkOrg/$($action.name)"
+    try {
+        $response = ApiCall -method GET -url $url -token_destination $access_token_destination
+    }
+    catch {
+        Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+    }
+
+    return $response
+}
 function GetInfo {
     Param (
         $existingForks
@@ -228,15 +243,8 @@ function GetInfo {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
-
-        $url = "/repos/$forkOrg/$($action.name)"
-        try {
-            $response = ApiCall -method GET -url $url -token_destination $access_token_destination
-        }
-        catch {
-            Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
-            continue
-        }
+        
+        $response = $null
 
         # back fill the 'owner' field with info from the fork
         $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
@@ -247,6 +255,7 @@ function GetInfo {
                 continue
             }
             # load owner from repo info out of the fork
+            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg
             Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
                 if ($response -and $response.parent) {
                     # load owner info from parent
@@ -271,7 +280,9 @@ function GetInfo {
         # check when the mirror was last updated
         $hasField = Get-Member -inputobject $action -name "mirrorLastUpdated" -Membertype Properties
         if (!$hasField) {
-            
+            if ($null -eq $response) {
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg
+            }
             if ($response -and $response.updated_at) {
                 # add the new field
                 $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
@@ -285,6 +296,9 @@ function GetInfo {
         # store repo size
         $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
         if (!$hasField) {
+            if ($null -eq $response) {
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg
+            }
             $action | Add-Member -Name repoSize -Value $response.size -MemberType NoteProperty
         }
         else {
