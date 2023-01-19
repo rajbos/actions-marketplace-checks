@@ -5,14 +5,14 @@ if ((Test-Path $actionsFile)) {
 else {
     $actions=$null
 }
-$numberofReposToDo = 10
+$numberofReposToDo = 100000
 
 #./.github/workflows/functions.ps1 -actions $actions -numberofReposToDo $numberofReposToDo
-./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo $numberofReposToDo
+#./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo $numberofReposToDo
 
 $statusFile = "status.json"
 if ((Test-Path $statusFile)) {
-    $status=(Get-Content $statusFile | ConvertFrom-Json)
+    $status = ( Get-Content $statusFile | ConvertFrom-Json)
 }
 else {
     $status=$null
@@ -23,3 +23,4 @@ else {
 #./tests/filtering.Tests.ps1 -actions $actions
 
 #./.github/workflows/dependabot-updates.ps1 -actions $status -numberOfReposToDo $numberofReposToDo
+./.github/workflows/ossf-scan.ps1 -actions $actions -numberofReposToDo $numberofReposToDo
