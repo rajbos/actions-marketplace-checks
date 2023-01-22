@@ -408,6 +408,16 @@ function ReportAgeInsights {
     }
 }
 
+function GetOSSFInfo {
+    $ossfInfoCount = 0
+    foreach ($action in $actions) {
+        if ($action.ossf) {
+            $ossfInfoCount++
+        }
+    }
+    Log-Message "Found [$ossfInfoCount] actions with OSSF info available."
+}
+
 # call the report functions
 $repoInformation = AnalyzeActionInformation -actions $actions
 ReportAgeInsights
@@ -441,5 +451,6 @@ foreach ($action in $compositeActions) {
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions -repoInformation $compositeRepoInformation
 
 GetTagReleaseInfo
+GetOSSFInfo
 
 GetFoundSecretCount -access_token_destination $access_token_destination
