@@ -5,7 +5,7 @@ if ((Test-Path $actionsFile)) {
 else {
     $actions=$null
 }
-$numberofReposToDo = 100000
+$numberofReposToDo = 10
 
 #./.github/workflows/functions.ps1 -actions $actions -numberofReposToDo $numberofReposToDo
 #./.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo $numberofReposToDo

@@ -1,7 +1,6 @@
 name: Get actions that use the OSS Scan action
 
 on:
-  
   push: 
     branches: 
       - main
@@ -10,12 +9,13 @@ on:
       - .github/workflows/ossf-scan.ps1
 
   schedule:
-    - cron: '15 10 * * *'
+     - cron: '50 */1 * * *'
 
   workflow_dispatch:
 
 jobs:
-  report:
+  get-data:
+    concurrency: there-can-be-only-one
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,7 +33,8 @@ jobs:
         run: |
            $actions=(cat status.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
-           $numberOfReposToDo = $actions.Length
+           //$numberOfReposToDo = $actions.Length
+           $numberOfReposToDo = 1000
            ./.github/workflows/ossf-scan.ps1 -actions $actions -numberOfReposToDo $numberOfReposToDo -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
       - name: Commit changes

@@ -49,7 +49,14 @@ function Get-OSSFInfo {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
-
+        
+        $hasField = Get-Member -inputobject $action -name "ossfDateLastUpdate" -Membertype Properties
+        if($hasField) {
+            if ($action.ossfDateLastUpdate -gt (Get-Date).AddDays(-7)) {
+                Write-Host "Skipping retrieving OSSF info for [$($action.name)] as it was updated less than 7 days ago"
+                continue
+            }
+        }
         ($owner, $repo) = GetOrgActionInfo($action.name)
         Write-Host "$i/$max - Checking OSSF information for [$($owner)/$($repo)]"
         ($enabled, $score, $date) = Get-OSSFInfoForRepo -owner $owner -repo $repo -access_token $access_token -access_token_destination $access_token_destination
@@ -78,6 +85,14 @@ function Get-OSSFInfo {
             }
             else {
                 $action.ossfDateLastUpdate = $date
+            }
+        }
+        else {
+            $hasField = Get-Member -inputobject $action -name "ossfDateLastUpdate" -Membertype Properties
+            if (!$hasField) {
+                $action | Add-Member -Name ossfDateLastUpdate -Value (Get-Date) -MemberType NoteProperty
+            } else {
+                $action.ossfDateLastUpdate = Get-Date
             }
         }
 
