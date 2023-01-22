@@ -699,8 +699,9 @@ function GetFoundSecretCount {
             $alertTypes.Add($alert.secret_type_display_name, $alert.number)
         }
     }
-    foreach ($alertType in $alertTypes.Keys) {
-        Write-Message "| $($alertType) | $($alertTypes[$alertType]) |" -logToSummary $true
+    $alertTypes = $alertTypes.GetEnumerator() | Sort-Object -Descending -Property Value 
+    foreach ($alertType in $alertTypes) {
+        Write-Message "| $($alertType.Key) | $($alertType.Value) |" -logToSummary $true
     }
 
     Write-Message "" -logToSummary $true

@@ -1,7 +1,7 @@
 Param (
   $actions,
   $logSummary,
-  $access_token_destination
+  $access_token_destination = $env:GITHUB_TOKEN
 )
 
 Write-Host "Found [$($actions.Count)] actions to report on"
@@ -415,7 +415,7 @@ function GetOSSFInfo {
             $ossfInfoCount++
         }
     }
-    Log-Message "Found [$ossfInfoCount] actions with OSSF info available."
+    LogMessage "Found [$ossfInfoCount] actions with OSSF info available."
 }
 
 # call the report functions
