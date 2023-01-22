@@ -98,7 +98,7 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos
 
-    $existingForks = Get-OSSFInfo -existingForks $existingForks # todo: store the information
+    $existingForks = Get-OSSFInfo -existingForks $existingForks
     SaveStatus -existingForks $existingForks
 
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination

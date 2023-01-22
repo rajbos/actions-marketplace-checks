@@ -295,7 +295,7 @@ function SaveStatus {
         $existingForks,
         $failedForks
     )
-    if ("" -ne $env:CI) {
+    if ("" -ne "$($env:CI)") {
         # We are running in CI, so let's pull before we overwrite the file
         git pull --quiet | Out-Null
     }
