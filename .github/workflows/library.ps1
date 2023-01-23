@@ -692,11 +692,13 @@ function GetFoundSecretCount {
     Write-Message "|---| ---: |" -logToSummary $true
     foreach ($alert in $alertsResult) {
         $totalAlerts += $alert.number
-        if ($alertTypes.ContainsKey($alert.secret_type_display_name)) {
-            $alertTypes[$alert.secret_type_display_name] += $alert.number
+        #$key = "$($alert.secret_type) - $($alert.secret_type_display_name)" # note: currently does not give extra info
+        $key = "$($alert.secret_type_display_name)"
+        if ($alertTypes.ContainsKey($key)) {
+            $alertTypes[$key] += $alert.number
         }
         else {
-            $alertTypes.Add($alert.secret_type_display_name, $alert.number)
+            $alertTypes.Add($key, $alert.number)
         }
     }
     $alertTypes = $alertTypes.GetEnumerator() | Sort-Object -Descending -Property Value 
