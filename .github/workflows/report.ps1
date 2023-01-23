@@ -410,12 +410,20 @@ function ReportAgeInsights {
 
 function GetOSSFInfo {
     $ossfInfoCount = 0
+    $total = 0
+    $ossfChecked = 0
     foreach ($action in $actions) {
         if ($action.ossf) {
             $ossfInfoCount++
         }
+
+        if ($action.ossfDateLastUpdate) {
+            $ossfChecked++
+        }
+
+        $total++
     }
-    LogMessage "Found [$ossfInfoCount] actions with OSSF info available."
+    LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total."
 }
 
 # call the report functions
