@@ -40,3 +40,8 @@ jobs:
         with:
           name: report
           path: VulnerableRepos-**.txt
+          
+      - uses: actions/upload-artifact@v3.1.1
+        with:
+          name: SecretScanningAlerts
+          path: secretScanningAlerts.json

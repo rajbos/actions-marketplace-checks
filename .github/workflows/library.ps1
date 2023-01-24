@@ -707,6 +707,9 @@ function GetFoundSecretCount {
     Write-Message "" -logToSummary $true
     Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
     Write-Message "" -logToSummary $true
+    
+    # log all resuls into a json file
+    Set-Content -Path secretScanningAlerts.json -Value (ConvertTo-Json $alertsResult)
 }
 
 function Write-Message {
