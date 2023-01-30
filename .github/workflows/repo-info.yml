@@ -31,6 +31,11 @@ jobs:
           curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
           ls -la
           
+      - uses: actions/upload-artifact@v2
+        with:
+          name: actions.json
+          path: actions.json
+          
       - name: Get App Token
         id: get_workflow_token
         uses: rajbos-actions/workflow-application-token-action@v2.1.0
