@@ -29,6 +29,7 @@ jobs:
       - name: Get current actions list
         run: |
           curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          ls -la
           
       - name: Get App Token
         id: get_workflow_token
