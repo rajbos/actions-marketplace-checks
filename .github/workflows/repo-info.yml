@@ -30,6 +30,7 @@ jobs:
         run: |
           curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
           ls -la
+          cat actions.json
           
       - uses: actions/upload-artifact@v2
         with:
