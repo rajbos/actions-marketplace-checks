@@ -36,12 +36,12 @@ jobs:
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3
         with:
           name: report
           path: VulnerableRepos-**.txt
           
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3
         with:
           name: SecretScanningAlerts
           path: secretScanningAlerts.json
