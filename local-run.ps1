@@ -1,3 +1,9 @@
+
+. $PSScriptRoot/.github/workflows/library.ps1
+
+GetRateLimitInfo -access_token $env:GITHUB_TOKEN
+
+return
 $actionsFile = "actions.json"
 if ((Test-Path $actionsFile)) {
     $actions=(Get-Content $actionsFile | ConvertFrom-Json)
