@@ -132,13 +132,14 @@ function GetActionType {
                 }
                 catch {
                     Write-Debug "No action.yml or action.yaml or Dockerfile or dockerfile found in repo [$owner/$repo]"
-                    return ("No file found", "No file found", "No file found", $null)
+                    return ("No file found", "No file found", "No file found")
                 }
             }
         }
     }
 
     # load the file
+    Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
     $fileContent = ApiCall -method GET -url $response.download_url
     Write-Debug "response: $($fileContent)"
     try {
