@@ -100,20 +100,20 @@ function GetActionType {
     $actionType = ""
     try {
         $url = "/repos/$owner/$repo/contents/action.yml"
-        $response = ApiCall -method GET -url $url
+        $response = ApiCall -method GET -url $url -hideFailedCall $true
         $fileFound = "action.yml"
     }
     catch {
         Write-Debug "No action.yml, checking for action.yaml"
         try {
             $url = "/repos/$owner/$repo/contents/action.yaml"
-            $response = ApiCall -method GET -url $url
+            $response = ApiCall -method GET -url $url -hideFailedCall $true
             $fileFound = "action.yaml"
         }
         catch {
             try {
                 $url = "/repos/$owner/$repo/contents/Dockerfile"
-                $response = ApiCall -method GET -url $url
+                $response = ApiCall -method GET -url $url -hideFailedCall $true
                 $fileFound = "Dockerfile"
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
@@ -123,7 +123,7 @@ function GetActionType {
             catch {
                 try {
                     $url = "/repos/$owner/$repo/contents/dockerfile"
-                    $response = ApiCall -method GET -url $url
+                    $response = ApiCall -method GET -url $url -hideFailedCall $true
                     $fileFound = "dockerfile"
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
@@ -131,6 +131,7 @@ function GetActionType {
                     return ($actionType, $fileFound, $actionDockerType)
                 }
                 catch {
+                    Write-Debug "No action.yml or action.yaml or Dockerfile or dockerfile found in repo [$owner/$repo]"
                     return ("No file found", "No file found", "No file found", $null)
                 }
             }
@@ -161,7 +162,7 @@ function GetActionType {
     $actionDockerType = ""
     if ($using -eq "docker") {
         $actionType = "Docker"
-        if ($yaml.runs.image -eq "Dockerfile") {
+        if ($yaml.runs.image -eq "Dockerfile" -or $yaml.runs.image -eq "./Dockerfile" -or $yaml.runs.image -eq ".\Dockerfile") {
             $actionDockerType = "Dockerfile"
         }
         else {
@@ -377,16 +378,16 @@ function GetRepoDockerBaseImage {
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
         try {
-            $dockerFile = ApiCall -method GET -url $url
+            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true
             $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
             $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
         }
         catch {
-            Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message)"
+            Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message), trying lowercase file"
             # retry with lowercase dockerfile name
             $url = "/repos/$owner/$repo/contents/dockerfile"
             try {
-                $dockerFile = ApiCall -method GET -url $url
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true
                 $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url
                 $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
             }

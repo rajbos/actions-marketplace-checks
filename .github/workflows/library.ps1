@@ -15,6 +15,7 @@ function ApiCall {
         [int] $currentResultCount,
         [int] $backOff = 5,
         [int] $maxResultCount = 0,
+        [bool] $hideFailedCall = $false,
         $access_token = $env:GITHUB_TOKEN
     )
     $headers = @{
@@ -182,17 +183,20 @@ function ApiCall {
             }
         }
         else {
-            Write-Host "Error calling $url, status code [$($result.StatusCode)]"
-            Write-Host "MessageData: " $messageData 
-            Write-Host "Error: " $_
-            if ($result.Content.Length -gt 100) {
-                Write-Host "Content: " $result.Content.Substring(0, 100) + "..."
-            }
-            else {
-                Write-Host "Content: " $result.Content
-            }
+            # if call failure is expectd, suppress the error
+            if (!$hideFailedCall) {
+                Write-Host "Error calling $url, status code [$($result.StatusCode)]"
+                Write-Host "MessageData: " $messageData 
+                Write-Host "Error: " $_
+                if ($result.Content.Length -gt 100) {
+                    Write-Host "Content: " $result.Content.Substring(0, 100) + "..."
+                }
+                else {
+                    Write-Host "Content: " $result.Content
+                }
 
-            throw
+                throw
+            }
         }
     }
 }
