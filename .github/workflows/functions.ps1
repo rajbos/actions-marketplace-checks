@@ -261,7 +261,7 @@ function ForkActionRepo {
                 Write-Host "Injecting CodeQL file"
                 $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
                 # copy the file to the repo
-                Copy-Item -Path $codeQLFile -Destination $tempDir\.github\workflows\codeql-analysis-injected.yml -Force | Out-Null
+                Copy-Item -Path $codeQLFile -Destination "$tempDir\$repo\.github\workflows\codeql-analysis-injected.yml" -Force | Out-Null
                 git add $tempDir\.github\workflows\codeql-analysis-injected.yml
                 git commit -m "Inject CodeQL file" | Out-Null
                 git push | Out-Null
