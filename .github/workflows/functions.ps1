@@ -248,9 +248,9 @@ function ForkActionRepo {
             Set-Location $tempDir | Out-Null
             Write-Host "Cloning from repo [https://github.com/$owner/$repo.git]"
             git clone "https://github.com/$owner/$repo.git" 
-            Set-Location $repo  | Out-Null
-            git remote remove origin  | Out-Null
-            git remote add origin "https://x:$access_token@github.com/$forkOrg/$($newRepoName).git"  | Out-Null
+            Set-Location $repo | Out-Null
+            git remote remove origin | Out-Null
+            git remote add origin "https://x:$access_token@github.com/$forkOrg/$($newRepoName).git" | Out-Null
 
             $branchName = $(git branch --show-current)
             Write-Host "Pushing to branch [$($branchName)]"
@@ -261,7 +261,7 @@ function ForkActionRepo {
                 Write-Host "Injecting CodeQL file"
                 $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
                 # copy the file to the repo
-                Copy-Item -Path $codeQLFile -Destination "$tempDir\$repo\.github\workflows\codeql-analysis-injected.yml" -Force | Out-Null
+                Copy-Item -Path $codeQLFile -Destination "$tempDir\$repo\.github\workflows\codeql-analysis-injected.yml" -Force -Recurse | Out-Null
                 git add $tempDir\.github\workflows\codeql-analysis-injected.yml
                 git commit -m "Inject CodeQL file" | Out-Null
                 git push | Out-Null
