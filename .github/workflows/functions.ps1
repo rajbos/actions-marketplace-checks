@@ -276,6 +276,8 @@ function ForkActionRepo {
         catch {
             Write-Host "Failed to mirror [$owner/$repo] to [$forkOrg/$($newRepoName)]"
             Write-Host $_.Exception.Message
+            # make sure we are back in the correct directory
+            Set-Location "$PSScriptRoot\..\..\" | Out-Null
             return $false
         }
     }
