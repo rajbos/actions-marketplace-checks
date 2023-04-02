@@ -2,9 +2,9 @@
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "mirroredRepos"
-$actionsFile = "actions.json"
-$statusFile = "status.json"
-$failedStatusFile = "failedForks.json"
+$actionsFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\actions.json"
+$statusFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\status.json"
+$failedStatusFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\failedForks.json"
 
 function ApiCall {
     Param (
@@ -715,16 +715,15 @@ function GetFoundSecretCount {
 }
 
 function Write-Message {
-    Param (
+    param(
         [string] $message,
-        [boolean] $logToSummary = $false
+        [bool] $logToSummary = $false
     )
     Write-Host $message
     if ($logToSummary) {
         $message >> $env:GITHUB_STEP_SUMMARY
     }
 }
-
 function GetForkedActionRepos {
     # if file exists, read it
     $status = $null
