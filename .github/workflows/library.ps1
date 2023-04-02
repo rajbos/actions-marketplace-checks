@@ -1,10 +1,14 @@
 
 # default variables
 $forkOrg = "actions-marketplace-validations"
-$tempDir = Join-Path -Path $PSScriptRoot -ChildPath "..\..\mirroredRepos"
-$actionsFile =Join-Path -Path $PSScriptRoot -ChildPath "..\..\actions.json"
-$statusFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\status.json"
-$failedStatusFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\failedForks.json"
+$tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)\mirroredRepos"
+$actionsFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)\actions.json"
+$statusFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)\status.json"
+$failedStatusFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)\failedForks.json"
+Write-Host "tempDir location: [$tempDir]"
+Write-Host "actionsFile location: [$actionsFile]"
+Write-Host "statusFile location: [$statusFile]"
+Write-Host "failedStatusFile location: [$failedStatusFile]"
 
 function ApiCall {
     Param (
