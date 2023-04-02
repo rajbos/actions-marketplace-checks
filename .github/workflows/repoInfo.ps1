@@ -138,6 +138,11 @@ function GetActionType {
         }
     }
 
+    if ($response.Length -eq 0 -or $response.download_url.Length -eq 0) {
+        Write-Debug "No action definition found in repo [$owner/$repo]"
+        return ("No file found", "No file found", "No file found")
+    }
+    
     # load the file
     Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
     $fileContent = ApiCall -method GET -url $response.download_url
