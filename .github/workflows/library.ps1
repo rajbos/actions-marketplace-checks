@@ -25,6 +25,12 @@ function ApiCall {
         $headers.Add('Content-Type', 'application/json')
         $headers.Add('User-Agent', 'rajbos')
     }
+
+    # prevent errors with empty urls
+    if ($null -eq $url -or $url -eq "") {
+        Write-Message -message "ApiCall Url is empty" -logToSummary $true
+        return false
+    }
     # prevent errors with starting slashes
     if ($url.StartsWith("/")) {
         $url = $url.Substring(1)
