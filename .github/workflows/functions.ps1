@@ -256,17 +256,22 @@ function ForkActionRepo {
             Write-Host "Pushing to branch [$($branchName)]"
             git push --set-upstream origin $branchName | Out-Null
 
-            # inject the CodeQL file
-            Write-Host "Injecting CodeQL file"
-            $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
-            # copy the file to the repo
-            Copy-Item -Path $codeQLFile -Destination $tempDir\.github\workflows\codeql-analysis-injected.yml -Force | Out-Null
-            git add $tempDir\.github\workflows\codeql-analysis-injected.yml
-            git commit -m "Inject CodeQL file" | Out-Null
-            git push | Out-Null
-
+            try {
+                # inject the CodeQL file
+                Write-Host "Injecting CodeQL file"
+                $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
+                # copy the file to the repo
+                Copy-Item -Path $codeQLFile -Destination $tempDir\.github\workflows\codeql-analysis-injected.yml -Force | Out-Null
+                git add $tempDir\.github\workflows\codeql-analysis-injected.yml
+                git commit -m "Inject CodeQL file" | Out-Null
+                git push | Out-Null
+            }
+            catch {
+                Write-Host "Failed to inject CodeQL file"
+                Write-Host $_.Exception.Message
+            }
             # back to normal repo
-            Set-Location ../.. | Out-Null
+            Set-Location "$PSScriptRoot\..\..\" | Out-Null
             # remove the temp directory to prevent disk build up
             Remove-Item -Path $tempDir/$repo -Recurse -Force | Out-Null
             Write-Host "Mirrored [$owner/$repo] to [$forkOrg/$($newRepoName)]"

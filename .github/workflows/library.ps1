@@ -1,8 +1,8 @@
 
 # default variables
 $forkOrg = "actions-marketplace-validations"
-$tempDir = "mirroredRepos"
-$actionsFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\actions.json"
+$tempDir = Join-Path -Path $PSScriptRoot -ChildPath "..\..\mirroredRepos"
+$actionsFile =Join-Path -Path $PSScriptRoot -ChildPath "..\..\actions.json"
 $statusFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\status.json"
 $failedStatusFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\failedForks.json"
 
