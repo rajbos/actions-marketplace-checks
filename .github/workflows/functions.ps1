@@ -268,9 +268,14 @@ function ForkActionRepo {
                 $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
                 # copy the file to the repo
                 Copy-Item -Path $codeQLFile -Destination "$tempDir\$repo\.github\workflows\codeql-analysis-injected.yml" -Force -Recurse | Out-Null
-                git add $tempDir\.github\workflows\codeql-analysis-injected.yml
+                git config --global user.email "actions-marketplace-checks@example.com"
+                git config --global user.name "actions-marketplace-checks"
+                Write-Host "Adding file to git"
+                git add $tempDir\$repo\.github\workflows\codeql-analysis-injected.yml
+                Write-Host "Committing file to git"
                 git commit -m "Inject CodeQL file" | Out-Null
                 git push | Out-Null
+                Write-Host "Injected CodeQL file pushed to repo"
             }
             catch {
                 Write-Host "Failed to inject CodeQL file"
