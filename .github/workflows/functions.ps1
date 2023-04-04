@@ -79,7 +79,7 @@ function ForkActionRepos {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
-
+        Write-Host "$i/$max Checking repo [$owner/$repo]"
         # check if fork already exists
         $forkedRepoName = $action.forkedRepoName
         $existingFork = $existingForks | Where-Object {$_.name -eq $forkedRepoName}

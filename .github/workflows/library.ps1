@@ -355,9 +355,9 @@ function FilterActionsToProcess {
                 break
             }
             # check first letter, since we sorted we do not need to go any further
-            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
+            if ($existingForksNames[$j].ToLower()[0] -gt $forkedRepoName.ToLower()[0]) {
                 $lastIndex = $j
-                break                
+                break
             }
         }
         if (!$found) {
