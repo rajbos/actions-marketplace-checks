@@ -259,17 +259,17 @@ function ForkActionRepo {
                 Write-Host "Injecting CodeQL file"
                 Write-Host "Current location: $(Get-Location)"
                 # check if there is a .github/workflows directory, if not, create it
-                if (-not (Test-Path ".github\workflows")) {
-                    Write-Host "Creating directory .github\workflows"
-                    New-Item -ItemType Directory -Path ".github\workflows" | Out-null
+                if (-not (Test-Path ".github/workflows")) {
+                    Write-Host "Creating directory .github/workflows"
+                    New-Item -ItemType Directory -Path ".github/workflows" | Out-null
                 }
-                $codeQLFile = "$PSScriptRoot\..\..\injectFiles\codeql-analysis-injected.yml"
+                $codeQLFile = "$PSScriptRoot/../../injectFiles/codeql-analysis-injected.yml"
                 # copy the file to the repo
-                Copy-Item -Path $codeQLFile -Destination "$tempDir\$repo\.github\workflows\codeql-analysis-injected.yml" -Force -Recurse | Out-Null
+                Copy-Item -Path $codeQLFile -Destination "$tempDir/$repo/.github/workflows/codeql-analysis-injected.yml" -Force -Recurse | Out-Null
                 git config --global user.email "actions-marketplace-checks@example.com"
                 git config --global user.name "actions-marketplace-checks"
                 Write-Host "Adding file to git"
-                git add $tempDir\$repo\.github\workflows\codeql-analysis-injected.yml
+                git add .github/workflows/codeql-analysis-injected.yml
                 Write-Host "Committing file to git"
                 git commit -m "Inject CodeQL file" | Out-Null
                 git push | Out-Null
