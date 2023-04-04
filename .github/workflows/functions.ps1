@@ -67,7 +67,7 @@ function ForkActionRepos {
         $actionsToProcess = $actions
     }
 
-    Write-Host "Found [$($actionsToProcess.Count)] actions still to process for forking"
+    Write-Message -message "Found [$($actionsToProcess.Count)] actions still to process for forking" -logToSummary $true
 
     # get existing forks with owner/repo values instead of full urls
     # declar variables outside of the loop to make it faster
