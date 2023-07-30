@@ -6,6 +6,7 @@ Param (
 )
 
 . $PSScriptRoot/library.ps1
+. $PSScriptRoot/dependents.ps1
 
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
