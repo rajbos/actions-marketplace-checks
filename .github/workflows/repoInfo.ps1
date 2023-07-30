@@ -314,6 +314,7 @@ function GetInfo {
         }
 
         # store dependent information
+        # todo: do we need to check if the repo still exists and/or is archived?
         $hasField = Get-Member -inputobject $action -name dependents -Membertype Properties
         if (!$hasField) {
             ($owner, $repo) = GetOrgActionInfo($action.name)

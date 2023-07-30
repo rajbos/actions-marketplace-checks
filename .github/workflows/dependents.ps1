@@ -18,12 +18,12 @@ function GetDependentsForRepo {
         if ($myMatches.Count -eq 1) { 
             # replace all spaces with nothing
             $found = $myMatches[0].Value.Replace(" ", "").Replace("`n", " ").Replace("Repositories", "")
-            Write-Host "Found match: $found"
+            Write-Debug "Found match: $found"
             
             return $found
         }
         else {
-            Write-Host "Found $($myMatches.Count) matches"
+            Write-Debug "Found $($myMatches.Count) matches for owner [$owner] and repo [$repo]: https://github.com/$owner/$repo/network/dependents"
             return ""
         }
     }
