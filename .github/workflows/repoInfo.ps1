@@ -325,6 +325,7 @@ function GetInfo {
                     dependentsLastUpdated = Get-Date
                 }
                 $action | Add-Member -Name dependents -Value $dependents -MemberType NoteProperty
+                $i++ | Out-Null
             }
         }
         else {
@@ -338,6 +339,7 @@ function GetInfo {
                 if ("" -ne $dependents) {
                     $action.dependents.dependents = $dependentsNumber
                     $action.dependents.dependentsLastUpdated = Get-Date
+                    $i++ | Out-Null
                 }
             }
         }
