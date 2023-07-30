@@ -312,6 +312,34 @@ function GetInfo {
             $action.repoSize = $response.size
         }
 
+        # store dependent information
+        $hasField = Get-Member -inputobject $action -name dependents -Membertype Properties
+        if (!$hasField) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner
+            if ("" -ne $dependents) {
+                $dependents = @{
+                    dependents = $dependentsNumber
+                    dependentsLastUpdated = Get-Date
+                }
+                $action | Add-Member -Name dependents -Value $dependents -MemberType NoteProperty
+            }
+        }
+        else {
+            # check if the last update was more than 7 days ago
+            $lastUpdated = $action.dependents.dependentsLastUpdated
+            $daysSinceLastUpdate = (Get-Date) - $lastUpdated
+            if ($daysSinceLastUpdate.Days -gt 7) {
+                # update the dependents info
+                ($owner, $repo) = GetOrgActionInfo($action.name)
+                $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner
+                if ("" -ne $dependents) {
+                    $action.dependents.dependents = $dependentsNumber
+                    $action.dependents.dependentsLastUpdated = Get-Date
+                }
+            }
+        }
+
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
         $hasNodeVersionField = $null -ne $action.actionType.nodeVersion
         $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField
