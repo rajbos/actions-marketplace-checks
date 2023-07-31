@@ -22,8 +22,12 @@ if ((Test-Path $statusFile)) {
 else {
     $status=$null
 }
-./.github/workflows/report.ps1 -actions $status
+#./.github/workflows/report.ps1 -actions $status
 #./.github/workflows/cleanup-all-repos.ps1 -numberOfReposToDo $numberofReposToDo
 #./tests/filtering.Tests.ps1 -actions $actions
 #./.github/workflows/dependabot-updates.ps1 -actions $status -numberOfReposToDo $numberofReposToDo
 #./.github/workflows/ossf-scan.ps1 -actions $actions -numberofReposToDo $numberofReposToDo
+
+. ./.github/workflows/dependents.ps1 
+#GetDependentsForRepo -owner "pozil" -repo "auto-assign-issue"
+GetDependentsForRepo -owner "devops-action" -repo "get-tag"

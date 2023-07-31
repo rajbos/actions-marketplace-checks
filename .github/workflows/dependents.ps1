@@ -12,7 +12,7 @@ function GetDependentsForRepo {
         $content = Invoke-WebRequest -Uri $url -UseBasicParsing
 
         # find the text where it says "10 repositories"
-        $regex = [regex]"\d+\s*\n\s*Repositories"
+        $regex = [regex]"\d{1,3}(,\d{1,3})*\s*\n\s*Repositories"
         $myMatches = $regex.Matches($content.Content)
         # check for regex matches
         if ($myMatches.Count -eq 1) { 
