@@ -430,7 +430,8 @@ function GetMostUsedActionsList {
     LogMessage "## Most used actions:"
     LogMessage "| Repository | Dependent repos |"
     LogMessage "|---|---:|"
-    $actions | Where-Object ($_.dependent.dependents -ne "") | Sort-Object -Property dependents.dependents -Descending | Select-Object -First 10 | ForEach-Object {
+    
+    $actions | Where-Object {$null -ne $_.dependent && $_.dependent.dependents -ne ""} | Sort-Object -Property {[int]($_.dependents?.dependents?.Replace(" ", ""))} -Descending | Select-Object -First 10 | ForEach-Object {
         $splitted = $_.name.Split("_")
         LogMessage "| $($splitted[0])/$($splitted[1]) | $($_.dependents.dependents) |"
     }
