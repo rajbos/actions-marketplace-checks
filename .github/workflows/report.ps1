@@ -426,6 +426,14 @@ function GetOSSFInfo {
     LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total."
 }
 
+function GetMostUsedActionsList {
+    LogMessage "## Most used actions:"
+    #sort the actions with most dependents
+    $actions | Sort-Object -Property dependents.dependents -Descending | Select-Object -First 10 | ForEach-Object {
+        LogMessage "- $($_.name) (used in $($_.dependents.dependents) repos)"
+    }
+}
+
 # call the report functions
 $repoInformation = AnalyzeActionInformation -actions $actions
 ReportAgeInsights
@@ -462,3 +470,5 @@ GetTagReleaseInfo
 GetOSSFInfo
 
 GetFoundSecretCount -access_token_destination $access_token_destination
+
+GetMostUsedActionsList
