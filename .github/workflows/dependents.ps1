@@ -17,7 +17,7 @@ function GetDependentsForRepo {
         # check for regex matches
         if ($myMatches.Count -eq 1) { 
             # replace all spaces with nothing
-            $found = $myMatches[0].Value.Replace(" ", "").Replace("`n", " ").Replace("Repositories", "")
+            $found = $myMatches[0].Value.Replace(" ", "").Replace("`n", "").Replace("Repositories", "")
             Write-Debug "Found match: $found"
             
             return $found
