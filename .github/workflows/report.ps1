@@ -428,9 +428,11 @@ function GetOSSFInfo {
 
 function GetMostUsedActionsList {
     LogMessage "## Most used actions:"
-    #sort the actions with most dependents
-    $actions | Sort-Object -Property dependents.dependents -Descending | Select-Object -First 10 | ForEach-Object {
-        LogMessage "- $($_.name) (used in $($_.dependents.dependents) repos)"
+    LogMessage "| Repository | Dependent repos |"
+    LogMessage "|---|---:|"
+    $actions | Where-Object ($_.dependent.dependents -ne "") | Sort-Object -Property dependents.dependents -Descending | Select-Object -First 10 | ForEach-Object {
+        $splitted = $_.name.Split("_")
+        LogMessage "| $($splitted[0])/$($splitted[1]) | $($_.dependents.dependents) |"
     }
 }
 
