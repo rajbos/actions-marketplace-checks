@@ -693,4 +693,4 @@ function Run {
 }
 
 # main call
-Run -access_token -actions $actions -access_token $access_token -access_token_destination $access_token_destination
+Run -actions $actions -access_token $access_token -access_token_destination $access_token_destination
