@@ -784,6 +784,7 @@ function GetForkedActionRepos {
         $failedForks = New-Object System.Collections.ArrayList
     }
 
+    Write-Host "Updating actions with split RepoUrl"
     # prep the actions file so that we only have to split the repourl once
     foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
@@ -792,9 +793,11 @@ function GetForkedActionRepos {
         $actionStatus | Add-Member -Name name -Value $repo -MemberType NoteProperty
     }
 
+    Write-Host "Convert static array"
     # convert the static array into a collection so we can add items to it
     $status = {$status}.Invoke()
 
+    Write-Host "Update the status file with newly found actions"
     # update the actions with any new action that is not yet in the status file
     foreach ($action in $actions) {
         # check if action is already in $status
