@@ -36,6 +36,7 @@ $global:actiondDockerFile = 0
 $global:compositeAction = 0
 $global:unknownActionType = 0
 $global:repoInfo = 0
+$global:Verified = 0
 # store current datetime
 $global:oldestRepo = Get-Date
 $global:updatedLastMonth = 0
@@ -90,11 +91,11 @@ function AnalyzeActionInformation {
     Param (
         $actions
     )
-    
+
     $repoInformation = New-Object RepoInformation
     # analyze action type, definition and age
     foreach ($action in $actions) {
-            
+
         GetVulnerableInfo -action $action -actionType "Any" -repoInformation $repoInformation
 
         if ($action.actionType) {
@@ -116,7 +117,7 @@ function AnalyzeActionInformation {
                 $global:nodeBasedActions++
 
                 $global:nodeVersions += $action.actionType.nodeVersion
-            }        
+            }
             elseif ($action.actionType.actionType -eq "Composite") {
                 $global:compositeAction++
             }
@@ -154,6 +155,10 @@ function AnalyzeActionInformation {
             $unknownActionType++
         }
 
+        if ($action.Verified) {
+            $global:Verified++
+        }
+
         if ($action.repoInfo -And $action.repoInfo.updated_at ) {
             $global:repoInfo++
 
@@ -166,7 +171,7 @@ function AnalyzeActionInformation {
             }
             elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-3)) {
                 $global:updatedLastQuarter++
-            } 
+            }
             elseif ($action.repoInfo.updated_at -gt (Get-Date).AddMonths(-6)) {
                 $global:updatedLast6Months++
             }
@@ -199,7 +204,7 @@ function GetTagReleaseInfo {
             if (!$action.releaseInfo) {
                 $tagButNoRelease++
             }
-            else {                
+            else {
                 $releaseInfo++
 
                 $tagCount = 0
@@ -238,7 +243,7 @@ function LogMessage {
         $message
     )
 
-    Write-Host $message 
+    Write-Host $message
     if ($logSummary) {
         $message | Out-File $logSummary -Append
     }
@@ -252,10 +257,10 @@ function VulnerabilityCalculations {
     )
     $averageHighAlerts = 0
     $averageCriticalAlerts = 0
-    
+
     if ($repoInformation.reposAnalyzed -eq 0) {
-        LogMessage "# No repos analyzed"        
-    } 
+        LogMessage "# No repos analyzed"
+    }
     else {
         $averageHighAlerts = $repoInformation.highAlerts / $repoInformation.reposAnalyzed
         $averageCriticalAlerts = $repoInformation.criticalAlerts / $repoInformation.reposAnalyzed
@@ -398,7 +403,7 @@ function ReportAgeInsights {
         LogMessage "## Action's repo size"
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
         LogMessage "|Description    | Info|"
-        LogMessage "|---            | ---:|"    
+        LogMessage "|---            | ---:|"
         LogMessage "|Total          | $($global:repoInfo)"
         LogMessage "|Analyzed       | $($global:countRepoSize)|"
         LogMessage "|Sum reposizes  | $([math]::Round($global:sumRepoSize / 1024, 0)) GiB|"
@@ -430,7 +435,7 @@ function GetMostUsedActionsList {
     LogMessage "## Most used actions:"
     LogMessage "| Repository | Dependent repos |"
     LogMessage "|---|---:|"
-    
+
     $actions | Where-Object {!$_.name.StartsWith("actions") && $null -ne $_.dependent && $_.dependent.dependents -ne ""} | Sort-Object -Property {[int]($_.dependents?.dependents?.Replace(" ", ""))} -Descending | Select-Object -First 10 | ForEach-Object {
         $splitted = $_.name.Split("_")
         LogMessage "| $($splitted[0])/$($splitted[1]) | $($_.dependents.dependents) |"
@@ -456,7 +461,7 @@ ReportVulnChartInMarkdown -chartTitle "actions" -actions $actions -repoInformati
 # reset everything for just the Node actions
 $nodeBasedActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Node")}
 $nodeRepoInformation = New-Object RepoInformation
-foreach ($action in $nodeBasedActions) {        
+foreach ($action in $nodeBasedActions) {
     GetVulnerableInfo -action $action -actionType "Node" -repoInformation $nodeRepoInformation
 }
 ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions -repoInformation $nodeRepoInformation
@@ -464,7 +469,7 @@ ReportVulnChartInMarkdown -chartTitle "Node actions" -actions $nodeBasedActions 
 # reset everything for just the Composite actions
 $compositeActions = $actions | Where-Object {($null -ne $_.actionType) -and ($_.actionType.actionType -eq "Composite")}
 $compositeRepoInformation = New-Object RepoInformation
-foreach ($action in $compositeActions) {        
+foreach ($action in $compositeActions) {
     GetVulnerableInfo -action $action -actionType "Composite" -repoInformation $compositeRepoInformation
 }
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions -repoInformation $compositeRepoInformation
@@ -475,3 +480,7 @@ GetOSSFInfo
 GetFoundSecretCount -access_token_destination $access_token_destination
 
 GetMostUsedActionsList
+
+
+LogMessage ""
+LogMessage "Verification status: [$($global:Verified)] out of [$($actions.Count)] actions are verified"

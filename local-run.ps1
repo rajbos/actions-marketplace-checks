@@ -3,6 +3,8 @@
 
 GetRateLimitInfo -access_token $env:GITHUB_TOKEN
 
+# to add: how to refresh the actions.json from the storage account?
+
 $actionsFile = "actions.json"
 if ((Test-Path $actionsFile)) {
     $actions=(Get-Content $actionsFile | ConvertFrom-Json)
@@ -28,6 +30,6 @@ else {
 #./.github/workflows/dependabot-updates.ps1 -actions $status -numberOfReposToDo $numberofReposToDo
 #./.github/workflows/ossf-scan.ps1 -actions $actions -numberofReposToDo $numberofReposToDo
 
-. ./.github/workflows/dependents.ps1 
+. ./.github/workflows/dependents.ps1
 #GetDependentsForRepo -owner "pozil" -repo "auto-assign-issue"
 GetDependentsForRepo -owner "devops-action" -repo "get-tag"
