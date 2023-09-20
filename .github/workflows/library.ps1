@@ -740,6 +740,7 @@ function Write-Message {
         $message >> $env:GITHUB_STEP_SUMMARY
     }
 }
+
 function GetForkedActionRepos {
     Param (
         $actions
