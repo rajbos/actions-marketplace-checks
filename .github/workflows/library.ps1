@@ -792,6 +792,9 @@ function GetForkedActionRepos {
         $actionStatus | Add-Member -Name name -Value $repo -MemberType NoteProperty
     }
 
+    # convert the static array into a collection so we can add items to it
+    $status = {$status}.Invoke()
+
     # update the actions with any new action that is not yet in the status file
     foreach ($action in $actions) {
         # check if action is already in $status
