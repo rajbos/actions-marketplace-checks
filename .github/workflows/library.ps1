@@ -322,7 +322,7 @@ function SaveStatus {
 
         # get number of forks that have repo information
         $existingForksWithRepoInfo = $existingForks | Where-Object { $_.repoInfo -And ($null -ne $_.repoInfo.updated_at) }
-        Write-Message -message "Found [$($existingForksWithRepoInfo.Length) out of $($existingForks.Length)] repos that have repo information" -logToSummary $true
+        Write-Message -message "Found [$($existingForksWithRepoInfo.Count) out of $($existingForks.Count)] repos that have repo information" -logToSummary $true
     }
 
     if ($failedForks) {
@@ -761,8 +761,8 @@ function GetForkedActionRepos {
             $failedForks = New-Object System.Collections.ArrayList
         }
 
-        Write-Host "Found $($status.Count) existing repos in status file"
-        Write-Host "Found $($failedForks.Count) existing records in the failed forks file"
+        Write-Host "Found [$($status.Count)] existing repos in status file"
+        Write-Host "Found [$($failedForks.Count)] existing records in the failed forks file"
     }
     else {
         # build up status from scratch
@@ -770,13 +770,13 @@ function GetForkedActionRepos {
 
         # get all existing repos in target org
         $forkedRepos = GetForkedActionRepoList
-        Write-Host "Found $($forkedRepos.Count) existing repos in target org"
+        Write-Host "Found [$($forkedRepos.Count)] existing repos in target org"
         # convert list of forkedRepos to a new array with only the name of the repo
         $status = New-Object System.Collections.ArrayList
         foreach ($repo in $forkedRepos) {
             $status.Add(@{name = $repo.name; dependabot = $null}) | Out-Null
         }
-        Write-Host "Found $($status.Count) existing repos in target org"
+        Write-Host "Found [$($status.Count)] existing repos in target org"
         # for each repo, get the Dependabot status
         foreach ($repo in $status) {
             $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name)
@@ -816,12 +816,12 @@ function GetForkedActionRepos {
         else {
             if (!$found.Verified) {
                 # add the extra field
-                $found | Add-Member -Name Verified -Value $action.Verified -MemberType NoteProperty
+                $status | Add-Member -Name Verified -Value $action.Verified -MemberType NoteProperty
             }
         }
     }
 
     $statusVerified = $status | Where-Object {$_.Verified}
-    Write-Host "Found $($statusVerified.Count) verified repos in status file of total $($status.Count) repos"
+    Write-Host "Found [$($statusVerified.Count)] verified repos in status file of total $($status.Count) repos"
     return ($status, $failedForks)
 }
