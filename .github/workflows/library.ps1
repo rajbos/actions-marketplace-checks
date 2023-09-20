@@ -71,17 +71,17 @@ function ApiCall {
         Write-Debug "  RateLimit-Reset: $($result.Headers["X-RateLimit-Reset"])"
         Write-Debug "  RateLimit-Used: $($result.Headers["X-Ratelimit-used"])"
         Write-Debug "  Retry-After: $($result.Headers["Retry-After"])"
-        
+
         if ($result.Headers["Link"]) {
             #Write-Host "Found pagination link: $($result.Headers["Link"])"
             # load next link from header
-            
+
             $result.Headers["Link"].Split(',') | ForEach-Object {
                 # search for the 'next' link in this list
                 $link = $_.Split(';')[0].Trim()
                 if ($_.Split(';')[1].Contains("next")) {
                     $nextUrl = $link.Substring(1, $link.Length - 2)
-                    
+
                     $currentResultCount = $currentResultCount + $response.Count
                     if ($maxResultCount -ne 0) {
                         Write-Host "Loading next page of data, where at [$($currentResultCount)] of max [$maxResultCount]"
@@ -99,9 +99,9 @@ function ApiCall {
                     $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token
                     $response += $nextResult
                 }
-            }            
+            }
         }
-        
+
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
         if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
@@ -113,7 +113,7 @@ function ApiCall {
                 Write-Host ""
                 $message = "Rate limit is low or hit [$rateLimitRemaining], waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing. Continuing at [$oUNIXDate UTC]"
                 Write-Message -message $message -logToSummary $true
-                Write-Host ""                
+                Write-Host ""
                 Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
             }
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
@@ -140,7 +140,7 @@ function ApiCall {
         catch {
             $messageData = $_.ErrorDetails.Message
         }
-        
+
         if ($messageData.message -eq "was submitted too quickly") {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
@@ -198,7 +198,7 @@ function ApiCall {
             # if call failure is expectd, suppress the error
             if (!$hideFailedCall) {
                 Write-Host "Error calling $url, status code [$($result.StatusCode)]"
-                Write-Host "MessageData: " $messageData 
+                Write-Host "MessageData: " $messageData
                 Write-Host "Error: " $_
                 if ($result.Content.Length -gt 100) {
                     Write-Host "Content: " $result.Content.Substring(0, 100) + "..."
@@ -220,7 +220,7 @@ function GetBasicAuthenticationHeader(){
 
     $CredPair = "x:$access_token"
     $EncodedCredentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($CredPair))
-    
+
     return "Basic $EncodedCredentials";
 }
 
@@ -246,11 +246,11 @@ function SplitUrl {
 }
 
 function GetForkedRepoName {
-    Param ( 
+    Param (
         $owner,
         $repo
      )
-    return "$($owner)_$($repo)"    
+    return "$($owner)_$($repo)"
 }
 
 function GetOrgActionInfo {
@@ -287,7 +287,7 @@ function GetRateLimitInfo {
         $access_token,
         $access_token_destination
     )
-    $url = "rate_limit"	
+    $url = "rate_limit"
     $response = ApiCall -method GET -url $url
 
     #Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
@@ -344,7 +344,7 @@ function FilterActionsToProcess {
     $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
     $lastIndex = 0
-    $actionsToProcess = $actionsToProcess | ForEach-Object { 
+    $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
         # for loop since the existingForksNames is a sorted array
@@ -383,7 +383,7 @@ function FilterActionsToProcessDependabot {
     $existingFork = $null
     $forkedRepoName = ""
     $found = $false
-    $actionsToProcess = $actionsToProcess | ForEach-Object { 
+    $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
         # for loop since the existingForksNames is a sorted array
@@ -424,7 +424,7 @@ function FilterActionsToProcessDependabot-Improved {
     $forkedRepoName = ""
     $found = $false
     $lastIndex = 0
-    $actionsToProcess = $actionsToProcess | ForEach-Object { 
+    $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
         # for loop since the existingForksNames is a sorted array
@@ -482,7 +482,7 @@ function FlattenActionsList {
 function GetDependabotStatus {
     Param (
         $owner,
-        $repo        
+        $repo
     )
 
     $url = "repos/$owner/$repo/vulnerability-alerts"
@@ -491,7 +491,7 @@ function GetDependabotStatus {
 }
 
 function EnableDependabot {
-    Param ( 
+    Param (
       $existingFork,
       $access_token_destination
     )
@@ -517,7 +517,7 @@ function EnableDependabot {
     return $false
 }
 
-function GetDependabotAlerts { 
+function GetDependabotAlerts {
     Param (
         $existingForks,
         [int] $numberOfReposToDo
@@ -621,19 +621,19 @@ function GetDependabotVulnerabilityAlerts {
             }
         }
     }'
-    
+
     $variables = "
         {
             ""owner"": ""$owner"",
             ""name"": ""$repo""
         }
         "
-    
+
     $uri = "https://api.github.com/graphql"
     $requestHeaders = @{
         Authorization = GetBasicAuthenticationHeader -access_token $access_token
     }
-    
+
     Write-Debug "Loading vulnerability alerts for repo $repo"
     $response = (Invoke-GraphQLQuery -Query $query -Variables $variables -Uri $uri -Headers $requestHeaders -Raw | ConvertFrom-Json)
     #Write-Host ($response | ConvertTo-Json)
@@ -649,7 +649,7 @@ function GetDependabotVulnerabilityAlerts {
         #Write-Host "Found $($node.securityVulnerability.advisory.severity)"
         #Write-Host $node.securityVulnerability.advisory.severity
         if ($node.dependencyScope -eq "RUNTIME") {
-            switch ($node.securityVulnerability.advisory.severity) {            
+            switch ($node.securityVulnerability.advisory.severity) {
                 "MODERATE" {
                     $moderate++
                 }
@@ -701,7 +701,7 @@ function GetFoundSecretCount {
     Write-Message "" -logToSummary $true
     Write-Message "## Secret scanning alerts" -logToSummary $true
     $totalAlerts = 0
-    
+
     # summarize the number of alerts per secret_type_display_name
     $alertTypes = @{}
     Write-Message "|Alert type| Count |" -logToSummary $true
@@ -717,7 +717,7 @@ function GetFoundSecretCount {
             $alertTypes.Add($key, $alert.number)
         }
     }
-    $alertTypes = $alertTypes.GetEnumerator() | Sort-Object -Descending -Property Value 
+    $alertTypes = $alertTypes.GetEnumerator() | Sort-Object -Descending -Property Value
     foreach ($alertType in $alertTypes) {
         Write-Message "| $($alertType.Key) | $($alertType.Value) |" -logToSummary $true
     }
@@ -725,7 +725,7 @@ function GetFoundSecretCount {
     Write-Message "" -logToSummary $true
     Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
     Write-Message "" -logToSummary $true
-    
+
     # log all resuls into a json file
     Set-Content -Path secretScanningAlerts.json -Value (ConvertTo-Json $alertsResult)
 }
@@ -741,6 +741,9 @@ function Write-Message {
     }
 }
 function GetForkedActionRepos {
+    Param (
+        $actions
+    )
     # if file exists, read it
     $status = $null
     if (Test-Path $statusFile) {
@@ -756,7 +759,7 @@ function GetForkedActionRepos {
         else {
             $failedForks = New-Object System.Collections.ArrayList
         }
-        
+
         Write-Host "Found $($status.Count) existing repos in status file"
         Write-Host "Found $($failedForks.Count) existing records in the failed forks file"
     }
@@ -777,8 +780,41 @@ function GetForkedActionRepos {
         foreach ($repo in $status) {
             $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name)
         }
-        
+
         $failedForks = New-Object System.Collections.ArrayList
     }
+
+    # prep the actions file so that we only have to split the repourl once
+    foreach ($actionStatus in $status){
+        ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
+
+        $actionStatus | Add-Member -Name owner -Value $owner -MemberType NoteProperty
+        $actionStatus | Add-Member -Name name -Value $repo -MemberType NoteProperty
+    }
+
+    # update the actions with any new action that is not yet in the status file
+    foreach ($action in $actions) {
+        # check if action is already in $status
+        $found = $status | Where-Object {$_.owner -eq $action.owner -And $_.name -eq $action.name}
+
+        if (!$found) {
+            # add to status
+            $status.Add(@{
+                name = $action.name;
+                owner = $action.owner;
+                dependabot = $null;
+                verified = $action.Verified;
+            }) | Out-Null
+        }
+        else {
+            if (!$found.Verified) {
+                # add the extra field
+                $found | Add-Member -Name Verified -Value $action.Verified -MemberType NoteProperty
+            }
+        }
+    }
+
+    $statusVerified = $status | Where-Object {$_.Verified}
+    Write-Host "Found $($statusVerified.Count) verified repos in status file of total $($status.Count) repos"
     return ($status, $failedForks)
 }

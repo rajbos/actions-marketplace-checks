@@ -19,7 +19,7 @@ on:
 env:
   numberOfReposToDo: 100
   numberOfReposToDoRepoInfo: 100
-    
+
 jobs:
   check-em-all:
     concurrency: there-can-be-only-one
@@ -30,7 +30,7 @@ jobs:
       - name: Get current actions list
         run: |
           curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
-          
+
       - name: Get App Token
         id: get_workflow_token
         uses: rajbos-actions/workflow-application-token-action@v2.1.0
@@ -38,7 +38,7 @@ jobs:
           application_id: 264650
           application_private_key: ${{ secrets.Automation_App_Key }}
           organization: actions-marketplace-validations
-          
+
       - shell: pwsh
         name: Gotta check 'em all
         run: |
@@ -48,8 +48,8 @@ jobs:
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
            # fork repos and load Dependabot status
            ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
-           # get repo information           
-           ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+           # get repo information
+           ${{ github.workspace }}/.github/workflows/repoInfo.ps1 -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
       - name: Commit changes
         if: always()
@@ -61,7 +61,7 @@ jobs:
           if [[ `git status --porcelain` ]]; then
             git config --global user.email "github_token@github.com"
             git config --global user.name "GITHUB_TOKEN"
-            
+
             git add status.json
             git add failedForks.json
             git commit -m "Update status.json"

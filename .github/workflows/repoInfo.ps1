@@ -49,14 +49,14 @@ function GetRepoTagInfo {
         $owner,
         $repo
     )
-    
+
     if ($null -eq $owner -or $owner.Length -eq 0) {
         return $null
     }
 
     $url = "repos/$owner/$repo/git/matching-refs/tags"
     $response = ApiCall -method GET -url $url
-    
+
     # filter the result array to only use the ref field
     $response = $response | ForEach-Object { SplitUrlLastPart($_.ref) }
 
@@ -68,13 +68,13 @@ function GetRepoReleases {
         $owner,
         $repo
     )
-    
+
     if ($null -eq $owner -or $owner.Length -eq 0) {
         return $null
     }
     $url = "repos/$owner/$repo/releases"
     $response = ApiCall -method GET -url $url
-    
+
     # filter the result array to only use the ref field
     $response = $response | ForEach-Object { SplitUrlLastPart($_.tag_name) }
 
@@ -118,7 +118,7 @@ function GetActionType {
                 $fileFound = "Dockerfile"
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
-    
+
                 return ($actionType, $fileFound, $actionDockerType)
             }
             catch {
@@ -128,7 +128,7 @@ function GetActionType {
                     $fileFound = "dockerfile"
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
-        
+
                     return ($actionType, $fileFound, $actionDockerType)
                 }
                 catch {
@@ -143,7 +143,7 @@ function GetActionType {
         Write-Debug "No action definition found in repo [$owner/$repo]"
         return ("No file found", "No file found", "No file found")
     }
-    
+
     # load the file
     Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
     $fileContent = ApiCall -method GET -url $response.download_url
@@ -157,14 +157,14 @@ function GetActionType {
         Write-Host $fileContent
         return "Unknown"
     }
-    
+
     # find line that says "
     # runs:
     #   using: "docker"
     #   image: "Dockerfile""
     # or:
     # using: "node**"
-    
+
     $using = $yaml.runs.using
     $actionDockerType = ""
     if ($using -eq "docker") {
@@ -207,8 +207,8 @@ function CheckForInfoUpdateNeeded {
     if (!$hasActionTypeField -or ($null -eq $action.actionType.actionType)) {
         return $true
     }
-    
-    # check nodeVersion field missing or not filled actionType in it    
+
+    # check nodeVersion field missing or not filled actionType in it
     if (("No file found" -eq $action.actionType.actionType) -or ("No repo found" -eq $action.actionType.actionType)) {
         return $true
     }
@@ -251,7 +251,7 @@ function GetInfo {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
-        
+
         $response = $null
 
         # back fill the 'owner' field with info from the fork
@@ -354,7 +354,7 @@ function GetInfo {
 
             If (!$hasActionTypeField) {
                 $actionType = @{
-                    actionType = $actionTypeResult 
+                    actionType = $actionTypeResult
                     fileFound = $fileFoundResult
                     actionDockerType = $actionDockerTypeResult
                     nodeVersion = $nodeVersion
@@ -390,15 +390,15 @@ function GetDockerBaseImageNameFromContent {
     if ($null -eq $dockerFileContent -or "" -eq $dockerFileContent) {
         return ""
     }
-    
+
     # find first line with FROM in the Dockerfile
-    $lines = $dockerFileContent.Split("`n") 
-    $firstFromLine = $lines | Where-Object { $_ -like "FROM *" } 
+    $lines = $dockerFileContent.Split("`n")
+    $firstFromLine = $lines | Where-Object { $_ -like "FROM *" }
     $dockerBaseImage = $firstFromLine | Select-Object -First 1
     if ($dockerBaseImage) {
         $dockerBaseImage = $dockerBaseImage.Split(" ")[1]
     }
-    
+
     # remove \r from the end
     $dockerBaseImage = $dockerBaseImage.TrimEnd("`r")
 
@@ -465,7 +465,7 @@ function GetMoreInfo {
     Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
     "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
     $memberAdded = 0
-    $memberUpdate = 0 
+    $memberUpdate = 0
     $dockerBaseImageInfoAdded = 0
     # store the repos that no longer exists
     $originalRepoDoesNotExists = New-Object System.Collections.ArrayList
@@ -539,7 +539,7 @@ function GetMoreInfo {
                     $tagInfo = GetRepoTagInfo -owner $owner -repo $repo
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
-                        
+
                         $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
                         $i++ | Out-Null
                     }
@@ -560,7 +560,7 @@ function GetMoreInfo {
                     $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name
                     if (!$hasField) {
                         Write-Host "Adding secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($action.name)]"
-                        
+
                         $action | Add-Member -Name secretScanningEnabled -Value $secretScanningEnabled -MemberType NoteProperty
                         $i++ | Out-Null
                     }
@@ -581,7 +581,7 @@ function GetMoreInfo {
                     $releaseInfo = GetRepoReleases -owner $owner -repo $repo
                     if (!$hasField) {
                         Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
-                        
+
                         $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
                         $i++ | Out-Null
                     }
@@ -602,10 +602,10 @@ function GetMoreInfo {
                     try {
                         # search for the docker file in the fork organization, since the original repo might already have seen updates
                         $dockerBaseImage = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType
-                        if ($dockerBaseImage -ne "") {                    
+                        if ($dockerBaseImage -ne "") {
                             if (!$hasField) {
                                 Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
-                                
+
                                 $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
                                 $i++ | Out-Null
                                 $dockerBaseImageInfoAdded++ | Out-Null
@@ -664,18 +664,19 @@ function GetMoreInfo {
 
 function Run {
     Param (
-        $access_token, 
+        $actions,
+        $access_token,
         $access_token_destination
     )
-    Write-Host "Got $($actions.Length) actions to get the repo information for"    
+    Write-Host "Got $($actions.Length) actions to get the repo information for"
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
-    ($existingForks, $failedForks) = GetForkedActionRepos
+    ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions
 
     $existingForks = GetInfo -existingForks $existingForks
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
-    
+
     # make it findable in the log to see where the second part starts
     Write-Host ""
     Write-Host ""
@@ -692,4 +693,4 @@ function Run {
 }
 
 # main call
-Run -access_token $access_token -access_token_destination $access_token_destination
+Run -access_token -actions $actions -access_token $access_token -access_token_destination $access_token_destination
