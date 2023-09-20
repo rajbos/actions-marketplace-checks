@@ -805,6 +805,7 @@ function GetForkedActionRepos {
         $found = $status | Where-Object {$_.owner -eq $action.owner -And $_.name -eq $action.name}
 
         if (!$found) {
+            Write-Host "Adding new action to the list: [$($action.owner)/$($action.name)]"
             # add to status
             $status.Add(@{
                 name = $action.name;
@@ -816,12 +817,14 @@ function GetForkedActionRepos {
         else {
             if (!$found.Verified) {
                 # add the extra field
-                $status | Add-Member -Name Verified -Value $action.Verified -MemberType NoteProperty
+                if (!Get-Member -inputobject $status -name "verified" -Membertype Properties) {
+                    $status | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty
+                }
             }
         }
     }
 
-    $statusVerified = $status | Where-Object {$_.Verified}
+    $statusVerified = $status | Where-Object {$_.verified}
     Write-Host "Found [$($statusVerified.Count)] verified repos in status file of total $($status.Count) repos"
     return ($status, $failedForks)
 }
