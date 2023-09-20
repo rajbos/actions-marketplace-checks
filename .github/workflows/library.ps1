@@ -785,7 +785,7 @@ function GetForkedActionRepos {
     }
 
     # prep the actions file so that we only have to split the repourl once
-    foreach ($actionStatus in $status){
+    foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
 
         $actionStatus | Add-Member -Name owner -Value $owner -MemberType NoteProperty
