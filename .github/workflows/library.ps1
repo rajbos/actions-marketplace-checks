@@ -790,8 +790,7 @@ function GetForkedActionRepos {
     foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
 
-        $actionStatus | Add-Member -Name owner -Value $owner -MemberType NoteProperty
-        $actionStatus | Add-Member -Name name -Value $repo -MemberType NoteProperty
+        $actionStatus | Add-Member -Name (GetForkedRepoName -owner $owner -repo $repo) -Value $owner -MemberType NoteProperty
     }
 
     Write-Host "Convert static array"
@@ -802,7 +801,7 @@ function GetForkedActionRepos {
     # update the actions with any new action that is not yet in the status file
     foreach ($action in $actions) {
         # check if action is already in $status
-        $found = $status | Where-Object {$_.owner -eq $action.owner -And $_.name -eq $action.name}
+        $found = $status | Where-Object {$_.name -eq $action.name} # both are owner_repo
 
         if (!$found) {
             Write-Host "Adding new action to the list: [$($action.owner)/$($action.name)]"

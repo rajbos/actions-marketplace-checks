@@ -242,8 +242,8 @@ function GetInfo {
     )
 
     # get information from the action files
-    $i = $existingForks.Length
-    $max = $existingForks.Length + ($numberOfReposToDo * 1)
+    $i = $existingForks.Count
+    $max = $existingForks.Count + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
 
         if ($i -ge $max) {
