@@ -817,7 +817,7 @@ function GetForkedActionRepos {
         else {
             if (!$found.Verified) {
                 # add the extra field
-                if (!Get-Member -inputobject $status -name "verified" -Membertype Properties) {
+                if ($false -eq (Get-Member -inputobject $status -name "verified" -Membertype Properties)) {
                     $status | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty
                 }
             }
