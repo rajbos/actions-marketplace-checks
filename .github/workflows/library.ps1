@@ -787,15 +787,18 @@ function GetForkedActionRepos {
 
     Write-Host "Updating actions with split RepoUrl from the list of [$($actions.Count)] actions"
     if ($null -ne $actions -And $actions.Count -gt 0) {
-        Write-Host "This is the first action on the list: [$($actions[0] | ConvertTo-Json)]"
+        Write-Host "This is the first action on the list: $($actions[0] | ConvertTo-Json)"
     }
 
     # prep the actions file so that we only have to split the repourl once
+    $counter = 0
     foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
 
         $actionStatus | Add-Member -Name name -Value (GetForkedRepoName -owner $owner -repo $repo) -MemberType NoteProperty
+        $counter++
     }
+    Write-Host "Updated [$($counter)] actions with split RepoUrl"
 
     Write-Host "Convert static array"
     # convert the static array into a collection so we can add items to it
