@@ -786,7 +786,9 @@ function GetForkedActionRepos {
     }
 
     Write-Host "Updating actions with split RepoUrl from the list of [$($actions.Count)] actions"
-    Write-Host "This is the first action on the list: [$($actions[0] | ConvertTo-Json)]"
+    if ($null -ne $actions -And $actions.Count -gt 0) {
+        Write-Host "This is the first action on the list: [$($actions[0] | ConvertTo-Json)]"
+    }
 
     # prep the actions file so that we only have to split the repourl once
     foreach ($actionStatus in $actions){
