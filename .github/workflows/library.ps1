@@ -786,19 +786,19 @@ function GetForkedActionRepos {
     }
 
     Write-Host "Updating actions with split RepoUrl from the list of [$($actions.Count)] actions"
-    Write-Host "This is the first action on the list: [$($actions | ConvertTo-Json)]"
+    Write-Host "This is the first action on the list: [$($actions[0] | ConvertTo-Json)]"
 
     # prep the actions file so that we only have to split the repourl once
     foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
 
-        $actionStatus | Add-Member -Name (GetForkedRepoName -owner $owner -repo $repo) -Value $owner -MemberType NoteProperty
+        $actionStatus | Add-Member -Name name -Value (GetForkedRepoName -owner $owner -repo $repo) -MemberType NoteProperty
     }
 
     Write-Host "Convert static array"
     # convert the static array into a collection so we can add items to it
     $status = {$status}.Invoke()
-    Write-Host "And this is the first status on the list: [$($status | ConvertTo-Json)]"
+    Write-Host "And this is the first status on the list: [$($status[0] | ConvertTo-Json)]"
 
     Write-Host "Update the status file with newly found actions"
     # update the actions with any new action that is not yet in the status file
