@@ -697,37 +697,43 @@ function GetFoundSecretCount {
     )
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
 
-    $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
-    Write-Message "" -logToSummary $true
-    Write-Message "## Secret scanning alerts" -logToSummary $true
-    $totalAlerts = 0
+    try {
+        $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
+        Write-Message "" -logToSummary $true
+        Write-Message "## Secret scanning alerts" -logToSummary $true
+        $totalAlerts = 0
 
-    # summarize the number of alerts per secret_type_display_name
-    $alertTypes = @{}
-    Write-Message "|Alert type| Count |" -logToSummary $true
-    Write-Message "|---| ---: |" -logToSummary $true
-    foreach ($alert in $alertsResult) {
-        $totalAlerts += $alert.number
-        #$key = "$($alert.secret_type) - $($alert.secret_type_display_name)" # note: currently does not give extra info
-        $key = "$($alert.secret_type_display_name)"
-        if ($alertTypes.ContainsKey($key)) {
-            $alertTypes[$key] += $alert.number
+        # summarize the number of alerts per secret_type_display_name
+        $alertTypes = @{}
+        Write-Message "|Alert type| Count |" -logToSummary $true
+        Write-Message "|---| ---: |" -logToSummary $true
+        foreach ($alert in $alertsResult) {
+            $totalAlerts += $alert.number
+            #$key = "$($alert.secret_type) - $($alert.secret_type_display_name)" # note: currently does not give extra info
+            $key = "$($alert.secret_type_display_name)"
+            if ($alertTypes.ContainsKey($key)) {
+                $alertTypes[$key] += $alert.number
+            }
+            else {
+                $alertTypes.Add($key, $alert.number)
+            }
         }
-        else {
-            $alertTypes.Add($key, $alert.number)
+        $alertTypes = $alertTypes.GetEnumerator() | Sort-Object -Descending -Property Value
+        foreach ($alertType in $alertTypes) {
+            Write-Message "| $($alertType.Key) | $($alertType.Value) |" -logToSummary $true
         }
-    }
-    $alertTypes = $alertTypes.GetEnumerator() | Sort-Object -Descending -Property Value
-    foreach ($alertType in $alertTypes) {
-        Write-Message "| $($alertType.Key) | $($alertType.Value) |" -logToSummary $true
-    }
 
-    Write-Message "" -logToSummary $true
-    Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
-    Write-Message "" -logToSummary $true
+        Write-Message "" -logToSummary $true
+        Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
+        Write-Message "" -logToSummary $true
 
-    # log all resuls into a json file
-    Set-Content -Path secretScanningAlerts.json -Value (ConvertTo-Json $alertsResult)
+        # log all resuls into a json file
+        Set-Content -Path secretScanningAlerts.json -Value (ConvertTo-Json $alertsResult)
+    }
+    catch {
+        Write-Message "Failed to get secret scanning alerts" -logToSummary $true
+        Write-Message "Error: $($_.Exception.Message)" -logToSummary $true
+    }
 }
 
 function Write-Message {
@@ -787,7 +793,8 @@ function GetForkedActionRepos {
 
     Write-Host "Updating actions with split RepoUrl from the list of [$($actions.Count)] actions"
     if ($null -ne $actions -And $actions.Count -gt 0) {
-        Write-Host "This is the first action on the list: $($actions[0] | ConvertTo-Json)"
+        Write-Host "This is the first action on the list: "
+        Write-Host "$($actions[0] | ConvertTo-Json)"
     }
 
     # prep the actions file so that we only have to split the repourl once
@@ -803,7 +810,8 @@ function GetForkedActionRepos {
     Write-Host "Convert static array"
     # convert the static array into a collection so we can add items to it
     $status = {$status}.Invoke()
-    Write-Host "And this is the first status on the list: [$($status[0] | ConvertTo-Json)]"
+    Write-Host "And this is the first status on the list:"
+    Write-Host "$($status[0] | ConvertTo-Json)"
 
     Write-Host "Update the status file with newly found actions"
     # update the actions with any new action that is not yet in the status file

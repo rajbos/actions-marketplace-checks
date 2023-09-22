@@ -640,7 +640,7 @@ function GetMoreInfo {
 
     Write-Message -message "Docker base image information added for [$dockerBaseImageInfoAdded] actions"  -logToSummary $true
 
-    Write-Host "Starting the cleanup with [$($existingForks.Length)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
+    Write-Host "Starting the cleanup with [$($existingForks.Count)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
     foreach ($action in $originalRepoDoesNotExists) {
         # remove the action from the actions lists
 
@@ -656,7 +656,7 @@ function GetMoreInfo {
         # $existingFork = $existingForks | Where-Object {$_.name -eq $repoName}
         # $existingForks.Remove($existingFork)
     }
-    Write-Host "Ended the cleanup with [$($existingForks.Length)] actions"
+    Write-Host "Ended the cleanup with [$($existingForks.Count)] actions"
 
     #return ($actions, $existingForks) ? where does this $actions come from?
     return ($null, $existingForks)
