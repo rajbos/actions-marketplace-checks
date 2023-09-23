@@ -699,7 +699,7 @@ function GetFoundSecretCount {
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
 
     try {
-        $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination
+        $alertsResult = ApiCall -method GET -url $url -access_token $access_token_destination -hideFailedCall $true
         Write-Message "" -logToSummary $true
         Write-Message "## Secret scanning alerts" -logToSummary $true
         $totalAlerts = 0
