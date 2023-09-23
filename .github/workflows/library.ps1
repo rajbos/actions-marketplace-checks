@@ -496,7 +496,8 @@ function EnableDependabot {
       $access_token_destination
     )
     if ($existingFork.name -eq "" -or $null -eq $existingFork.name) {
-        Write-Debug "No repo name found, skipping [$($existingFork.name)]" $existingFork | ConvertTo-Json
+        Write-Debug "No repo name found, skipping [$($existingFork.name)]:"
+        Write-Debug ($existingFork | ConvertTo-Json)
         return $false
     }
 
