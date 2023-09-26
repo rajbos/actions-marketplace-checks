@@ -1,0 +1,34 @@
+name: Testing
+
+on:
+
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/testing.yml
+
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v2.1.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+
+      - shell: pwsh
+        name: Run reporting script
+        run: |
+           $actions=(cat status.json | ConvertFrom-Json)
+           Write-Host "Found [$($actions.Length)] actions in the datafile"
+
+           . .github/workflows/library.ps1
+           GetFoundSecretCount -access_token_destination $access_token_destination

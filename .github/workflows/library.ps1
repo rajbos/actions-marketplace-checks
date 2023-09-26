@@ -195,7 +195,7 @@ function ApiCall {
             }
         }
         else {
-            # if call failure is expectd, suppress the error
+            # if the call failure is expected, suppress the error
             if (!$hideFailedCall) {
                 Write-Host "Error calling $url, status code [$($result.StatusCode)]"
                 Write-Host "MessageData: " $messageData
