@@ -2,9 +2,9 @@
 name: Generate report
 
 on:
-  
-  push: 
-    branches: 
+
+  push:
+    branches:
       - main
     paths:
       - .github/workflows/report.yml
@@ -28,19 +28,21 @@ jobs:
           application_id: 264650
           application_private_key: ${{ secrets.Automation_App_Key }}
           organization: actions-marketplace-validations
-          
+
       - shell: pwsh
         name: Run reporting script
         run: |
            $actions=(cat status.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
-           ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+           $token="${{ steps.get_workflow_token.outputs.token }}"  # this one expires after an hour
+           $token="${{ secrets.ACCESS_TOKEN }}"                    # using this to prevent issues in the current run, as it takes 1h 42mins atm
+           ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination $token
 
       - uses: actions/upload-artifact@v3
         with:
           name: report
           path: VulnerableRepos-**.txt
-          
+
       - uses: actions/upload-artifact@v3
         with:
           name: SecretScanningAlerts
