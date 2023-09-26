@@ -45,14 +45,31 @@ jobs:
           organization: actions-marketplace-validations
 
       - shell: pwsh
-        name: Gotta check 'em all
+        name: "Gotta check 'em all: functions"
         run: |
            $actions=(Get-Content actions.json | ConvertFrom-Json)
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
+
            # fork repos and load Dependabot status
            ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+
+      # get a new token for the next script, as it might have expired already
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v2.1.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+
+      - shell: pwsh
+        name: "Gotta check 'em all: repoInfo"
+        run: |
+           $actions=(Get-Content actions.json | ConvertFrom-Json)
+           Write-Host "Found [$($actions.Length)] actions in the datafile"
+
            # get repo information
            ${{ github.workspace }}/.github/workflows/repoInfo.ps1 -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
