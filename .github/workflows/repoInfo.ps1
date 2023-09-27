@@ -469,6 +469,8 @@ function GetMoreInfo {
     $dockerBaseImageInfoAdded = 0
     # store the repos that no longer exists
     $originalRepoDoesNotExists = New-Object System.Collections.ArrayList
+    # store the timestamp
+    $startTime = Get-Date
     try {
         foreach ($action in $existingForks) {
 
@@ -481,6 +483,13 @@ function GetMoreInfo {
             if (!$action.forkFound) {
                 Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
                 continue
+            }
+
+            # if we are already running for 55 minutes, stop
+            $timeSpan = (Get-Date) - $startTime
+            if ($timeSpan.Minutes -gt 55) {
+                Write-Host "Stopping the run, since we are running for more than 55 minutes"
+                break
             }
 
             # load info that is needed for most checks
