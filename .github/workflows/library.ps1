@@ -824,7 +824,9 @@ function GetForkedActionRepos {
     # Convert $status to a hashtable for faster lookup
     $statusTable = @{}
     foreach ($item in $status) {
-        $statusTable[$item.name] = $item
+        if ($null -ne $item.name -And $item.name -ne "") {
+            $statusTable[$item.name] = $item
+        }
     }
 
     foreach ($action in $actions) {
