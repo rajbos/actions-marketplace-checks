@@ -258,11 +258,15 @@ function GetOrgActionInfo {
         $forkedOwnerRepo
     )
 
-    $forkedOwnerRepoParts = $forkedOwnerRepo.Split('_')
-    $owner = $forkedOwnerRepoParts[0]
-    $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
+    if ($null -ne $forkedOwnerRepo -And $forkedOwnerRepo -ne "") {
+        $forkedOwnerRepoParts = $forkedOwnerRepo.Split('_')
+        $owner = $forkedOwnerRepoParts[0]
+        $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
 
-    return $owner, $repo
+        return $owner, $repo
+    }
+
+    return "", ""
 }
 
 function SplitUrlLastPart {
