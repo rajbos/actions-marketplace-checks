@@ -819,10 +819,17 @@ function GetForkedActionRepos {
     Write-Host "$($status[0] | ConvertTo-Json)"
 
     Write-Host "Update the status file with newly found actions"
-    # update the actions with any new action that is not yet in the status file
+    # find any new action that is not yet in the status file
+
+    # Convert $status to a hashtable for faster lookup
+    $statusTable = @{}
+    foreach ($item in $status) {
+        $statusTable[$item.name] = $item
+    }
+
     foreach ($action in $actions) {
-        # check if action is already in $status
-        $found = $status | Where-Object {$_.name -eq $action.name} # both are owner_repo
+        # check if action is already in $statusTable
+        $found = $statusTable[$action.name]
 
         if (!$found) {
             Write-Host "Adding new action to the list: [$($action.owner)/$($action.name)]"
