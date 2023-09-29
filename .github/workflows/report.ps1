@@ -436,10 +436,13 @@ function GetMostUsedActionsList {
     LogMessage "| Repository | Dependent repos |"
     LogMessage "|---|---:|"
 
-    $actions | Where-Object
+    $dependentsInfoAvailable = $actions | Where-Object
     {
-        $null -ne $_ && $null -ne $_.name && !$_.name.StartsWith("actions") && $null -ne $_.dependent && $_.dependent?.dependents -ne ""
+        $null -ne $_ && $null -ne $_.name && !$_.name.StartsWith("actions") && $null -ne $_.dependent && $_.dependent.dependents -ne ""
     }
+    LogMessage "Found [$($dependentsInfoAvailable.Count)] actions with dependents info available"
+
+    $dependentsInfoAvailable
         | Sort-Object -Property {[int]($_.dependents?.dependents?.Replace(" ", ""))} -Descending
         | Select-Object -First 10
         | ForEach-Object
