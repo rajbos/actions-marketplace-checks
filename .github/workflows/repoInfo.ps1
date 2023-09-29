@@ -318,14 +318,16 @@ function GetInfo {
         $hasField = Get-Member -inputobject $action -name dependents -Membertype Properties
         if (!$hasField) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
+            if ($repo -ne "" -and $owner -ne "") {
             $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner
             if ("" -ne $dependents) {
-                $dependents = @{
-                    dependents = $dependentsNumber
-                    dependentsLastUpdated = Get-Date
+                    $dependents = @{
+                        dependents = $dependentsNumber
+                        dependentsLastUpdated = Get-Date
+                    }
+                    $action | Add-Member -Name dependents -Value $dependents -MemberType NoteProperty
+                    $i++ | Out-Null
                 }
-                $action | Add-Member -Name dependents -Value $dependents -MemberType NoteProperty
-                $i++ | Out-Null
             }
         }
         else {
