@@ -546,7 +546,12 @@ function GetDependabotAlerts {
         }
 
         if ($repo.name -eq "" -or $null -eq $repo.name) {
-            Write-Debug "Skipping repo with no name" $repo | ConvertTo-Json
+            if ($null -eq $repo) {
+                Write-Debug "Skipping repo with no name" $repo | ConvertTo-Json
+            }
+            else {
+                Write-Debug "Skipping null repo"
+            }
             continue
         }
 
