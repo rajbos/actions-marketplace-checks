@@ -432,6 +432,10 @@ function GetOSSFInfo {
 }
 
 function GetMostUsedActionsList {
+    if ($null -eq $actions) {
+        LogMessage "No actions found, so cannot check for Most Used Actions"
+        return
+    }
     LogMessage "## Most used actions:"
     LogMessage "| Repository | Dependent repos |"
     LogMessage "|---|---:|"
