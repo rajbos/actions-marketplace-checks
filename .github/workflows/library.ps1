@@ -848,22 +848,17 @@ function GetForkedActionRepos {
             }) | Out-Null
         }
         else {
-            Write-Host "found: [$($found.name)] with verified [$($found.Verified)] and [$($found.verified)]"
-            if (Get-Member -inputobject $found -name "Verified" -Membertype Properties) {
-                Write-Host "Verified on object"
-                Write-Host ($found | ConvertTo-Json)
+
+            # get the item from the status lists as it is already in it
+            $statusItem = $status | Where-Object { $_.name -eq $action.name }
+            if (Get-Member -inputobject $statusItem -name "Verified" -Membertype Properties) {
+                Write-Host "Verified already on object"
+                Write-Host ($statusItem | ConvertTo-Json)
             }
             else {
                 Write-Host "Verified not on object"
-            #if (!$found.Verified) {
-                # add the extra field
-                if (Get-Member -inputobject $status -name "verified" -Membertype Properties) {
-                    Write-Host "Verified already on status object"
-                }
-                else {
-                    Write-Host "Adding status member verified on status: [$($status | ConvertTo-Json)]"
-                    $status | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty
-                }
+                Write-Host "Adding status member verified on status: [$($status | ConvertTo-Json)]"
+                $statusItem | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty                }
             }
         }
     }
