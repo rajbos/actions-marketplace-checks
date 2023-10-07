@@ -817,7 +817,6 @@ function GetForkedActionRepos {
     }
     Write-Host "Updated [$($counter)] actions with split RepoUrl"
 
-    Write-Host "Convert static array"
     # convert the static array into a collection so we can add items to it
     $status = {$status}.Invoke()
     Write-Host "And this is the first status on the list:"
