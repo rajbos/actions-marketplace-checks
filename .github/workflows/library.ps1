@@ -848,10 +848,16 @@ function GetForkedActionRepos {
             }) | Out-Null
         }
         else {
-            if (!$found.Verified) {
+            if (!Get-Member -inputobject $found -name "Verified" -Membertype Properties) {
+                Write-Host "Verified not on object"
+            #if (!$found.Verified) {
                 # add the extra field
                 if ($false -eq (Get-Member -inputobject $status -name "verified" -Membertype Properties)) {
+                    Write-Host "Adding status member verified"
                     $status | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty
+                }
+                else {
+                    Write-Host "Verified not on status object"
                 }
             }
         }
