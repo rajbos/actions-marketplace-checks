@@ -848,6 +848,7 @@ function GetForkedActionRepos {
             }) | Out-Null
         }
         else {
+            Write-Host "found"
             if ($false -eq (Get-Member -inputobject $found -name "Verified" -Membertype Properties)) {
                 Write-Host "Verified not on object"
             #if (!$found.Verified) {
