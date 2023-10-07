@@ -861,6 +861,10 @@ function GetForkedActionRepos {
                     Write-Host "Verified not on status object"
                 }
             }
+            else {
+                Get-Member -inputobject $found -name "Verified" -Membertype Properties
+                Write-Host ($found | ConvertTo-Json)
+            }
         }
     }
 
