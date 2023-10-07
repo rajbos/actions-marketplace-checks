@@ -861,7 +861,7 @@ function GetForkedActionRepos {
                     Write-Host "Verified already on status object"
                 }
                 else {
-                    Write-Host "Adding status member verified"
+                    Write-Host "Adding status member verified on status: [$($status | ConvertTo-Json)]"
                     $status | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty
                 }
             }
