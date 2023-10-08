@@ -840,7 +840,7 @@ function GetForkedActionRepos {
         if (!$found) {
             Write-Host "Adding new action to the list: [$($action.owner)/$($action.name)]"
             # add to status
-            $status.Add(@{
+            $statusTable.Add(@{
                 name = $action.name;
                 owner = $action.owner;
                 dependabot = $null;
@@ -849,7 +849,6 @@ function GetForkedActionRepos {
         }
         else {
             # get the item from the status lists as it is already in it
-            $statusItem = $status | Where-Object { $_.name -eq $action.name }
             if (Get-Member -inputobject $statusItem -name "Verified" -Membertype Properties) {
                 #Write-Host "Verified already on object"
             }
@@ -860,6 +859,8 @@ function GetForkedActionRepos {
         }
     }
 
+    # convert the hashtable back to an array
+    $status = $statusTable.Values
     $statusVerified = $status | Where-Object {$_.verified}
     Write-Host "Found [$($statusVerified.Count)] verified repos in status file of total $($status.Count) repos"
     return ($status, $failedForks)
