@@ -851,10 +851,10 @@ function GetForkedActionRepos {
             # get the item from the status lists as it is already in it
             $statusItem = $status | Where-Object { $_.name -eq $action.name }
             if (Get-Member -inputobject $statusItem -name "Verified" -Membertype Properties) {
-                Write-Host "Verified already on object"
+                #Write-Host "Verified already on object"
             }
             else {
-                Write-Host "Verified not on object"
+                #Write-Host "Verified not on object"
                 $statusItem | Add-Member -Name verified -Value $action.Verified -MemberType NoteProperty
             }
         }
