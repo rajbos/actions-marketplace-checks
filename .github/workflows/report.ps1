@@ -463,14 +463,15 @@ function GetMostUsedActionsList {
 
     LogMessage "Found [$($dependentsInfoAvailable.Count)] actions with dependents info available"
 
-    $dependentsInfoAvailable
+    $top10 = $dependentsInfoAvailable
         | Sort-Object -Property {[int]($_.dependents?.dependents?.Replace(" ", ""))} -Descending
         | Select-Object -First 10
-        | ForEach-Object
-        {
-            $splitted = $_.name.Split("_")
-            LogMessage "| $($splitted[0])/$($splitted[1]) | $($_.dependents.dependents) |"
-        }
+
+    foreach ($item in $top10)
+    {
+        $splitted = $item.name.Split("_")
+        LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
+    }
 }
 
 # call the report functions
