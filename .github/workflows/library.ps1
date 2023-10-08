@@ -34,7 +34,7 @@ function ApiCall {
     if ($null -eq $url -or $url -eq "") {
         Write-Message -message "ApiCall Url is empty" -logToSummary $true
         # show the method that called this function
-        Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | Format-List)" -logToSummary $true
+        Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | ForEach-Object { $_.Command })" -logToSummary $true
         return false
     }
     # prevent errors with starting slashes
