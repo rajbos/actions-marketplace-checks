@@ -395,16 +395,17 @@ function ReportAgeInsights {
     LogMessage "|Updated within last 6-12 months| $global:updatedLast12Months|$global:repoInfo repos |$([math]::Round($global:updatedLast12Months/$global:repoInfo * 100 , 1))%|"
     LogMessage "|Updated more then 12 months ago| $global:moreThen12Months   |$global:repoInfo repos |$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
     LogMessage ""
-    LogMessage "Additional information:"
+    LogMessage "### Additional information:"
     LogMessage "|Description    | Info|"
     LogMessage "|---            | --- |"
     LogMessage "|Average age| $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days|"
     LogMessage "|Archived repos| $global:archived|"
 
-    $statusVerified = ($status | Where-Object {$_.verified}).Count
+    $statusVerified = $global:Verified
     $actionCount = $actions.Count
     $notVerifiedCount = $actionCount - $statusVerified
-    LogMessage "Verified:"
+    LogMessage ""
+    LogMessage "### Verified publisher:"
     LogMessage "|Description    | Info|"
     LogMessage "|---            | --- |"
     LogMessage "|Total actions  |$actionCount|"
@@ -507,7 +508,6 @@ foreach ($action in $compositeActions) {
 ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeActions -repoInformation $compositeRepoInformation
 
 GetTagReleaseInfo
-GetOSSFInfo
 
 GetFoundSecretCount -access_token_destination $access_token_destination
 
@@ -515,4 +515,5 @@ GetMostUsedActionsList
 
 
 LogMessage ""
-LogMessage "Verification status: [$($global:Verified)] out of [$($actions.Count)] actions are verified"
+LogMessage "Verification status: [$($global:Verified)] out of [$($actions.Count)] actions are from a verified publisher"
+GetOSSFInfo
