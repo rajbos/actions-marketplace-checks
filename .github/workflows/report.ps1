@@ -395,8 +395,25 @@ function ReportAgeInsights {
     LogMessage "|Updated within last 6-12 months| $global:updatedLast12Months|$global:repoInfo repos |$([math]::Round($global:updatedLast12Months/$global:repoInfo * 100 , 1))%|"
     LogMessage "|Updated more then 12 months ago| $global:moreThen12Months   |$global:repoInfo repos |$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
     LogMessage ""
-    LogMessage "Average age: $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days"
-    LogMessage "Archived repos: $global:archived"
+    LogMessage "Additional information:"
+    LogMessage "|Description    | Info|"
+    LogMessage "|---            | --- |"
+    LogMessage "|Average age| $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days|"
+    LogMessage "|Archived repos| $global:archived|"
+
+    $statusVerified = ($status | Where-Object {$_.verified}).Count
+    $actionCount = $actions.Count
+    $notVerifiedCount = $actionCount - $statusVerified
+    LogMessage "Verified:"
+    LogMessage "|Description    | Info|"
+    LogMessage "|---            | --- |"
+    LogMessage "|Total actions  |$($actions.Count)|"
+
+    $percentage = $statusVerified / $actionCount * 100
+    LogMessage "|Verified       |$statusVerified ($([math]::Round($percentage, 1)))|"
+
+    $percentage = $notVerifiedCount / $actionCount * 100
+    LogMessage "|Not verified   |$notVerifiedCount ($([math]::Round($percentage, 1)))|"
 
     if ($global:countRepoSize -gt 0) {
         LogMessage ""
@@ -441,7 +458,7 @@ function GetMostUsedActionsList {
     LogMessage "|---|---:|"
 
     $dependentsInfoAvailable = $actions | Where-Object {
-        $null -ne $_ && $null -ne $_.name && !$_.name.StartsWith("actions") && $null -ne $_.dependent && $_.dependent.dependents -ne ""
+        $null -ne $_ && $null -ne $_.name && !$_.name.StartsWith("actions") && $null -ne $_.dependents && $_.dependents.dependents -ne ""
     }
 
     LogMessage "Found [$($dependentsInfoAvailable.Count)] actions with dependents info available"
