@@ -411,10 +411,10 @@ function ReportAgeInsights {
     LogMessage "|Total actions  |$actionCount|"
 
     $percentage = $statusVerified / $actionCount * 100
-    LogMessage "|Verified       |$statusVerified ($([math]::Round($percentage, 1)))|"
+    LogMessage "|Verified       |$statusVerified ($([math]::Round($percentage, 1))%)|"
 
     $percentage = $notVerifiedCount / $actionCount * 100
-    LogMessage "|Not verified   |$notVerifiedCount ($([math]::Round($percentage, 1)))|"
+    LogMessage "|Not verified   |$notVerifiedCount ($([math]::Round($percentage, 1))%)|"
 
     if ($global:countRepoSize -gt 0) {
         LogMessage ""
