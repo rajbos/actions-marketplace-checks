@@ -840,7 +840,7 @@ function GetForkedActionRepos {
         if (!$found) {
             Write-Host "Adding new action to the list: [$($action.owner)/$($action.name)]"
             # add to status
-            $statusTable.Add(@{
+            $statusTable.Add($action.name, @{
                 name = $action.name;
                 owner = $action.owner;
                 dependabot = $null;
