@@ -123,5 +123,10 @@
     "owner": "veridit",
     "timesFailed": 0,
     "name": "alpine-rsync-with-ssh-github-actions"
+  },
+  {
+    "timesFailed": 0,
+    "name": "github-tag-action",
+    "owner": "kzrnm"
   }
 ]
