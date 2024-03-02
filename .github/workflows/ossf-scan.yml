@@ -9,7 +9,7 @@ on:
       - .github/workflows/ossf-scan.ps1
 
   schedule:
-     - cron: '50 */1 * * *'
+     - cron: '50 3 * * *'
 
   workflow_dispatch:
 
