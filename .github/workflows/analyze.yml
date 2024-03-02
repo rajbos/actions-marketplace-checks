@@ -38,7 +38,7 @@ jobs:
 
       - name: Get App Token
         id: get_workflow_token2
-        uses: rajbos-actions/workflow-application-token-action@v2.1.0
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
         with:
           application_id: 264650
           application_private_key: ${{ secrets.Automation_App_Key }}
@@ -58,7 +58,7 @@ jobs:
       # get a new token for the next script, as it might have expired already
       - name: Get App Token
         id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v2.1.0
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
         with:
           application_id: 264650
           application_private_key: ${{ secrets.Automation_App_Key }}
