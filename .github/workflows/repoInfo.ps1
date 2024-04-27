@@ -14,7 +14,7 @@ if ($env:APP_PEM_KEY) {
     $env:APP_ID = 264650
     $env:INSTALLATION_ID = 31486141
     # get a token to use from the app
-    $accessToken = Get-GitHubAppToken -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
+    $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
 }
 
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo

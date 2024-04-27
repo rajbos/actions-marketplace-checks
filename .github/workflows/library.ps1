@@ -302,7 +302,7 @@ function GetRateLimitInfo {
     if ($access_token -ne $access_token_destination) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
-        Write-Message -message "Access token destination ratelimit info: $($response2.rate | ConvertTo-Json)" -logToSummary $true
+        Write-Message -message "Access token destination ratelimit info: $($response2.rate | ConvertTo-Json -Depth 5)" -logToSummary $true
     }
 
     if ($response.rate.limit -eq 60) {
@@ -867,55 +867,52 @@ function GetForkedActionRepos {
     return ($status, $failedForks)
 }
 
-function Get-GitHubAppToken {
+
+<#
+    .DESCRIPTION
+    Get-TokenFromApp uses the paramsas credentials
+    for the GitHub App to load an aceess token with. Be aware that this token is only valid for an hour.
+    Note: this token has only access to the repositories that the App has been installed to.
+    We cannot use this token to create new repositories or install the app in a repo.
+#>
+function Get-TokenFromApp {
     param (
         [string] $appId,
         [string] $installationId,
         [string] $pemKey
     )
-    $jwt = New-Jwt -appId $appId -pemKey $pemKey
-    $token = Get-AppToken -jwt $jwt -installationId $installationId
+    # get a temporary jwt token from the key file and app id (hardcoded in the file:)
+    $generated_jwt = $(bash ./github-app-jwt.sh $appId $pemKey)
+    $github_api_url = "https://api.github.com/app"
+
+    #Write-Host "Loaded jwt token: [$($generated_jwt)]"
+    $github_api_url="https://api.github.com/app/installations"
+    Write-Debug "Calling [${github_api_url}]"
+    $installationId = ""
+    try {
+        $response = Invoke-RestMethod -Uri $github_api_url -Headers @{Authorization = "Bearer $generated_jwt" } -ContentType "application/json" -Method Get
+
+        Write-Debug "Found installationId: [$($response[0].id)]"
+        $installationId = $response[0].id
+    }
+    catch
+    {
+        Write-Error "Error in finding the app installations: $($_)"
+    }
+
+    $github_api_url="https://api.github.com/app/installations/$installationId/access_tokens"
+    Write-Host "Calling [${github_api_url}]"
+    $token = ""
+    try {
+        $response = Invoke-RestMethod -Uri $github_api_url -Headers @{Authorization = "Bearer $generated_jwt" } -ContentType "application/json" -Method POST -Body "{}"
+        $token = $response.token
+        Write-Host "Got an access token that will expire at: [$($response.expires_at)]"
+    }
+    catch
+    {
+        Write-Error "Error in getting an access token: $($_)"
+    }
+
+    Write-Host "Found token with [$($token.length)]"
     return $token
-}
-
-function New-Jwt {
-    param (
-        [string] $appId,
-        [string] $pemKey
-    )
-    $now = [System.DateTime]::UtcNow
-    $payload = @{
-        iat = [math]::floor($now.Subtract((New-Object DateTime 1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind::Utc)).TotalSeconds)
-        exp = [math]::floor($now.AddMinutes(10).Subtract((New-Object DateTime 1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind::Utc)).TotalSeconds)
-        iss = $appId
-    }
-    $header = @{
-        alg = "RS256"
-        typ = "JWT"
-    }
-    $headerJson = $header | ConvertTo-Json -Compress
-    $payloadJson = $payload | ConvertTo-Json -Compress
-    $headerBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($headerJson))
-    $payloadBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($payloadJson))
-    $data = "$headerBase64.$payloadBase64"
-    $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
-    $rsa.ImportParameters((New-Object System.Security.Cryptography.RSAParameters))
-    $rsa.FromXmlString($pemKey)
-    $signature = $rsa.SignData([System.Text.Encoding]::UTF8.GetBytes($data), "SHA256")
-    $signatureBase64 = [Convert]::ToBase64String($signature)
-    return "$data.$signatureBase64"
-}
-
-function Get-AppToken {
-    param (
-        [string] $jwt,
-        [string] $installationId
-    )
-    $uri = "https://api.github.com/app/installations/$installationId/access_tokens"
-    $headers = @{
-        "Authorization" = "Bearer $jwt"
-        "Accept" = "application/vnd.github.v3+json"
-    }
-    $response = Invoke-RestMethod -Uri $uri -Method POST -Headers $headers
-    return $response.token
 }
