@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  numberOfReposToDo: 1000
+  numberOfReposToDo: 100
 
 jobs:
   get-repo-information:
