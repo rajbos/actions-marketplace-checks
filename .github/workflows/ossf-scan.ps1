@@ -111,7 +111,7 @@ function Run {
     Write-Host "Got $($actions.Length) actions to get the repo information for"    
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
-    ($existingForks, $failedForks) = GetForkedActionRepos
+    ($existingForks, $failedForks) = GetForkedActionRepos -access_token $access_token
 
     $existingForks = Get-OSSFInfo -existingForks $existingForks
     SaveStatus -existingForks $existingForks

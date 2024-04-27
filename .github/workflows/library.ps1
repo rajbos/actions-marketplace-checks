@@ -759,7 +759,8 @@ function Write-Message {
 
 function GetForkedActionRepos {
     Param (
-        $actions
+        $actions,
+        $access_token
     )
     # if file exists, read it
     $status = $null
@@ -785,7 +786,7 @@ function GetForkedActionRepos {
         Write-Host "Loading current forks and status from scratch"
 
         # get all existing repos in target org
-        $forkedRepos = GetForkedActionRepoList
+        $forkedRepos = GetForkedActionRepoList -access_token $access_token
         Write-Host "Found [$($forkedRepos.Count)] existing repos in target org"
         # convert list of forkedRepos to a new array with only the name of the repo
         $status = New-Object System.Collections.ArrayList
