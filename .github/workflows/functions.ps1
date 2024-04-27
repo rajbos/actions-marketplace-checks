@@ -10,10 +10,13 @@ Param (
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 function GetForkedActionRepoList {
+    Param (
+        $access_token
+    )
     # get all existing repos in target org
     #$repoUrl = "orgs/$forkOrg/repos?type=forks"
     $repoUrl = "orgs/$forkOrg/repos"
-    $repoResponse = ApiCall -method GET -url $repoUrl -body "{`"organization`":`"$forkOrg`"}" -access_token $access_token_destination
+    $repoResponse = ApiCall -method GET -url $repoUrl -body "{`"organization`":`"$forkOrg`"}" -access_token $access_token
     Write-Host "Found [$($repoResponse.Count)] existing repos in org [$forkOrg]"
     
     #foreach ($repo in $repoResponse) {
@@ -314,7 +317,7 @@ Write-Host "Got $($actions.Length) actions"
 GetRateLimitInfo
 
 # load the list of forked repos
-($existingForks, $failedForks) = GetForkedActionRepos
+($existingForks, $failedForks) = GetForkedActionRepos -access_token $access_token_destination
 #Write-Host "existingForks object type: $($existingForks.GetType())"
 #Write-Host "failedForks object type: $($failedForks.GetType())"
 
