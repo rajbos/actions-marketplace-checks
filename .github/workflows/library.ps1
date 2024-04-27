@@ -866,3 +866,56 @@ function GetForkedActionRepos {
     Write-Host "Found [$($statusVerified.Count)] verified repos in status file of total $($status.Count) repos"
     return ($status, $failedForks)
 }
+
+function Get-GitHubAppToken {
+    param (
+        [string] $appId,
+        [string] $installationId,
+        [string] $pemKey
+    )
+    $jwt = New-Jwt -appId $appId -pemKey $pemKey
+    $token = Get-AppToken -jwt $jwt -installationId $installationId
+    return $token
+}
+
+function New-Jwt {
+    param (
+        [string] $appId,
+        [string] $pemKey
+    )
+    $now = [System.DateTime]::UtcNow
+    $payload = @{
+        iat = [math]::floor($now.Subtract((New-Object DateTime 1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind::Utc)).TotalSeconds)
+        exp = [math]::floor($now.AddMinutes(10).Subtract((New-Object DateTime 1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind::Utc)).TotalSeconds)
+        iss = $appId
+    }
+    $header = @{
+        alg = "RS256"
+        typ = "JWT"
+    }
+    $headerJson = $header | ConvertTo-Json -Compress
+    $payloadJson = $payload | ConvertTo-Json -Compress
+    $headerBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($headerJson))
+    $payloadBase64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($payloadJson))
+    $data = "$headerBase64.$payloadBase64"
+    $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
+    $rsa.ImportParameters((New-Object System.Security.Cryptography.RSAParameters))
+    $rsa.FromXmlString($pemKey)
+    $signature = $rsa.SignData([System.Text.Encoding]::UTF8.GetBytes($data), "SHA256")
+    $signatureBase64 = [Convert]::ToBase64String($signature)
+    return "$data.$signatureBase64"
+}
+
+function Get-AppToken {
+    param (
+        [string] $jwt,
+        [string] $installationId
+    )
+    $uri = "https://api.github.com/app/installations/$installationId/access_tokens"
+    $headers = @{
+        "Authorization" = "Bearer $jwt"
+        "Accept" = "application/vnd.github.v3+json"
+    }
+    $response = Invoke-RestMethod -Uri $uri -Method POST -Headers $headers
+    return $response.token
+}

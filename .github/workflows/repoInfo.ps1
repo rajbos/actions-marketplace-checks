@@ -8,6 +8,15 @@ Param (
 . $PSScriptRoot/library.ps1
 . $PSScriptRoot/dependents.ps1
 
+if ($env:APP_PEM_KEY) {
+    Write-Host "GitHub App information found, using GitHub App"
+    # todo: move into codespace variable
+    $env:APP_ID = 264650
+    $env:INSTALLATION_ID = 31486141
+    # get a token to use from the app
+    $accessToken = Get-GitHubAppToken -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
+}
+
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 Import-Module powershell-yaml -Force
@@ -29,7 +38,7 @@ function GetRepoInfo {
     $url = "/repos/$owner/$repo"
     Write-Host "Loading repository info for [$owner/$repo]"
     try {
-        $response = ApiCall -method GET -url $url
+        $response = ApiCall -method GET -url $url -access_token $access_token
         try {
             $url = "/repos/$owner/$repo/releases/latest"
             $release = ApiCall -method GET -url $url -access_token $access_token
@@ -69,7 +78,7 @@ function GetRepoReleases {
     Param (
         $owner,
         $repo,
-        $access_token_destination
+        $access_token
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
@@ -453,12 +462,13 @@ function GetRepoDockerBaseImage {
 function EnableSecretScanning {
     param (
         [string] $owner,
-        [string] $repo
+        [string] $repo,
+        [string] $access_token
     )
 
     $url = "/repos/$owner/$repo"
     $body = "{""security_and_analysis"": {""secret_scanning"": {""status"": ""enabled""}}}"
-    $patchResult = ApiCall -method PATCH -url $url -body $body -token_destination $access_token_destination -expected 200
+    $patchResult = ApiCall -method PATCH -url $url -body $body access_token $access_token -expected 200
 
     return $patchResult
 }
@@ -576,7 +586,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.secretScanningEnabled) -or !$action.secretScanningEnabled) {
                 Write-Host "$i/$max - Enabling secret scanning information for [$forkOrg/$($action.name)]. hasField: [$hasField], action.secretScanningEnabled: [$($action.secretScanningEnabled)]]"
                 try {
-                    $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name
+                    $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name -access_token $access_token
                     if (!$hasField) {
                         Write-Host "Adding secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($action.name)]"
 
