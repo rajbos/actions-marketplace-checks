@@ -334,7 +334,7 @@ function GetInfo {
         if (!$hasField) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             if ($repo -ne "" -and $owner -ne "") {
-            $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner -access_token $access_token
+            $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner
             if ("" -ne $dependents) {
                     $dependents = @{
                         dependents = $dependentsNumber
