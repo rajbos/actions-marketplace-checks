@@ -28,6 +28,7 @@ function GetRepoInfo {
     Param (
         $owner,
         $repo,
+        [Parameter(Mandatory=$true)]
         $access_token
     )
 
@@ -694,7 +695,11 @@ function GetMoreInfo {
 function Run {
     Param (
         $actions,
+
+        [Parameter(Mandatory=$true)]
         $access_token,
+
+        [Parameter(Mandatory=$true)]
         $access_token_destination
     )
     Write-Host "Got $($actions.Length) actions to get the repo information for"

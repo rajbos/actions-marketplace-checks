@@ -703,6 +703,7 @@ function Test-AccessTokens {
 
 function GetFoundSecretCount {
     Param (
+        [Parameter(Mandatory=$true)]
         [string] $access_token_destination
     )
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
