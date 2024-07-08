@@ -111,6 +111,11 @@ function ApiCall {
             $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
+                if ($rateLimitReset.TotalSeconds > 1200) {
+                    $message = "Rate limit is low or hit [$rateLimitRemaining], and we need to wait for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing, which would mean continuing at [$oUNIXDate UTC]. This is longer then 20 minutes, so we are stopping the execution"
+                    Write-Message -message $message -logToSummary $true
+                    throw $message
+                }
                 $message = "Rate limit is low or hit [$rateLimitRemaining], waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing. Continuing at [$oUNIXDate UTC]"
                 Write-Message -message $message -logToSummary $true
                 Write-Host ""
