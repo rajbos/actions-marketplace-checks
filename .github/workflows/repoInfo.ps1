@@ -29,11 +29,19 @@ function GetRepoInfo {
         $owner,
         $repo,
         [Parameter(Mandatory=$true)]
-        $access_token
+        $access_token,
+        $startTime
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
         return ($null, $null, $null, $null, $null)
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
     }
 
     $url = "/repos/$owner/$repo"
@@ -59,11 +67,19 @@ function GetRepoTagInfo {
     Param (
         $owner,
         $repo,
-        $access_token
+        $access_token,
+        $startTime
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
         return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
     }
 
     $url = "repos/$owner/$repo/git/matching-refs/tags"
@@ -79,12 +95,21 @@ function GetRepoReleases {
     Param (
         $owner,
         $repo,
-        $access_token
+        $access_token,
+        $startTime
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
         return $null
     }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
     $url = "repos/$owner/$repo/releases"
     $response = ApiCall -method GET -url $url -access_token $access_token
 
@@ -98,7 +123,8 @@ function GetActionType {
     Param (
         $owner,
         $repo,
-        $access_token
+        $access_token,
+        $startTime
     )
 
     if ($null -eq $owner) {
@@ -107,6 +133,13 @@ function GetActionType {
 
     if ($null -eq $repo) {
         return ("No repo found", "No repo found", "No repo found", $null)
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
     }
 
     # check repo for action.yml or action.yaml
@@ -210,7 +243,8 @@ function CheckForInfoUpdateNeeded {
     Param (
         $action,
         $hasActionTypeField,
-        $hasNodeVersionField
+        $hasNodeVersionField,
+        $startTime
     )
 
     # skip actions where we cannot find the fork anymore
@@ -232,6 +266,13 @@ function CheckForInfoUpdateNeeded {
         return $true
     }
 
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
     return $false
 }
 
@@ -239,8 +280,17 @@ function MakeRepoInfoCall {
     Param (
         $action,
         $forkOrg,
-        $access_token
+        $access_token,
+        $startTime
     )
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
     $url = "/repos/$forkOrg/$($action.name)"
     try {
         $response = ApiCall -method GET -url $url -access_token $access_token
@@ -254,13 +304,21 @@ function MakeRepoInfoCall {
 function GetInfo {
     Param (
         $existingForks,
-        $access_token
+        $access_token,
+        $startTime
     )
 
     # get information from the action files
     $i = $existingForks.Count
     $max = $existingForks.Count + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
+
+        # Check if we are nearing the 50-minute mark
+        $timeSpan = (Get-Date) - $startTime
+        if ($timeSpan.TotalMinutes -gt 50) {
+            Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+            break
+        }
 
         if ($i -ge $max) {
             # do not run to long
@@ -279,7 +337,7 @@ function GetInfo {
                 continue
             }
             # load owner from repo info out of the fork
-            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token
+            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
             Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
                 if ($response -and $response.parent) {
                     # load owner info from parent
@@ -305,7 +363,7 @@ function GetInfo {
         $hasField = Get-Member -inputobject $action -name "mirrorLastUpdated" -Membertype Properties
         if (!$hasField) {
             if ($null -eq $response) {
-                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
             }
             if ($response -and $response.updated_at) {
                 # add the new field
@@ -321,7 +379,7 @@ function GetInfo {
         $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
         if (!$hasField) {
             if ($null -eq $response) {
-                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
             }
             $action | Add-Member -Name repoSize -Value $response.size -MemberType NoteProperty
         }
@@ -364,11 +422,11 @@ function GetInfo {
 
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
         $hasNodeVersionField = $null -ne $action.actionType.nodeVersion
-        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField -access_token $access_token
+        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField -startTime $startTime
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
-            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo
+            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo -access_token $access_token -startTime $startTime
 
             If (!$hasActionTypeField) {
                 $actionType = @{
@@ -477,7 +535,8 @@ function EnableSecretScanning {
 function GetMoreInfo {
     param (
         $existingForks,
-        $access_token
+        $access_token,
+        $startTime
     )
     # get repo information
     $i = $existingForks.Length
@@ -494,6 +553,13 @@ function GetMoreInfo {
     $startTime = Get-Date
     try {
         foreach ($action in $existingForks) {
+
+            # Check if we are nearing the 50-minute mark
+            $timeSpan = (Get-Date) - $startTime
+            if ($timeSpan.TotalMinutes -gt 50) {
+                Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+                break
+            }
 
             if ($i -ge $max) {
                 # do not run to long
@@ -520,7 +586,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
                 Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo
+                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
                         $action.forkFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
@@ -566,7 +632,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.tagInfo)) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
 
@@ -608,7 +674,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.releaseInfo)) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo
+                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
 
@@ -702,12 +768,16 @@ function Run {
         [Parameter(Mandatory=$true)]
         $access_token_destination
     )
+
+    $startTime = Get-Date
+    Write-Host "Run started at [$startTime]"
+
     Write-Host "Got $($actions.Length) actions to get the repo information for"
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
     ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $access_token_destination
 
-    $existingForks = GetInfo -existingForks $existingForks -access_token $access_token
+    $existingForks = GetInfo -existingForks $existingForks -access_token $access_token -startTime $startTime
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
 
@@ -719,7 +789,7 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -access_token $access_token_destination
+    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -access_token $access_token_destination -startTime $startTime
     SaveStatus -existingForks $existingForks
 
     GetFoundSecretCount -access_token_destination $access_token_destination
