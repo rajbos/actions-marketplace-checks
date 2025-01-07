@@ -104,6 +104,7 @@ function ApiCall {
 
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
+        $rateLimitUsed = $result.Headers["X-Ratelimit-Used"]
         if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
             # convert rateLimitReset from epoch to ms
             $rateLimitResetInt = [int]$rateLimitReset[0]
@@ -111,12 +112,12 @@ function ApiCall {
             $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
-                if ($rateLimitReset.TotalSeconds > 1200) {
-                    $message = "Rate limit is low or hit [$rateLimitRemaining], and we need to wait for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing, which would mean continuing at [$oUNIXDate UTC]. This is longer then 20 minutes, so we are stopping the execution"
+                if ($rateLimitReset.TotalSeconds -gt 1200) {
+                    $message = "Rate limit is low or hit (Remaining/Used) [$($rateLimitRemaining)/$($rateLimitUsed)], and we need to wait for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing, which would mean continuing at [$oUNIXDate UTC]. This is longer then 20 minutes, so we are stopping the execution"
                     Write-Message -message $message -logToSummary $true
                     throw $message
                 }
-                $message = "Rate limit is low or hit [$rateLimitRemaining], waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing. Continuing at [$oUNIXDate UTC]"
+                $message = "Rate limit is low or hit (Remaining/Used) [$($rateLimitRemaining)/$($rateLimitUsed)], waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing. Continuing at [$oUNIXDate UTC]"
                 Write-Message -message $message -logToSummary $true
                 Write-Host ""
                 Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
@@ -320,6 +321,7 @@ function SaveStatus {
         $existingForks,
         $failedForks
     )
+    Write-Host "SaveStatus"
     if ("" -ne "$($env:CI)") {
         # We are running in CI, so let's pull before we overwrite the file
         git pull --quiet | Out-Null
@@ -711,6 +713,8 @@ function GetFoundSecretCount {
         [Parameter(Mandatory=$true)]
         [string] $access_token_destination
     )
+    Write-Message "Getting secret scanning alerts" -logToSummary $true
+
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
 
     try {
