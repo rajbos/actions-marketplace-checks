@@ -10,3 +10,6 @@ Information being loaded (see the [report workflow](.github/workflows/report.yml
 |Declaration of the Action|action.yml, action.yaml, Dockerfile|
 |Docker image setup|Dockerfile in repo or remote image url (e.g. Docker hub, GitHub Container Registry, etc.|
 |Security alerts|Fork the Action and enabling Dependabot (works only for Node actions), then read back the security alerts|
+
+
+The dataset is scraped in this repo: [rajbos/github-azure-devops-marketplace-extension-news](https://github.com/rajbos/github-azure-devops-marketplace-extension-news)
