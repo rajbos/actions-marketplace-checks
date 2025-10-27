@@ -7,7 +7,7 @@ This repository contains PowerShell scripts that run checks on GitHub Actions in
 - Identify the type of action (Docker, Node, or Composite)
 - Analyze action declarations (action.yml, action.yaml, Dockerfile)
 - Check Docker image setup
-- Fork actions and enable Dependabot to detect security alerts (Node actions only)
+- Fork actions and enable GitHub Dependabot to detect security alerts (Node actions only)
 
 ## Technology Stack
 
@@ -105,7 +105,7 @@ Invoke-Pester -Output Detailed
 
 - The project processes a large dataset of GitHub Actions
 - API rate limiting is a concern - use backoff strategies
-- Fork operations use the organization `actions-marketplace-validations`
+- Fork operations use the organization `actions-marketplace-validations` (dedicated org for validation forks)
 - Temporary repositories are stored in `mirroredRepos` directory
 - Large data files (status.json) should not be committed unnecessarily
 
