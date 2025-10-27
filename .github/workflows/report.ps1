@@ -376,6 +376,17 @@ function ReportInsightsInMarkdown {
         LogMessage "- $($_.Name): $($_.Count)"
     }
     LogMessage ""
+
+    LogMessage "## Node based actions, used Node versions: "
+    # calculate unique items in nodeVersions
+    $nodeVersionsUnique = $global:nodeVersions | Sort-Object | Get-Unique
+    LogMessage "Found $($global:nodeVersions.Length) Node based actions with $($nodeVersionsUnique.Length) unique Node versions."
+    # summarize the string list nodeVersions to count each item
+    $nodeVersionsGrouped = $global:nodeVersions | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
+    $nodeVersionsGrouped | ForEach-Object {
+        LogMessage "- Node $($_.Name): $($_.Count)"
+    }
+    LogMessage ""
 }
 
 function ReportAgeInsights {

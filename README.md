@@ -7,6 +7,7 @@ Information being loaded (see the [report workflow](.github/workflows/report.yml
 |Information|Description|
 |---|---|
 |Type of Action|Docker, Node or Composite action|
+|Node versions|Node version used (e.g., node12, node16, node20) for Node-based actions|
 |Declaration of the Action|action.yml, action.yaml, Dockerfile|
 |Docker image setup|Dockerfile in repo or remote image url (e.g. Docker hub, GitHub Container Registry, etc.|
 |Security alerts|Fork the Action and enabling Dependabot (works only for Node actions), then read back the security alerts|
