@@ -15,7 +15,7 @@ on:
 
 jobs:
   get-data:
-    concurrency: there-can-be-only-one
+    concurrency: ossf-scan-workflow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

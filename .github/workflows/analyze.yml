@@ -22,7 +22,7 @@ env:
 
 jobs:
   check-em-all:
-    concurrency: there-can-be-only-one
+    concurrency: analyze-workflow
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
