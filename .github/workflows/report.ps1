@@ -383,7 +383,7 @@ function ReportInsightsInMarkdown {
     LogMessage "Found $($global:nodeVersions.Length) Node based actions with $($nodeVersionsUnique.Length) unique Node versions."
     # summarize the string list nodeVersions to count each item
     $nodeVersionsGrouped = $global:nodeVersions | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
-    $nodeVersionsGrouped | Sort-Object -Property Count -Descending | ForEach-Object {
+    $nodeVersionsGrouped | ForEach-Object {
         LogMessage "- Node $($_.Name): $($_.Count)"
     }
     LogMessage ""

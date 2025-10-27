@@ -80,7 +80,9 @@ Describe "GroupNodeVersionsAndCount" {
         # Act
         $result = GroupNodeVersionsAndCount -nodeVersions $nodeVersions
         
-        # Assert - results should be sorted by key
+        # Assert - The function sorts by Key (version number), not by Count
+        # This is intentional as the function is used in the mermaid flowchart
+        # The report section re-sorts by Count when displaying the list
         $result.Count | Should -Be 3
         $result[0].Key | Should -Be "12"
         $result[1].Key | Should -Be "16"
