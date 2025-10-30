@@ -18,6 +18,8 @@ on:
 jobs:
   cleanup-invalid-repos:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to commit and push changes to status.json
     steps:
       - uses: actions/checkout@v5
           
