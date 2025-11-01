@@ -38,12 +38,12 @@ jobs:
            $token="${{ secrets.ACCESS_TOKEN }}"                    # using this to prevent issues in the current run, as it takes 1h 42mins atm
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination $token
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: report
           path: VulnerableRepos-**.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: SecretScanningAlerts
           path: secretScanningAlerts.json

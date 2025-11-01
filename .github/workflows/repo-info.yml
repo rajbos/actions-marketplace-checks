@@ -35,7 +35,7 @@ jobs:
           #cat actions.json
           $actions=(cat actions.json | ConvertFrom-Json)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: actions.json
           path: actions.json
