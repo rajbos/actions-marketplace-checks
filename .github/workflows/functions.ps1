@@ -7,7 +7,7 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
-Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 function GetForkedActionRepoList {
     Param (
@@ -211,7 +211,7 @@ function ForkActionRepo {
 
     # check if the source repo exists
     $url = "repos/$owner/$repo"
-    $status = ApiCall -method GET -url $url -body $null -expected 200
+    $status = ApiCall -method GET -url $url -body $null -expected 200 -access_token $access_token
     if ($status -eq $false) {
         Write-Host "Repo [$owner/$repo] does not exist"
         return $false
@@ -220,7 +220,7 @@ function ForkActionRepo {
     # check if the destination repo already exists
     $newRepoName = GetForkedRepoName -owner $owner -repo $repo
     $url = "repos/$forkOrg/$newRepoName"
-    $status = ApiCall -method GET -url $url -body $null -expected 200
+    $status = ApiCall -method GET -url $url -body $null -expected 200 -access_token $access_token_destination
     if ($status -eq $true) {
         Write-Host "Repo [$forkOrg/$newRepoName] already exists"
         return $true
@@ -314,7 +314,7 @@ function ForkActionRepo {
 }
 
 Write-Host "Got $($actions.Length) actions"
-GetRateLimitInfo
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
 # load the list of forked repos
 ($existingForks, $failedForks) = GetForkedActionRepos -access_token $access_token_destination
@@ -327,7 +327,7 @@ Write-Host "Ended up with $($existingForks.Count) forked repos"
 # save the status
 SaveStatus -existingForks $existingForks
 
-GetRateLimitInfo
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
 Write-Host "End of script, added [$numberOfReposToDo] forked repos"
 # show the current location

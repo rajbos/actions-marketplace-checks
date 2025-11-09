@@ -22,6 +22,13 @@ function ApiCall {
         [bool] $hideFailedCall = $false,
         $access_token = $env:GITHUB_TOKEN
     )
+    
+    # Validate that access token is not null or empty before making API calls
+    if ([string]::IsNullOrWhiteSpace($access_token)) {
+        Write-Error "Missing GitHub access token. API call to [$url] cannot proceed without valid credentials."
+        throw "No access token available for API call. Please ensure ACCESS_TOKEN or Automation_App_Key secrets are properly configured."
+    }
+    
     $headers = @{
         Authorization = GetBasicAuthenticationHeader -access_token $access_token
     }
@@ -298,7 +305,7 @@ function GetRateLimitInfo {
         $access_token_destination
     )
     $url = "rate_limit"
-    $response = ApiCall -method GET -url $url
+    $response = ApiCall -method GET -url $url -access_token $access_token
 
     #Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
     Write-Message -message "Ratelimit info: $($response.rate | ConvertTo-Json)"  -logToSummary $true
@@ -493,11 +500,12 @@ function FlattenActionsList {
 function GetDependabotStatus {
     Param (
         $owner,
-        $repo
+        $repo,
+        $access_token = $env:GITHUB_TOKEN
     )
 
     $url = "repos/$owner/$repo/vulnerability-alerts"
-    $status = ApiCall -method GET -url $url -body $null -expected 204
+    $status = ApiCall -method GET -url $url -body $null -expected 204 -access_token $access_token
     return $status
 }
 
@@ -693,18 +701,26 @@ function Test-AccessTokens {
         [string] $access_token_destination,
         [int] $numberOfReposToDo
     )
-    #store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
-    if ($access_token) {
-        $env:GITHUB_TOKEN = $access_token
-    }
-    Write-Host "Got an access token with a length of [$($access_token.Length)], running for [$($numberOfReposToDo)] repos"
-
-    if ($access_token_destination -ne $access_token) {
-        Write-Host "Got an access token for the destination with a length of [$($access_token_destination.Length)]"
-    }
-
-    if ($access_token.Length -eq 0) {
+    
+    # Validate that accessToken is not null or empty
+    if ([string]::IsNullOrWhiteSpace($accessToken)) {
+        Write-Error "Missing GitHub access token (ACCESS_TOKEN). Please ensure the secret is configured in the repository."
         throw "No access token provided, please provide one!"
+    }
+    
+    # Validate that access_token_destination is not null or empty
+    if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
+        Write-Error "Missing GitHub access token for destination (Automation_App_Key). Please ensure the secret is configured in the repository."
+        throw "No access token for destination provided, please provide one!"
+    }
+    
+    #store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
+    $env:GITHUB_TOKEN = $accessToken
+    
+    Write-Host "Got an access token with a length of [$($accessToken.Length)], running for [$($numberOfReposToDo)] repos"
+
+    if ($access_token_destination -ne $accessToken) {
+        Write-Host "Got an access token for the destination with a length of [$($access_token_destination.Length)]"
     }
 }
 
@@ -806,7 +822,7 @@ function GetForkedActionRepos {
         Write-Host "Found [$($status.Count)] existing repos in target org"
         # for each repo, get the Dependabot status
         foreach ($repo in $status) {
-            $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name)
+            $repo.dependabot = $(GetDependabotStatus -owner $forkOrg -repo $repo.name -access_token $access_token)
         }
 
         $failedForks = New-Object System.Collections.ArrayList
