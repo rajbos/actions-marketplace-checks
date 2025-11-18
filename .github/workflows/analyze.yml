@@ -60,7 +60,8 @@ jobs:
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
 
            # fork repos and load Dependabot status
-           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token2.outputs.token }}
+           # used to be secrets.ACCESS_TOKEN, but that expired. trying with app token
+           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token2.outputs.token }}" -access_token_destination ${{ steps.get_workflow_token2.outputs.token }}
 
       # get a new token for the next script, as it might have expired already
       - name: Get App Token
