@@ -79,7 +79,8 @@ jobs:
            Write-Host "Found [$($actions.Length)] actions in the datafile"
 
            # get repo information
-           ${{ github.workspace }}/.github/workflows/repoInfo.ps1 -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+           # used to be secrets.ACCESS_TOKEN, but that expired. trying with app token
+           ${{ github.workspace }}/.github/workflows/repoInfo.ps1 -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
       - name: Commit changes
         if: always()
