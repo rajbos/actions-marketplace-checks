@@ -16,6 +16,10 @@ if ($env:APP_PEM_KEY) {
     # get a token to use from the app
     $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
 }
+else {
+  # use the one send in as a file param
+  $accessToken = $access_token
+}
 
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
