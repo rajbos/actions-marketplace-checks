@@ -5,28 +5,20 @@ BeforeAll {
     . $PSScriptRoot/../.github/workflows/library.ps1
 }
 
-Describe "Fork Sync Tests" {
-    Context "SyncForkWithUpstream function" {
-        It "Should handle successful sync response" {
-            # Mock the ApiCall function to simulate successful sync
-            Mock ApiCall {
-                return @{
-                    message = "Successfully fetched and fast-forwarded from upstream"
-                    merge_type = "fast-forward"
-                }
-            }
-            
-            # This test validates the function structure exists
-            $result = Get-Command SyncForkWithUpstream
+Describe "Mirror Sync Tests" {
+    Context "SyncMirrorWithUpstream function" {
+        It "Should have function defined" {
+            $result = Get-Command SyncMirrorWithUpstream
             $result | Should -Not -BeNullOrEmpty
-            $result.Name | Should -Be "SyncForkWithUpstream"
+            $result.Name | Should -Be "SyncMirrorWithUpstream"
         }
         
         It "Should have required parameters" {
-            $command = Get-Command SyncForkWithUpstream
+            $command = Get-Command SyncMirrorWithUpstream
             $command.Parameters.Keys | Should -Contain "owner"
             $command.Parameters.Keys | Should -Contain "repo"
-            $command.Parameters.Keys | Should -Contain "branch"
+            $command.Parameters.Keys | Should -Contain "upstreamOwner"
+            $command.Parameters.Keys | Should -Contain "upstreamRepo"
             $command.Parameters.Keys | Should -Contain "access_token"
         }
     }

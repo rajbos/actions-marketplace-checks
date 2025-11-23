@@ -1,5 +1,5 @@
-# Update all forked repos to sync with their upstream repositories
-name: Update Forks
+# Update all mirrored repos to sync with their upstream repositories
+name: Update Mirrors
 
 on:
   push:
@@ -40,10 +40,10 @@ jobs:
           organization: actions-marketplace-validations
           
       - shell: pwsh
-        name: Update forked repos
+        name: Update mirrored repos
         run: |
            $existingForks=(cat status.json | ConvertFrom-Json)
-           Write-Host "Found [$($existingForks.Length)] forks in the status file"
+           Write-Host "Found [$($existingForks.Length)] mirrors in the status file"
            
            # Use workflow input if available, otherwise use env variable
            $numberOfRepos = ${{ github.event.inputs.numberOfRepos || env.numberOfReposToDo }}
@@ -61,7 +61,7 @@ jobs:
             git config --global user.name "GITHUB_TOKEN"
             
             git add status.json
-            git commit -m "Update fork sync status"
+            git commit -m "Update mirror sync status"
             git push
           else
             echo "Nothing to commit"

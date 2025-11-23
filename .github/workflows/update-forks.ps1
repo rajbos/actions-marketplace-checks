@@ -15,7 +15,7 @@ function UpdateForkedRepos {
         [int] $numberOfReposToDo
     )
 
-    Write-Message -message "Running fork sync for [$($existingForks.Count)] forks" -logToSummary $true
+    Write-Message -message "Running mirror sync for [$($existingForks.Count)] mirrors" -logToSummary $true
     
     $i = 0
     $max = $numberOfReposToDo
@@ -34,29 +34,30 @@ function UpdateForkedRepos {
 
         # Skip repos that don't have forkFound property or where it's false
         if ($null -eq $existingFork.forkFound -or $existingFork.forkFound -eq $false) {
-            Write-Debug "Fork not found for [$($existingFork.name)], skipping"
+            Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
             continue
         }
 
-        # Get the owner and repo from the fork name
-        ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $existingFork.name
+        # Get the upstream owner and repo from the mirror name
+        # Mirror name format: upstreamOwner_upstreamRepo
+        ($upstreamOwner, $upstreamRepo) = GetOrgActionInfo -forkedOwnerRepo $existingFork.name
         
-        if ([string]::IsNullOrEmpty($owner) -or [string]::IsNullOrEmpty($repo)) {
-            Write-Warning "Could not parse owner/repo from fork name [$($existingFork.name)], skipping"
+        if ([string]::IsNullOrEmpty($upstreamOwner) -or [string]::IsNullOrEmpty($upstreamRepo)) {
+            Write-Warning "Could not parse upstream owner/repo from mirror name [$($existingFork.name)], skipping"
             continue
         }
 
-        Write-Host "$i/$max Syncing fork [actions-marketplace-validations/$($existingFork.name)] with upstream [$owner/$repo]"
+        Write-Host "$i/$max Syncing mirror [actions-marketplace-validations/$($existingFork.name)] with upstream [$upstreamOwner/$upstreamRepo]"
         
-        $result = SyncForkWithUpstream -owner $forkOrg -repo $existingFork.name -access_token $access_token_destination
+        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
         
         if ($result.success) {
             if ($result.message -like "*Already up to date*") {
-                Write-Debug "Fork [$($existingFork.name)] already up to date"
+                Write-Debug "Mirror [$($existingFork.name)] already up to date"
                 $upToDate++
             }
             else {
-                Write-Host "$i/$max Successfully synced fork [$($existingFork.name)]"
+                Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
                 $synced++
                 # Update the sync timestamp
                 $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
@@ -64,11 +65,11 @@ function UpdateForkedRepos {
         }
         else {
             if ($result.message -like "*Merge conflict*") {
-                Write-Warning "$i/$max Merge conflict detected for fork [$($existingFork.name)]"
+                Write-Warning "$i/$max Merge conflict detected for mirror [$($existingFork.name)]"
                 $conflicts++
             }
             else {
-                Write-Warning "$i/$max Failed to sync fork [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$max Failed to sync mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
             }
             # Track failed sync
@@ -79,7 +80,7 @@ function UpdateForkedRepos {
         $i++ | Out-Null
     }
 
-    Write-Message -message "Fork sync complete: Synced=[$synced], UpToDate=[$upToDate], Conflicts=[$conflicts], Failed=[$failed]" -logToSummary $true
+    Write-Message -message "Mirror sync complete: Synced=[$synced], UpToDate=[$upToDate], Conflicts=[$conflicts], Failed=[$failed]" -logToSummary $true
     return $existingForks
 }
 
