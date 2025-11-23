@@ -25,6 +25,9 @@ jobs:
   update-forks:
     concurrency: update-forks-workflow
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to commit and push changes to status.json
+      actions: read    # Required to read workflow artifacts
     steps:
       - uses: actions/checkout@v5
 
