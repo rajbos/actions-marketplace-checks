@@ -947,6 +947,7 @@ function SyncForkWithUpstream {
     Param (
         $owner,
         $repo,
+        $branch = "main",
         $access_token = $env:GITHUB_TOKEN
     )
     
@@ -956,11 +957,11 @@ function SyncForkWithUpstream {
     
     $url = "repos/$owner/$repo/merge-upstream"
     $body = @{
-        branch = "main"
+        branch = $branch
     } | ConvertTo-Json
     
     try {
-        Write-Debug "Syncing fork [$owner/$repo] with upstream"
+        Write-Debug "Syncing fork [$owner/$repo] with upstream using branch [$branch]"
         $response = ApiCall -method POST -url $url -body $body -access_token $access_token
         
         if ($null -ne $response) {
@@ -998,7 +999,7 @@ function SyncForkWithUpstream {
     }
     catch {
         $errorMessage = $_.Exception.Message
-        Write-Warning "Error syncing fork [$owner/$repo]: $errorMessage"
+        Write-Warning "Error syncing fork [$owner/$repo] with branch [$branch]: $errorMessage"
         
         # Check for common errors
         if ($errorMessage -like "*409*" -or $errorMessage -like "*merge conflict*") {
@@ -1007,8 +1008,9 @@ function SyncForkWithUpstream {
                 message = "Merge conflict detected"
             }
         }
-        elseif ($errorMessage -like "*default branch*") {
-            # Try with master branch
+        elseif (($errorMessage -like "*default branch*" -or $errorMessage -like "*not found*") -and $branch -eq "main") {
+            # Try with master branch as fallback
+            Write-Debug "Retrying with master branch for fork [$owner/$repo]"
             $body = @{
                 branch = "master"
             } | ConvertTo-Json
@@ -1024,7 +1026,7 @@ function SyncForkWithUpstream {
                 }
             }
             catch {
-                # Fallback failed
+                # Fallback failed, return original error
             }
         }
         

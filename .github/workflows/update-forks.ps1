@@ -46,7 +46,7 @@ function UpdateForkedRepos {
             continue
         }
 
-        Write-Host "$i/$max Syncing fork [$forkOrg/$($existingFork.name)] with upstream [$owner/$repo]"
+        Write-Host "$i/$max Syncing fork [actions-marketplace-validations/$($existingFork.name)] with upstream [$owner/$repo]"
         
         $result = SyncForkWithUpstream -owner $forkOrg -repo $existingFork.name -access_token $access_token_destination
         

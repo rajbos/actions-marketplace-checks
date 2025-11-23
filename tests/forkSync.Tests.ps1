@@ -14,7 +14,7 @@ Describe "Fork Sync Tests" {
                     message = "Successfully fetched and fast-forwarded from upstream"
                     merge_type = "fast-forward"
                 }
-            } -ModuleName $null
+            }
             
             # This test validates the function structure exists
             $result = Get-Command SyncForkWithUpstream
@@ -26,6 +26,7 @@ Describe "Fork Sync Tests" {
             $command = Get-Command SyncForkWithUpstream
             $command.Parameters.Keys | Should -Contain "owner"
             $command.Parameters.Keys | Should -Contain "repo"
+            $command.Parameters.Keys | Should -Contain "branch"
             $command.Parameters.Keys | Should -Contain "access_token"
         }
     }
