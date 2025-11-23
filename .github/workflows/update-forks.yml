@@ -1,0 +1,65 @@
+# Update all forked repos to sync with their upstream repositories
+name: Update Forks
+
+on:
+  push:
+    paths:
+      - .github/workflows/update-forks.yml
+      - .github/workflows/update-forks.ps1
+
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      numberOfRepos:
+        description: 'Number of repos to update (default: 100)'
+        required: false
+        default: '100'
+
+env: 
+  numberOfReposToDo: 100
+
+jobs:
+  update-forks:
+    concurrency: update-forks-workflow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+          
+      - shell: pwsh
+        name: Update forked repos
+        run: |
+           $existingForks=(cat status.json | ConvertFrom-Json)
+           Write-Host "Found [$($existingForks.Length)] forks in the status file"
+           
+           # Use workflow input if available, otherwise use env variable
+           $numberOfRepos = ${{ github.event.inputs.numberOfRepos || env.numberOfReposToDo }}
+           Write-Host "Will process up to [$numberOfRepos] repos in this run"
+           
+           ./.github/workflows/update-forks.ps1 -actions $existingForks -numberOfReposToDo $numberOfRepos -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+
+      - name: Commit changes
+        if: always()
+        run: |
+          # pull to make sure we have the latest contents and that the commit / push will succeed
+          git pull --quiet
+          if [[ `git status --porcelain` ]]; then
+            git config --global user.email "github_token@github.com"
+            git config --global user.name "GITHUB_TOKEN"
+            
+            git add status.json
+            git commit -m "Update fork sync status"
+            git push
+          else
+            echo "Nothing to commit"
+          fi

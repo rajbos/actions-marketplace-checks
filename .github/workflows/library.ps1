@@ -942,3 +942,95 @@ function Get-TokenFromApp {
     Write-Host "Found token with [$($token.length)]"
     return $token
 }
+
+function SyncForkWithUpstream {
+    Param (
+        $owner,
+        $repo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+    
+    # Use GitHub API to sync fork with upstream
+    # POST /repos/{owner}/{repo}/merge-upstream
+    # https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#sync-a-fork-branch-with-the-upstream-repository
+    
+    $url = "repos/$owner/$repo/merge-upstream"
+    $body = @{
+        branch = "main"
+    } | ConvertTo-Json
+    
+    try {
+        Write-Debug "Syncing fork [$owner/$repo] with upstream"
+        $response = ApiCall -method POST -url $url -body $body -access_token $access_token
+        
+        if ($null -ne $response) {
+            if ($response.message -eq "Successfully fetched and fast-forwarded from upstream") {
+                Write-Debug "Successfully synced fork [$owner/$repo]"
+                return @{
+                    success = $true
+                    message = $response.message
+                    merge_type = $response.merge_type
+                }
+            }
+            elseif ($response.message -like "*already up to date*" -or $response.message -like "*up-to-date*") {
+                Write-Debug "Fork [$owner/$repo] is already up to date"
+                return @{
+                    success = $true
+                    message = "Already up to date"
+                    merge_type = "none"
+                }
+            }
+            else {
+                Write-Warning "Unexpected response syncing fork [$owner/$repo]: $($response.message)"
+                return @{
+                    success = $false
+                    message = $response.message
+                }
+            }
+        }
+        else {
+            Write-Warning "No response received when syncing fork [$owner/$repo]"
+            return @{
+                success = $false
+                message = "No response received"
+            }
+        }
+    }
+    catch {
+        $errorMessage = $_.Exception.Message
+        Write-Warning "Error syncing fork [$owner/$repo]: $errorMessage"
+        
+        # Check for common errors
+        if ($errorMessage -like "*409*" -or $errorMessage -like "*merge conflict*") {
+            return @{
+                success = $false
+                message = "Merge conflict detected"
+            }
+        }
+        elseif ($errorMessage -like "*default branch*") {
+            # Try with master branch
+            $body = @{
+                branch = "master"
+            } | ConvertTo-Json
+            
+            try {
+                $response = ApiCall -method POST -url $url -body $body -access_token $access_token
+                if ($null -ne $response -and $response.message -like "*Successfully*") {
+                    return @{
+                        success = $true
+                        message = $response.message
+                        merge_type = $response.merge_type
+                    }
+                }
+            }
+            catch {
+                # Fallback failed
+            }
+        }
+        
+        return @{
+            success = $false
+            message = $errorMessage
+        }
+    }
+}
