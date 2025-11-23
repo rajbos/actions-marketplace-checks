@@ -1016,6 +1016,10 @@ function SyncMirrorWithUpstream {
         # Get the current commit hash
         $beforeHash = $(git rev-parse HEAD)
         
+        # Configure git user identity before merge
+        git config --global user.email "actions-marketplace-checks@example.com" | Out-Null
+        git config --global user.name "actions-marketplace-checks" | Out-Null
+        
         # Try to merge upstream changes
         Write-Debug "Merging upstream/$currentBranch"
         $mergeResult = git merge "upstream/$currentBranch" --no-edit 2>&1
