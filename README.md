@@ -12,5 +12,12 @@ Information being loaded (see the [report workflow](.github/workflows/report.yml
 |Docker image setup|Dockerfile in repo or remote image url (e.g. Docker hub, GitHub Container Registry, etc.|
 |Security alerts|Fork the Action and enabling Dependabot (works only for Node actions), then read back the security alerts|
 
+## Workflows
+
+This repository includes several automated workflows:
+
+- **[Enable Dependabot](.github/workflows/dependabot-updates.yml)**: Automatically enables Dependabot on mirrored repositories to detect security vulnerabilities
+- **[Update Mirrors](.github/workflows/update-forks.yml)**: Automatically syncs all mirrored repositories with their upstream sources (runs daily at 2 AM UTC)
+- **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status
 
 The dataset is scraped in this repo: [rajbos/github-azure-devops-marketplace-extension-news](https://github.com/rajbos/github-azure-devops-marketplace-extension-news)

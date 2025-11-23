@@ -942,3 +942,162 @@ function Get-TokenFromApp {
     Write-Host "Found token with [$($token.length)]"
     return $token
 }
+
+function SyncMirrorWithUpstream {
+    Param (
+        $owner,
+        $repo,
+        $upstreamOwner,
+        $upstreamRepo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+    
+    # Sync a mirror repository by pulling from upstream and pushing to mirror
+    # This is different from fork sync - these are mirrors created by cloning upstream repos
+    # Mirror repos are named: actions-marketplace-validations/upstreamOwner_upstreamRepo
+    # Upstream repos are at: github.com/upstreamOwner/upstreamRepo
+    
+    Write-Debug "Syncing mirror [$owner/$repo] with upstream [$upstreamOwner/$upstreamRepo]"
+    
+    # Create temp directory if it doesn't exist
+    $syncTempDir = "$tempDir/sync-$(Get-Random)"
+    if (-not (Test-Path $syncTempDir)) {
+        New-Item -ItemType Directory -Path $syncTempDir | Out-Null
+    }
+    
+    try {
+        # Save current directory
+        $originalDir = Get-Location
+        Set-Location $syncTempDir | Out-Null
+        
+        # Clone the mirror repo
+        Write-Debug "Cloning mirror repo [https://github.com/$owner/$repo.git]"
+        $cloneResult = git clone "https://x:$access_token@github.com/$owner/$repo.git" 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to clone mirror repo: $cloneResult"
+        }
+        
+        Set-Location $repo | Out-Null
+        
+        # Get the current branch name
+        $currentBranch = $(git branch --show-current)
+        if ([string]::IsNullOrEmpty($currentBranch)) {
+            # Try to get default branch
+            $currentBranch = $(git symbolic-ref refs/remotes/origin/HEAD 2>$null | ForEach-Object { $_ -replace 'refs/remotes/origin/', '' })
+            if ([string]::IsNullOrEmpty($currentBranch)) {
+                $currentBranch = "main"
+            }
+        }
+        Write-Debug "Current branch: [$currentBranch]"
+        
+        # Add upstream remote
+        Write-Debug "Adding upstream remote [https://github.com/$upstreamOwner/$upstreamRepo.git]"
+        git remote add upstream "https://github.com/$upstreamOwner/$upstreamRepo.git" 2>&1 | Out-Null
+        
+        # Fetch from upstream
+        Write-Debug "Fetching from upstream"
+        $fetchResult = git fetch upstream 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to fetch from upstream: $fetchResult"
+        }
+        
+        # Check if upstream has the same branch
+        $upstreamBranchExists = git ls-remote --heads upstream $currentBranch 2>&1
+        if ([string]::IsNullOrEmpty($upstreamBranchExists) -and $currentBranch -eq "main") {
+            # Try master branch
+            $currentBranch = "master"
+            $upstreamBranchExists = git ls-remote --heads upstream $currentBranch 2>&1
+        }
+        
+        if ([string]::IsNullOrEmpty($upstreamBranchExists)) {
+            throw "Upstream branch [$currentBranch] not found"
+        }
+        
+        # Get the current commit hash
+        $beforeHash = $(git rev-parse HEAD)
+        
+        # Try to merge upstream changes
+        Write-Debug "Merging upstream/$currentBranch"
+        $mergeResult = git merge "upstream/$currentBranch" --no-edit 2>&1
+        
+        if ($LASTEXITCODE -ne 0) {
+            # Check if it's a conflict
+            if ($mergeResult -like "*conflict*" -or $mergeResult -like "*CONFLICT*") {
+                # Abort the merge
+                git merge --abort 2>&1 | Out-Null
+                throw "Merge conflict detected"
+            }
+            else {
+                throw "Failed to merge: $mergeResult"
+            }
+        }
+        
+        # Get the commit hash after merge
+        $afterHash = $(git rev-parse HEAD)
+        
+        # Check if there were any changes
+        if ($beforeHash -eq $afterHash) {
+            Write-Debug "Mirror [$owner/$repo] is already up to date"
+            # Clean up
+            Set-Location $originalDir | Out-Null
+            Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+            return @{
+                success = $true
+                message = "Already up to date"
+                merge_type = "none"
+            }
+        }
+        
+        # Push changes back to mirror
+        Write-Debug "Pushing changes to mirror"
+        $pushResult = git push origin $currentBranch 2>&1
+        
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to push to mirror: $pushResult"
+        }
+        
+        Write-Debug "Successfully synced mirror [$owner/$repo]"
+        
+        # Clean up
+        Set-Location $originalDir | Out-Null
+        Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+        
+        return @{
+            success = $true
+            message = "Successfully fetched and merged from upstream"
+            merge_type = "merge"
+        }
+    }
+    catch {
+        $errorMessage = $_.Exception.Message
+        Write-Warning "Error syncing mirror [$owner/$repo]: $errorMessage"
+        
+        # Clean up
+        try {
+            Set-Location $originalDir | Out-Null
+            Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+        }
+        catch {
+            # Ignore cleanup errors
+        }
+        
+        # Check for common errors
+        if ($errorMessage -like "*Merge conflict*") {
+            return @{
+                success = $false
+                message = "Merge conflict detected"
+            }
+        }
+        elseif ($errorMessage -like "*not found*" -or $errorMessage -like "*does not exist*") {
+            return @{
+                success = $false
+                message = "Repository or branch not found"
+            }
+        }
+        
+        return @{
+            success = $false
+            message = $errorMessage
+        }
+    }
+}
