@@ -22,7 +22,7 @@ env:
 
 jobs:
   check-em-all:
-    concurrency: analyze-workflow
+    concurrency: repo-state-updates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

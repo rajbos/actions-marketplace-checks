@@ -21,7 +21,7 @@ env:
 
 jobs:
   get-repo-information:
-    concurrency: repo-info-workflow
+    concurrency: repo-state-updates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
