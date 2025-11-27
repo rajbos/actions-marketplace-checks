@@ -23,7 +23,7 @@ env:
 
 jobs:
   update-forks:
-    concurrency: update-forks-workflow
+    concurrency: repo-state-updates
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required to commit and push changes to status.json

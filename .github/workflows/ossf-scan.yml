@@ -15,7 +15,7 @@ on:
 
 jobs:
   get-data:
-    concurrency: ossf-scan-workflow
+    concurrency: repo-state-updates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
