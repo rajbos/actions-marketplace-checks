@@ -21,7 +21,9 @@ env:
 
 jobs:
   get-repo-information:
-    concurrency: repo-state-updates
+    concurrency:
+      group: repo-state-updates
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
