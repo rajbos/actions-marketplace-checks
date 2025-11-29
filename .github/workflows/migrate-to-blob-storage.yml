@@ -21,6 +21,74 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Validate SAS token by listing blobs in target folder
+        id: validate_sas
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          Write-Host "Validating SAS token by listing blobs in target folder..."
+          
+          if ([string]::IsNullOrEmpty($env:BLOB_SAS_TOKEN)) {
+              Write-Error "BLOB_SAS_TOKEN secret is not set or empty"
+              exit 1
+          }
+          
+          # Extract base URL and query string from SAS token
+          $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
+          $queryStart = $baseUrlWithQuery.IndexOf('?')
+          
+          if ($queryStart -lt 0) {
+              Write-Error "Invalid SAS token format - missing query string"
+              exit 1
+          }
+          
+          $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+          $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+          
+          # Construct the URL to list blobs in the status folder
+          # For Azure Blob Storage, we need to use the container URL with comp=list and prefix
+          $lastSlash = $baseUrl.LastIndexOf('/')
+          $containerUrl = $baseUrl.Substring(0, $lastSlash)
+          
+          # Add list parameters to the SAS query
+          $listUrl = "$containerUrl$sasQuery&restype=container&comp=list&prefix=status/"
+          
+          Write-Host "Testing blob storage access..."
+          
+          try {
+              $response = Invoke-WebRequest -Uri $listUrl -Method GET -UseBasicParsing -ErrorAction Stop
+              
+              if ($response.StatusCode -eq 200) {
+                  Write-Host "✓ SAS token is valid - successfully connected to blob storage"
+                  Write-Host "Existing blobs in status/ folder:"
+                  
+                  # Parse the XML response to list existing blobs
+                  [xml]$xmlResponse = $response.Content
+                  $blobs = $xmlResponse.EnumerationResults.Blobs.Blob
+                  
+                  if ($blobs) {
+                      foreach ($blob in $blobs) {
+                          Write-Host "  - $($blob.Name)"
+                      }
+                  }
+                  else {
+                      Write-Host "  (no existing blobs in status/ folder)"
+                  }
+                  
+                  echo "sas_valid=true" >> $env:GITHUB_OUTPUT
+              }
+              else {
+                  Write-Error "Unexpected response status: $($response.StatusCode)"
+                  exit 1
+              }
+          }
+          catch {
+              Write-Error "Failed to validate SAS token: $($_.Exception.Message)"
+              Write-Error "Please ensure BLOB_SAS_TOKEN secret is correctly configured with read/write access"
+              exit 1
+          }
+
       - name: Check for JSON files in repo
         id: check_files
         shell: pwsh
