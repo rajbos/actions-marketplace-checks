@@ -983,7 +983,8 @@ function Get-RepositoryDefaultBranchCommit {
         
         $defaultBranch = $repoInfo.default_branch
         if ([string]::IsNullOrWhiteSpace($defaultBranch)) {
-            $defaultBranch = "main"  # Fallback to main
+            # Repository metadata may not have default_branch set; default to main
+            $defaultBranch = "main"
         }
         
         # Get the latest commit from the default branch
@@ -991,7 +992,8 @@ function Get-RepositoryDefaultBranchCommit {
         $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
         
         if ($null -eq $branchInfo -or $branchInfo -eq $false) {
-            # Try master if main doesn't exist
+            # If the default branch is 'main' and wasn't found, try 'master' as some repos use it
+            # This fallback only applies to 'main' since it's our default assumption
             if ($defaultBranch -eq "main") {
                 $defaultBranch = "master"
                 $branchUrl = "repos/$owner/$repo/branches/$defaultBranch"
