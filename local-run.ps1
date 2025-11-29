@@ -12,9 +12,32 @@ if ($null -ne $env:APP_PEM_KEY) {
     $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
 }
 
-# to add: how to refresh the actions.json from the storage account?
+# Download status.json from blob storage if STATUS_BLOB_SAS_TOKEN is set
+if ($null -ne $env:STATUS_BLOB_SAS_TOKEN -and $env:STATUS_BLOB_SAS_TOKEN -ne "") {
+    Write-Host "STATUS_BLOB_SAS_TOKEN found, downloading status.json from blob storage"
+    $result = Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+    if (-not $result) {
+        Write-Warning "Failed to download status.json from blob storage. Using local file if available."
+    }
+}
+else {
+    Write-Host "STATUS_BLOB_SAS_TOKEN not set. To work with blob storage, set this environment variable."
+    Write-Host "Example: `$env:STATUS_BLOB_SAS_TOKEN = 'https://intostorage.blob.core.windows.net/intostorage/status.json?sv=...'"
+}
 
+# Download actions.json from blob storage if BLOB_SAS_TOKEN is set
 $actionsFile = "actions.json"
+if ($null -ne $env:BLOB_SAS_TOKEN -and $env:BLOB_SAS_TOKEN -ne "") {
+    Write-Host "BLOB_SAS_TOKEN found, downloading actions.json from blob storage"
+    try {
+        Invoke-WebRequest -Uri $env:BLOB_SAS_TOKEN -OutFile $actionsFile -UseBasicParsing
+        Write-Host "Successfully downloaded actions.json"
+    }
+    catch {
+        Write-Warning "Failed to download actions.json: $($_.Exception.Message)"
+    }
+}
+
 if ((Test-Path $actionsFile)) {
     $actions=(Get-Content $actionsFile | ConvertFrom-Json)
 }
@@ -33,6 +56,16 @@ if ((Test-Path $statusFile)) {
 else {
     $status=$null
 }
+
+# Upload status.json back to blob storage after processing
+if ($null -ne $env:STATUS_BLOB_SAS_TOKEN -and $env:STATUS_BLOB_SAS_TOKEN -ne "") {
+    Write-Host "Uploading status.json back to blob storage"
+    $result = Set-StatusToBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+    if (-not $result) {
+        Write-Warning "Failed to upload status.json to blob storage"
+    }
+}
+
 #./.github/workflows/report.ps1 -actions $status
 #./.github/workflows/cleanup-all-repos.ps1 -numberOfReposToDo $numberofReposToDo
 #./tests/filtering.Tests.ps1 -actions $actions

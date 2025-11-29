@@ -10,6 +10,127 @@ Write-Host "actionsFile location: [$actionsFile]"
 Write-Host "statusFile location: [$statusFile]"
 Write-Host "failedStatusFile location: [$failedStatusFile]"
 
+# Blob storage base URL for status.json (without SAS token)
+$script:statusBlobBaseUrl = "https://intostorage.blob.core.windows.net/intostorage/status.json"
+
+<#
+    .SYNOPSIS
+    Downloads status.json from Azure Blob Storage to the local statusFile location.
+
+    .DESCRIPTION
+    Uses the provided SAS token to download the status.json file from Azure Blob Storage.
+    The file is saved to the local $statusFile path.
+
+    .PARAMETER sasToken
+    The full SAS token URL or just the SAS token query string for accessing the blob.
+
+    .EXAMPLE
+    Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+#>
+function Get-StatusFromBlobStorage {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken
+    )
+
+    Write-Host "Downloading status.json from Azure Blob Storage..."
+
+    # Construct the full URL
+    $blobUrl = $sasToken
+    if (-not $sasToken.StartsWith("https://")) {
+        # If only the query string is provided, prepend the base URL
+        $blobUrl = "$script:statusBlobBaseUrl$sasToken"
+    }
+
+    try {
+        # Download the file using Invoke-WebRequest
+        $response = Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $statusFile -UseBasicParsing
+        
+        if (Test-Path $statusFile) {
+            $fileSize = (Get-Item $statusFile).Length
+            Write-Host "Successfully downloaded status.json ($fileSize bytes) to [$statusFile]"
+            return $true
+        }
+        else {
+            Write-Error "Failed to download status.json - file not found after download"
+            return $false
+        }
+    }
+    catch {
+        # Check if this is a 404 (file doesn't exist yet)
+        if ($_.Exception.Response.StatusCode -eq 404) {
+            Write-Host "status.json does not exist in blob storage yet. Starting with empty status."
+            # Create an empty status file
+            "[]" | Out-File -FilePath $statusFile -Encoding UTF8
+            return $true
+        }
+        Write-Error "Failed to download status.json from blob storage: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+<#
+    .SYNOPSIS
+    Uploads status.json from the local statusFile location to Azure Blob Storage.
+
+    .DESCRIPTION
+    Uses the provided SAS token to upload the status.json file to Azure Blob Storage.
+    The file is read from the local $statusFile path.
+
+    .PARAMETER sasToken
+    The full SAS token URL or just the SAS token query string for accessing the blob.
+
+    .EXAMPLE
+    Set-StatusToBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+#>
+function Set-StatusToBlobStorage {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken
+    )
+
+    Write-Host "Uploading status.json to Azure Blob Storage..."
+
+    if (-not (Test-Path $statusFile)) {
+        Write-Error "status.json does not exist at [$statusFile]. Nothing to upload."
+        return $false
+    }
+
+    # Construct the full URL
+    $blobUrl = $sasToken
+    if (-not $sasToken.StartsWith("https://")) {
+        # If only the query string is provided, prepend the base URL
+        $blobUrl = "$script:statusBlobBaseUrl$sasToken"
+    }
+
+    try {
+        # Get file content as bytes
+        $fileContent = [System.IO.File]::ReadAllBytes($statusFile)
+        $fileSize = $fileContent.Length
+        
+        # Upload using Invoke-WebRequest with PUT method
+        $headers = @{
+            "x-ms-blob-type" = "BlockBlob"
+            "Content-Type" = "application/json"
+        }
+        
+        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
+        
+        if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
+            Write-Host "Successfully uploaded status.json ($fileSize bytes) to blob storage"
+            return $true
+        }
+        else {
+            Write-Error "Unexpected status code when uploading status.json: $($response.StatusCode)"
+            return $false
+        }
+    }
+    catch {
+        Write-Error "Failed to upload status.json to blob storage: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 function ApiCall {
     Param (
         $method,

@@ -1,4 +1,4 @@
-# report the data stored in the repository
+# report the data stored in Azure Blob Storage
 name: Generate report
 
 on:
@@ -20,6 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          STATUS_BLOB_SAS_TOKEN: "${{ secrets.STATUS_BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
 
       - name: Get App Token
         id: get_workflow_token

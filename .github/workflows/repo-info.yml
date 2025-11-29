@@ -1,6 +1,6 @@
 # Fork new action repos
 # Get new data from Dependabot
-# Store the data in the repo for later use
+# Store the data in Azure Blob Storage
 
 name: Get repo info
 
@@ -42,6 +42,18 @@ jobs:
           name: actions.json
           path: actions.json
 
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          STATUS_BLOB_SAS_TOKEN: "${{ secrets.STATUS_BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
       - name: Get App Token
         id: get_workflow_token
         uses: rajbos-actions/workflow-application-token-action@v3.0.0
@@ -60,21 +72,29 @@ jobs:
            # get repo information
            ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
-      - name: Commit changes
+      - name: Upload status.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          STATUS_BLOB_SAS_TOKEN: "${{ secrets.STATUS_BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-StatusToBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
+
+      - name: Commit failedForks.json changes
         if: always()
         run: |
-          # pull to make sure we have the latest contents and that the commit / push will succeed
-          # still fails if these two files have been updated ofc.
-
-          git pull --quiet
-          if [[ `git status --porcelain` ]]; then
+          if [[ `git status --porcelain failedForks.json` ]]; then
             git config --global user.email "github_token@github.com"
             git config --global user.name "GITHUB_TOKEN"
 
-            git add status.json
             git add failedForks.json
-            git commit -m "Update status.json"
+            git commit -m "Update failedForks.json"
             git push
           else
-            echo "Nothing to commit"
+            echo "No changes to failedForks.json"
           fi
