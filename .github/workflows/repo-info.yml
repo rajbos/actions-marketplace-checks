@@ -45,10 +45,10 @@ jobs:
       - name: Download status.json from blob storage
         shell: pwsh
         env:
-          STATUS_BLOB_SAS_TOKEN: "${{ secrets.STATUS_BLOB_SAS_TOKEN }}"
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
           . ./.github/workflows/library.ps1
-          $result = Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
             Write-Error "Failed to download status.json from blob storage"
             exit 1
@@ -76,10 +76,10 @@ jobs:
         if: always()
         shell: pwsh
         env:
-          STATUS_BLOB_SAS_TOKEN: "${{ secrets.STATUS_BLOB_SAS_TOKEN }}"
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
           . ./.github/workflows/library.ps1
-          $result = Set-StatusToBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+          $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
             Write-Error "Failed to upload status.json to blob storage"
             exit 1

@@ -24,8 +24,8 @@
     ./blob-helper.ps1 -Action info
 
     .NOTES
-    Requires the STATUS_BLOB_SAS_TOKEN environment variable to be set.
-    Example: $env:STATUS_BLOB_SAS_TOKEN = 'https://intostorage.blob.core.windows.net/intostorage/status.json?sv=...'
+    Requires the BLOB_SAS_TOKEN environment variable to be set.
+    Example: $env:BLOB_SAS_TOKEN = 'https://intostorage.blob.core.windows.net/intostorage/status.json?sv=...'
 #>
 
 Param (
@@ -72,11 +72,11 @@ function Show-StatusInfo {
 }
 
 # Check for SAS token
-if ([string]::IsNullOrWhiteSpace($env:STATUS_BLOB_SAS_TOKEN)) {
-    Write-Host "ERROR: STATUS_BLOB_SAS_TOKEN environment variable is not set." -ForegroundColor Red
+if ([string]::IsNullOrWhiteSpace($env:BLOB_SAS_TOKEN)) {
+    Write-Host "ERROR: BLOB_SAS_TOKEN environment variable is not set." -ForegroundColor Red
     Write-Host ""
-    Write-Host "To use this script, set the STATUS_BLOB_SAS_TOKEN environment variable:" -ForegroundColor Yellow
-    Write-Host '  $env:STATUS_BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/status.json?sv=..."'
+    Write-Host "To use this script, set the BLOB_SAS_TOKEN environment variable:" -ForegroundColor Yellow
+    Write-Host '  $env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/status.json?sv=..."'
     Write-Host ""
     Write-Host "You can get this token from the Azure Portal or from your team's secrets management." -ForegroundColor Yellow
     
@@ -90,7 +90,7 @@ if ([string]::IsNullOrWhiteSpace($env:STATUS_BLOB_SAS_TOKEN)) {
 switch ($Action) {
     'download' {
         Write-Host "Downloading status.json from Azure Blob Storage..." -ForegroundColor Cyan
-        $result = Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+        $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
         if ($result) {
             Write-Host "SUCCESS: status.json downloaded successfully!" -ForegroundColor Green
             Show-StatusInfo
@@ -117,7 +117,7 @@ switch ($Action) {
             exit 0
         }
         
-        $result = Set-StatusToBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+        $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
         if ($result) {
             Write-Host "SUCCESS: status.json uploaded successfully!" -ForegroundColor Green
         }

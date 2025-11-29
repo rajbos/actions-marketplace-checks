@@ -25,7 +25,7 @@ $script:statusBlobBaseUrl = "https://intostorage.blob.core.windows.net/intostora
     The full SAS token URL or just the SAS token query string for accessing the blob.
 
     .EXAMPLE
-    Get-StatusFromBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+    Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
 #>
 function Get-StatusFromBlobStorage {
     Param (
@@ -81,7 +81,7 @@ function Get-StatusFromBlobStorage {
     The full SAS token URL or just the SAS token query string for accessing the blob.
 
     .EXAMPLE
-    Set-StatusToBlobStorage -sasToken $env:STATUS_BLOB_SAS_TOKEN
+    Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
 #>
 function Set-StatusToBlobStorage {
     Param (

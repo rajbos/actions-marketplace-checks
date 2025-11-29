@@ -30,19 +30,15 @@ This repository contains PowerShell scripts that run checks on GitHub Actions in
 
 | Secret Name | Description |
 |-------------|-------------|
-| `STATUS_BLOB_SAS_TOKEN` | Full SAS URL for status.json blob (read/write access) |
-| `BLOB_SAS_TOKEN` | SAS URL for actions.json blob (read access) |
+| `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access for status.json) |
 
 #### Local Development with Blob Storage
 
 For local testing, set environment variables before running scripts:
 
 ```powershell
-# Set the SAS token for status.json (read/write)
-$env:STATUS_BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/status.json?sv=..."
-
-# Set the SAS token for actions.json (read)
-$env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/actions.json?sv=..."
+# Set the SAS token for blob storage (status.json read/write, actions.json read)
+$env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/status.json?sv=..."
 ```
 
 Use the helper script for manual operations:
