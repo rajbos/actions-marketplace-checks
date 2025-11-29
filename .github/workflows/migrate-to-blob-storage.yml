@@ -67,75 +67,75 @@ jobs:
           Write-Host ""
           Write-Host "Base URL (data folder): $baseUrl"
           
-          # Try to validate the SAS token by listing blobs in the folder
+          # Validate the SAS token by trying to upload a small test file
+          # This is the most reliable way since we know we need write access
           Write-Host ""
-          Write-Host "Testing SAS token by listing blobs in the data folder..."
+          Write-Host "Testing SAS token by uploading a test file..."
           
-          # Construct list URL - append comp=list and restype=directory params to the SAS query
-          $listUrl = "$baseUrl$sasQuery&restype=directory&comp=list"
-          Write-Host "List URL: $baseUrl (restype=directory, comp=list)"
+          # Upload a small test file to the status folder
+          $testFileName = "status/.validation-test.txt"
+          $testContent = [System.Text.Encoding]::UTF8.GetBytes("SAS validation test - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
+          $testBlobUrl = "$baseUrl/$testFileName$sasQuery"
+          
+          Write-Host "Test upload URL: $baseUrl/$testFileName"
           
           try {
-              # Try listing blobs in the directory
-              $response = Invoke-WebRequest -Uri $listUrl -Method GET -UseBasicParsing -ErrorAction Stop
+              $headers = @{
+                  "x-ms-blob-type" = "BlockBlob"
+                  "Content-Type" = "text/plain"
+              }
               
-              Write-Host "✓ SAS token is valid - successfully accessed blob storage folder"
+              $response = Invoke-WebRequest -Uri $testBlobUrl -Method PUT -Body $testContent -Headers $headers -UseBasicParsing -ErrorAction Stop
+              
+              Write-Host "✓ SAS token is valid - successfully uploaded test file to blob storage"
               Write-Host "  Response status: $($response.StatusCode)"
+              
+              # Clean up - delete the test file
+              Write-Host "Cleaning up test file..."
+              try {
+                  $deleteResponse = Invoke-WebRequest -Uri $testBlobUrl -Method DELETE -UseBasicParsing -ErrorAction SilentlyContinue
+                  Write-Host "  Test file deleted"
+              }
+              catch {
+                  Write-Host "  Note: Could not delete test file (this is OK, it will be overwritten)"
+              }
               
               echo "sas_valid=true" >> $env:GITHUB_OUTPUT
           }
           catch {
-              # If listing fails, try a simpler approach - check if we can at least get the folder properties
-              Write-Host "Directory listing failed, trying alternative validation..."
+              $errorDetails = $_.Exception.Message
+              Write-Host ""
+              Write-Host "=== ERROR DETAILS ==="
+              Write-Host "Exception Type: $($_.Exception.GetType().FullName)"
+              Write-Host "Error Message: $errorDetails"
               
-              try {
-                  # Try to access a known blob that should exist (actions.json is in the data folder)
-                  $actionsJsonUrl = "$baseUrl/actions.json$sasQuery"
-                  Write-Host "Testing access to actions.json..."
+              if ($_.Exception.Response) {
+                  $statusCode = [int]$_.Exception.Response.StatusCode
+                  $statusDesc = $_.Exception.Response.StatusDescription
+                  Write-Host "HTTP Status Code: $statusCode"
+                  Write-Host "Status Description: $statusDesc"
                   
-                  $response = Invoke-WebRequest -Uri $actionsJsonUrl -Method HEAD -UseBasicParsing -ErrorAction Stop
-                  
-                  Write-Host "✓ SAS token is valid - successfully accessed actions.json in blob storage"
-                  Write-Host "  Response status: $($response.StatusCode)"
-                  Write-Host "  Content-Length: $($response.Headers['Content-Length'])"
-                  
-                  echo "sas_valid=true" >> $env:GITHUB_OUTPUT
-              }
-              catch {
-                  $errorDetails = $_.Exception.Message
-                  Write-Host ""
-                  Write-Host "=== ERROR DETAILS ==="
-                  Write-Host "Exception Type: $($_.Exception.GetType().FullName)"
-                  Write-Host "Error Message: $errorDetails"
-                  
-                  if ($_.Exception.Response) {
-                      $statusCode = [int]$_.Exception.Response.StatusCode
-                      $statusDesc = $_.Exception.Response.StatusDescription
-                      Write-Host "HTTP Status Code: $statusCode"
-                      Write-Host "Status Description: $statusDesc"
-                      
-                      # Try to read the response body for more details
-                      try {
-                          $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-                          $responseBody = $reader.ReadToEnd()
-                          Write-Host "Response Body: $responseBody"
-                      }
-                      catch {
-                          Write-Host "Could not read response body"
-                      }
+                  # Try to read the response body for more details
+                  try {
+                      $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                      $responseBody = $reader.ReadToEnd()
+                      Write-Host "Response Body: $responseBody"
                   }
-                  
-                  Write-Host "===================="
-                  Write-Host ""
-                  Write-Error "Failed to validate SAS token: $errorDetails"
-                  Write-Host ""
-                  Write-Host "Troubleshooting tips:"
-                  Write-Host "1. Ensure BLOB_SAS_TOKEN secret contains a valid SAS URL for the data folder"
-                  Write-Host "2. Check if the SAS token has not expired (check 'se' parameter)"
-                  Write-Host "3. Verify the SAS token has read (r) and write (w) permissions (check 'sp' parameter)"
-                  Write-Host "4. The SAS token should be for the 'data' folder, e.g., .../container/data?sas_params"
-                  exit 1
+                  catch {
+                      Write-Host "Could not read response body"
+                  }
               }
+              
+              Write-Host "===================="
+              Write-Host ""
+              Write-Error "Failed to validate SAS token: $errorDetails"
+              Write-Host ""
+              Write-Host "Troubleshooting tips:"
+              Write-Host "1. Ensure BLOB_SAS_TOKEN secret contains a valid SAS URL for the data folder"
+              Write-Host "2. Check if the SAS token has not expired (check 'se' parameter)"
+              Write-Host "3. Verify the SAS token has read (r), write (w), and create (c) permissions (check 'sp' parameter)"
+              Write-Host "4. The SAS token should be for the 'data' folder, e.g., .../container/data?sas_params"
+              exit 1
           }
 
       - name: Check for JSON files in repo
