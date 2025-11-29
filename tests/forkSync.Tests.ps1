@@ -115,4 +115,44 @@ Describe "Mirror Sync Tests" {
             $functionMatch.Value | Should -Not -BeNullOrEmpty
         }
     }
+    
+    Context "Disable-GitHubActions function" {
+        It "Should have function defined" {
+            $result = Get-Command Disable-GitHubActions
+            $result | Should -Not -BeNullOrEmpty
+            $result.Name | Should -Be "Disable-GitHubActions"
+        }
+        
+        It "Should have required parameters" {
+            $command = Get-Command Disable-GitHubActions
+            $command.Parameters.Keys | Should -Contain "owner"
+            $command.Parameters.Keys | Should -Contain "repo"
+            $command.Parameters.Keys | Should -Contain "access_token"
+        }
+        
+        It "Should return false for empty owner" {
+            $result = Disable-GitHubActions -owner "" -repo "test" -access_token "test_token" 3>$null
+            $result | Should -Be $false
+        }
+        
+        It "Should return false for empty repo" {
+            $result = Disable-GitHubActions -owner "test" -repo "" -access_token "test_token" 3>$null
+            $result | Should -Be $false
+        }
+        
+        It "Should return false for null owner" {
+            $result = Disable-GitHubActions -owner $null -repo "test" -access_token "test_token" 3>$null
+            $result | Should -Be $false
+        }
+        
+        It "Should return false for whitespace-only owner" {
+            $result = Disable-GitHubActions -owner "   " -repo "test" -access_token "test_token" 3>$null
+            $result | Should -Be $false
+        }
+        
+        It "Should return false for whitespace-only repo" {
+            $result = Disable-GitHubActions -owner "test" -repo "   " -access_token "test_token" 3>$null
+            $result | Should -Be $false
+        }
+    }
 }

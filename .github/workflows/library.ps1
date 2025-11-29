@@ -1240,6 +1240,13 @@ function SyncMirrorWithUpstream {
             }
         }
         
+        # Disable GitHub Actions before pushing changes to prevent workflows from running
+        Write-Debug "Disabling GitHub Actions for [$owner/$repo] before push"
+        $disableResult = Disable-GitHubActions -owner $owner -repo $repo -access_token $access_token
+        if (-not $disableResult) {
+            Write-Warning "Could not disable GitHub Actions for [$owner/$repo], continuing with push anyway"
+        }
+        
         # Push changes back to mirror using explicit branch reference with retry
         Write-Debug "Pushing changes to mirror"
         $pushRef = "HEAD:refs/heads/$currentBranch"
@@ -1317,5 +1324,45 @@ function SyncMirrorWithUpstream {
             error_type = $errorType
             full_error = $errorMessage
         }
+    }
+}
+
+function Disable-GitHubActions {
+    Param (
+        [string] $owner,
+        [string] $repo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+    
+    # Disable GitHub Actions for a repository to prevent workflows from running on push
+    # Uses the GitHub API: PUT /repos/{owner}/{repo}/actions/permissions
+    # See: https://docs.github.com/en/rest/actions/permissions#set-github-actions-permissions-for-a-repository
+    
+    if ([string]::IsNullOrWhiteSpace($owner) -or [string]::IsNullOrWhiteSpace($repo)) {
+        Write-Warning "Cannot disable GitHub Actions: owner or repo is empty"
+        return $false
+    }
+    
+    $url = "repos/$owner/$repo/actions/permissions"
+    $body = @{
+        enabled = $false
+    } | ConvertTo-Json
+    
+    Write-Debug "Disabling GitHub Actions for [$owner/$repo]"
+    
+    try {
+        $result = ApiCall -method PUT -url $url -body $body -expected 204 -access_token $access_token
+        if ($result -eq $true) {
+            Write-Debug "GitHub Actions disabled for [$owner/$repo]"
+            return $true
+        }
+        else {
+            Write-Warning "Failed to disable GitHub Actions for [$owner/$repo]"
+            return $false
+        }
+    }
+    catch {
+        Write-Warning "Error disabling GitHub Actions for [$owner/$repo]: $($_.Exception.Message)"
+        return $false
     }
 }

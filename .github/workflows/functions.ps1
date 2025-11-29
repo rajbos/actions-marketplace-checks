@@ -240,9 +240,13 @@ function ForkActionRepo {
         Start-Sleep -Seconds 20
         
         Write-Host "Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
-        # disable actions on the new repo, to prevent them from running on push (not needed, actions disabled on org leve)
-        # $url = "repos/$forkOrg/$newRepoName/actions/permissions"
-        # $response = ApiCall -method PUT -url $url -body "{`"enabled`":false}" -expected 204
+        
+        # Disable GitHub Actions on the new repo before pushing code to prevent workflows from running
+        Write-Host "Disabling GitHub Actions for [$forkOrg/$newRepoName] before push"
+        $disableResult = Disable-GitHubActions -owner $forkOrg -repo $newRepoName -access_token $access_token_destination
+        if (-not $disableResult) {
+            Write-Warning "Could not disable GitHub Actions for [$forkOrg/$newRepoName], continuing with push anyway"
+        }
         
         try {
             # cd to temp directory
