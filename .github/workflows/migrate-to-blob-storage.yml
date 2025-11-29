@@ -21,71 +21,103 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Validate SAS token by listing blobs in target folder
+      - name: Validate SAS token by testing blob access
         id: validate_sas
         shell: pwsh
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          Write-Host "Validating SAS token by listing blobs in target folder..."
+          Write-Host "Validating SAS token by testing blob access..."
           
           if ([string]::IsNullOrEmpty($env:BLOB_SAS_TOKEN)) {
               Write-Error "BLOB_SAS_TOKEN secret is not set or empty"
               exit 1
           }
           
-          # Extract base URL and query string from SAS token
+          # Log SAS token structure (without revealing sensitive parts)
           $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
           $queryStart = $baseUrlWithQuery.IndexOf('?')
           
           if ($queryStart -lt 0) {
-              Write-Error "Invalid SAS token format - missing query string"
+              Write-Error "Invalid SAS token format - missing query string (no '?' found)"
+              Write-Host "URL format received: $($baseUrlWithQuery.Length) characters"
               exit 1
           }
           
           $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
           $sasQuery = $baseUrlWithQuery.Substring($queryStart)
           
-          # Construct the URL to list blobs in the status folder
-          # For Azure Blob Storage, we need to use the container URL with comp=list and prefix
+          Write-Host "Base URL: $baseUrl"
+          Write-Host "SAS query length: $($sasQuery.Length) characters"
+          Write-Host "SAS query starts with: $($sasQuery.Substring(0, [Math]::Min(20, $sasQuery.Length)))..."
+          
+          # Parse the SAS query parameters for logging
+          $queryParams = [System.Web.HttpUtility]::ParseQueryString($sasQuery.TrimStart('?'))
+          Write-Host "SAS parameters found:"
+          foreach ($key in $queryParams.AllKeys) {
+              if ($key -eq 'sig') {
+                  Write-Host "  $key = [REDACTED - $($queryParams[$key].Length) chars]"
+              } else {
+                  Write-Host "  $key = $($queryParams[$key])"
+              }
+          }
+          
+          # Construct the URL to test access to the status folder
+          # The SAS URL points to a specific blob (e.g., actions.json), we need to construct the path for status/status.json
           $lastSlash = $baseUrl.LastIndexOf('/')
           $containerUrl = $baseUrl.Substring(0, $lastSlash)
           
-          # Add list parameters to the SAS query
-          $listUrl = "$containerUrl$sasQuery&restype=container&comp=list&prefix=status/"
+          Write-Host ""
+          Write-Host "Container URL: $containerUrl"
           
-          Write-Host "Testing blob storage access..."
+          # Try to access the existing blob that the SAS token points to (for validation)
+          Write-Host ""
+          Write-Host "Testing access to the blob the SAS token references..."
           
           try {
-              $response = Invoke-WebRequest -Uri $listUrl -Method GET -UseBasicParsing -ErrorAction Stop
+              # First, try a HEAD request to the original URL to validate the token works
+              $response = Invoke-WebRequest -Uri $baseUrlWithQuery -Method HEAD -UseBasicParsing -ErrorAction Stop
               
-              if ($response.StatusCode -eq 200) {
-                  Write-Host "✓ SAS token is valid - successfully connected to blob storage"
-                  Write-Host "Existing blobs in status/ folder:"
-                  
-                  # Parse the XML response to list existing blobs
-                  [xml]$xmlResponse = $response.Content
-                  $blobs = $xmlResponse.EnumerationResults.Blobs.Blob
-                  
-                  if ($blobs) {
-                      foreach ($blob in $blobs) {
-                          Write-Host "  - $($blob.Name)"
-                      }
-                  }
-                  else {
-                      Write-Host "  (no existing blobs in status/ folder)"
-                  }
-                  
-                  echo "sas_valid=true" >> $env:GITHUB_OUTPUT
-              }
-              else {
-                  Write-Error "Unexpected response status: $($response.StatusCode)"
-                  exit 1
-              }
+              Write-Host "✓ SAS token is valid - successfully accessed blob storage"
+              Write-Host "  Response status: $($response.StatusCode)"
+              Write-Host "  Content-Length: $($response.Headers['Content-Length'])"
+              Write-Host "  Content-Type: $($response.Headers['Content-Type'])"
+              
+              echo "sas_valid=true" >> $env:GITHUB_OUTPUT
           }
           catch {
-              Write-Error "Failed to validate SAS token: $($_.Exception.Message)"
-              Write-Error "Please ensure BLOB_SAS_TOKEN secret is correctly configured with read/write access"
+              $errorDetails = $_.Exception.Message
+              Write-Host ""
+              Write-Host "=== ERROR DETAILS ==="
+              Write-Host "Exception Type: $($_.Exception.GetType().FullName)"
+              Write-Host "Error Message: $errorDetails"
+              
+              if ($_.Exception.Response) {
+                  $statusCode = [int]$_.Exception.Response.StatusCode
+                  $statusDesc = $_.Exception.Response.StatusDescription
+                  Write-Host "HTTP Status Code: $statusCode"
+                  Write-Host "Status Description: $statusDesc"
+                  
+                  # Try to read the response body for more details
+                  try {
+                      $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                      $responseBody = $reader.ReadToEnd()
+                      Write-Host "Response Body: $responseBody"
+                  }
+                  catch {
+                      Write-Host "Could not read response body"
+                  }
+              }
+              
+              Write-Host "===================="
+              Write-Host ""
+              Write-Error "Failed to validate SAS token: $errorDetails"
+              Write-Host ""
+              Write-Host "Troubleshooting tips:"
+              Write-Host "1. Ensure BLOB_SAS_TOKEN secret contains a valid SAS URL"
+              Write-Host "2. Check if the SAS token has not expired (check 'se' parameter)"
+              Write-Host "3. Verify the SAS token has read (r) and write (w) permissions (check 'sp' parameter)"
+              Write-Host "4. Ensure the blob exists at the URL specified in the SAS token"
               exit 1
           }
 
