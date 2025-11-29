@@ -155,4 +155,91 @@ Describe "Mirror Sync Tests" {
             $result | Should -Be $false
         }
     }
+    
+    Context "Get-RepositoryDefaultBranchCommit function" {
+        It "Should have function defined" {
+            $result = Get-Command Get-RepositoryDefaultBranchCommit
+            $result | Should -Not -BeNullOrEmpty
+            $result.Name | Should -Be "Get-RepositoryDefaultBranchCommit"
+        }
+        
+        It "Should have required parameters" {
+            $command = Get-Command Get-RepositoryDefaultBranchCommit
+            $command.Parameters.Keys | Should -Contain "owner"
+            $command.Parameters.Keys | Should -Contain "repo"
+            $command.Parameters.Keys | Should -Contain "access_token"
+        }
+        
+        It "Should return failure for empty owner" {
+            $result = Get-RepositoryDefaultBranchCommit -owner "" -repo "test" -access_token "test_token"
+            $result.success | Should -Be $false
+            $result.sha | Should -BeNullOrEmpty
+            $result.error | Should -Be "Invalid owner or repo"
+        }
+        
+        It "Should return failure for empty repo" {
+            $result = Get-RepositoryDefaultBranchCommit -owner "test" -repo "" -access_token "test_token"
+            $result.success | Should -Be $false
+            $result.sha | Should -BeNullOrEmpty
+            $result.error | Should -Be "Invalid owner or repo"
+        }
+        
+        It "Should return failure for null owner" {
+            $result = Get-RepositoryDefaultBranchCommit -owner $null -repo "test" -access_token "test_token"
+            $result.success | Should -Be $false
+            $result.sha | Should -BeNullOrEmpty
+        }
+        
+        It "Should return failure for whitespace-only owner" {
+            $result = Get-RepositoryDefaultBranchCommit -owner "   " -repo "test" -access_token "test_token"
+            $result.success | Should -Be $false
+            $result.error | Should -Be "Invalid owner or repo"
+        }
+    }
+    
+    Context "Compare-RepositoryCommitHashes function" {
+        It "Should have function defined" {
+            $result = Get-Command Compare-RepositoryCommitHashes
+            $result | Should -Not -BeNullOrEmpty
+            $result.Name | Should -Be "Compare-RepositoryCommitHashes"
+        }
+        
+        It "Should have required parameters" {
+            $command = Get-Command Compare-RepositoryCommitHashes
+            $command.Parameters.Keys | Should -Contain "sourceOwner"
+            $command.Parameters.Keys | Should -Contain "sourceRepo"
+            $command.Parameters.Keys | Should -Contain "mirrorOwner"
+            $command.Parameters.Keys | Should -Contain "mirrorRepo"
+            $command.Parameters.Keys | Should -Contain "access_token"
+        }
+        
+        It "Should return can_compare false for empty source owner" {
+            $result = Compare-RepositoryCommitHashes -sourceOwner "" -sourceRepo "test" -mirrorOwner "test" -mirrorRepo "test" -access_token "test_token"
+            $result.can_compare | Should -Be $false
+            $result.in_sync | Should -Be $false
+        }
+        
+        It "Should return can_compare false for empty source repo" {
+            $result = Compare-RepositoryCommitHashes -sourceOwner "test" -sourceRepo "" -mirrorOwner "test" -mirrorRepo "test" -access_token "test_token"
+            $result.can_compare | Should -Be $false
+            $result.in_sync | Should -Be $false
+        }
+        
+        It "Should return can_compare false for empty mirror owner" {
+            $result = Compare-RepositoryCommitHashes -sourceOwner "test" -sourceRepo "test" -mirrorOwner "" -mirrorRepo "test" -access_token "test_token"
+            $result.can_compare | Should -Be $false
+            $result.in_sync | Should -Be $false
+        }
+        
+        It "Should return can_compare false for empty mirror repo" {
+            $result = Compare-RepositoryCommitHashes -sourceOwner "test" -sourceRepo "test" -mirrorOwner "test" -mirrorRepo "" -access_token "test_token"
+            $result.can_compare | Should -Be $false
+            $result.in_sync | Should -Be $false
+        }
+        
+        It "Should have error message when comparison fails" {
+            $result = Compare-RepositoryCommitHashes -sourceOwner "" -sourceRepo "test" -mirrorOwner "test" -mirrorRepo "test" -access_token "test_token"
+            $result.error | Should -Not -BeNullOrEmpty
+        }
+    }
 }
