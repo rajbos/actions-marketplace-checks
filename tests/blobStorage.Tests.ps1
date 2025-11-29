@@ -46,7 +46,8 @@ Describe "Blob Storage Wrapper Functions" {
         }
 
         It "Should fail with invalid SAS token URL" {
-            $result = Get-StatusFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/invalid/actions.json?sv=invalid"
+            # SAS URL should point to a folder (e.g., 'data'), not a specific blob
+            $result = Get-StatusFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/container/data?sv=invalid"
             $result | Should -Be $false
         }
     }
@@ -115,7 +116,8 @@ Describe "Blob Storage Wrapper Functions" {
 
     Context "Blob storage URL handling" {
         It "Should use full URL when sasToken starts with https://" {
-            { Get-StatusFromBlobStorage -sasToken "https://example.blob.core.windows.net/container/actions.json?sv=test" } | Should -Not -Throw
+            # SAS URL should point to a folder (e.g., 'data'), not a specific blob
+            { Get-StatusFromBlobStorage -sasToken "https://example.blob.core.windows.net/container/data?sv=test" } | Should -Not -Throw
         }
     }
 }
