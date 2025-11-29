@@ -12,322 +12,185 @@ Write-Host "statusFile location: [$statusFile]"
 Write-Host "failedStatusFile location: [$failedStatusFile]"
 Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 
-# Blob storage base URLs for status files (in the 'status' subfolder, without SAS token)
-$script:statusBlobBaseUrl = "https://intostorage.blob.core.windows.net/intostorage/status/status.json"
-$script:failedForksBlobBaseUrl = "https://intostorage.blob.core.windows.net/intostorage/status/failedForks.json"
-$script:secretScanningAlertsBlobBaseUrl = "https://intostorage.blob.core.windows.net/intostorage/status/secretScanningAlerts.json"
+# Blob storage base URL (in the 'status' subfolder, without file name or SAS token)
+$script:blobStorageBaseUrl = "https://intostorage.blob.core.windows.net/intostorage/status"
 
 <#
     .SYNOPSIS
-    Downloads status.json from Azure Blob Storage to the local statusFile location.
+    Common function to download a JSON file from Azure Blob Storage.
 
     .DESCRIPTION
-    Uses the provided SAS token to download the status.json file from Azure Blob Storage.
-    The file is saved to the local $statusFile path.
+    Uses the provided SAS token to download a JSON file from Azure Blob Storage.
+    If the file doesn't exist (404), creates an empty JSON array file locally.
 
     .PARAMETER sasToken
     The full SAS token URL or just the SAS token query string for accessing the blob.
 
+    .PARAMETER blobFileName
+    The name of the file in blob storage (e.g., 'status.json').
+
+    .PARAMETER localFilePath
+    The local file path where the downloaded file should be saved.
+
     .EXAMPLE
-    Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+    Get-JsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -blobFileName "status.json" -localFilePath $statusFile
 #>
+function Get-JsonFromBlobStorage {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $blobFileName,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $localFilePath
+    )
+
+    Write-Host "Downloading $blobFileName from Azure Blob Storage..."
+
+    # Extract just the SAS query string from the token
+    $sasQuery = $sasToken
+    if ($sasToken.StartsWith("https://")) {
+        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
+    }
+    
+    # Construct the full URL
+    $blobUrl = "$script:blobStorageBaseUrl/$blobFileName$sasQuery"
+
+    try {
+        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $localFilePath -UseBasicParsing | Out-Null
+        
+        if (Test-Path $localFilePath) {
+            $fileSize = (Get-Item $localFilePath).Length
+            Write-Host "Successfully downloaded $blobFileName ($fileSize bytes) to [$localFilePath]"
+            return $true
+        }
+        else {
+            Write-Error "Failed to download $blobFileName - file not found after download"
+            return $false
+        }
+    }
+    catch {
+        if ($_.Exception.Response.StatusCode -eq 404) {
+            Write-Host "$blobFileName does not exist in blob storage yet. Starting with empty array."
+            "[]" | Out-File -FilePath $localFilePath -Encoding UTF8
+            return $true
+        }
+        Write-Error "Failed to download $blobFileName from blob storage: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+<#
+    .SYNOPSIS
+    Common function to upload a JSON file to Azure Blob Storage.
+
+    .DESCRIPTION
+    Uses the provided SAS token to upload a JSON file to Azure Blob Storage.
+    If the local file doesn't exist, returns true (nothing to upload).
+
+    .PARAMETER sasToken
+    The full SAS token URL or just the SAS token query string for accessing the blob.
+
+    .PARAMETER blobFileName
+    The name of the file in blob storage (e.g., 'status.json').
+
+    .PARAMETER localFilePath
+    The local file path to upload.
+
+    .PARAMETER failIfMissing
+    If true, returns false when the local file doesn't exist. Default is false.
+
+    .EXAMPLE
+    Set-JsonToBlobStorage -sasToken $env:BLOB_SAS_TOKEN -blobFileName "status.json" -localFilePath $statusFile
+#>
+function Set-JsonToBlobStorage {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $blobFileName,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $localFilePath,
+        
+        [Parameter(Mandatory=$false)]
+        [bool] $failIfMissing = $false
+    )
+
+    Write-Host "Uploading $blobFileName to Azure Blob Storage..."
+
+    if (-not (Test-Path $localFilePath)) {
+        if ($failIfMissing) {
+            Write-Error "$blobFileName does not exist at [$localFilePath]. Nothing to upload."
+            return $false
+        }
+        Write-Host "$blobFileName does not exist at [$localFilePath]. Nothing to upload."
+        return $true
+    }
+
+    # Extract just the SAS query string from the token
+    $sasQuery = $sasToken
+    if ($sasToken.StartsWith("https://")) {
+        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
+    }
+    
+    # Construct the full URL
+    $blobUrl = "$script:blobStorageBaseUrl/$blobFileName$sasQuery"
+
+    try {
+        $fileContent = [System.IO.File]::ReadAllBytes($localFilePath)
+        $fileSize = $fileContent.Length
+        
+        $headers = @{
+            "x-ms-blob-type" = "BlockBlob"
+            "Content-Type" = "application/json"
+        }
+        
+        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
+        
+        if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
+            Write-Host "Successfully uploaded $blobFileName ($fileSize bytes) to blob storage"
+            return $true
+        }
+        else {
+            Write-Error "Unexpected status code when uploading $blobFileName`: $($response.StatusCode)"
+            return $false
+        }
+    }
+    catch {
+        Write-Error "Failed to upload $blobFileName to blob storage: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+# Convenience wrapper functions for specific files
+
 function Get-StatusFromBlobStorage {
-    Param (
-        [Parameter(Mandatory=$true)]
-        [string] $sasToken
-    )
-
-    Write-Host "Downloading status.json from Azure Blob Storage..."
-
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        # Extract everything after the '?' (the SAS query parameters)
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
-    
-    # Construct the full URL for status.json in the status subfolder
-    $blobUrl = "$script:statusBlobBaseUrl$sasQuery"
-
-    try {
-        # Download the file using Invoke-WebRequest
-        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $statusFile -UseBasicParsing | Out-Null
-        
-        if (Test-Path $statusFile) {
-            $fileSize = (Get-Item $statusFile).Length
-            Write-Host "Successfully downloaded status.json ($fileSize bytes) to [$statusFile]"
-            return $true
-        }
-        else {
-            Write-Error "Failed to download status.json - file not found after download"
-            return $false
-        }
-    }
-    catch {
-        # Check if this is a 404 (file doesn't exist yet)
-        if ($_.Exception.Response.StatusCode -eq 404) {
-            Write-Host "status.json does not exist in blob storage yet. Starting with empty status."
-            # Create an empty status file
-            "[]" | Out-File -FilePath $statusFile -Encoding UTF8
-            return $true
-        }
-        Write-Error "Failed to download status.json from blob storage: $($_.Exception.Message)"
-        return $false
-    }
+    Param ([Parameter(Mandatory=$true)][string] $sasToken)
+    return Get-JsonFromBlobStorage -sasToken $sasToken -blobFileName "status.json" -localFilePath $statusFile
 }
 
-<#
-    .SYNOPSIS
-    Uploads status.json from the local statusFile location to Azure Blob Storage.
-
-    .DESCRIPTION
-    Uses the provided SAS token to upload the status.json file to Azure Blob Storage.
-    The file is read from the local $statusFile path.
-
-    .PARAMETER sasToken
-    The full SAS token URL or just the SAS token query string for accessing the blob.
-
-    .EXAMPLE
-    Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
-#>
 function Set-StatusToBlobStorage {
-    Param (
-        [Parameter(Mandatory=$true)]
-        [string] $sasToken
-    )
-
-    Write-Host "Uploading status.json to Azure Blob Storage..."
-
-    if (-not (Test-Path $statusFile)) {
-        Write-Error "status.json does not exist at [$statusFile]. Nothing to upload."
-        return $false
-    }
-
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        # Extract everything after the '?' (the SAS query parameters)
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
-    
-    # Construct the full URL for status.json in the status subfolder
-    $blobUrl = "$script:statusBlobBaseUrl$sasQuery"
-
-    try {
-        # Get file content as bytes
-        $fileContent = [System.IO.File]::ReadAllBytes($statusFile)
-        $fileSize = $fileContent.Length
-        
-        # Upload using Invoke-WebRequest with PUT method
-        $headers = @{
-            "x-ms-blob-type" = "BlockBlob"
-            "Content-Type" = "application/json"
-        }
-        
-        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
-        
-        if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
-            Write-Host "Successfully uploaded status.json ($fileSize bytes) to blob storage"
-            return $true
-        }
-        else {
-            Write-Error "Unexpected status code when uploading status.json: $($response.StatusCode)"
-            return $false
-        }
-    }
-    catch {
-        Write-Error "Failed to upload status.json to blob storage: $($_.Exception.Message)"
-        return $false
-    }
+    Param ([Parameter(Mandatory=$true)][string] $sasToken)
+    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName "status.json" -localFilePath $statusFile -failIfMissing $true
 }
 
-<#
-    .SYNOPSIS
-    Downloads failedForks.json from Azure Blob Storage to the local failedStatusFile location.
-
-    .DESCRIPTION
-    Uses the provided SAS token to download the failedForks.json file from Azure Blob Storage.
-    The file is saved to the local $failedStatusFile path.
-
-    .PARAMETER sasToken
-    The full SAS token URL or just the SAS token query string for accessing the blob.
-
-    .EXAMPLE
-    Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
-#>
 function Get-FailedForksFromBlobStorage {
-    Param (
-        [Parameter(Mandatory=$true)]
-        [string] $sasToken
-    )
-
-    Write-Host "Downloading failedForks.json from Azure Blob Storage..."
-
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        # Extract everything after the '?' (the SAS query parameters)
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
-    
-    # Construct the full URL for failedForks.json
-    $blobUrl = "$script:failedForksBlobBaseUrl$sasQuery"
-
-    try {
-        # Download the file using Invoke-WebRequest
-        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $failedStatusFile -UseBasicParsing | Out-Null
-        
-        if (Test-Path $failedStatusFile) {
-            $fileSize = (Get-Item $failedStatusFile).Length
-            Write-Host "Successfully downloaded failedForks.json ($fileSize bytes) to [$failedStatusFile]"
-            return $true
-        }
-        else {
-            Write-Error "Failed to download failedForks.json - file not found after download"
-            return $false
-        }
-    }
-    catch {
-        # Check if this is a 404 (file doesn't exist yet)
-        if ($_.Exception.Response.StatusCode -eq 404) {
-            Write-Host "failedForks.json does not exist in blob storage yet. Starting with empty list."
-            # Create an empty failed forks file
-            "[]" | Out-File -FilePath $failedStatusFile -Encoding UTF8
-            return $true
-        }
-        Write-Error "Failed to download failedForks.json from blob storage: $($_.Exception.Message)"
-        return $false
-    }
+    Param ([Parameter(Mandatory=$true)][string] $sasToken)
+    return Get-JsonFromBlobStorage -sasToken $sasToken -blobFileName "failedForks.json" -localFilePath $failedStatusFile
 }
 
-<#
-    .SYNOPSIS
-    Uploads failedForks.json from the local failedStatusFile location to Azure Blob Storage.
-
-    .DESCRIPTION
-    Uses the provided SAS token to upload the failedForks.json file to Azure Blob Storage.
-    The file is read from the local $failedStatusFile path.
-
-    .PARAMETER sasToken
-    The full SAS token URL or just the SAS token query string for accessing the blob.
-
-    .EXAMPLE
-    Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
-#>
 function Set-FailedForksToBlobStorage {
-    Param (
-        [Parameter(Mandatory=$true)]
-        [string] $sasToken
-    )
-
-    Write-Host "Uploading failedForks.json to Azure Blob Storage..."
-
-    if (-not (Test-Path $failedStatusFile)) {
-        Write-Host "failedForks.json does not exist at [$failedStatusFile]. Nothing to upload."
-        return $true  # Not an error - just nothing to upload
-    }
-
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        # Extract everything after the '?' (the SAS query parameters)
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
-    
-    # Construct the full URL for failedForks.json
-    $blobUrl = "$script:failedForksBlobBaseUrl$sasQuery"
-
-    try {
-        # Get file content as bytes
-        $fileContent = [System.IO.File]::ReadAllBytes($failedStatusFile)
-        $fileSize = $fileContent.Length
-        
-        # Upload using Invoke-WebRequest with PUT method
-        $headers = @{
-            "x-ms-blob-type" = "BlockBlob"
-            "Content-Type" = "application/json"
-        }
-        
-        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
-        
-        if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
-            Write-Host "Successfully uploaded failedForks.json ($fileSize bytes) to blob storage"
-            return $true
-        }
-        else {
-            Write-Error "Unexpected status code when uploading failedForks.json: $($response.StatusCode)"
-            return $false
-        }
-    }
-    catch {
-        Write-Error "Failed to upload failedForks.json to blob storage: $($_.Exception.Message)"
-        return $false
-    }
+    Param ([Parameter(Mandatory=$true)][string] $sasToken)
+    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName "failedForks.json" -localFilePath $failedStatusFile
 }
 
-<#
-    .SYNOPSIS
-    Uploads secretScanningAlerts.json from the local secretScanningAlertsFile location to Azure Blob Storage.
-
-    .DESCRIPTION
-    Uses the provided SAS token to upload the secretScanningAlerts.json file to Azure Blob Storage.
-    The file is read from the local $secretScanningAlertsFile path.
-
-    .PARAMETER sasToken
-    The full SAS token URL or just the SAS token query string for accessing the blob.
-
-    .EXAMPLE
-    Set-SecretScanningAlertsToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
-#>
 function Set-SecretScanningAlertsToBlobStorage {
-    Param (
-        [Parameter(Mandatory=$true)]
-        [string] $sasToken
-    )
-
-    Write-Host "Uploading secretScanningAlerts.json to Azure Blob Storage..."
-
-    if (-not (Test-Path $secretScanningAlertsFile)) {
-        Write-Host "secretScanningAlerts.json does not exist at [$secretScanningAlertsFile]. Nothing to upload."
-        return $true  # Not an error - just nothing to upload
-    }
-
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        # Extract everything after the '?' (the SAS query parameters)
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
-    
-    # Construct the full URL for secretScanningAlerts.json
-    $blobUrl = "$script:secretScanningAlertsBlobBaseUrl$sasQuery"
-
-    try {
-        # Get file content as bytes
-        $fileContent = [System.IO.File]::ReadAllBytes($secretScanningAlertsFile)
-        $fileSize = $fileContent.Length
-        
-        # Upload using Invoke-WebRequest with PUT method
-        $headers = @{
-            "x-ms-blob-type" = "BlockBlob"
-            "Content-Type" = "application/json"
-        }
-        
-        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
-        
-        if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
-            Write-Host "Successfully uploaded secretScanningAlerts.json ($fileSize bytes) to blob storage"
-            return $true
-        }
-        else {
-            Write-Error "Unexpected status code when uploading secretScanningAlerts.json: $($response.StatusCode)"
-            return $false
-        }
-    }
-    catch {
-        Write-Error "Failed to upload secretScanningAlerts.json to blob storage: $($_.Exception.Message)"
-        return $false
-    }
+    Param ([Parameter(Mandatory=$true)][string] $sasToken)
+    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName "secretScanningAlerts.json" -localFilePath $secretScanningAlertsFile
 }
 
 function ApiCall {
