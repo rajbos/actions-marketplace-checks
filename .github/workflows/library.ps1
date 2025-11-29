@@ -44,7 +44,7 @@ function Get-StatusFromBlobStorage {
 
     try {
         # Download the file using Invoke-WebRequest
-        $response = Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $statusFile -UseBasicParsing
+        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $statusFile -UseBasicParsing | Out-Null
         
         if (Test-Path $statusFile) {
             $fileSize = (Get-Item $statusFile).Length
