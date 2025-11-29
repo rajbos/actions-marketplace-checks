@@ -44,7 +44,17 @@ jobs:
       - shell: pwsh
         name: Update mirrored repos
         run: |
-           $existingForks=(cat status.json | ConvertFrom-Json)
+           try {
+               # Clean BOM if present before parsing JSON
+               $jsonContent = Get-Content status.json -Raw
+               $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+               $existingForks = $jsonContent | ConvertFrom-Json
+           } catch {
+               Write-Error "JSON parsing failed: $($_.Exception.Message)"
+               Write-Host "First 10 lines of status.json:"
+               Get-Content status.json | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
+               exit 1
+           }
            Write-Host "Found [$($existingForks.Length)] mirrors in the status file"
            
            # Use workflow input if available, otherwise use env variable
