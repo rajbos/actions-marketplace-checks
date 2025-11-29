@@ -947,6 +947,139 @@ function Get-TokenFromApp {
     return $token
 }
 
+function Get-RepositoryDefaultBranchCommit {
+    Param (
+        [string] $owner,
+        [string] $repo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+    
+    # Get the latest commit SHA from the default branch of a repository using the GitHub API
+    # Returns a hashtable with success status, commit SHA, and branch name
+    # This is more efficient than cloning the repo just to check if it's up to date
+    
+    if ([string]::IsNullOrWhiteSpace($owner) -or [string]::IsNullOrWhiteSpace($repo)) {
+        return @{
+            success = $false
+            sha = $null
+            branch = $null
+            error = "Invalid owner or repo"
+        }
+    }
+    
+    try {
+        # First get the repository info to find the default branch
+        $repoUrl = "repos/$owner/$repo"
+        $repoInfo = ApiCall -method GET -url $repoUrl -access_token $access_token -hideFailedCall $true
+        
+        if ($null -eq $repoInfo -or $repoInfo -eq $false) {
+            return @{
+                success = $false
+                sha = $null
+                branch = $null
+                error = "Repository not found"
+            }
+        }
+        
+        $defaultBranch = $repoInfo.default_branch
+        if ([string]::IsNullOrWhiteSpace($defaultBranch)) {
+            # Repository metadata may not have default_branch set; default to main
+            $defaultBranch = "main"
+        }
+        
+        # Get the latest commit from the default branch
+        $branchUrl = "repos/$owner/$repo/branches/$defaultBranch"
+        $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
+        
+        if ($null -eq $branchInfo -or $branchInfo -eq $false) {
+            # If the default branch is 'main' and wasn't found, try 'master' as some repos use it
+            # This fallback only applies to 'main' since it's our default assumption
+            if ($defaultBranch -eq "main") {
+                $defaultBranch = "master"
+                $branchUrl = "repos/$owner/$repo/branches/$defaultBranch"
+                $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
+            }
+        }
+        
+        if ($null -eq $branchInfo -or $branchInfo -eq $false) {
+            return @{
+                success = $false
+                sha = $null
+                branch = $defaultBranch
+                error = "Branch not found"
+            }
+        }
+        
+        return @{
+            success = $true
+            sha = $branchInfo.commit.sha
+            branch = $defaultBranch
+            error = $null
+        }
+    }
+    catch {
+        return @{
+            success = $false
+            sha = $null
+            branch = $null
+            error = $_.Exception.Message
+        }
+    }
+}
+
+function Compare-RepositoryCommitHashes {
+    Param (
+        [string] $sourceOwner,
+        [string] $sourceRepo,
+        [string] $mirrorOwner,
+        [string] $mirrorRepo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+    
+    # Compare the latest commit hashes of source and mirror repositories
+    # Returns a hashtable indicating if they are in sync and the commit details
+    # This allows early exit before expensive git clone/fetch operations
+    
+    Write-Debug "Comparing commits: source [$sourceOwner/$sourceRepo] vs mirror [$mirrorOwner/$mirrorRepo]"
+    
+    # Get source repository commit
+    $sourceCommit = Get-RepositoryDefaultBranchCommit -owner $sourceOwner -repo $sourceRepo -access_token $access_token
+    if (-not $sourceCommit.success) {
+        return @{
+            in_sync = $false
+            can_compare = $false
+            source_sha = $null
+            mirror_sha = $null
+            error = "Could not get source commit: $($sourceCommit.error)"
+        }
+    }
+    
+    # Get mirror repository commit  
+    $mirrorCommit = Get-RepositoryDefaultBranchCommit -owner $mirrorOwner -repo $mirrorRepo -access_token $access_token
+    if (-not $mirrorCommit.success) {
+        return @{
+            in_sync = $false
+            can_compare = $false
+            source_sha = $sourceCommit.sha
+            mirror_sha = $null
+            error = "Could not get mirror commit: $($mirrorCommit.error)"
+        }
+    }
+    
+    # Compare the commit SHAs
+    $inSync = $sourceCommit.sha -eq $mirrorCommit.sha
+    
+    return @{
+        in_sync = $inSync
+        can_compare = $true
+        source_sha = $sourceCommit.sha
+        mirror_sha = $mirrorCommit.sha
+        source_branch = $sourceCommit.branch
+        mirror_branch = $mirrorCommit.branch
+        error = $null
+    }
+}
+
 function Test-RepositoryExists {
     Param (
         [string] $owner,
@@ -1103,6 +1236,27 @@ function SyncMirrorWithUpstream {
             message = "Mirror repository not found"
             error_type = "mirror_not_found"
         }
+    }
+    
+    # Early sync detection: Compare commit hashes before cloning
+    # This avoids expensive git clone/fetch operations when repos are already in sync
+    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token
+    
+    if ($comparison.can_compare -and $comparison.in_sync) {
+        Write-Debug "Mirror [$owner/$repo] is already in sync with upstream (SHA: $($comparison.source_sha))"
+        return @{
+            success = $true
+            message = "Already up to date"
+            merge_type = "none"
+            source_sha = $comparison.source_sha
+            mirror_sha = $comparison.mirror_sha
+        }
+    }
+    
+    # If comparison failed, continue with normal sync process (clone/fetch/merge)
+    # This handles cases where API comparison might fail but git operations could succeed
+    if (-not $comparison.can_compare) {
+        Write-Debug "Could not compare commits via API, proceeding with git-based sync: $($comparison.error)"
     }
     
     # Create temp directory if it doesn't exist
