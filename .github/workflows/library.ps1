@@ -1331,7 +1331,7 @@ function Disable-GitHubActions {
     Param (
         [string] $owner,
         [string] $repo,
-        $access_token = $env:GITHUB_TOKEN
+        [string] $access_token = $env:GITHUB_TOKEN
     )
     
     # Disable GitHub Actions for a repository to prevent workflows from running on push
@@ -1339,7 +1339,7 @@ function Disable-GitHubActions {
     # See: https://docs.github.com/en/rest/actions/permissions#set-github-actions-permissions-for-a-repository
     
     if ([string]::IsNullOrWhiteSpace($owner) -or [string]::IsNullOrWhiteSpace($repo)) {
-        Write-Warning "Cannot disable GitHub Actions: owner or repo is empty"
+        Write-Warning "Cannot disable GitHub Actions: owner and/or repo is empty or null"
         return $false
     }
     
