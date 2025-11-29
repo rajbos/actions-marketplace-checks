@@ -1,0 +1,205 @@
+# One-time migration workflow to upload existing JSON files to blob storage and remove them from git
+# DELETE THIS WORKFLOW AFTER THE FIRST SUCCESSFUL RUN
+name: Migrate JSON files to Blob Storage
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_migration:
+        description: 'Type "MIGRATE" to confirm you want to migrate JSON files to blob storage'
+        required: true
+        default: ''
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_migration == 'MIGRATE'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Check for JSON files in repo
+        id: check_files
+        shell: pwsh
+        run: |
+          $statusExists = Test-Path "status.json"
+          $failedForksExists = Test-Path "failedForks.json"
+          $secretScanningExists = Test-Path "secretScanningAlerts.json"
+          
+          Write-Host "status.json exists: $statusExists"
+          Write-Host "failedForks.json exists: $failedForksExists"
+          Write-Host "secretScanningAlerts.json exists: $secretScanningExists"
+          
+          $anyExists = $statusExists -or $failedForksExists -or $secretScanningExists
+          
+          echo "status_exists=$statusExists" >> $env:GITHUB_OUTPUT
+          echo "failedforks_exists=$failedForksExists" >> $env:GITHUB_OUTPUT
+          echo "secretscanning_exists=$secretScanningExists" >> $env:GITHUB_OUTPUT
+          echo "any_exists=$anyExists" >> $env:GITHUB_OUTPUT
+
+      - name: Upload status.json to blob storage
+        if: steps.check_files.outputs.status_exists == 'True'
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          Write-Host "Uploading status.json to blob storage..."
+          
+          # Read the local file
+          $localFile = "status.json"
+          $fileContent = [System.IO.File]::ReadAllBytes($localFile)
+          $fileSize = $fileContent.Length
+          Write-Host "File size: $fileSize bytes"
+          
+          # Extract base URL and query string from SAS token
+          $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
+          $queryStart = $baseUrlWithQuery.IndexOf('?')
+          $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+          $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+          
+          # Construct the full URL for status/status.json
+          $lastSlash = $baseUrl.LastIndexOf('/')
+          $containerUrl = $baseUrl.Substring(0, $lastSlash)
+          $blobUrl = "$containerUrl/status/status.json$sasQuery"
+          
+          $headers = @{
+              "x-ms-blob-type" = "BlockBlob"
+              "Content-Type" = "application/json"
+          }
+          
+          $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
+          
+          if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
+              Write-Host "Successfully uploaded status.json to blob storage"
+          }
+          else {
+              Write-Error "Failed to upload status.json: $($response.StatusCode)"
+              exit 1
+          }
+
+      - name: Upload failedForks.json to blob storage
+        if: steps.check_files.outputs.failedforks_exists == 'True'
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          Write-Host "Uploading failedForks.json to blob storage..."
+          
+          $localFile = "failedForks.json"
+          $fileContent = [System.IO.File]::ReadAllBytes($localFile)
+          $fileSize = $fileContent.Length
+          Write-Host "File size: $fileSize bytes"
+          
+          # Extract base URL and query string from SAS token
+          $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
+          $queryStart = $baseUrlWithQuery.IndexOf('?')
+          $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+          $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+          
+          # Construct the full URL for status/failedForks.json
+          $lastSlash = $baseUrl.LastIndexOf('/')
+          $containerUrl = $baseUrl.Substring(0, $lastSlash)
+          $blobUrl = "$containerUrl/status/failedForks.json$sasQuery"
+          
+          $headers = @{
+              "x-ms-blob-type" = "BlockBlob"
+              "Content-Type" = "application/json"
+          }
+          
+          $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
+          
+          if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
+              Write-Host "Successfully uploaded failedForks.json to blob storage"
+          }
+          else {
+              Write-Error "Failed to upload failedForks.json: $($response.StatusCode)"
+              exit 1
+          }
+
+      - name: Upload secretScanningAlerts.json to blob storage
+        if: steps.check_files.outputs.secretscanning_exists == 'True'
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          Write-Host "Uploading secretScanningAlerts.json to blob storage..."
+          
+          $localFile = "secretScanningAlerts.json"
+          $fileContent = [System.IO.File]::ReadAllBytes($localFile)
+          $fileSize = $fileContent.Length
+          Write-Host "File size: $fileSize bytes"
+          
+          # Extract base URL and query string from SAS token
+          $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
+          $queryStart = $baseUrlWithQuery.IndexOf('?')
+          $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+          $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+          
+          # Construct the full URL for status/secretScanningAlerts.json
+          $lastSlash = $baseUrl.LastIndexOf('/')
+          $containerUrl = $baseUrl.Substring(0, $lastSlash)
+          $blobUrl = "$containerUrl/status/secretScanningAlerts.json$sasQuery"
+          
+          $headers = @{
+              "x-ms-blob-type" = "BlockBlob"
+              "Content-Type" = "application/json"
+          }
+          
+          $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
+          
+          if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
+              Write-Host "Successfully uploaded secretScanningAlerts.json to blob storage"
+          }
+          else {
+              Write-Error "Failed to upload secretScanningAlerts.json: $($response.StatusCode)"
+              exit 1
+          }
+
+      - name: Remove JSON files from git and commit
+        if: steps.check_files.outputs.any_exists == 'True'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Remove the files from git tracking (if they exist)
+          if [ -f "status.json" ]; then
+            git rm status.json
+            echo "Removed status.json from git"
+          fi
+          
+          if [ -f "failedForks.json" ]; then
+            git rm failedForks.json
+            echo "Removed failedForks.json from git"
+          fi
+          
+          if [ -f "secretScanningAlerts.json" ]; then
+            git rm secretScanningAlerts.json
+            echo "Removed secretScanningAlerts.json from git"
+          fi
+          
+          # Commit and push the removal
+          git commit -m "Remove JSON state files (migrated to blob storage)"
+          git push
+
+      - name: Migration summary
+        shell: pwsh
+        run: |
+          Write-Host "================================"
+          Write-Host "MIGRATION COMPLETE"
+          Write-Host "================================"
+          Write-Host ""
+          Write-Host "The following files have been migrated to Azure Blob Storage:"
+          Write-Host "  - status/status.json"
+          Write-Host "  - status/failedForks.json"
+          Write-Host "  - status/secretScanningAlerts.json"
+          Write-Host ""
+          Write-Host "These files have been removed from the git repository."
+          Write-Host ""
+          Write-Host "IMPORTANT: You can now delete this workflow file:"
+          Write-Host "  .github/workflows/migrate-to-blob-storage.yml"
+          Write-Host ""
+          Write-Host "================================"
