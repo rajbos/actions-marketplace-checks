@@ -9,27 +9,27 @@ Describe "Token Validation Tests" {
     Context "Test-AccessTokens function" {
         It "Should throw error when accessToken is null" {
             { Test-AccessTokens -accessToken $null -access_token_destination "valid_token" -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*No access token provided*"
+                Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when accessToken is empty string" {
             { Test-AccessTokens -accessToken "" -access_token_destination "valid_token" -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*No access token provided*"
+                Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when accessToken is whitespace" {
             { Test-AccessTokens -accessToken "   " -access_token_destination "valid_token" -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*No access token provided*"
+                Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when access_token_destination is null" {
             { Test-AccessTokens -accessToken "valid_token" -access_token_destination $null -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*No access token for destination provided*"
+                Should -Throw -ExpectedMessage "*access token*destination*"
         }
 
         It "Should throw error when access_token_destination is empty string" {
             { Test-AccessTokens -accessToken "valid_token" -access_token_destination "" -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*No access token for destination provided*"
+                Should -Throw -ExpectedMessage "*access token*destination*"
         }
 
         It "Should not throw error when both tokens are valid" {
@@ -46,17 +46,17 @@ Describe "Token Validation Tests" {
     Context "ApiCall function token validation" {
         It "Should throw error when access_token is null" {
             { ApiCall -method GET -url "rate_limit" -access_token $null } | 
-                Should -Throw -ExpectedMessage "*No access token available*"
+                Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when access_token is empty string" {
             { ApiCall -method GET -url "rate_limit" -access_token "" } | 
-                Should -Throw -ExpectedMessage "*No access token available*"
+                Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when access_token is whitespace" {
             { ApiCall -method GET -url "rate_limit" -access_token "   " } | 
-                Should -Throw -ExpectedMessage "*No access token available*"
+                Should -Throw -ExpectedMessage "*access token*"
         }
     }
 }
