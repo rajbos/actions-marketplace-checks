@@ -161,7 +161,9 @@ function ApiCall {
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
         }
         else {
-            Write-Host "Log message: $($messageData.message)"
+            if (!$hideFailedCall) {
+                Write-Host "Log message: $($messageData.message)"
+            }
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("You have exceeded a secondary rate limit"))) {
