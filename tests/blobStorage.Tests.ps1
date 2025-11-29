@@ -46,7 +46,7 @@ Describe "Blob Storage Wrapper Functions" {
         }
 
         It "Should fail with invalid SAS token URL" {
-            $result = Get-StatusFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/invalid/status.json?sv=invalid"
+            $result = Get-StatusFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/invalid/actions.json?sv=invalid"
             $result | Should -Be $false
         }
     }
@@ -69,7 +69,7 @@ Describe "Blob Storage Wrapper Functions" {
             }
             
             try {
-                $result = Set-StatusToBlobStorage -sasToken "https://test.blob.core.windows.net/test/status.json?sv=test"
+                $result = Set-StatusToBlobStorage -sasToken "https://test.blob.core.windows.net/test/actions.json?sv=test"
                 $result | Should -Be $false
             }
             finally {
@@ -115,7 +115,7 @@ Describe "Blob Storage Wrapper Functions" {
 
     Context "Blob storage URL handling" {
         It "Should use full URL when sasToken starts with https://" {
-            { Get-StatusFromBlobStorage -sasToken "https://example.blob.core.windows.net/container/status.json?sv=test" } | Should -Not -Throw
+            { Get-StatusFromBlobStorage -sasToken "https://example.blob.core.windows.net/container/actions.json?sv=test" } | Should -Not -Throw
         }
     }
 }
@@ -133,11 +133,15 @@ Describe "Status file path configuration" {
         $secretScanningAlertsFile | Should -Not -BeNullOrEmpty
     }
 
-    It "Should have blobStorageBaseUrl variable defined" {
-        $script:blobStorageBaseUrl | Should -Not -BeNullOrEmpty
+    It "Should have statusBlobFileName constant defined" {
+        $script:statusBlobFileName | Should -Be "status.json"
     }
 
-    It "Should have correct blob storage base URL format with status subfolder" {
-        $script:blobStorageBaseUrl | Should -Match "^https://.*\.blob\.core\.windows\.net/.*/status$"
+    It "Should have failedForksBlobFileName constant defined" {
+        $script:failedForksBlobFileName | Should -Be "failedForks.json"
+    }
+
+    It "Should have secretScanningAlertsBlobFileName constant defined" {
+        $script:secretScanningAlertsBlobFileName | Should -Be "secretScanningAlerts.json"
     }
 }

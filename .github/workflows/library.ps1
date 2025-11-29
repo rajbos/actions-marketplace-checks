@@ -12,19 +12,22 @@ Write-Host "statusFile location: [$statusFile]"
 Write-Host "failedStatusFile location: [$failedStatusFile]"
 Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 
-# Blob storage base URL (in the 'status' subfolder, without file name or SAS token)
-$script:blobStorageBaseUrl = "https://intostorage.blob.core.windows.net/intostorage/status"
+# Blob file names in the 'status' subfolder
+$script:statusBlobFileName = "status.json"
+$script:failedForksBlobFileName = "failedForks.json"
+$script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
 
 <#
     .SYNOPSIS
     Common function to download a JSON file from Azure Blob Storage.
 
     .DESCRIPTION
-    Uses the provided SAS token to download a JSON file from Azure Blob Storage.
+    Uses the provided SAS token URL to download a JSON file from Azure Blob Storage.
+    The SAS token should be the full URL including the file path.
     If the file doesn't exist (404), creates an empty JSON array file locally.
 
     .PARAMETER sasToken
-    The full SAS token URL or just the SAS token query string for accessing the blob.
+    The full SAS token URL for accessing the blob container.
 
     .PARAMETER blobFileName
     The name of the file in blob storage (e.g., 'status.json').
@@ -49,14 +52,16 @@ function Get-JsonFromBlobStorage {
 
     Write-Host "Downloading $blobFileName from Azure Blob Storage..."
 
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
+    # The sasToken contains the full URL. Extract base URL and query string, then construct path for specific file
+    $baseUrlWithQuery = $sasToken
+    $queryStart = $baseUrlWithQuery.IndexOf('?')
+    $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
-    # Construct the full URL
-    $blobUrl = "$script:blobStorageBaseUrl/$blobFileName$sasQuery"
+    # Replace the filename in the base URL with status/<blobFileName>
+    $lastSlash = $baseUrl.LastIndexOf('/')
+    $containerUrl = $baseUrl.Substring(0, $lastSlash)
+    $blobUrl = "$containerUrl/status/$blobFileName$sasQuery"
 
     try {
         Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $localFilePath -UseBasicParsing | Out-Null
@@ -87,11 +92,12 @@ function Get-JsonFromBlobStorage {
     Common function to upload a JSON file to Azure Blob Storage.
 
     .DESCRIPTION
-    Uses the provided SAS token to upload a JSON file to Azure Blob Storage.
+    Uses the provided SAS token URL to upload a JSON file to Azure Blob Storage.
+    The SAS token should be the full URL including the file path.
     If the local file doesn't exist, returns true (nothing to upload).
 
     .PARAMETER sasToken
-    The full SAS token URL or just the SAS token query string for accessing the blob.
+    The full SAS token URL for accessing the blob container.
 
     .PARAMETER blobFileName
     The name of the file in blob storage (e.g., 'status.json').
@@ -131,14 +137,16 @@ function Set-JsonToBlobStorage {
         return $true
     }
 
-    # Extract just the SAS query string from the token
-    $sasQuery = $sasToken
-    if ($sasToken.StartsWith("https://")) {
-        $sasQuery = $sasToken.Substring($sasToken.IndexOf('?'))
-    }
+    # The sasToken contains the full URL. Extract base URL and query string, then construct path for specific file
+    $baseUrlWithQuery = $sasToken
+    $queryStart = $baseUrlWithQuery.IndexOf('?')
+    $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
-    # Construct the full URL
-    $blobUrl = "$script:blobStorageBaseUrl/$blobFileName$sasQuery"
+    # Replace the filename in the base URL with status/<blobFileName>
+    $lastSlash = $baseUrl.LastIndexOf('/')
+    $containerUrl = $baseUrl.Substring(0, $lastSlash)
+    $blobUrl = "$containerUrl/status/$blobFileName$sasQuery"
 
     try {
         $fileContent = [System.IO.File]::ReadAllBytes($localFilePath)
@@ -170,27 +178,27 @@ function Set-JsonToBlobStorage {
 
 function Get-StatusFromBlobStorage {
     Param ([Parameter(Mandatory=$true)][string] $sasToken)
-    return Get-JsonFromBlobStorage -sasToken $sasToken -blobFileName "status.json" -localFilePath $statusFile
+    return Get-JsonFromBlobStorage -sasToken $sasToken -blobFileName $script:statusBlobFileName -localFilePath $statusFile
 }
 
 function Set-StatusToBlobStorage {
     Param ([Parameter(Mandatory=$true)][string] $sasToken)
-    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName "status.json" -localFilePath $statusFile -failIfMissing $true
+    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName $script:statusBlobFileName -localFilePath $statusFile -failIfMissing $true
 }
 
 function Get-FailedForksFromBlobStorage {
     Param ([Parameter(Mandatory=$true)][string] $sasToken)
-    return Get-JsonFromBlobStorage -sasToken $sasToken -blobFileName "failedForks.json" -localFilePath $failedStatusFile
+    return Get-JsonFromBlobStorage -sasToken $sasToken -blobFileName $script:failedForksBlobFileName -localFilePath $failedStatusFile
 }
 
 function Set-FailedForksToBlobStorage {
     Param ([Parameter(Mandatory=$true)][string] $sasToken)
-    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName "failedForks.json" -localFilePath $failedStatusFile
+    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName $script:failedForksBlobFileName -localFilePath $failedStatusFile
 }
 
 function Set-SecretScanningAlertsToBlobStorage {
     Param ([Parameter(Mandatory=$true)][string] $sasToken)
-    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName "secretScanningAlerts.json" -localFilePath $secretScanningAlertsFile
+    return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName $script:secretScanningAlertsBlobFileName -localFilePath $secretScanningAlertsFile
 }
 
 function ApiCall {
