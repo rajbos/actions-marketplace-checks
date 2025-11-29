@@ -9,11 +9,13 @@ on:
         description: 'Type "MIGRATE" to confirm you want to migrate JSON files to blob storage'
         required: true
         default: ''
+  push:
+    paths: .github/workflows/migrate-to-blob-storage.yml
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
-    if: github.event.inputs.confirm_migration == 'MIGRATE'
+    #if: github.event.inputs.confirm_migration == 'MIGRATE'
     steps:
       - uses: actions/checkout@v5
         with:
