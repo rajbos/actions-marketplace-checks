@@ -13,44 +13,56 @@ This repository contains PowerShell scripts that run checks on GitHub Actions in
 
 ### Azure Blob Storage for State Management
 
-**Important:** The `status.json` file is stored in Azure Blob Storage, NOT in the Git repository. This design decision improves:
+**Important:** All state JSON files are stored in Azure Blob Storage in the `status` subfolder, NOT in the Git repository. This design decision improves:
 
 - **Concurrency**: Multiple workflow runs can operate without Git merge conflicts
-- **Performance**: Eliminates slow Git operations on a ~29MB file
+- **Performance**: Eliminates slow Git operations on large files
 - **Scalability**: Blob storage handles large files more efficiently
 - **Repo hygiene**: Keeps the repository clean and focused on code
 
+#### Files Stored in Blob Storage
+
+All files are stored in the `status/` subfolder:
+- `status/status.json` - Main status tracking file (~29MB)
+- `status/failedForks.json` - List of repos that failed to fork
+- `status/secretScanningAlerts.json` - Secret scanning alerts data
+
 #### Blob Storage Workflow
 
-1. **At workflow start**: Download `status.json` from blob storage using `Get-StatusFromBlobStorage`
-2. **During execution**: Process actions and update the local `status.json` file
-3. **At workflow end**: Upload the modified `status.json` back to blob storage using `Set-StatusToBlobStorage`
+1. **At workflow start**: Download JSON files from blob storage using helper functions
+2. **During execution**: Process actions and update local files
+3. **At workflow end**: Upload modified files back to blob storage
+
+Helper functions in `library.ps1`:
+- `Get-StatusFromBlobStorage` / `Set-StatusToBlobStorage` - For status.json
+- `Get-FailedForksFromBlobStorage` / `Set-FailedForksToBlobStorage` - For failedForks.json
+- `Set-SecretScanningAlertsToBlobStorage` - For secretScanningAlerts.json
 
 #### Required Secrets
 
 | Secret Name | Description |
 |-------------|-------------|
-| `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access for status.json) |
+| `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access) |
 
 #### Local Development with Blob Storage
 
 For local testing, set environment variables before running scripts:
 
 ```powershell
-# Set the SAS token for blob storage (status.json read/write, actions.json read)
-$env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/status.json?sv=..."
+# Set the SAS token for blob storage
+$env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/actions.json?sv=..."
 ```
 
 Use the helper script for manual operations:
 
 ```powershell
-# Download status.json from blob storage
+# Download all JSON files from blob storage
 ./blob-helper.ps1 -Action download
 
 # View status.json info
 ./blob-helper.ps1 -Action info
 
-# Upload status.json to blob storage (with confirmation)
+# Upload all JSON files to blob storage (with confirmation)
 ./blob-helper.ps1 -Action upload
 ```
 
@@ -60,7 +72,7 @@ Use the helper script for manual operations:
 - **Testing Framework**: Pester
 - **CI/CD**: GitHub Actions workflows
 - **Package Manager**: None (uses built-in PowerShell modules)
-- **State Storage**: Azure Blob Storage
+- **State Storage**: Azure Blob Storage (status/ subfolder)
 
 ## Code Structure
 

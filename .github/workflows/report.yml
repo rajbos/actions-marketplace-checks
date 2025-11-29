@@ -65,6 +65,19 @@ jobs:
            $token="${{ secrets.ACCESS_TOKEN }}"                    # using this to prevent issues in the current run, as it takes 1h 42mins atm
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination $token
 
+      - name: Upload secretScanningAlerts.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-SecretScanningAlertsToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload secretScanningAlerts.json to blob storage"
+            exit 1
+          }
+
       - uses: actions/upload-artifact@v5
         with:
           name: report

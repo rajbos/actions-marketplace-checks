@@ -28,7 +28,6 @@ jobs:
       cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to commit failedForks.json
       actions: read    # Required to read workflow artifacts
     steps:
       - uses: actions/checkout@v5
@@ -42,6 +41,18 @@ jobs:
           $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
             Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
 
@@ -90,5 +101,18 @@ jobs:
           $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
             Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
+
+      - name: Upload failedForks.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload failedForks.json to blob storage"
             exit 1
           }

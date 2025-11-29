@@ -54,6 +54,39 @@ Describe "Blob Storage Helper Functions" {
         }
     }
 
+    Context "Get-FailedForksFromBlobStorage function" {
+        It "Should have function defined" {
+            Get-Command Get-FailedForksFromBlobStorage -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+        }
+
+        It "Should have required sasToken parameter" {
+            $params = (Get-Command Get-FailedForksFromBlobStorage).Parameters
+            $params.Keys | Should -Contain 'sasToken'
+        }
+    }
+
+    Context "Set-FailedForksToBlobStorage function" {
+        It "Should have function defined" {
+            Get-Command Set-FailedForksToBlobStorage -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+        }
+
+        It "Should have required sasToken parameter" {
+            $params = (Get-Command Set-FailedForksToBlobStorage).Parameters
+            $params.Keys | Should -Contain 'sasToken'
+        }
+    }
+
+    Context "Set-SecretScanningAlertsToBlobStorage function" {
+        It "Should have function defined" {
+            Get-Command Set-SecretScanningAlertsToBlobStorage -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+        }
+
+        It "Should have required sasToken parameter" {
+            $params = (Get-Command Set-SecretScanningAlertsToBlobStorage).Parameters
+            $params.Keys | Should -Contain 'sasToken'
+        }
+    }
+
     Context "Blob storage URL handling" {
         It "Should use full URL when sasToken starts with https://" {
             # This test verifies the function accepts a full URL format
@@ -68,11 +101,35 @@ Describe "Status file path configuration" {
         $statusFile | Should -Not -BeNullOrEmpty
     }
 
+    It "Should have failedStatusFile variable defined" {
+        $failedStatusFile | Should -Not -BeNullOrEmpty
+    }
+
+    It "Should have secretScanningAlertsFile variable defined" {
+        $secretScanningAlertsFile | Should -Not -BeNullOrEmpty
+    }
+
     It "Should have statusBlobBaseUrl variable defined" {
         $script:statusBlobBaseUrl | Should -Not -BeNullOrEmpty
     }
 
-    It "Should have correct blob storage base URL format" {
-        $script:statusBlobBaseUrl | Should -Match "^https://.*\.blob\.core\.windows\.net/.*/status\.json$"
+    It "Should have failedForksBlobBaseUrl variable defined" {
+        $script:failedForksBlobBaseUrl | Should -Not -BeNullOrEmpty
+    }
+
+    It "Should have secretScanningAlertsBlobBaseUrl variable defined" {
+        $script:secretScanningAlertsBlobBaseUrl | Should -Not -BeNullOrEmpty
+    }
+
+    It "Should have correct blob storage base URL format with status subfolder" {
+        $script:statusBlobBaseUrl | Should -Match "^https://.*\.blob\.core\.windows\.net/.*/status/status\.json$"
+    }
+
+    It "Should have correct failedForks blob storage base URL format with status subfolder" {
+        $script:failedForksBlobBaseUrl | Should -Match "^https://.*\.blob\.core\.windows\.net/.*/status/failedForks\.json$"
+    }
+
+    It "Should have correct secretScanningAlerts blob storage base URL format with status subfolder" {
+        $script:secretScanningAlertsBlobBaseUrl | Should -Match "^https://.*\.blob\.core\.windows\.net/.*/status/secretScanningAlerts\.json$"
     }
 }

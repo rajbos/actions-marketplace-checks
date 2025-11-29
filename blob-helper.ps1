@@ -1,22 +1,22 @@
 <#
     .SYNOPSIS
-    Helper script for manually downloading and uploading status.json from/to Azure Blob Storage.
+    Helper script for manually downloading and uploading JSON files from/to Azure Blob Storage.
 
     .DESCRIPTION
     This script provides convenient commands for developers to:
-    - Download status.json from blob storage for local testing
-    - Upload status.json back to blob storage after local modifications
+    - Download status.json and failedForks.json from blob storage for local testing
+    - Upload status.json and failedForks.json back to blob storage after local modifications
     - View the current status.json file info
 
     .PARAMETER Action
     The action to perform: 'download', 'upload', or 'info'
 
     .EXAMPLE
-    # Download status.json from blob storage
+    # Download all JSON files from blob storage
     ./blob-helper.ps1 -Action download
 
     .EXAMPLE
-    # Upload status.json to blob storage
+    # Upload all JSON files to blob storage
     ./blob-helper.ps1 -Action upload
 
     .EXAMPLE
@@ -25,7 +25,12 @@
 
     .NOTES
     Requires the BLOB_SAS_TOKEN environment variable to be set.
-    Example: $env:BLOB_SAS_TOKEN = 'https://intostorage.blob.core.windows.net/intostorage/status.json?sv=...'
+    Example: $env:BLOB_SAS_TOKEN = 'https://intostorage.blob.core.windows.net/intostorage/actions.json?sv=...'
+    
+    All files are stored in the 'status' subfolder in blob storage:
+    - status/status.json
+    - status/failedForks.json
+    - status/secretScanningAlerts.json
 #>
 
 Param (
@@ -69,6 +74,18 @@ function Show-StatusInfo {
     catch {
         Write-Host "Could not parse JSON: $($_.Exception.Message)" -ForegroundColor Red
     }
+    
+    Write-Host ""
+    Write-Host "=== failedForks.json Information ===" -ForegroundColor Cyan
+    if (Test-Path $failedStatusFile) {
+        $fileInfo = Get-Item $failedStatusFile
+        Write-Host "Local file path: $($fileInfo.FullName)"
+        Write-Host "File size: $([math]::Round($fileInfo.Length / 1KB, 2)) KB ($($fileInfo.Length) bytes)"
+        Write-Host "Last modified: $($fileInfo.LastWriteTime)"
+    }
+    else {
+        Write-Host "failedForks.json does not exist locally" -ForegroundColor Yellow
+    }
 }
 
 # Check for SAS token
@@ -76,7 +93,7 @@ if ([string]::IsNullOrWhiteSpace($env:BLOB_SAS_TOKEN)) {
     Write-Host "ERROR: BLOB_SAS_TOKEN environment variable is not set." -ForegroundColor Red
     Write-Host ""
     Write-Host "To use this script, set the BLOB_SAS_TOKEN environment variable:" -ForegroundColor Yellow
-    Write-Host '  $env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/status.json?sv=..."'
+    Write-Host '  $env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/actions.json?sv=..."'
     Write-Host ""
     Write-Host "You can get this token from the Azure Portal or from your team's secrets management." -ForegroundColor Yellow
     
@@ -89,41 +106,66 @@ if ([string]::IsNullOrWhiteSpace($env:BLOB_SAS_TOKEN)) {
 
 switch ($Action) {
     'download' {
-        Write-Host "Downloading status.json from Azure Blob Storage..." -ForegroundColor Cyan
+        Write-Host "Downloading JSON files from Azure Blob Storage..." -ForegroundColor Cyan
+        
+        Write-Host ""
         $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
         if ($result) {
             Write-Host "SUCCESS: status.json downloaded successfully!" -ForegroundColor Green
-            Show-StatusInfo
         }
         else {
-            Write-Host "FAILED: Could not download status.json" -ForegroundColor Red
-            exit 1
+            Write-Host "WARNING: Could not download status.json" -ForegroundColor Yellow
         }
+        
+        Write-Host ""
+        $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+        if ($result) {
+            Write-Host "SUCCESS: failedForks.json downloaded successfully!" -ForegroundColor Green
+        }
+        else {
+            Write-Host "WARNING: Could not download failedForks.json" -ForegroundColor Yellow
+        }
+        
+        Write-Host ""
+        Show-StatusInfo
     }
     
     'upload' {
-        Write-Host "Uploading status.json to Azure Blob Storage..." -ForegroundColor Cyan
+        Write-Host "Uploading JSON files to Azure Blob Storage..." -ForegroundColor Cyan
         
-        if (-not (Test-Path $statusFile)) {
-            Write-Host "ERROR: status.json does not exist at: $statusFile" -ForegroundColor Red
-            Write-Host "Nothing to upload. Download first or create the file." -ForegroundColor Yellow
-            exit 1
-        }
-        
-        Write-Host "WARNING: This will overwrite the status.json in blob storage!" -ForegroundColor Yellow
+        Write-Host "WARNING: This will overwrite files in blob storage!" -ForegroundColor Yellow
         $confirm = Read-Host "Are you sure you want to upload? (yes/no)"
         if ($confirm -ne 'yes') {
             Write-Host "Upload cancelled." -ForegroundColor Yellow
             exit 0
         }
         
-        $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
-        if ($result) {
-            Write-Host "SUCCESS: status.json uploaded successfully!" -ForegroundColor Green
+        Write-Host ""
+        if (Test-Path $statusFile) {
+            $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+            if ($result) {
+                Write-Host "SUCCESS: status.json uploaded successfully!" -ForegroundColor Green
+            }
+            else {
+                Write-Host "FAILED: Could not upload status.json" -ForegroundColor Red
+            }
         }
         else {
-            Write-Host "FAILED: Could not upload status.json" -ForegroundColor Red
-            exit 1
+            Write-Host "SKIPPED: status.json does not exist locally" -ForegroundColor Yellow
+        }
+        
+        Write-Host ""
+        if (Test-Path $failedStatusFile) {
+            $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+            if ($result) {
+                Write-Host "SUCCESS: failedForks.json uploaded successfully!" -ForegroundColor Green
+            }
+            else {
+                Write-Host "FAILED: Could not upload failedForks.json" -ForegroundColor Red
+            }
+        }
+        else {
+            Write-Host "SKIPPED: failedForks.json does not exist locally" -ForegroundColor Yellow
         }
     }
     

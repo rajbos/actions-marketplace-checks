@@ -54,6 +54,18 @@ jobs:
             exit 1
           }
 
+      - name: Download failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
+            exit 1
+          }
+
       - name: Get App Token
         id: get_workflow_token
         uses: rajbos-actions/workflow-application-token-action@v3.0.0
@@ -85,16 +97,15 @@ jobs:
             exit 1
           }
 
-      - name: Commit failedForks.json changes
+      - name: Upload failedForks.json to blob storage
         if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          if [[ `git status --porcelain failedForks.json` ]]; then
-            git config --global user.email "github_token@github.com"
-            git config --global user.name "GITHUB_TOKEN"
-
-            git add failedForks.json
-            git commit -m "Update failedForks.json"
-            git push
-          else
-            echo "No changes to failedForks.json"
-          fi
+          . ./.github/workflows/library.ps1
+          $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload failedForks.json to blob storage"
+            exit 1
+          }
