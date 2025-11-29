@@ -329,13 +329,15 @@ function SaveStatus {
         $failedForks
     )
     Write-Host "SaveStatus"
-    if ("" -ne "$($env:CI)") {
-        # We are running in CI, so let's pull before we overwrite the file
-        git pull --quiet | Out-Null
-    }
-    if ($existingForks) {
+    # Note: git pull is handled by the workflow's "Commit changes" step, not here.
+    # Doing git pull here was causing 30+ minute delays due to merge operations
+    # on the large status.json file during concurrent workflow runs.
+    
+    if ($null -ne $existingForks -and $existingForks.Count -gt 0) {
         Write-Host "Storing the information of [$($existingForks.Count)] existing forks to the status file"
-        $existingForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+        # Use -InputObject to avoid slow pipeline processing for large arrays
+        $json = ConvertTo-Json -InputObject $existingForks -Depth 10
+        [System.IO.File]::WriteAllText($statusFile, $json, [System.Text.Encoding]::UTF8)
         Write-Host "Saved"
 
         # get number of forks that have repo information
@@ -343,9 +345,11 @@ function SaveStatus {
         Write-Message -message "Found [$($existingForksWithRepoInfo.Count) out of $($existingForks.Count)] repos that have repo information" -logToSummary $true
     }
 
-    if ($failedForks) {
+    if ($null -ne $failedForks -and $failedForks.Count -gt 0) {
         Write-Host "Storing the information of [$($failedForks.Count)] failed forks to the failed status file"
-        $failedForks | ConvertTo-Json -Depth 10 | Out-File -FilePath $failedStatusFile -Encoding UTF8
+        # Use -InputObject to avoid slow pipeline processing for large arrays
+        $json = ConvertTo-Json -InputObject $failedForks -Depth 10
+        [System.IO.File]::WriteAllText($failedStatusFile, $json, [System.Text.Encoding]::UTF8)
         Write-Host "Saved"
     }
 }
