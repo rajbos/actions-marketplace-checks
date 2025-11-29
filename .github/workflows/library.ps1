@@ -947,6 +947,111 @@ function Get-TokenFromApp {
     return $token
 }
 
+function Test-RepositoryExists {
+    Param (
+        [string] $owner,
+        [string] $repo,
+        $access_token = $env:GITHUB_TOKEN
+    )
+    
+    # Check if a repository exists using the GitHub API
+    # Returns $true if the repo exists and is accessible, $false otherwise
+    
+    if ([string]::IsNullOrWhiteSpace($owner) -or [string]::IsNullOrWhiteSpace($repo)) {
+        return $false
+    }
+    
+    $url = "repos/$owner/$repo"
+    try {
+        $result = ApiCall -method GET -url $url -access_token $access_token -hideFailedCall $true
+        if ($null -ne $result -and $result -ne $false) {
+            return $true
+        }
+        return $false
+    }
+    catch {
+        # Repository doesn't exist or isn't accessible
+        return $false
+    }
+}
+
+function Invoke-GitCommandWithRetry {
+    Param (
+        [string] $Command,
+        [string] $Description = "Git command",
+        [int] $MaxRetries = 3,
+        [int] $InitialDelaySeconds = 5
+    )
+    
+    # Execute a git command with exponential backoff retry logic
+    # Returns the command output and exit code
+    
+    $attempt = 0
+    $delay = $InitialDelaySeconds
+    $lastError = $null
+    $lastOutput = $null
+    
+    while ($attempt -lt $MaxRetries) {
+        $attempt++
+        
+        try {
+            # Execute the git command
+            $output = Invoke-Expression $Command 2>&1
+            $exitCode = $LASTEXITCODE
+            
+            if ($exitCode -eq 0) {
+                return @{
+                    Success = $true
+                    Output = $output
+                    ExitCode = $exitCode
+                }
+            }
+            
+            # Check if this is a transient error that should be retried
+            $outputString = $output | Out-String
+            $isTransientError = $outputString -like "*could not read Username*" -or 
+                               $outputString -like "*Connection refused*" -or
+                               $outputString -like "*Connection timed out*" -or
+                               $outputString -like "*SSL*" -or
+                               $outputString -like "*Network is unreachable*"
+            
+            if (-not $isTransientError) {
+                # Non-transient error, don't retry
+                return @{
+                    Success = $false
+                    Output = $output
+                    ExitCode = $exitCode
+                }
+            }
+            
+            $lastError = $outputString
+            $lastOutput = $output
+            
+            if ($attempt -lt $MaxRetries) {
+                Write-Debug "$Description failed (attempt $attempt/$MaxRetries), retrying in $delay seconds..."
+                Start-Sleep -Seconds $delay
+                $delay = $delay * 2  # Exponential backoff
+            }
+        }
+        catch {
+            $lastError = $_.Exception.Message
+            if ($attempt -lt $MaxRetries) {
+                Write-Debug "$Description failed (attempt $attempt/$MaxRetries): $lastError, retrying in $delay seconds..."
+                Start-Sleep -Seconds $delay
+                $delay = $delay * 2
+            }
+        }
+    }
+    
+    # All retries exhausted
+    return @{
+        Success = $false
+        Output = $lastOutput
+        ExitCode = $LASTEXITCODE
+        Error = $lastError
+    }
+}
+
 function SyncMirrorWithUpstream {
     Param (
         $owner,
@@ -963,85 +1068,162 @@ function SyncMirrorWithUpstream {
     
     Write-Debug "Syncing mirror [$owner/$repo] with upstream [$upstreamOwner/$upstreamRepo]"
     
+    # Validate parameters
+    if ([string]::IsNullOrWhiteSpace($upstreamOwner) -or [string]::IsNullOrWhiteSpace($upstreamRepo)) {
+        return @{
+            success = $false
+            message = "Invalid upstream owner or repo name"
+            error_type = "validation_error"
+        }
+    }
+    
+    # Check if upstream repository exists before attempting sync
+    $upstreamExists = Test-RepositoryExists -owner $upstreamOwner -repo $upstreamRepo -access_token $access_token
+    if (-not $upstreamExists) {
+        Write-Debug "Upstream repository [$upstreamOwner/$upstreamRepo] does not exist or is not accessible"
+        return @{
+            success = $false
+            message = "Upstream repository not found"
+            error_type = "upstream_not_found"
+        }
+    }
+    
+    # Check if mirror repository exists
+    $mirrorExists = Test-RepositoryExists -owner $owner -repo $repo -access_token $access_token
+    if (-not $mirrorExists) {
+        Write-Debug "Mirror repository [$owner/$repo] does not exist"
+        return @{
+            success = $false
+            message = "Mirror repository not found"
+            error_type = "mirror_not_found"
+        }
+    }
+    
     # Create temp directory if it doesn't exist
     $syncTempDir = "$tempDir/sync-$(Get-Random)"
     if (-not (Test-Path $syncTempDir)) {
         New-Item -ItemType Directory -Path $syncTempDir | Out-Null
     }
     
+    # Save current directory for cleanup
+    $originalDir = Get-Location
+    
     try {
-        # Save current directory
-        $originalDir = Get-Location
         Set-Location $syncTempDir | Out-Null
         
-        # Clone the mirror repo
+        # Configure git credential helper to use the token
+        # This prevents the "could not read Username" error
+        git config --global credential.helper "!f() { echo username=x; echo password=$access_token; }; f" 2>&1 | Out-Null
+        
+        # Clone the mirror repo with retry logic
         Write-Debug "Cloning mirror repo [https://github.com/$owner/$repo.git]"
-        $cloneResult = git clone "https://x:$access_token@github.com/$owner/$repo.git" 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to clone mirror repo: $cloneResult"
+        $cloneCommand = "git clone `"https://x:$access_token@github.com/$owner/$repo.git`" 2>&1"
+        $cloneResult = Invoke-GitCommandWithRetry -Command $cloneCommand -Description "Clone mirror repo"
+        
+        if (-not $cloneResult.Success) {
+            $errorOutput = $cloneResult.Output | Out-String
+            if ($errorOutput -like "*Repository not found*" -or $errorOutput -like "*not found*") {
+                throw "Mirror repository not found"
+            }
+            elseif ($errorOutput -like "*could not read Username*") {
+                throw "Authentication failed - could not read credentials"
+            }
+            throw "Failed to clone mirror repo: $errorOutput"
         }
         
         Set-Location $repo | Out-Null
         
-        # Get the current branch name
-        $currentBranch = $(git branch --show-current)
+        # Configure git user identity
+        git config user.email "actions-marketplace-checks@example.com" 2>&1 | Out-Null
+        git config user.name "actions-marketplace-checks" 2>&1 | Out-Null
+        
+        # Get the current branch name using explicit refs to avoid ambiguity
+        $currentBranch = $null
+        $branchOutput = git symbolic-ref --short HEAD 2>&1
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrEmpty($branchOutput)) {
+            $currentBranch = $branchOutput.Trim()
+        }
+        
         if ([string]::IsNullOrEmpty($currentBranch)) {
-            # Try to get default branch
-            $currentBranch = $(git symbolic-ref refs/remotes/origin/HEAD 2>$null | ForEach-Object { $_ -replace 'refs/remotes/origin/', '' })
+            # Try to get default branch from remote
+            $remoteHeadOutput = git symbolic-ref refs/remotes/origin/HEAD 2>&1
+            if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrEmpty($remoteHeadOutput)) {
+                $currentBranch = $remoteHeadOutput -replace 'refs/remotes/origin/', ''
+            }
+            
             if ([string]::IsNullOrEmpty($currentBranch)) {
+                # Default to main
                 $currentBranch = "main"
             }
         }
         Write-Debug "Current branch: [$currentBranch]"
         
-        # Add upstream remote
+        # Add upstream remote (no auth needed for public repos, but we'll use it for private ones)
         Write-Debug "Adding upstream remote [https://github.com/$upstreamOwner/$upstreamRepo.git]"
         git remote add upstream "https://github.com/$upstreamOwner/$upstreamRepo.git" 2>&1 | Out-Null
         
-        # Fetch from upstream
+        # Fetch from upstream with retry logic
         Write-Debug "Fetching from upstream"
-        $fetchResult = git fetch upstream 2>&1
+        $fetchCommand = "git fetch upstream 2>&1"
+        $fetchResult = Invoke-GitCommandWithRetry -Command $fetchCommand -Description "Fetch from upstream"
+        
+        if (-not $fetchResult.Success) {
+            $errorOutput = $fetchResult.Output | Out-String
+            if ($errorOutput -like "*Repository not found*" -or $errorOutput -like "*not found*") {
+                throw "Upstream repository not found during fetch"
+            }
+            throw "Failed to fetch from upstream: $errorOutput"
+        }
+        
+        # Check if upstream has the target branch using explicit refs
+        $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
+        $branchCheckOutput = git show-ref --verify $upstreamBranchRef 2>&1
+        
         if ($LASTEXITCODE -ne 0) {
-            throw "Failed to fetch from upstream: $fetchResult"
+            # Try master branch if main doesn't exist
+            if ($currentBranch -eq "main") {
+                $currentBranch = "master"
+                $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
+                $branchCheckOutput = git show-ref --verify $upstreamBranchRef 2>&1
+            }
         }
         
-        # Check if upstream has the same branch
-        $upstreamBranchExists = git ls-remote --heads upstream $currentBranch 2>&1
-        if ([string]::IsNullOrEmpty($upstreamBranchExists) -and $currentBranch -eq "main") {
-            # Try master branch
-            $currentBranch = "master"
-            $upstreamBranchExists = git ls-remote --heads upstream $currentBranch 2>&1
-        }
-        
-        if ([string]::IsNullOrEmpty($upstreamBranchExists)) {
+        if ($LASTEXITCODE -ne 0) {
             throw "Upstream branch [$currentBranch] not found"
         }
         
-        # Get the current commit hash
-        $beforeHash = $(git rev-parse HEAD)
+        # Get the current commit hash using explicit HEAD ref
+        $beforeHash = git rev-parse HEAD 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to get current HEAD: unknown revision or path not in the working tree"
+        }
         
-        # Configure git user identity before merge
-        git config --global user.email "actions-marketplace-checks@example.com" | Out-Null
-        git config --global user.name "actions-marketplace-checks" | Out-Null
-        
-        # Try to merge upstream changes
+        # Try to merge upstream changes using explicit branch reference
         Write-Debug "Merging upstream/$currentBranch"
-        $mergeResult = git merge "upstream/$currentBranch" --no-edit 2>&1
+        $mergeRef = "refs/remotes/upstream/$currentBranch"
+        $mergeResult = git merge $mergeRef --no-edit 2>&1
         
         if ($LASTEXITCODE -ne 0) {
+            $mergeOutput = $mergeResult | Out-String
             # Check if it's a conflict
-            if ($mergeResult -like "*conflict*" -or $mergeResult -like "*CONFLICT*") {
+            if ($mergeOutput -like "*conflict*" -or $mergeOutput -like "*CONFLICT*") {
                 # Abort the merge
                 git merge --abort 2>&1 | Out-Null
                 throw "Merge conflict detected"
             }
+            elseif ($mergeOutput -like "*refspec*matches more than one*") {
+                throw "Ambiguous git reference: $mergeOutput"
+            }
             else {
-                throw "Failed to merge: $mergeResult"
+                throw "Failed to merge: $mergeOutput"
             }
         }
         
         # Get the commit hash after merge
-        $afterHash = $(git rev-parse HEAD)
+        $afterHash = git rev-parse HEAD 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to get HEAD after merge"
+        }
         
         # Check if there were any changes
         if ($beforeHash -eq $afterHash) {
@@ -1056,12 +1238,17 @@ function SyncMirrorWithUpstream {
             }
         }
         
-        # Push changes back to mirror
+        # Push changes back to mirror using explicit branch reference with retry
         Write-Debug "Pushing changes to mirror"
-        $pushResult = git push origin $currentBranch 2>&1
+        $pushCommand = "git push origin `"HEAD:refs/heads/$currentBranch`" 2>&1"
+        $pushResult = Invoke-GitCommandWithRetry -Command $pushCommand -Description "Push to mirror"
         
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to push to mirror: $pushResult"
+        if (-not $pushResult.Success) {
+            $errorOutput = $pushResult.Output | Out-String
+            if ($errorOutput -like "*refspec*matches more than one*") {
+                throw "Ambiguous push reference: src refspec matches more than one"
+            }
+            throw "Failed to push to mirror: $errorOutput"
         }
         
         Write-Debug "Successfully synced mirror [$owner/$repo]"
@@ -1089,23 +1276,44 @@ function SyncMirrorWithUpstream {
             # Ignore cleanup errors
         }
         
-        # Check for common errors
+        # Categorize errors for better reporting
+        $errorType = "unknown"
+        $cleanMessage = $errorMessage
+        
         if ($errorMessage -like "*Merge conflict*") {
-            return @{
-                success = $false
-                message = "Merge conflict detected"
-            }
+            $errorType = "merge_conflict"
+            $cleanMessage = "Merge conflict detected"
         }
-        elseif ($errorMessage -like "*not found*" -or $errorMessage -like "*does not exist*") {
-            return @{
-                success = $false
-                message = "Repository or branch not found"
-            }
+        elseif ($errorMessage -like "*Upstream repository not found*" -or $errorMessage -like "*not found during fetch*") {
+            $errorType = "upstream_not_found"
+            $cleanMessage = "Upstream repository not found"
+        }
+        elseif ($errorMessage -like "*Mirror repository not found*") {
+            $errorType = "mirror_not_found"
+            $cleanMessage = "Mirror repository not found"
+        }
+        elseif ($errorMessage -like "*branch*not found*") {
+            $errorType = "branch_not_found"
+            $cleanMessage = "Branch not found"
+        }
+        elseif ($errorMessage -like "*could not read Username*" -or $errorMessage -like "*Authentication failed*") {
+            $errorType = "auth_error"
+            $cleanMessage = "Authentication error"
+        }
+        elseif ($errorMessage -like "*unknown revision*" -or $errorMessage -like "*ambiguous*") {
+            $errorType = "git_reference_error"
+            $cleanMessage = "Git reference error"
+        }
+        elseif ($errorMessage -like "*refspec*matches more than one*") {
+            $errorType = "ambiguous_refspec"
+            $cleanMessage = "Ambiguous git reference"
         }
         
         return @{
             success = $false
-            message = $errorMessage
+            message = $cleanMessage
+            error_type = $errorType
+            full_error = $errorMessage
         }
     }
 }
