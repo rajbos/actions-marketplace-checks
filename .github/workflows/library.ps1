@@ -977,13 +977,15 @@ function Test-RepositoryExists {
 
 function Invoke-GitCommandWithRetry {
     Param (
-        [string] $Command,
+        [string] $GitCommand,
+        [string[]] $GitArguments,
         [string] $Description = "Git command",
         [int] $MaxRetries = 3,
         [int] $InitialDelaySeconds = 5
     )
     
     # Execute a git command with exponential backoff retry logic
+    # Uses safe execution method instead of Invoke-Expression
     # Returns the command output and exit code
     
     $attempt = 0
@@ -995,8 +997,12 @@ function Invoke-GitCommandWithRetry {
         $attempt++
         
         try {
-            # Execute the git command
-            $output = Invoke-Expression $Command 2>&1
+            # Execute git command safely using the call operator
+            if ($GitArguments) {
+                $output = & git $GitCommand @GitArguments 2>&1
+            } else {
+                $output = & git $GitCommand 2>&1
+            }
             $exitCode = $LASTEXITCODE
             
             if ($exitCode -eq 0) {
@@ -1111,14 +1117,11 @@ function SyncMirrorWithUpstream {
     try {
         Set-Location $syncTempDir | Out-Null
         
-        # Configure git credential helper to use the token
-        # This prevents the "could not read Username" error
-        git config --global credential.helper "!f() { echo username=x; echo password=$access_token; }; f" 2>&1 | Out-Null
-        
         # Clone the mirror repo with retry logic
+        # Token is embedded in URL for authentication (standard git approach)
         Write-Debug "Cloning mirror repo [https://github.com/$owner/$repo.git]"
-        $cloneCommand = "git clone `"https://x:$access_token@github.com/$owner/$repo.git`" 2>&1"
-        $cloneResult = Invoke-GitCommandWithRetry -Command $cloneCommand -Description "Clone mirror repo"
+        $cloneUrl = "https://x:$access_token@github.com/$owner/$repo.git"
+        $cloneResult = Invoke-GitCommandWithRetry -GitCommand "clone" -GitArguments @($cloneUrl) -Description "Clone mirror repo"
         
         if (-not $cloneResult.Success) {
             $errorOutput = $cloneResult.Output | Out-String
@@ -1133,7 +1136,7 @@ function SyncMirrorWithUpstream {
         
         Set-Location $repo | Out-Null
         
-        # Configure git user identity
+        # Configure git user identity locally for this repo only
         git config user.email "actions-marketplace-checks@example.com" 2>&1 | Out-Null
         git config user.name "actions-marketplace-checks" 2>&1 | Out-Null
         
@@ -1164,8 +1167,7 @@ function SyncMirrorWithUpstream {
         
         # Fetch from upstream with retry logic
         Write-Debug "Fetching from upstream"
-        $fetchCommand = "git fetch upstream 2>&1"
-        $fetchResult = Invoke-GitCommandWithRetry -Command $fetchCommand -Description "Fetch from upstream"
+        $fetchResult = Invoke-GitCommandWithRetry -GitCommand "fetch" -GitArguments @("upstream") -Description "Fetch from upstream"
         
         if (-not $fetchResult.Success) {
             $errorOutput = $fetchResult.Output | Out-String
@@ -1240,8 +1242,8 @@ function SyncMirrorWithUpstream {
         
         # Push changes back to mirror using explicit branch reference with retry
         Write-Debug "Pushing changes to mirror"
-        $pushCommand = "git push origin `"HEAD:refs/heads/$currentBranch`" 2>&1"
-        $pushResult = Invoke-GitCommandWithRetry -Command $pushCommand -Description "Push to mirror"
+        $pushRef = "HEAD:refs/heads/$currentBranch"
+        $pushResult = Invoke-GitCommandWithRetry -GitCommand "push" -GitArguments @("origin", $pushRef) -Description "Push to mirror"
         
         if (-not $pushResult.Success) {
             $errorOutput = $pushResult.Output | Out-String

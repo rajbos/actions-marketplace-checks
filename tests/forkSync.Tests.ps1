@@ -85,20 +85,21 @@ Describe "Mirror Sync Tests" {
         
         It "Should have required parameters" {
             $command = Get-Command Invoke-GitCommandWithRetry
-            $command.Parameters.Keys | Should -Contain "Command"
+            $command.Parameters.Keys | Should -Contain "GitCommand"
+            $command.Parameters.Keys | Should -Contain "GitArguments"
             $command.Parameters.Keys | Should -Contain "Description"
             $command.Parameters.Keys | Should -Contain "MaxRetries"
             $command.Parameters.Keys | Should -Contain "InitialDelaySeconds"
         }
         
         It "Should return success for git version command" {
-            $result = Invoke-GitCommandWithRetry -Command "git --version 2>&1" -Description "Test git version" -MaxRetries 1 -InitialDelaySeconds 1
+            $result = Invoke-GitCommandWithRetry -GitCommand "--version" -Description "Test git version" -MaxRetries 1 -InitialDelaySeconds 1
             $result.Success | Should -Be $true
             $result.ExitCode | Should -Be 0
         }
         
         It "Should return failure for non-existent command" {
-            $result = Invoke-GitCommandWithRetry -Command "git nonexistent-command 2>&1" -Description "Test failure" -MaxRetries 1 -InitialDelaySeconds 1
+            $result = Invoke-GitCommandWithRetry -GitCommand "nonexistent-command" -Description "Test failure" -MaxRetries 1 -InitialDelaySeconds 1
             $result.Success | Should -Be $false
         }
     }
