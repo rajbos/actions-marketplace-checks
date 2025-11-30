@@ -57,7 +57,10 @@ jobs:
       - shell: pwsh
         name: Run reporting script
         run: |
-           $actions=(cat status.json | ConvertFrom-Json)
+           # Clean BOM if present before parsing JSON
+           $jsonContent = Get-Content status.json -Raw
+           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+           $actions = $jsonContent | ConvertFrom-Json
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            # $numberOfReposToDo = $actions.Length
            $numberOfReposToDo = 1000

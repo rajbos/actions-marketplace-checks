@@ -35,7 +35,10 @@ jobs:
 
           #ls -la
           #cat actions.json
-          $actions=(cat actions.json | ConvertFrom-Json)
+          # Clean BOM if present before parsing JSON
+          $jsonContent = Get-Content actions.json -Raw
+          $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+          $actions = $jsonContent | ConvertFrom-Json
 
       - uses: actions/upload-artifact@v5
         with:
@@ -77,7 +80,10 @@ jobs:
       - shell: pwsh
         name: Gotta check 'em all
         run: |
-           $actions=(cat actions.json | ConvertFrom-Json)
+           # Clean BOM if present before parsing JSON
+           $jsonContent = Get-Content actions.json -Raw
+           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+           $actions = $jsonContent | ConvertFrom-Json
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber

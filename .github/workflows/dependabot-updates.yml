@@ -65,7 +65,10 @@ jobs:
       - shell: pwsh
         name: Gotta enable 'em all
         run: |
-           $existingForks=(cat status.json | ConvertFrom-Json)
+           # Clean BOM if present before parsing JSON
+           $jsonContent = Get-Content status.json -Raw
+           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+           $existingForks = $jsonContent | ConvertFrom-Json
            Write-Host "Found [$($existingForks.Length)] actions in the status file"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
