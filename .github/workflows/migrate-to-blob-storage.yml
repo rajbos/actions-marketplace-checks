@@ -47,7 +47,12 @@ jobs:
           $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
           $sasQuery = $baseUrlWithQuery.Substring($queryStart)
           
-          Write-Host "Base URL: $baseUrl"
+          # The SAS URL is for actions.json (e.g., .../data/actions.json?sas)
+          # Remove /actions.json to get the folder path
+          $folderUrl = $baseUrl -replace '/actions\.json$', ''
+          
+          Write-Host "Full URL (before query): $baseUrl"
+          Write-Host "Folder URL: $folderUrl"
           Write-Host "SAS query length: $($sasQuery.Length) characters"
           Write-Host "SAS query starts with: $($sasQuery.Substring(0, [Math]::Min(20, $sasQuery.Length)))..."
           
@@ -62,10 +67,8 @@ jobs:
               }
           }
           
-          # The SAS URL is for a folder (e.g., .../data?sas)
-          # We should NOT strip off the folder - status files will be under data/status/
           Write-Host ""
-          Write-Host "Base URL (data folder): $baseUrl"
+          Write-Host "Data folder URL: $folderUrl"
           
           # Validate the SAS token by trying to upload a small test file
           # This is the most reliable way since we know we need write access
@@ -75,9 +78,9 @@ jobs:
           # Upload a small test file to the status folder
           $testFileName = "status/.validation-test.txt"
           $testContent = [System.Text.Encoding]::UTF8.GetBytes("SAS validation test - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
-          $testBlobUrl = "$baseUrl/$testFileName$sasQuery"
+          $testBlobUrl = "$folderUrl/$testFileName$sasQuery"
           
-          Write-Host "Test upload URL: $baseUrl/$testFileName"
+          Write-Host "Test upload URL: $folderUrl/$testFileName"
           
           try {
               $headers = @{

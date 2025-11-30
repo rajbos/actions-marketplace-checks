@@ -33,14 +33,8 @@ jobs:
         env:
           SAS: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # The SAS token is for the 'data' folder: https://.../data?sas
-          # We need to append /actions.json before the query string
-          baseUrl="${SAS%%\?*}"
-          sasQuery="${SAS#*\?}"
-          actionsUrl="${baseUrl}/actions.json?${sasQuery}"
-          
-          echo "Downloading actions.json from blob storage..."
-          curl -s "$actionsUrl" > actions.json
+          # BLOB_SAS_TOKEN is the full URL to actions.json
+          curl "$SAS" > actions.json
 
           echo "Directory info:"
           ls -la
