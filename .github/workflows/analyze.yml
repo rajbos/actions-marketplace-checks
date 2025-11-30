@@ -34,7 +34,21 @@ jobs:
           SAS: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
           # BLOB_SAS_TOKEN is the full URL to actions.json
-          curl "$SAS" > actions.json
+          # Debug: show URL structure (without signature)
+          echo "SAS URL base (redacted): ${SAS%%\?*}"
+          echo "URL length: ${#SAS}"
+          
+          # Use curl with -f to fail on HTTP errors, and properly quote the URL
+          curl -f -L -o actions.json "$SAS"
+          curl_exit_code=$?
+          if [ $curl_exit_code -ne 0 ]; then
+            echo "ERROR: curl failed with exit code $curl_exit_code"
+            if [ -f actions.json ]; then
+              echo "Content downloaded (first 10 lines):"
+              head -n 10 actions.json
+            fi
+            exit 1
+          fi
 
           echo "Directory info:"
           ls -la
