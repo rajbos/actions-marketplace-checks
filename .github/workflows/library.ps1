@@ -59,8 +59,14 @@ function Get-JsonFromBlobStorage {
     $fullBaseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
-    # Remove /actions.json from the end to get the folder path
-    $folderUrl = $fullBaseUrl -replace '/actions\.json$', ''
+    # Check if URL ends with /actions.json and remove it to get the folder path
+    # If it doesn't end with /actions.json, assume it's already a folder URL
+    if ($fullBaseUrl -match '/actions\.json$') {
+        $folderUrl = $fullBaseUrl -replace '/actions\.json$', ''
+    }
+    else {
+        $folderUrl = $fullBaseUrl
+    }
     
     # Append status/<blobFileName> to the folder URL
     $blobUrl = "$folderUrl/status/$blobFileName$sasQuery"
@@ -148,8 +154,14 @@ function Set-JsonToBlobStorage {
     $fullBaseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
-    # Remove /actions.json from the end to get the folder path
-    $folderUrl = $fullBaseUrl -replace '/actions\.json$', ''
+    # Check if URL ends with /actions.json and remove it to get the folder path
+    # If it doesn't end with /actions.json, assume it's already a folder URL
+    if ($fullBaseUrl -match '/actions\.json$') {
+        $folderUrl = $fullBaseUrl -replace '/actions\.json$', ''
+    }
+    else {
+        $folderUrl = $fullBaseUrl
+    }
     
     # Append status/<blobFileName> to the folder URL
     $blobUrl = "$folderUrl/status/$blobFileName$sasQuery"
