@@ -32,27 +32,18 @@ jobs:
       - name: Get current actions list
         env:
           SAS: "${{ secrets.BLOB_SAS_TOKEN }}"
-        shell: pwsh
         run: |
-          # The SAS token points to the 'data' folder: https://.../data?sas...
-          # We need to construct URL for actions.json: https://.../data/actions.json?sas...
-          $sasToken = $env:SAS
-          $queryStart = $sasToken.IndexOf('?')
-          $baseUrl = $sasToken.Substring(0, $queryStart)
-          $sasQuery = $sasToken.Substring($queryStart)
-          $actionsUrl = "$baseUrl/actions.json$sasQuery"
-          
-          Write-Host "Downloading actions.json from blob storage..."
-          Write-Host "Base URL: $baseUrl"
-          
-          Invoke-WebRequest -Uri $actionsUrl -Method GET -OutFile "actions.json" -UseBasicParsing | Out-Null
-          
-          Write-Host "Directory info:"
-          Get-ChildItem -Path . | Format-Table Name, Length, LastWriteTime
-          
-          Write-Host ""
-          Write-Host "Content of the file (first 10 lines):"
-          Get-Content "actions.json" -TotalCount 10
+          # extract filename from SAS
+          fileKeySAS=${SAS##*?sv=}
+          echo "File key: [$fileKeySAS]"
+          curl $SAS > actions.json
+
+          echo "Directory info:"
+          ls -la
+
+          echo ""
+          echo "Content of the file:"
+          head -n 10 actions.json
 
       - name: Download status.json from blob storage
         shell: pwsh
