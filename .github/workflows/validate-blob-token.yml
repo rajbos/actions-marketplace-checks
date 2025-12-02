@@ -47,31 +47,31 @@ jobs:
           
           $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "❌ Failed to download actions.json from blob storage"
+            Write-Error "❌ Failed to download Actions-Full-Overview.Json from blob storage"
             exit 1
           }
           
           # Validate the downloaded file
           if (Test-Path $actionsFile) {
             $fileSize = (Get-Item $actionsFile).Length
-            Write-Host "✅ Successfully downloaded actions.json ($fileSize bytes)"
+            Write-Host "✅ Successfully downloaded Actions-Full-Overview.Json ($fileSize bytes)"
             
             # Validate it's valid JSON
             try {
               $json = Get-Content $actionsFile -Raw | ConvertFrom-Json
-              Write-Host "✅ actions.json is valid JSON"
+              Write-Host "✅ Actions-Full-Overview.Json is valid JSON"
               
               if ($json.Count -gt 0) {
-                Write-Host "✅ actions.json contains $($json.Count) items"
+                Write-Host "✅ Actions-Full-Overview.Json contains $($json.Count) items"
               } else {
-                Write-Warning "⚠️ actions.json is empty"
+                Write-Warning "⚠️ Actions-Full-Overview.Json is empty"
               }
             } catch {
-              Write-Error "❌ actions.json is not valid JSON: $($_.Exception.Message)"
+              Write-Error "❌ Actions-Full-Overview.Json is not valid JSON: $($_.Exception.Message)"
               exit 1
             }
           } else {
-            Write-Error "❌ actions.json not found at expected location: $actionsFile"
+            Write-Error "❌ Actions-Full-Overview.Json not found at expected location: $actionsFile"
             exit 1
           }
 
@@ -189,12 +189,12 @@ jobs:
           Write-Host "✅ SAS token is at blob storage level"
           
           # Test constructing file URLs by appending full paths
-          $actionsJsonUrl = "${baseUrl}/data/actions.json${sasQuery}"
-          Write-Host "✅ Constructed actions.json URL: ${baseUrl}/data/actions.json (SAS redacted)"
+          $actionsJsonUrl = "${baseUrl}/data/Actions-Full-Overview.Json${sasQuery}"
+          Write-Host "✅ Constructed Actions-Full-Overview.Json URL: ${baseUrl}/data/Actions-Full-Overview.Json (SAS redacted)"
           
           # Expected files and their constructed URLs
           $expectedFiles = @(
-            @{Name='data/actions.json'; Path="${baseUrl}/data/actions.json${sasQuery}"},
+            @{Name='data/Actions-Full-Overview.Json'; Path="${baseUrl}/data/Actions-Full-Overview.Json${sasQuery}"},
             @{Name='data/status/status.json'; Path="${baseUrl}/data/status/status.json${sasQuery}"},
             @{Name='data/status/failedForks.json'; Path="${baseUrl}/data/status/failedForks.json${sasQuery}"},
             @{Name='data/status/secretScanningAlerts.json'; Path="${baseUrl}/data/status/secretScanningAlerts.json${sasQuery}"}
@@ -216,7 +216,7 @@ jobs:
           Write-Host "================================================"
           Write-Host ""
           Write-Host "Validated files:"
-          Write-Host "  ✅ data/actions.json"
+          Write-Host "  ✅ data/Actions-Full-Overview.Json"
           Write-Host "  ✅ data/status/status.json"
           Write-Host "  ✅ data/status/failedForks.json"
           Write-Host ""
