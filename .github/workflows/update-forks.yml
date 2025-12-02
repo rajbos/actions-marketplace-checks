@@ -8,8 +8,7 @@ on:
       - .github/workflows/update-forks.ps1
 
   schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: '*/15 * * * *'
 
   workflow_dispatch:
     inputs:
