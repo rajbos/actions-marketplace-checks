@@ -44,7 +44,7 @@ function Get-ActionsJsonFromBlobStorage {
         [string] $localFilePath = $actionsFile
     )
 
-    Write-Host "Downloading actions.json from Azure Blob Storage..."
+    Write-Host "Downloading Actions-Full-Overview.Json from Azure Blob Storage..."
 
     # The sasToken is the blob storage URL with SAS query (e.g., https://.../container/data?sp=racwdl&st=...)
     # The URL already includes the /data path, so we just append /actions.json
@@ -54,25 +54,25 @@ function Get-ActionsJsonFromBlobStorage {
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
     # Construct full blob URL: baseUrl + /actions.json + SAS query
-    $blobUrl = "${baseUrl}/actions.json${sasQuery}"
+    $blobUrl = "${baseUrl}/Actions-Full-Overview.Json${sasQuery}"
     
-    Write-Host "Blob URL: ${baseUrl}/actions.json (SAS redacted)"
+    Write-Host "Blob URL: ${baseUrl}/Actions-Full-Overview.Json (SAS redacted)"
 
     try {
         Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $localFilePath -UseBasicParsing | Out-Null
         
         if (Test-Path $localFilePath) {
             $fileSize = (Get-Item $localFilePath).Length
-            Write-Host "Successfully downloaded actions.json ($fileSize bytes) to [$localFilePath]"
+            Write-Host "Successfully downloaded Actions-Full-Overview.Json ($fileSize bytes) to [$localFilePath]"
             return $true
         }
         else {
-            Write-Error "Failed to download actions.json - file not found after download"
+            Write-Error "Failed to download Actions-Full-Overview.Json - file not found after download"
             return $false
         }
     }
     catch {
-        Write-Error "Failed to download actions.json from blob storage: $($_.Exception.Message)"
+        Write-Error "Failed to download Actions-Full-Overview.Json from blob storage: $($_.Exception.Message)"
         return $false
     }
 }

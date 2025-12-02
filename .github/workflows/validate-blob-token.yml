@@ -37,13 +37,13 @@ jobs:
           }
           Write-Host "✅ BLOB_SAS_TOKEN format looks valid (blob storage base URL with SAS query)"
 
-      - name: Test download actions.json (base file)
+      - name: Test download Actions-Full-Overview.Json (base file)
         shell: pwsh
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
           . ./.github/workflows/library.ps1
-          Write-Host "Testing download of actions.json (base file)..."
+          Write-Host "Testing download of Actions-Full-Overview.Json (base file)..."
           
           $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
