@@ -19,15 +19,75 @@ $script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
 
 <#
     .SYNOPSIS
+    Downloads actions.json from Azure Blob Storage.
+
+    .DESCRIPTION
+    Downloads the actions.json file from the root of the blob storage folder.
+    This is the main data file containing all marketplace actions.
+
+    .PARAMETER sasToken
+    The folder URL with SAS token query string for accessing the blob container.
+
+    .PARAMETER localFilePath
+    The local file path where the downloaded file should be saved. Defaults to $actionsFile.
+
+    .EXAMPLE
+    Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+#>
+function Get-ActionsJsonFromBlobStorage {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken,
+        
+        [Parameter(Mandatory=$false)]
+        [string] $localFilePath = $actionsFile
+    )
+
+    Write-Host "Downloading actions.json from Azure Blob Storage..."
+
+    # The sasToken is a folder URL with SAS query (e.g., .../data?sp=racwdl&st=...)
+    # Parse folder URL and SAS query
+    $baseUrlWithQuery = $sasToken
+    $queryStart = $baseUrlWithQuery.IndexOf('?')
+    $folderUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+    
+    # Construct full blob URL for actions.json at root of folder
+    $blobUrl = "${folderUrl}/actions.json${sasQuery}"
+    
+    Write-Host "Blob URL: ${folderUrl}/actions.json (SAS redacted)"
+
+    try {
+        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $localFilePath -UseBasicParsing | Out-Null
+        
+        if (Test-Path $localFilePath) {
+            $fileSize = (Get-Item $localFilePath).Length
+            Write-Host "Successfully downloaded actions.json ($fileSize bytes) to [$localFilePath]"
+            return $true
+        }
+        else {
+            Write-Error "Failed to download actions.json - file not found after download"
+            return $false
+        }
+    }
+    catch {
+        Write-Error "Failed to download actions.json from blob storage: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+<#
+    .SYNOPSIS
     Common function to download a JSON file from Azure Blob Storage.
 
     .DESCRIPTION
     Uses the provided SAS token URL to download a JSON file from Azure Blob Storage.
-    The SAS token should be the full URL including the file path.
+    The SAS token should be a folder URL with SAS query string (e.g., https://.../data?sp=racwdl&st=...).
+    Files are downloaded from the 'status' subfolder within the folder URL.
     If the file doesn't exist (404), creates an empty JSON array file locally.
 
     .PARAMETER sasToken
-    The full SAS token URL for accessing the blob container.
+    The folder URL with SAS token query string for accessing the blob container.
 
     .PARAMETER blobFileName
     The name of the file in blob storage (e.g., 'status.json').
@@ -52,24 +112,15 @@ function Get-JsonFromBlobStorage {
 
     Write-Host "Downloading $blobFileName from Azure Blob Storage..."
 
-    # The sasToken is the full URL to actions.json (e.g., .../data/actions.json?sas)
-    # We need to replace actions.json with status/<blobFileName>
+    # The sasToken is a folder URL with SAS query (e.g., .../data?sp=racwdl&st=...)
+    # Parse folder URL and SAS query
     $baseUrlWithQuery = $sasToken
     $queryStart = $baseUrlWithQuery.IndexOf('?')
-    $fullBaseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $folderUrl = $baseUrlWithQuery.Substring(0, $queryStart)
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
-    # Check if URL ends with /actions.json and remove it to get the folder path
-    # If it doesn't end with /actions.json, assume it's already a folder URL
-    if ($fullBaseUrl -match '/actions\.json$') {
-        $folderUrl = $fullBaseUrl -replace '/actions\.json$', ''
-    }
-    else {
-        $folderUrl = $fullBaseUrl
-    }
-    
-    # Append status/<blobFileName> to the folder URL
-    $blobUrl = "$folderUrl/status/$blobFileName$sasQuery"
+    # Construct full blob URL: folderUrl/status/blobFileName + SAS query
+    $blobUrl = "${folderUrl}/status/${blobFileName}${sasQuery}"
     
     Write-Host "Blob URL: $($folderUrl)/status/$blobFileName (SAS redacted)"
 
@@ -103,11 +154,12 @@ function Get-JsonFromBlobStorage {
 
     .DESCRIPTION
     Uses the provided SAS token URL to upload a JSON file to Azure Blob Storage.
-    The SAS token should be the full URL including the file path.
+    The SAS token should be a folder URL with SAS query string (e.g., https://.../data?sp=racwdl&st=...).
+    Files are uploaded to the 'status' subfolder within the folder URL.
     If the local file doesn't exist, returns true (nothing to upload).
 
     .PARAMETER sasToken
-    The full SAS token URL for accessing the blob container.
+    The folder URL with SAS token query string for accessing the blob container.
 
     .PARAMETER blobFileName
     The name of the file in blob storage (e.g., 'status.json').
@@ -147,26 +199,17 @@ function Set-JsonToBlobStorage {
         return $true
     }
 
-    # The sasToken is the full URL to actions.json (e.g., .../data/actions.json?sas)
-    # We need to replace actions.json with status/<blobFileName>
+    # The sasToken is a folder URL with SAS query (e.g., .../data?sp=racwdl&st=...)
+    # Parse folder URL and SAS query
     $baseUrlWithQuery = $sasToken
     $queryStart = $baseUrlWithQuery.IndexOf('?')
-    $fullBaseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $folderUrl = $baseUrlWithQuery.Substring(0, $queryStart)
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
-    # Check if URL ends with /actions.json and remove it to get the folder path
-    # If it doesn't end with /actions.json, assume it's already a folder URL
-    if ($fullBaseUrl -match '/actions\.json$') {
-        $folderUrl = $fullBaseUrl -replace '/actions\.json$', ''
-    }
-    else {
-        $folderUrl = $fullBaseUrl
-    }
+    # Construct full blob URL: folderUrl/status/blobFileName + SAS query
+    $blobUrl = "${folderUrl}/status/${blobFileName}${sasQuery}"
     
-    # Append status/<blobFileName> to the folder URL
-    $blobUrl = "$folderUrl/status/$blobFileName$sasQuery"
-    
-    Write-Host "Blob URL: $($folderUrl)/status/$blobFileName (SAS redacted)"
+    Write-Host "Blob URL: ${folderUrl}/status/$blobFileName (SAS redacted)"
 
     try {
         $fileContent = [System.IO.File]::ReadAllBytes($localFilePath)
