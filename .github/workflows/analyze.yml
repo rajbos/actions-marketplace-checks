@@ -1,6 +1,6 @@
 # Fork new action repos
 # Get new data from Dependabot
-# Store the data in the repo for later use
+# Store the data in Azure Blob Storage
 
 name: Analyze
 
@@ -30,20 +30,72 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Get current actions list
+        shell: pwsh
         env:
-          SAS: "${{ secrets.BLOB_SAS_TOKEN }}"
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # extract filename from SAS
-          fileKeySAS=${SAS##*?sv=}
-          echo "File key: [$fileKeySAS]"
-          curl $SAS > actions.json
+          Write-Host "Downloading actions.json from Azure Blob Storage..."
+          
+          # The BLOB_SAS_TOKEN should be the full URL to actions.json
+          $sasToken = $env:BLOB_SAS_TOKEN
+          
+          # Debug: show URL structure (without signature)
+          $queryStart = $sasToken.IndexOf('?')
+          if ($queryStart -gt 0) {
+              $baseUrl = $sasToken.Substring(0, $queryStart)
+              Write-Host "Base URL (redacted): $baseUrl"
+              Write-Host "URL length: $($sasToken.Length)"
+          }
+          
+          try {
+              Invoke-WebRequest -Uri $sasToken -Method GET -OutFile "actions.json" -UseBasicParsing | Out-Null
+              
+              if (Test-Path "actions.json") {
+                  $fileSize = (Get-Item "actions.json").Length
+                  Write-Host "Successfully downloaded actions.json ($fileSize bytes)"
+                  
+                  # Show first 10 lines
+                  Write-Host ""
+                  Write-Host "Content of the file (first 10 lines):"
+                  Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
+              }
+              else {
+                  Write-Error "Failed to download actions.json - file not found after download"
+                  exit 1
+              }
+          }
+          catch {
+              Write-Host "ERROR: Failed to download actions.json"
+              Write-Host "Exception: $($_.Exception.Message)"
+              if ($_.Exception.Response) {
+                  Write-Host "Status Code: $($_.Exception.Response.StatusCode)"
+              }
+              exit 1
+          }
 
-          echo "Directory info:"
-          ls -la
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
 
-          echo ""
-          echo "Content of the file:"
-          head -n 10 actions.json
+      - name: Download failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
+            exit 1
+          }
 
       - name: Get App Token
         id: get_workflow_token2
@@ -56,7 +108,21 @@ jobs:
       - shell: pwsh
         name: "Gotta check 'em all: functions"
         run: |
-           $actions=(Get-Content actions.json | ConvertFrom-Json)
+           # Debug: Show first 10 lines of actions.json
+           Write-Host "First 10 lines of actions.json:"
+           Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+           
+           # Clean BOM if present before parsing JSON
+           $jsonContent = Get-Content actions.json -Raw
+           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+           try {
+               $actions = $jsonContent | ConvertFrom-Json
+           } catch {
+               Write-Host "ERROR: JSON parsing failed"
+               Write-Host "First 10 lines of content:"
+               Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+               throw $_
+           }
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
@@ -77,28 +143,49 @@ jobs:
       - shell: pwsh
         name: "Gotta check 'em all: repoInfo"
         run: |
-           $actions=(Get-Content actions.json | ConvertFrom-Json)
+           # Debug: Show first 10 lines of actions.json
+           Write-Host "First 10 lines of actions.json:"
+           Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+           
+           # Clean BOM if present before parsing JSON
+           $jsonContent = Get-Content actions.json -Raw
+           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+           try {
+               $actions = $jsonContent | ConvertFrom-Json
+           } catch {
+               Write-Host "ERROR: JSON parsing failed"
+               Write-Host "First 10 lines of content:"
+               Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+               throw $_
+           }
            Write-Host "Found [$($actions.Length)] actions in the datafile"
 
            # get repo information
            # used to be secrets.ACCESS_TOKEN, but that expired. trying with app token
            ${{ github.workspace }}/.github/workflows/repoInfo.ps1 -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
 
-      - name: Commit changes
+      - name: Upload status.json to blob storage
         if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # pull to make sure we have the latest contents and that the commit / push will succeed
-          # still fails if these two files have been updated ofc.
+          . ./.github/workflows/library.ps1
+          $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
 
-          git pull --quiet
-          if [[ `git status --porcelain` ]]; then
-            git config --global user.email "github_token@github.com"
-            git config --global user.name "GITHUB_TOKEN"
-
-            git add status.json
-            git add failedForks.json
-            git commit -m "Update status.json"
-            git push
-          else
-            echo "Nothing to commit"
-          fi
+      - name: Upload failedForks.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload failedForks.json to blob storage"
+            exit 1
+          }

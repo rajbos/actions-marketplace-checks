@@ -1,0 +1,226 @@
+# Validate Azure Blob Storage SAS Token
+# This workflow tests all blob storage download operations to ensure the token is valid
+name: Validate Blob Token
+
+on:
+  workflow_dispatch:
+
+  pull_request: 
+
+  push:
+  
+  schedule:
+    # Run daily at 1 AM UTC to catch token expiration issues early
+    - cron: '0 1 * * *'
+
+jobs:
+  validate-blob-access:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate BLOB_SAS_TOKEN secret exists
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:BLOB_SAS_TOKEN)) {
+            Write-Error "❌ BLOB_SAS_TOKEN secret is not set or is empty"
+            exit 1
+          }
+          Write-Host "✅ BLOB_SAS_TOKEN secret is configured"
+          
+          # Validate it looks like a SAS URL at blob storage level
+          if ($env:BLOB_SAS_TOKEN -notmatch '^https://.*\?.*') {
+            Write-Error "❌ BLOB_SAS_TOKEN does not appear to be a valid SAS URL (should start with https:// and contain a query string)"
+            exit 1
+          }
+          Write-Host "✅ BLOB_SAS_TOKEN format looks valid (blob storage base URL with SAS query)"
+
+      - name: Test download actions file
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          Write-Host "Testing download of $actionsBlobFileName (base file)..."
+          
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "❌ Failed to download $actionsBlobFileName from blob storage"
+            exit 1
+          }
+          
+          # Validate the downloaded file
+          if (Test-Path $actionsFile) {
+            $fileSize = (Get-Item $actionsFile).Length
+            Write-Host "✅ Successfully downloaded $actionsBlobFileName ($fileSize bytes)"
+            
+            # Validate it's valid JSON
+            try {
+              $json = Get-Content $actionsFile -Raw | ConvertFrom-Json
+              Write-Host "✅ $actionsBlobFileName is valid JSON"
+              
+              if ($json.Count -gt 0) {
+                Write-Host "✅ $actionsBlobFileName contains $($json.Count) items"
+              } else {
+                Write-Warning "⚠️ $actionsBlobFileName is empty"
+              }
+            } catch {
+              Write-Error "❌ $actionsBlobFileName is not valid JSON: $($_.Exception.Message)"
+              exit 1
+            }
+          } else {
+            Write-Error "❌ $actionsBlobFileName not found at expected location: $actionsFile"
+            exit 1
+          }
+
+      - name: Test download status.json
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          Write-Host "Testing download of status.json..."
+          
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "❌ Failed to download status.json from blob storage"
+            exit 1
+          }
+          
+          # Validate the downloaded file
+          if (Test-Path $statusFile) {
+            $fileSize = (Get-Item $statusFile).Length
+            Write-Host "✅ Successfully downloaded status.json ($fileSize bytes)"
+            
+            # Check minimum file size (1MB = 1048576 bytes)
+            $minSizeBytes = 1MB
+            if ($fileSize -lt $minSizeBytes) {
+              Write-Error "❌ status.json is too small ($fileSize bytes). Expected at least 1MB ($minSizeBytes bytes)"
+              exit 1
+            }
+            Write-Host "✅ status.json size check passed ($fileSize bytes >= $minSizeBytes bytes)"
+            
+            # Validate it's valid JSON
+            try {
+              $jsonContent = Get-Content $statusFile -Raw
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM
+              $json = $jsonContent | ConvertFrom-Json
+              Write-Host "✅ status.json is valid JSON"
+              
+              if ($json.Count -gt 0) {
+                Write-Host "✅ status.json contains $($json.Count) items"
+              } else {
+                Write-Error "❌ status.json is empty (contains 0 items)"
+                exit 1
+              }
+            } catch {
+              Write-Error "❌ status.json is not valid JSON: $($_.Exception.Message)"
+              exit 1
+            }
+          } else {
+            Write-Error "❌ status.json not found at expected location: $statusFile"
+            exit 1
+          }
+
+      - name: Test download failedForks.json
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          Write-Host "Testing download of failedForks.json..."
+          
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "❌ Failed to download failedForks.json from blob storage"
+            exit 1
+          }
+          
+          # Validate the downloaded file
+          if (Test-Path $failedStatusFile) {
+            $fileSize = (Get-Item $failedStatusFile).Length
+            Write-Host "✅ Successfully downloaded failedForks.json ($fileSize bytes)"
+            
+            # Validate it's valid JSON
+            try {
+              $json = Get-Content $failedStatusFile -Raw | ConvertFrom-Json
+              Write-Host "✅ failedForks.json is valid JSON"
+              
+              if ($json.Count -gt 0) {
+                Write-Host "✅ failedForks.json contains $($json.Count) items"
+              } else {
+                Write-Host "✅ failedForks.json is empty (no failed forks)"
+              }
+            } catch {
+              Write-Error "❌ failedForks.json is not valid JSON: $($_.Exception.Message)"
+              exit 1
+            }
+          } else {
+            Write-Error "❌ failedForks.json not found at expected location: $failedStatusFile"
+            exit 1
+          }
+
+      - name: Test blob URL construction
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          Write-Host "Testing blob URL construction logic..."
+          
+          # Parse the SAS token URL (blob storage level)
+          $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
+          $queryStart = $baseUrlWithQuery.IndexOf('?')
+          
+          if ($queryStart -eq -1) {
+            Write-Error "❌ BLOB_SAS_TOKEN does not contain a query string (no '?' found)"
+            exit 1
+          }
+          
+          $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+          $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+          
+          Write-Host "Blob Storage Base URL: $baseUrl"
+          Write-Host "Query string length: $($sasQuery.Length) characters"
+          Write-Host "✅ SAS token is at blob storage level"
+          
+          # Test constructing file URLs by appending full paths
+          $actionsJsonUrl = "${baseUrl}/${actionsBlobFileName}${sasQuery}"
+          Write-Host "✅ Constructed $actionsBlobFileName URL: ${baseUrl}/${actionsBlobFileName} (SAS redacted)"
+          
+          # Expected files and their constructed URLs
+          $expectedFiles = @(
+            @{Name=$actionsBlobFileName; Path="${baseUrl}/${actionsBlobFileName}${sasQuery}"},
+            @{Name='data/status/status.json'; Path="${baseUrl}/data/status/status.json${sasQuery}"},
+            @{Name='data/status/failedForks.json'; Path="${baseUrl}/data/status/failedForks.json${sasQuery}"},
+            @{Name='data/status/secretScanningAlerts.json'; Path="${baseUrl}/data/status/secretScanningAlerts.json${sasQuery}"}
+          )
+          
+          Write-Host "✅ Can construct URLs for all expected files:"
+          foreach ($file in $expectedFiles) {
+            $displayPath = $file.Path -replace '\?.*$', ' (SAS redacted)'
+            Write-Host "   - $($file.Name): $displayPath"
+          }
+
+      - name: Summary
+        if: success()
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+          Write-Host ""
+          Write-Host "================================================"
+          Write-Host "🎉 All blob storage validation checks passed!"
+          Write-Host "================================================"
+          Write-Host ""
+          Write-Host "Validated files:"
+          Write-Host "  ✅ $actionsBlobFileName"
+          Write-Host "  ✅ data/status/status.json"
+          Write-Host "  ✅ data/status/failedForks.json"
+          Write-Host ""
+          Write-Host "The BLOB_SAS_TOKEN is valid and all download operations work correctly."
+

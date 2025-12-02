@@ -28,7 +28,35 @@ jobs:
 
       - name: Get current actions list
         run: |
+          # BLOB_SAS_TOKEN is the full URL to actions.json
           curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          
+          echo "First 10 lines of actions.json:"
+          head -n 10 actions.json
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
+            exit 1
+          }
           
       - name: Get App Token
         id: get_workflow_token
@@ -41,7 +69,21 @@ jobs:
       - shell: pwsh
         name: Gotta enable 'em all
         run: |
-           $existingForks=(cat status.json | ConvertFrom-Json)
+           # Debug: Show first 10 lines of status.json
+           Write-Host "First 10 lines of status.json:"
+           Get-Content status.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+           
+           # Clean BOM if present before parsing JSON
+           $jsonContent = Get-Content status.json -Raw
+           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+           try {
+               $existingForks = $jsonContent | ConvertFrom-Json
+           } catch {
+               Write-Host "ERROR: JSON parsing failed"
+               Write-Host "First 10 lines of content:"
+               Get-Content status.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+               throw $_
+           }
            Write-Host "Found [$($existingForks.Length)] actions in the status file"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
@@ -50,21 +92,28 @@ jobs:
            # this started to fail with the PAT ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
            ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
 
-      - name: Commit changes
+      - name: Upload status.json to blob storage
         if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # pull to make sure we have the latest contents and that the commit / push will succeed
-          # still fails if these two files have been updated ofc.
+          . ./.github/workflows/library.ps1
+          $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
 
-          git pull --quiet
-          if [[ `git status --porcelain` ]]; then
-            git config --global user.email "github_token@github.com"
-            git config --global user.name "GITHUB_TOKEN"
-            
-            git add status.json
-            git add failedForks.json
-            git commit -m "Update status.json"
-            git push
-          else
-            echo "Nothing to commit"
-          fi
+      - name: Upload failedForks.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload failedForks.json to blob storage"
+            exit 1
+          }

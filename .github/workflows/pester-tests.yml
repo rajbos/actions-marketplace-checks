@@ -18,7 +18,11 @@ jobs:
 
       - name: Get current actions list
         run: |
+          # BLOB_SAS_TOKEN is the full URL to actions.json
           curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          
+          echo "First 10 lines of actions.json:"
+          head -n 10 actions.json
       
       - name: Run Pester Tests
         run: Invoke-Pester -Output Detailed
