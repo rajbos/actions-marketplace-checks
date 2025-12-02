@@ -30,7 +30,7 @@ jobs:
     permissions:
       actions: read    # Required to read workflow artifacts
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Download status.json from blob storage
         shell: pwsh
