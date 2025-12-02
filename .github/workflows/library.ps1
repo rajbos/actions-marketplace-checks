@@ -2,7 +2,7 @@
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
-$actionsFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/actions.json"
+$actionsFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/Actions-Full-Overview.Json"
 $statusFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/status.json"
 $failedStatusFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/failedForks.json"
 $secretScanningAlertsFile = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/secretScanningAlerts.json"
