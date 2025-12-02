@@ -53,7 +53,7 @@ function Get-ActionsJsonFromBlobStorage {
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
     # Construct full blob URL: baseUrl + /data/actions.json + SAS query
-    $blobUrl = "${baseUrl}/data/actions.json${sasQuery}"y}"
+    $blobUrl = "${baseUrl}/data/actions.json${sasQuery}"
     
     Write-Host "Blob URL: ${baseUrl}/data/actions.json (SAS redacted)"
 
