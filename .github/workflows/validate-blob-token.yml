@@ -95,6 +95,14 @@ jobs:
             $fileSize = (Get-Item $statusFile).Length
             Write-Host "✅ Successfully downloaded status.json ($fileSize bytes)"
             
+            # Check minimum file size (1MB = 1048576 bytes)
+            $minSizeBytes = 1MB
+            if ($fileSize -lt $minSizeBytes) {
+              Write-Error "❌ status.json is too small ($fileSize bytes). Expected at least 1MB ($minSizeBytes bytes)"
+              exit 1
+            }
+            Write-Host "✅ status.json size check passed ($fileSize bytes >= $minSizeBytes bytes)"
+            
             # Validate it's valid JSON
             try {
               $jsonContent = Get-Content $statusFile -Raw
@@ -105,7 +113,8 @@ jobs:
               if ($json.Count -gt 0) {
                 Write-Host "✅ status.json contains $($json.Count) items"
               } else {
-                Write-Warning "⚠️ status.json is empty (might be new deployment)"
+                Write-Error "❌ status.json is empty (contains 0 items)"
+                exit 1
               }
             } catch {
               Write-Error "❌ status.json is not valid JSON: $($_.Exception.Message)"
