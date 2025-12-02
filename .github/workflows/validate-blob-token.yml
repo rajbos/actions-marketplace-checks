@@ -17,7 +17,7 @@ jobs:
   validate-blob-access:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Validate BLOB_SAS_TOKEN secret exists
         shell: pwsh

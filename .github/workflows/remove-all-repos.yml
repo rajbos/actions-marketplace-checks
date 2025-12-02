@@ -9,7 +9,7 @@ jobs:
   cleanup-all-repos:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
           
       - shell: pwsh
         name: Run reporting script
