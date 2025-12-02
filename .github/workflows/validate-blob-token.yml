@@ -76,6 +76,7 @@ jobs:
           }
 
       - name: Test download status.json
+        if: always()
         shell: pwsh
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
@@ -116,6 +117,7 @@ jobs:
           }
 
       - name: Test download failedForks.json
+        if: always()
         shell: pwsh
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
@@ -154,6 +156,7 @@ jobs:
           }
 
       - name: Test blob URL construction
+        if: always()
         shell: pwsh
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
