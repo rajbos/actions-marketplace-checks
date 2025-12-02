@@ -13,6 +13,7 @@ Write-Host "failedStatusFile location: [$failedStatusFile]"
 Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 
 # Blob file names in the 'status' subfolder
+$script:actionsBlobFileName = "Actions-Full-Overview.Json"
 $script:statusBlobFileName = "status.json"
 $script:failedForksBlobFileName = "failedForks.json"
 $script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
@@ -44,7 +45,7 @@ function Get-ActionsJsonFromBlobStorage {
         [string] $localFilePath = $actionsFile
     )
 
-    Write-Host "Downloading Actions-Full-Overview.Json from Azure Blob Storage..."
+    Write-Host "Downloading $script:actionsBlobFileName from Azure Blob Storage..."
 
     # The sasToken is the blob storage URL with SAS query (e.g., https://.../container/data?sp=racwdl&st=...)
     # The URL already includes the /data path, so we just append /actions.json
@@ -54,9 +55,9 @@ function Get-ActionsJsonFromBlobStorage {
     $sasQuery = $baseUrlWithQuery.Substring($queryStart)
     
     # Construct full blob URL: baseUrl + /actions.json + SAS query
-    $blobUrl = "${baseUrl}/Actions-Full-Overview.Json${sasQuery}"
+    $blobUrl = "${baseUrl}/${script:actionsBlobFileName}${sasQuery}"
     
-    Write-Host "Blob URL: ${baseUrl}/Actions-Full-Overview.Json (SAS redacted)"
+    Write-Host "Blob URL: ${baseUrl}/${script:actionsBlobFileName} (SAS redacted)"
 
     try {
         Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $localFilePath -UseBasicParsing | Out-Null
@@ -72,7 +73,7 @@ function Get-ActionsJsonFromBlobStorage {
         }
     }
     catch {
-        Write-Error "Failed to download Actions-Full-Overview.Json from blob storage: $($_.Exception.Message)"
+        Write-Error "Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
         return $false
     }
 }

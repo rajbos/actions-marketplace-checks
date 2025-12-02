@@ -37,41 +37,41 @@ jobs:
           }
           Write-Host "✅ BLOB_SAS_TOKEN format looks valid (blob storage base URL with SAS query)"
 
-      - name: Test download Actions-Full-Overview.Json (base file)
+      - name: Test download actions file
         shell: pwsh
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
           . ./.github/workflows/library.ps1
-          Write-Host "Testing download of Actions-Full-Overview.Json (base file)..."
+          Write-Host "Testing download of $actionsBlobFileName (base file)..."
           
           $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "❌ Failed to download Actions-Full-Overview.Json from blob storage"
+            Write-Error "❌ Failed to download $actionsBlobFileName from blob storage"
             exit 1
           }
           
           # Validate the downloaded file
           if (Test-Path $actionsFile) {
             $fileSize = (Get-Item $actionsFile).Length
-            Write-Host "✅ Successfully downloaded Actions-Full-Overview.Json ($fileSize bytes)"
+            Write-Host "✅ Successfully downloaded $actionsBlobFileName ($fileSize bytes)"
             
             # Validate it's valid JSON
             try {
               $json = Get-Content $actionsFile -Raw | ConvertFrom-Json
-              Write-Host "✅ Actions-Full-Overview.Json is valid JSON"
+              Write-Host "✅ $actionsBlobFileName is valid JSON"
               
               if ($json.Count -gt 0) {
-                Write-Host "✅ Actions-Full-Overview.Json contains $($json.Count) items"
+                Write-Host "✅ $actionsBlobFileName contains $($json.Count) items"
               } else {
-                Write-Warning "⚠️ Actions-Full-Overview.Json is empty"
+                Write-Warning "⚠️ $actionsBlobFileName is empty"
               }
             } catch {
-              Write-Error "❌ Actions-Full-Overview.Json is not valid JSON: $($_.Exception.Message)"
+              Write-Error "❌ $actionsBlobFileName is not valid JSON: $($_.Exception.Message)"
               exit 1
             }
           } else {
-            Write-Error "❌ Actions-Full-Overview.Json not found at expected location: $actionsFile"
+            Write-Error "❌ $actionsBlobFileName not found at expected location: $actionsFile"
             exit 1
           }
 
@@ -170,6 +170,7 @@ jobs:
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
+          . ./.github/workflows/library.ps1
           Write-Host "Testing blob URL construction logic..."
           
           # Parse the SAS token URL (blob storage level)
@@ -189,12 +190,12 @@ jobs:
           Write-Host "✅ SAS token is at blob storage level"
           
           # Test constructing file URLs by appending full paths
-          $actionsJsonUrl = "${baseUrl}/data/Actions-Full-Overview.Json${sasQuery}"
-          Write-Host "✅ Constructed Actions-Full-Overview.Json URL: ${baseUrl}/data/Actions-Full-Overview.Json (SAS redacted)"
+          $actionsJsonUrl = "${baseUrl}/${actionsBlobFileName}${sasQuery}"
+          Write-Host "✅ Constructed $actionsBlobFileName URL: ${baseUrl}/${actionsBlobFileName} (SAS redacted)"
           
           # Expected files and their constructed URLs
           $expectedFiles = @(
-            @{Name='data/Actions-Full-Overview.Json'; Path="${baseUrl}/data/Actions-Full-Overview.Json${sasQuery}"},
+            @{Name=$actionsBlobFileName; Path="${baseUrl}/${actionsBlobFileName}${sasQuery}"},
             @{Name='data/status/status.json'; Path="${baseUrl}/data/status/status.json${sasQuery}"},
             @{Name='data/status/failedForks.json'; Path="${baseUrl}/data/status/failedForks.json${sasQuery}"},
             @{Name='data/status/secretScanningAlerts.json'; Path="${baseUrl}/data/status/secretScanningAlerts.json${sasQuery}"}
@@ -210,13 +211,14 @@ jobs:
         if: success()
         shell: pwsh
         run: |
+          . ./.github/workflows/library.ps1
           Write-Host ""
           Write-Host "================================================"
           Write-Host "🎉 All blob storage validation checks passed!"
           Write-Host "================================================"
           Write-Host ""
           Write-Host "Validated files:"
-          Write-Host "  ✅ data/Actions-Full-Overview.Json"
+          Write-Host "  ✅ $actionsBlobFileName"
           Write-Host "  ✅ data/status/status.json"
           Write-Host "  ✅ data/status/failedForks.json"
           Write-Host ""
