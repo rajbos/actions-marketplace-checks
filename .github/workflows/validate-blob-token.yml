@@ -221,3 +221,4 @@ jobs:
           Write-Host "  ✅ data/status/failedForks.json"
           Write-Host ""
           Write-Host "The BLOB_SAS_TOKEN is valid and all download operations work correctly."
+
