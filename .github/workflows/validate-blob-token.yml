@@ -55,11 +55,6 @@ jobs:
           if (Test-Path $actionsFile) {
             $fileSize = (Get-Item $actionsFile).Length
             Write-Host "✅ Successfully downloaded actions.json ($fileSize bytes)"
-              
-            # Validate the downloaded file
-          if (Test-Path $actionsFile) {
-            $fileSize = (Get-Item $actionsFile).Length
-            Write-Host "✅ Successfully downloaded actions.json ($fileSize bytes)"
             
             # Validate it's valid JSON
             try {
