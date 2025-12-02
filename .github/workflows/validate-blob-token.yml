@@ -30,12 +30,12 @@ jobs:
           }
           Write-Host "✅ BLOB_SAS_TOKEN secret is configured"
           
-          # Validate it looks like a SAS URL for a folder
+          # Validate it looks like a SAS URL at blob storage level
           if ($env:BLOB_SAS_TOKEN -notmatch '^https://.*\?.*') {
             Write-Error "❌ BLOB_SAS_TOKEN does not appear to be a valid SAS URL (should start with https:// and contain a query string)"
             exit 1
           }
-          Write-Host "✅ BLOB_SAS_TOKEN format looks valid (folder URL with SAS query)"
+          Write-Host "✅ BLOB_SAS_TOKEN format looks valid (blob storage base URL with SAS query)"
 
       - name: Test download actions.json (base file)
         shell: pwsh
@@ -160,7 +160,7 @@ jobs:
         run: |
           Write-Host "Testing blob URL construction logic..."
           
-          # Parse the SAS token URL (folder-based)
+          # Parse the SAS token URL (blob storage level)
           $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
           $queryStart = $baseUrlWithQuery.IndexOf('?')
           
@@ -169,27 +169,23 @@ jobs:
             exit 1
           }
           
-          $folderUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+          $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
           $sasQuery = $baseUrlWithQuery.Substring($queryStart)
           
-          Write-Host "Folder URL: $folderUrl"
+          Write-Host "Blob Storage Base URL: $baseUrl"
           Write-Host "Query string length: $($sasQuery.Length) characters"
-          Write-Host "✅ SAS token is for folder access"
+          Write-Host "✅ SAS token is at blob storage level"
           
-          # Test constructing file URLs
-          $actionsJsonUrl = "${folderUrl}/actions.json${sasQuery}"
-          Write-Host "✅ Constructed actions.json URL: ${folderUrl}/actions.json (SAS redacted)"
-          
-          # Test that we can construct the status subfolder URLs
-          $statusFolderUrl = "${folderUrl}/status"
-          Write-Host "✅ Status folder URL: $statusFolderUrl"
+          # Test constructing file URLs by appending full paths
+          $actionsJsonUrl = "${baseUrl}/data/actions.json${sasQuery}"
+          Write-Host "✅ Constructed actions.json URL: ${baseUrl}/data/actions.json (SAS redacted)"
           
           # Expected files and their constructed URLs
           $expectedFiles = @(
-            @{Name='actions.json'; Path="${folderUrl}/actions.json${sasQuery}"},
-            @{Name='status/status.json'; Path="${folderUrl}/status/status.json${sasQuery}"},
-            @{Name='status/failedForks.json'; Path="${folderUrl}/status/failedForks.json${sasQuery}"},
-            @{Name='status/secretScanningAlerts.json'; Path="${folderUrl}/status/secretScanningAlerts.json${sasQuery}"}
+            @{Name='data/actions.json'; Path="${baseUrl}/data/actions.json${sasQuery}"},
+            @{Name='data/status/status.json'; Path="${baseUrl}/data/status/status.json${sasQuery}"},
+            @{Name='data/status/failedForks.json'; Path="${baseUrl}/data/status/failedForks.json${sasQuery}"},
+            @{Name='data/status/secretScanningAlerts.json'; Path="${baseUrl}/data/status/secretScanningAlerts.json${sasQuery}"}
           )
           
           Write-Host "✅ Can construct URLs for all expected files:"
@@ -208,8 +204,8 @@ jobs:
           Write-Host "================================================"
           Write-Host ""
           Write-Host "Validated files:"
-          Write-Host "  ✅ actions.json (base file)"
-          Write-Host "  ✅ status/status.json"
-          Write-Host "  ✅ status/failedForks.json"
+          Write-Host "  ✅ data/actions.json"
+          Write-Host "  ✅ data/status/status.json"
+          Write-Host "  ✅ data/status/failedForks.json"
           Write-Host ""
           Write-Host "The BLOB_SAS_TOKEN is valid and all download operations work correctly."
