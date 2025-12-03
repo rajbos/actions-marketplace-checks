@@ -34,44 +34,17 @@ jobs:
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          Write-Host "Downloading actions.json from Azure Blob Storage..."
-          
-          # The BLOB_SAS_TOKEN should be the full URL to actions.json
-          $sasToken = $env:BLOB_SAS_TOKEN
-          
-          # Debug: show URL structure (without signature)
-          $queryStart = $sasToken.IndexOf('?')
-          if ($queryStart -gt 0) {
-              $baseUrl = $sasToken.Substring(0, $queryStart)
-              Write-Host "Base URL (redacted): $baseUrl"
-              Write-Host "URL length: $($sasToken.Length)"
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
           }
           
-          try {
-              Invoke-WebRequest -Uri $sasToken -Method GET -OutFile "actions.json" -UseBasicParsing | Out-Null
-              
-              if (Test-Path "actions.json") {
-                  $fileSize = (Get-Item "actions.json").Length
-                  Write-Host "Successfully downloaded actions.json ($fileSize bytes)"
-                  
-                  # Show first 10 lines
-                  Write-Host ""
-                  Write-Host "Content of the file (first 10 lines):"
-                  Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
-              }
-              else {
-                  Write-Error "Failed to download actions.json - file not found after download"
-                  exit 1
-              }
-          }
-          catch {
-              Write-Host "ERROR: Failed to download actions.json"
-              Write-Host "Exception: $($_.Exception.Message)"
-              if ($_.Exception.Response) {
-                  Write-Host "Status Code: $($_.Exception.Response.StatusCode)"
-              }
-              exit 1
-          }
+          # Show first 10 lines for debugging
+          Write-Host ""
+          Write-Host "Content of the file (first 10 lines):"
+          Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
 
       - name: Download status.json from blob storage
         shell: pwsh

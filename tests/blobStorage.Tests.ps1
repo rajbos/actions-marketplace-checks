@@ -35,6 +35,28 @@ Describe "Blob Storage Common Functions" {
 }
 
 Describe "Blob Storage Wrapper Functions" {
+    Context "Get-ActionsJsonFromBlobStorage function" {
+        It "Should have function defined" {
+            Get-Command Get-ActionsJsonFromBlobStorage -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
+        }
+
+        It "Should have required sasToken parameter" {
+            $params = (Get-Command Get-ActionsJsonFromBlobStorage).Parameters
+            $params.Keys | Should -Contain 'sasToken'
+        }
+
+        It "Should have optional localFilePath parameter" {
+            $params = (Get-Command Get-ActionsJsonFromBlobStorage).Parameters
+            $params.Keys | Should -Contain 'localFilePath'
+        }
+
+        It "Should fail with invalid SAS token URL" {
+            # SAS URL should point to a folder (e.g., 'data'), not a specific blob
+            $result = Get-ActionsJsonFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/container/data?sv=invalid"
+            $result | Should -Be $false
+        }
+    }
+
     Context "Get-StatusFromBlobStorage function" {
         It "Should have function defined" {
             Get-Command Get-StatusFromBlobStorage -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
