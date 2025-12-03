@@ -22,49 +22,191 @@ This repository contains PowerShell scripts that run checks on GitHub Actions in
 
 #### Files Stored in Blob Storage
 
-All files are stored in the `status/` subfolder:
-- `status/status.json` - Main status tracking file (~29MB)
-- `status/failedForks.json` - List of repos that failed to fork
-- `status/secretScanningAlerts.json` - Secret scanning alerts data
+The blob storage structure uses two different patterns:
 
-#### Blob Storage Workflow
+1. **Root-level file** (legacy pattern):
+   - `Actions-Full-Overview.Json` - Marketplace actions list downloaded directly from the blob storage base URL
+
+2. **Status subfolder files** (current pattern):
+   - `status/status.json` - Main status tracking file (~29MB, 29,000+ actions)
+   - `status/failedForks.json` - List of repos that failed to fork
+   - `status/secretScanningAlerts.json` - Secret scanning alerts data
+
+#### SAS Token Structure and URL Construction
+
+The `BLOB_SAS_TOKEN` secret contains a **blob storage level SAS URL** with the following structure:
+
+```
+https://{storage-account}.blob.core.windows.net/{container}/{base-path}?{sas-query-string}
+```
+
+**Example:**
+```
+https://intostorage.blob.core.windows.net/intostorage/actions.json?sp=racwdl&st=2024-01-01T00:00:00Z&se=...
+```
+
+**Key Components:**
+- **Base URL**: `https://intostorage.blob.core.windows.net/intostorage/actions.json` (points to the base blob path)
+- **SAS Query**: `?sp=racwdl&st=...&se=...` (permissions, start time, expiry, etc.)
+
+#### How File URLs Are Constructed
+
+Files are accessed by constructing URLs from the SAS token:
+
+1. **Parse the SAS token** to separate base URL from query string:
+   ```powershell
+   $baseUrlWithQuery = $env:BLOB_SAS_TOKEN
+   $queryStart = $baseUrlWithQuery.IndexOf('?')
+   $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+   $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+   ```
+
+2. **For root-level files** (like `Actions-Full-Overview.Json`):
+   ```powershell
+   # Append file name to base URL, then add SAS query
+   $blobUrl = "${baseUrl}/${actionsBlobFileName}${sasQuery}"
+   # Result: https://.../intostorage/actions.json/Actions-Full-Overview.Json?sp=...
+   ```
+
+3. **For status subfolder files** (like `status.json`):
+   ```powershell
+   # Append /status/{filename} to base URL, then add SAS query
+   $blobUrl = "${baseUrl}/status/${blobFileName}${sasQuery}"
+   # Result: https://.../intostorage/actions.json/status/status.json?sp=...
+   ```
+
+**Important Notes:**
+- The base URL ends with `/actions.json`, so appending paths like `/status/status.json` creates the full path
+- The SAS query string is always appended AFTER the complete file path
+- All status files are in the `status/` subfolder relative to the base path
+
+#### Blob Storage Workflow Pattern
+
+All workflows that use blob storage follow this pattern:
 
 1. **At workflow start**: Download JSON files from blob storage using helper functions
-2. **During execution**: Process actions and update local files
-3. **At workflow end**: Upload modified files back to blob storage
+   ```yaml
+   - name: Download status.json from blob storage
+     shell: pwsh
+     env:
+       BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+     run: |
+       . ./.github/workflows/library.ps1
+       $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+       if (-not $result) {
+         Write-Error "Failed to download status.json"
+         exit 1
+       }
+   ```
 
-Helper functions in `library.ps1`:
-- `Get-StatusFromBlobStorage` / `Set-StatusToBlobStorage` - For status.json
-- `Get-FailedForksFromBlobStorage` / `Set-FailedForksToBlobStorage` - For failedForks.json
-- `Set-SecretScanningAlertsToBlobStorage` - For secretScanningAlerts.json
+2. **During execution**: Process actions and update local files
+   - Files are downloaded to the repository root (e.g., `status.json`, `failedForks.json`)
+   - Scripts read and modify these local files
+   - Changes are made in-memory or written back to local files
+
+3. **At workflow end**: Upload modified files back to blob storage
+   ```yaml
+   - name: Upload status.json to blob storage
+     shell: pwsh
+     env:
+       BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+     run: |
+       . ./.github/workflows/library.ps1
+       $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+       if (-not $result) {
+         Write-Error "Failed to upload status.json"
+         exit 1
+       }
+   ```
+
+#### Helper Functions in library.ps1
+
+**Download Functions:**
+- `Get-ActionsJsonFromBlobStorage -sasToken $token` - Downloads `Actions-Full-Overview.Json` from root
+- `Get-StatusFromBlobStorage -sasToken $token` - Downloads `status/status.json`
+- `Get-FailedForksFromBlobStorage -sasToken $token` - Downloads `status/failedForks.json`
+
+**Upload Functions:**
+- `Set-StatusToBlobStorage -sasToken $token` - Uploads `status/status.json` (fails if file missing)
+- `Set-FailedForksToBlobStorage -sasToken $token` - Uploads `status/failedForks.json`
+- `Set-SecretScanningAlertsToBlobStorage -sasToken $token` - Uploads `status/secretScanningAlerts.json`
+
+**Common Helper Functions:**
+- `Get-JsonFromBlobStorage -sasToken $token -blobFileName "status.json" -localFilePath $statusFile`
+  - Downloads any JSON file from the `status/` subfolder
+  - Creates empty JSON array `[]` locally if file doesn't exist (404)
+  
+- `Set-JsonToBlobStorage -sasToken $token -blobFileName "status.json" -localFilePath $statusFile -failIfMissing $false`
+  - Uploads any JSON file to the `status/` subfolder
+  - Sets Content-Type header to `application/json`
+  - Uses `x-ms-blob-type: BlockBlob` header
+
+#### Validation: validate-blob-token.yml Workflow
+
+This workflow runs daily (and on every PR/push) to validate blob storage access. It tests:
+
+1. **SAS Token Format Validation:**
+   - Checks if `BLOB_SAS_TOKEN` is set and non-empty
+   - Validates it matches expected URL format with query string (`https://...?...`)
+
+2. **File Download Tests:**
+   - Downloads `Actions-Full-Overview.Json` and validates it's valid JSON
+   - Downloads `status.json` and validates:
+     - File size is at least 1MB (validates it's not corrupted/empty)
+     - Content is valid JSON (handles UTF-8 BOM)
+     - Contains expected number of items (29,000+)
+   - Downloads `failedForks.json` and validates it's valid JSON
+
+3. **URL Construction Verification:**
+   - Tests the URL parsing logic (separating base URL from SAS query)
+   - Validates all expected file paths can be constructed
+   - Shows constructed URLs (with SAS redacted) for debugging
+
+**Example validation output:**
+```
+✅ BLOB_SAS_TOKEN secret is configured
+✅ BLOB_SAS_TOKEN format looks valid
+✅ Successfully downloaded Actions-Full-Overview.Json (X bytes)
+✅ Actions-Full-Overview.Json is valid JSON
+✅ Successfully downloaded status.json (29MB)
+✅ status.json size check passed (29000000 bytes >= 1048576 bytes)
+✅ status.json contains 29279 items
+```
 
 #### Required Secrets
 
 | Secret Name | Description |
 |-------------|-------------|
-| `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access) |
+| `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access). Format: `https://{storage}.blob.core.windows.net/{container}/{base-path}?{sas-params}` |
 
 #### Local Development with Blob Storage
 
 For local testing, set environment variables before running scripts:
 
 ```powershell
-# Set the SAS token for blob storage
+# Set the SAS token for blob storage (blob storage level URL)
 $env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/actions.json?sv=..."
 ```
 
-Use the helper script for manual operations:
+Use the helper script `blob-helper.ps1` for manual operations:
 
 ```powershell
 # Download all JSON files from blob storage
 ./blob-helper.ps1 -Action download
 
-# View status.json info
+# View status.json info (works without BLOB_SAS_TOKEN for local files)
 ./blob-helper.ps1 -Action info
 
-# Upload all JSON files to blob storage (with confirmation)
+# Upload all JSON files to blob storage (with confirmation prompt)
 ./blob-helper.ps1 -Action upload
 ```
+
+**blob-helper.ps1 Features:**
+- **Download**: Fetches `status.json` and `failedForks.json` from blob storage
+- **Info**: Shows local file statistics (size, entry count, last modified)
+- **Upload**: Pushes local files back to blob storage (requires confirmation)
+- Automatically uses functions from `library.ps1`
+- Shows detailed statistics about the downloaded files
 
 ## Technology Stack
 
