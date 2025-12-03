@@ -242,4 +242,25 @@ Describe "Mirror Sync Tests" {
             $result.error | Should -Not -BeNullOrEmpty
         }
     }
+    
+    Context "LFS handling in SyncMirrorWithUpstream" {
+        It "Should set GIT_LFS_SKIP_SMUDGE environment variable during sync operations" {
+            # This test verifies that the fix for LFS errors is in place
+            # We check if the code sets the environment variable by examining the function source
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'GIT_LFS_SKIP_SMUDGE'
+        }
+        
+        It "Should have cleanup code for GIT_LFS_SKIP_SMUDGE environment variable" {
+            # Verify that cleanup code exists to remove the environment variable
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'Remove-Item Env:\\GIT_LFS_SKIP_SMUDGE'
+        }
+        
+        It "Should mention LFS in debug messages" {
+            # Verify that the debug messaging indicates LFS handling
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'LFS skip smudge enabled'
+        }
+    }
 }

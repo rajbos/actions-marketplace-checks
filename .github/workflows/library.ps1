@@ -1529,9 +1529,14 @@ function SyncMirrorWithUpstream {
     try {
         Set-Location $syncTempDir | Out-Null
         
+        # Set environment variable to skip LFS smudging (downloading actual files)
+        # This prevents failures when LFS objects are missing on the server (404 errors)
+        # Git will keep LFS pointer files instead of trying to download missing objects
+        $env:GIT_LFS_SKIP_SMUDGE = "1"
+        
         # Clone the mirror repo with retry logic
         # Token is embedded in URL for authentication (standard git approach)
-        Write-Debug "Cloning mirror repo [https://github.com/$owner/$repo.git]"
+        Write-Debug "Cloning mirror repo [https://github.com/$owner/$repo.git] with LFS skip smudge enabled"
         $cloneUrl = "https://x:$access_token@github.com/$owner/$repo.git"
         $cloneResult = Invoke-GitCommandWithRetry -GitCommand "clone" -GitArguments @($cloneUrl) -Description "Clone mirror repo"
         
@@ -1645,6 +1650,8 @@ function SyncMirrorWithUpstream {
             # Clean up
             Set-Location $originalDir | Out-Null
             Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+            # Clear LFS skip smudge environment variable
+            Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
             return @{
                 success = $true
                 message = "Already up to date"
@@ -1678,6 +1685,9 @@ function SyncMirrorWithUpstream {
         Set-Location $originalDir | Out-Null
         Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
         
+        # Clear LFS skip smudge environment variable
+        Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
+        
         return @{
             success = $true
             message = "Successfully fetched and merged from upstream"
@@ -1692,6 +1702,8 @@ function SyncMirrorWithUpstream {
         try {
             Set-Location $originalDir | Out-Null
             Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+            # Clear LFS skip smudge environment variable
+            Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
         }
         catch {
             # Ignore cleanup errors
