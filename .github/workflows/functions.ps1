@@ -82,6 +82,17 @@ function ForkActionRepos {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
+        
+        # Check if token is about to expire (less than 5 minutes remaining)
+        if ($null -ne $script:tokenExpirationTime) {
+            if (Test-TokenExpiration -expirationTime $script:tokenExpirationTime -warningMinutes 5) {
+                $timeRemaining = $script:tokenExpirationTime - [DateTime]::UtcNow
+                Write-Message -message "Stopping repo processing loop: Token will expire in $([math]::Round($timeRemaining.TotalMinutes, 1)) minutes (less than 5 minutes). Processed $i repos." -logToSummary $true
+                Write-Host "Breaking loop to prevent token expiration issues. This is not an error."
+                break
+            }
+        }
+        
         Write-Host "$i/$max Checking repo [$owner/$repo]"
         # check if fork already exists
         $forkedRepoName = $action.forkedRepoName
@@ -166,6 +177,16 @@ function EnableDependabotForForkedActions {
             # do not run to long
             break            
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
+        }
+
+        # Check if token is about to expire (less than 5 minutes remaining)
+        if ($null -ne $script:tokenExpirationTime) {
+            if (Test-TokenExpiration -expirationTime $script:tokenExpirationTime -warningMinutes 5) {
+                $timeRemaining = $script:tokenExpirationTime - [DateTime]::UtcNow
+                Write-Message -message "Stopping dependabot enablement loop: Token will expire in $([math]::Round($timeRemaining.TotalMinutes, 1)) minutes (less than 5 minutes)." -logToSummary $true
+                Write-Host "Breaking loop to prevent token expiration issues. This is not an error."
+                break
+            }
         }
 
         $repo = $action.repo
@@ -319,6 +340,16 @@ function ForkActionRepo {
 
 Write-Host "Got $($actions.Length) actions"
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
+
+# Get token expiration time and store it for checking during the loop
+$script:tokenExpirationTime = Get-TokenExpirationTime -access_token $access_token_destination
+if ($null -eq $script:tokenExpirationTime) {
+    Write-Warning "Could not determine token expiration time. Continuing without expiration checks."
+}
+else {
+    $timeUntilExpiration = $script:tokenExpirationTime - [DateTime]::UtcNow
+    Write-Host "Token will expire in $([math]::Round($timeUntilExpiration.TotalMinutes, 1)) minutes at $($script:tokenExpirationTime) UTC"
+}
 
 # load the list of forked repos
 ($existingForks, $failedForks) = GetForkedActionRepos -access_token $access_token_destination

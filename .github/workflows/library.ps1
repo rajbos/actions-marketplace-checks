@@ -581,6 +581,80 @@ function GetRateLimitInfo {
     }
 }
 
+function Get-TokenExpirationTime {
+    Param (
+        [Parameter(Mandatory=$true)]
+        $access_token
+    )
+    
+    # Call the rate_limit API to get token expiration information from response headers
+    # GitHub App tokens include a 'GitHub-Authentication-Token-Expiration' header
+    # that contains the expiration timestamp in ISO 8601 format
+    
+    $url = "rate_limit"
+    $headers = @{
+        Authorization = GetBasicAuthenticationHeader -access_token $access_token
+    }
+    
+    try {
+        $result = Invoke-WebRequest -Uri "https://api.github.com/$url" -Headers $headers -Method GET -ErrorAction Stop
+        
+        # Check for token expiration header
+        # GitHub uses 'GitHub-Authentication-Token-Expiration' header for App tokens
+        $expirationHeader = $null
+        if ($result.Headers.ContainsKey('GitHub-Authentication-Token-Expiration')) {
+            $expirationHeader = $result.Headers['GitHub-Authentication-Token-Expiration']
+        }
+        elseif ($result.Headers.ContainsKey('github-authentication-token-expiration')) {
+            $expirationHeader = $result.Headers['github-authentication-token-expiration']
+        }
+        
+        if ($null -ne $expirationHeader) {
+            # Parse the ISO 8601 timestamp using culture-invariant parsing
+            # GitHub returns timestamps in format like: "2024-12-04 08:30:45 UTC"
+            try {
+                $expirationTime = [DateTimeOffset]::Parse($expirationHeader[0], [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
+                Write-Host "Token expiration time: $expirationTime UTC"
+                return $expirationTime
+            }
+            catch {
+                Write-Warning "Failed to parse token expiration header value: $($expirationHeader[0])"
+                Write-Debug "Parse error: $($_.Exception.Message)"
+                return $null
+            }
+        }
+        else {
+            Write-Warning "Token expiration header not found in response. Token may not be a GitHub App token."
+            Write-Debug "Available headers: $($result.Headers.Keys -join ', ')"
+            return $null
+        }
+    }
+    catch {
+        Write-Error "Failed to get token expiration time: $($_.Exception.Message)"
+        return $null
+    }
+}
+
+function Test-TokenExpiration {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [DateTime]$expirationTime,
+        [int]$warningMinutes = 5
+    )
+    
+    # Check if the token is about to expire within the specified number of minutes
+    # Returns $true if expiration is imminent, $false otherwise
+    
+    $currentTime = [DateTime]::UtcNow
+    $timeRemaining = $expirationTime - $currentTime
+    
+    if ($timeRemaining.TotalMinutes -le $warningMinutes) {
+        return $true
+    }
+    
+    return $false
+}
+
 function SaveStatus {
     Param (
         $existingForks,
