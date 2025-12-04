@@ -498,7 +498,7 @@ function GetRepoDockerBaseImage {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
         try {
             $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
-            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -$access_token $access_token
+            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token
             $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
         }
         catch {
@@ -531,7 +531,7 @@ function EnableSecretScanning {
 
     $url = "/repos/$owner/$repo"
     $body = "{""security_and_analysis"": {""secret_scanning"": {""status"": ""enabled""}}}"
-    $patchResult = ApiCall -method PATCH -url $url -body $body access_token $access_token -expected 200
+    $patchResult = ApiCall -method PATCH -url $url -body $body -access_token $access_token -expected 200
 
     return $patchResult
 }
