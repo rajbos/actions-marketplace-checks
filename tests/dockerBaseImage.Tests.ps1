@@ -2,7 +2,9 @@ Import-Module Pester
 
 BeforeAll {
     # Import only the function we need, not the entire script
-    # Extract the GetDockerBaseImageNameFromContent function definition
+    # Note: We copy the function definition here rather than sourcing repoInfo.ps1
+    # because that script executes initialization code requiring GitHub access tokens
+    # This approach ensures tests can run in isolation without authentication
     function GetDockerBaseImageNameFromContent {
         param (
             $dockerFileContent
