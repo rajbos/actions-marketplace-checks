@@ -29,28 +29,19 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Get current actions list
-        env:
-          SAS: "${{ secrets.BLOB_SAS_TOKEN }}"
         shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # BLOB_SAS_TOKEN is the full URL to actions.json
-          curl "$env:SAS" > actions.json
-
-          # Debug: Show first 10 lines of actions.json
-          Write-Host "First 10 lines of actions.json:"
-          Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-          
-          # Clean BOM if present before parsing JSON
-          $jsonContent = Get-Content actions.json -Raw
-          $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
-          try {
-              $actions = $jsonContent | ConvertFrom-Json
-          } catch {
-              Write-Host "ERROR: JSON parsing failed"
-              Write-Host "First 10 lines of content:"
-              Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-              throw $_
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
           }
+          
+          Write-Host "First 10 lines of actions.json:"
+          Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
 
       - uses: actions/upload-artifact@v5
         with:

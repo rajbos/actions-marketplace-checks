@@ -17,12 +17,19 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Get current actions list
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # BLOB_SAS_TOKEN is the full URL to actions.json
-          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
+          }
           
-          echo "First 10 lines of actions.json:"
-          head -n 10 actions.json
+          Write-Host "First 10 lines of actions.json:"
+          Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
       
       - name: Run Pester Tests
         run: Invoke-Pester -Output Detailed
