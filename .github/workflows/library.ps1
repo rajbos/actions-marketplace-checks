@@ -244,15 +244,18 @@ function Set-JsonToBlobStorage {
             $remoteContent = [System.IO.File]::ReadAllBytes($tempCompareFile)
             $remoteFileSize = $remoteContent.Length
             
-            # Compare file content byte-by-byte
-            $filesMatch = $localFileSize -eq $remoteFileSize
-            if ($filesMatch -and $localFileSize -gt 0) {
-                for ($i = 0; $i -lt $localFileSize; $i++) {
-                    if ($localContent[$i] -ne $remoteContent[$i]) {
-                        $filesMatch = $false
-                        break
-                    }
-                }
+            # Compare file content using SHA256 hash for efficiency (especially for large files)
+            $filesMatch = $false
+            if ($localFileSize -eq $remoteFileSize) {
+                # Compute SHA256 hashes for comparison
+                $localHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($localContent)
+                $remoteHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($remoteContent)
+                
+                # Convert hashes to base64 for comparison
+                $localHashString = [Convert]::ToBase64String($localHash)
+                $remoteHashString = [Convert]::ToBase64String($remoteHash)
+                
+                $filesMatch = $localHashString -eq $remoteHashString
             }
             
             if ($filesMatch) {

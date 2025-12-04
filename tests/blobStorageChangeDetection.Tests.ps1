@@ -32,7 +32,8 @@ Describe "Blob Storage Change Detection" {
 
         It "Should handle file existence check before upload" {
             # Test that missing file is handled correctly
-            $nonExistentFile = "/tmp/nonexistent-$(New-Guid).json"
+            $tempPath = [System.IO.Path]::GetTempPath()
+            $nonExistentFile = Join-Path $tempPath "nonexistent-$(New-Guid).json"
             
             # Should succeed but not upload when failIfMissing is false
             $result = Set-JsonToBlobStorage -sasToken "https://test.blob.core.windows.net/test/data?sv=test" -blobFileName "test.json" -localFilePath $nonExistentFile -failIfMissing $false
@@ -40,7 +41,8 @@ Describe "Blob Storage Change Detection" {
         }
 
         It "Should fail when file doesn't exist and failIfMissing is true" {
-            $nonExistentFile = "/tmp/nonexistent-$(New-Guid).json"
+            $tempPath = [System.IO.Path]::GetTempPath()
+            $nonExistentFile = Join-Path $tempPath "nonexistent-$(New-Guid).json"
             
             # Should fail when failIfMissing is true
             $result = Set-JsonToBlobStorage -sasToken "https://test.blob.core.windows.net/test/data?sv=test" -blobFileName "test.json" -localFilePath $nonExistentFile -failIfMissing $true
@@ -89,6 +91,12 @@ Describe "Blob Storage Change Detection" {
             # Should have logic to download current version and compare
             $functionContent | Should -Match 'GetTempFileName'
             $functionContent | Should -Match 'No changes detected'
+        }
+
+        It "Should use SHA256 hashing for efficient file comparison" {
+            $functionContent = (Get-Command Set-JsonToBlobStorage).ScriptBlock.ToString()
+            $functionContent | Should -Match 'SHA256'
+            $functionContent | Should -Match 'ComputeHash'
         }
 
         It "Should handle case when remote file doesn't exist" {
