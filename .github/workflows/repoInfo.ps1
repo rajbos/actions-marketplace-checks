@@ -634,7 +634,7 @@ function GetMoreInfo {
                     try {
                         $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
                         $forkResponse = ApiCall -method GET -url $forkCheckUrl -access_token $access_token -hideFailedCall $true
-                        if ($null -ne $forkResponse -and $forkResponse.id -and $forkResponse.id -gt 0) {
+                        if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
                             Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
                         }
                         else {
