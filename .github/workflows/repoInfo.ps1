@@ -652,7 +652,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.tagInfo)) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -startTime $startTime
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
 
@@ -694,7 +694,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.releaseInfo)) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -startTime $startTime
+                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
 
