@@ -610,10 +610,18 @@ function Get-TokenExpirationTime {
         }
         
         if ($null -ne $expirationHeader) {
-            # Parse the ISO 8601 timestamp
-            $expirationTime = [DateTime]::Parse($expirationHeader[0])
-            Write-Host "Token expiration time: $expirationTime UTC"
-            return $expirationTime
+            # Parse the ISO 8601 timestamp using culture-invariant parsing
+            # GitHub returns timestamps in format like: "2024-12-04 08:30:45 UTC"
+            try {
+                $expirationTime = [DateTimeOffset]::Parse($expirationHeader[0], [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
+                Write-Host "Token expiration time: $expirationTime UTC"
+                return $expirationTime
+            }
+            catch {
+                Write-Warning "Failed to parse token expiration header value: $($expirationHeader[0])"
+                Write-Debug "Parse error: $($_.Exception.Message)"
+                return $null
+            }
         }
         else {
             Write-Warning "Token expiration header not found in response. Token may not be a GitHub App token."
