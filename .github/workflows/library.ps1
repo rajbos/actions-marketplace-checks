@@ -45,7 +45,7 @@ function Get-ActionsJsonFromBlobStorage {
         [string] $localFilePath = $actionsFile
     )
 
-    Write-Host "Downloading $script:actionsBlobFileName from Azure Blob Storage..."
+    Write-Message -message "Downloading $script:actionsBlobFileName from Azure Blob Storage..." -logToSummary $true
 
     # The sasToken is the blob storage URL with SAS query (e.g., https://.../container/data?sp=racwdl&st=...)
     # The URL already includes the /data path, so we just append /actions.json
@@ -64,16 +64,21 @@ function Get-ActionsJsonFromBlobStorage {
         
         if (Test-Path $localFilePath) {
             $fileSize = (Get-Item $localFilePath).Length
-            Write-Host "Successfully downloaded Actions-Full-Overview.Json ($fileSize bytes) to [$localFilePath]"
+            $message = "✓ Successfully downloaded $script:actionsBlobFileName ($fileSize bytes) to [$localFilePath]"
+            Write-Message -message $message -logToSummary $true
             return $true
         }
         else {
-            Write-Error "Failed to download Actions-Full-Overview.Json - file not found after download"
+            $message = "⚠️ ERROR: Failed to download Actions-Full-Overview.Json - file not found after download"
+            Write-Message -message $message -logToSummary $true
+            Write-Error $message
             return $false
         }
     }
     catch {
-        Write-Error "Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
+        $message = "⚠️ ERROR: Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
         return $false
     }
 }
@@ -112,7 +117,7 @@ function Get-JsonFromBlobStorage {
         [string] $localFilePath
     )
 
-    Write-Host "Downloading $blobFileName from Azure Blob Storage..."
+    Write-Message -message "Downloading $blobFileName from Azure Blob Storage..." -logToSummary $true
 
     # The sasToken is the blob storage URL with SAS query (e.g., https://.../container/data?sp=racwdl&st=...)
     # The URL already includes the /data path, so we append /status/blobFileName
@@ -131,21 +136,27 @@ function Get-JsonFromBlobStorage {
         
         if (Test-Path $localFilePath) {
             $fileSize = (Get-Item $localFilePath).Length
-            Write-Host "Successfully downloaded $blobFileName ($fileSize bytes) to [$localFilePath]"
+            $message = "✓ Successfully downloaded $blobFileName ($fileSize bytes) to [$localFilePath]"
+            Write-Message -message $message -logToSummary $true
             return $true
         }
         else {
-            Write-Error "Failed to download $blobFileName - file not found after download"
+            $message = "⚠️ ERROR: Failed to download $blobFileName - file not found after download"
+            Write-Message -message $message -logToSummary $true
+            Write-Error $message
             return $false
         }
     }
     catch {
         if ($_.Exception.Response.StatusCode -eq 404) {
-            Write-Host "$blobFileName does not exist in blob storage yet. Starting with empty array."
+            $message = "ℹ️ $blobFileName does not exist in blob storage yet. Starting with empty array."
+            Write-Message -message $message -logToSummary $true
             "[]" | Out-File -FilePath $localFilePath -Encoding UTF8
             return $true
         }
-        Write-Error "Failed to download $blobFileName from blob storage: $($_.Exception.Message)"
+        $message = "⚠️ ERROR: Failed to download $blobFileName from blob storage: $($_.Exception.Message)"
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
         return $false
     }
 }
@@ -159,6 +170,8 @@ function Get-JsonFromBlobStorage {
     The SAS token should include the data folder path (e.g., https://storage.blob.core.windows.net/container/data?sp=racwdl&st=...).
     Files are uploaded to the 'status' subfolder within that path.
     If the local file doesn't exist, returns true (nothing to upload).
+    Before uploading, it downloads the current version from blob storage and compares content.
+    Only uploads if the content has changed, optimizing efficiency.
 
     .PARAMETER sasToken
     The blob storage URL with SAS token query string, including the data folder path.
@@ -190,14 +203,18 @@ function Set-JsonToBlobStorage {
         [bool] $failIfMissing = $false
     )
 
-    Write-Host "Uploading $blobFileName to Azure Blob Storage..."
+    Write-Message -message "Checking upload status for $blobFileName..." -logToSummary $true
 
+    # Validate file existence
     if (-not (Test-Path $localFilePath)) {
         if ($failIfMissing) {
-            Write-Error "$blobFileName does not exist at [$localFilePath]. Nothing to upload."
+            $message = "⚠️ ERROR: $blobFileName does not exist at [$localFilePath]. Nothing to upload."
+            Write-Message -message $message -logToSummary $true
+            Write-Error $message
             return $false
         }
-        Write-Host "$blobFileName does not exist at [$localFilePath]. Nothing to upload."
+        $message = "⚠️ WARNING: $blobFileName does not exist at [$localFilePath]. Skipping upload."
+        Write-Message -message $message -logToSummary $true
         return $true
     }
 
@@ -213,28 +230,85 @@ function Set-JsonToBlobStorage {
     
     Write-Host "Blob URL: ${baseUrl}/status/$blobFileName (SAS redacted)"
 
+    # Read local file content
+    $localContent = [System.IO.File]::ReadAllBytes($localFilePath)
+    $localFileSize = $localContent.Length
+    
+    # Download current version from blob storage to compare
+    $tempCompareFile = [System.IO.Path]::GetTempFileName()
     try {
-        $fileContent = [System.IO.File]::ReadAllBytes($localFilePath)
-        $fileSize = $fileContent.Length
+        Write-Host "Downloading current version of $blobFileName from blob storage for comparison..."
+        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $tempCompareFile -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
+        
+        if (Test-Path $tempCompareFile) {
+            $remoteContent = [System.IO.File]::ReadAllBytes($tempCompareFile)
+            $remoteFileSize = $remoteContent.Length
+            
+            # Compare file content using SHA256 hash for efficiency (especially for large files)
+            $filesMatch = $false
+            if ($localFileSize -eq $remoteFileSize) {
+                # Compute SHA256 hashes for comparison
+                $localHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($localContent)
+                $remoteHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($remoteContent)
+                
+                # Convert hashes to base64 for comparison
+                $localHashString = [Convert]::ToBase64String($localHash)
+                $remoteHashString = [Convert]::ToBase64String($remoteHash)
+                
+                $filesMatch = $localHashString -eq $remoteHashString
+            }
+            
+            if ($filesMatch) {
+                $message = "✓ No changes detected in $blobFileName (size: $localFileSize bytes). Skipping upload."
+                Write-Message -message $message -logToSummary $true
+                Remove-Item -Path $tempCompareFile -Force -ErrorAction SilentlyContinue
+                return $true
+            }
+            
+            Write-Host "Changes detected in $blobFileName (local: $localFileSize bytes, remote: $remoteFileSize bytes)"
+        }
+        else {
+            Write-Host "$blobFileName does not exist in blob storage yet. Will upload new file."
+        }
+    }
+    catch {
+        # If download fails (e.g., 404 for new file), continue with upload
+        Write-Host "Could not download current version of $blobFileName (might be new file): $($_.Exception.Message)"
+    }
+    finally {
+        # Clean up temp file
+        if (Test-Path $tempCompareFile) {
+            Remove-Item -Path $tempCompareFile -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Upload the file
+    try {
+        Write-Host "Uploading $blobFileName ($localFileSize bytes) to Azure Blob Storage..."
         
         $headers = @{
             "x-ms-blob-type" = "BlockBlob"
             "Content-Type" = "application/json"
         }
         
-        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $fileContent -Headers $headers -UseBasicParsing
+        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $localContent -Headers $headers -UseBasicParsing
         
         if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
-            Write-Host "Successfully uploaded $blobFileName ($fileSize bytes) to blob storage"
+            $message = "✓ Successfully uploaded $blobFileName ($localFileSize bytes) to blob storage"
+            Write-Message -message $message -logToSummary $true
             return $true
         }
         else {
-            Write-Error "Unexpected status code when uploading $blobFileName`: $($response.StatusCode)"
+            $message = "⚠️ ERROR: Unexpected status code when uploading $blobFileName`: $($response.StatusCode)"
+            Write-Message -message $message -logToSummary $true
+            Write-Error $message
             return $false
         }
     }
     catch {
-        Write-Error "Failed to upload $blobFileName to blob storage: $($_.Exception.Message)"
+        $message = "⚠️ ERROR: Failed to upload $blobFileName to blob storage: $($_.Exception.Message)"
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
         return $false
     }
 }
