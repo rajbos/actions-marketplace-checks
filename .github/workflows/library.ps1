@@ -64,7 +64,7 @@ function Get-ActionsJsonFromBlobStorage {
         
         if (Test-Path $localFilePath) {
             $fileSize = (Get-Item $localFilePath).Length
-            $message = "✓ Successfully downloaded Actions-Full-Overview.Json ($fileSize bytes) to [$localFilePath]"
+            $message = "✓ Successfully downloaded $script:actionsBlobFileName ($fileSize bytes) to [$localFilePath]"
             Write-Message -message $message -logToSummary $true
             return $true
         }
