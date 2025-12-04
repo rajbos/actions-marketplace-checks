@@ -590,7 +590,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
                 Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -startTime $startTime
+                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
                         $action.forkFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
@@ -628,6 +628,22 @@ function GetMoreInfo {
                     }
                 }
                 catch {
+                    Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $($_.Exception.Message)"
+                    
+                    # Check if our forked copy exists
+                    try {
+                        $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
+                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -access_token $access_token -hideFailedCall $true
+                        if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
+                            Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
+                        }
+                        else {
+                            Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
+                        }
+                    }
+                    catch {
+                        Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+                    }
                     # continue with next one
                 }
             }
@@ -636,7 +652,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.tagInfo)) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -startTime $startTime
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
 
@@ -678,7 +694,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.releaseInfo)) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -startTime $startTime
+                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
 
