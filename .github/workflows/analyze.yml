@@ -17,8 +17,8 @@ on:
   workflow_dispatch:
 
 env:
-  numberOfReposToDo: 75
-  numberOfReposToDoRepoInfo: 75
+  numberOfReposToDo: 250
+  numberOfReposToDoRepoInfo: 250
 
 jobs:
   check-em-all:
