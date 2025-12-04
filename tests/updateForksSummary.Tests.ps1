@@ -91,8 +91,16 @@ BeforeAll {
         $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
         
         $reposSyncedLast7Days = ($existingForks | Where-Object { 
-            $_.lastSynced -and 
-            ([DateTime]::Parse($_.lastSynced) -gt $sevenDaysAgo)
+            if ($_.lastSynced) {
+                try {
+                    $syncDate = [DateTime]::Parse($_.lastSynced)
+                    return $syncDate -gt $sevenDaysAgo
+                } catch {
+                    Write-Debug "Failed to parse lastSynced date for repo: $($_.name)"
+                    return $false
+                }
+            }
+            return $false
         }).Count
         
         if ($reposWithMirrors -gt 0) {
@@ -160,6 +168,17 @@ Describe "Update Forks Summary Functions" {
                 @{ name = "repo2"; forkFound = $true }
             )
             
+            { ShowOverallDatasetStatistics -existingForks $testData } | Should -Not -Throw
+        }
+
+        It "Should handle malformed lastSynced dates gracefully" {
+            $testData = @(
+                @{ name = "repo1"; forkFound = $true; lastSynced = "invalid-date" }
+                @{ name = "repo2"; forkFound = $true; lastSynced = "not-a-date-at-all" }
+                @{ name = "repo3"; forkFound = $true; lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+            )
+            
+            # Should not throw even with malformed dates
             { ShowOverallDatasetStatistics -existingForks $testData } | Should -Not -Throw
         }
     }

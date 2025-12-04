@@ -150,8 +150,16 @@ function ShowOverallDatasetStatistics {
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 
-        $_.lastSynced -and 
-        ([DateTime]::Parse($_.lastSynced) -gt $sevenDaysAgo)
+        if ($_.lastSynced) {
+            try {
+                $syncDate = [DateTime]::Parse($_.lastSynced)
+                return $syncDate -gt $sevenDaysAgo
+            } catch {
+                Write-Debug "Failed to parse lastSynced date for repo: $($_.name)"
+                return $false
+            }
+        }
+        return $false
     }).Count
     
     # Calculate percentages
