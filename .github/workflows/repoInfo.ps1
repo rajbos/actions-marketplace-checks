@@ -634,15 +634,15 @@ function GetMoreInfo {
                     try {
                         $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
                         $forkResponse = ApiCall -method GET -url $forkCheckUrl -access_token $access_token -hideFailedCall $true
-                        if ($forkResponse) {
-                            Write-Host "Our forked copy exists at [$forkOrg/$($action.name)], but upstream repo [$owner/$repo] may not exist or is inaccessible"
+                        if ($null -ne $forkResponse -and $forkResponse.id) {
+                            Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
                         }
                         else {
-                            Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]"
+                            Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
                         }
                     }
                     catch {
-                        Write-Host "Could not verify fork existence at [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+                        Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $($_.Exception.Message)"
                     }
                     # continue with next one
                 }
