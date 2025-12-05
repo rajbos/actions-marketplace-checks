@@ -36,23 +36,7 @@ function GetReposToCleanup {
         # Criterion 2: Action type shows the repo is invalid
       
         
-        # Criterion 3: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
-        if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
-            ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
-            ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
-            
-            # Only mark for cleanup if we have other indicators that it's invalid
-            if ($repo.forkFound -eq $false -or 
-                ($null -ne $repo.actionType -and 
-                 ($repo.actionType.actionType -eq "No file found" -or
-                  $repo.actionType.fileFound -eq "No file found"))) {
-                $shouldCleanup = $true
-                if ($reason -ne "") {
-                    $reason += " AND "
-                }
-                $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
-            }
-        }
+       
         
         if ($shouldCleanup) {
             $reposToCleanup.Add(@{
