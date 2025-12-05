@@ -34,17 +34,7 @@ function GetReposToCleanup {
         }
         
         # Criterion 2: Action type shows the repo is invalid
-        if ($null -ne $repo.actionType) {
-            if ($repo.actionType.actionType -eq "No file found" -or 
-                $repo.actionType.actionType -eq "No owner found" -or 
-                $repo.actionType.actionType -eq "No repo found") {
-                $shouldCleanup = $true
-                if ($reason -ne "") {
-                    $reason += " AND "
-                }
-                $reason += "Invalid action type: $($repo.actionType.actionType)"
-            }
-        }
+      
         
         # Criterion 3: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
         if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
