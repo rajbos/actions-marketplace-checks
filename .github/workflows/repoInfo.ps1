@@ -818,3 +818,6 @@ function Run {
 
 # main call
 Run -actions $actions -access_token $access_token -access_token_destination $access_token_destination
+
+# Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
+exit 0
