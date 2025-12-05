@@ -1174,7 +1174,7 @@ function GetFoundSecretCount {
         Write-Message "" -logToSummary $true
 
         # log all resuls into a json file
-        Set-Content -Path secretScanningAlerts.json -Value (ConvertTo-Json $alertsResult -Depth 10)
+        Set-Content -Path $secretScanningAlertsFile -Value (ConvertTo-Json $alertsResult -Depth 10)
     }
     catch {
         Write-Message "Failed to get secret scanning alerts" -logToSummary $true
