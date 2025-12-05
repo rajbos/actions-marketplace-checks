@@ -1938,3 +1938,202 @@ function Disable-GitHubActions {
         return $false
     }
 }
+
+<#
+    .SYNOPSIS
+    Splits a list of forks into equal chunks for parallel processing.
+    
+    .DESCRIPTION
+    Takes a list of forks and splits them into a specified number of chunks.
+    Only includes forks that have forkFound = true.
+    Returns a hashtable mapping chunk index to the list of fork names.
+    
+    .PARAMETER existingForks
+    The full list of forks from status.json
+    
+    .PARAMETER numberOfChunks
+    The number of chunks to split the work into (corresponds to matrix job count)
+    
+    .EXAMPLE
+    $chunks = Split-ForksIntoChunks -existingForks $forks -numberOfChunks 4
+#>
+function Split-ForksIntoChunks {
+    Param (
+        $existingForks,
+        [int] $numberOfChunks = 4
+    )
+    
+    Write-Message -message "Splitting forks into [$numberOfChunks] chunks for parallel processing" -logToSummary $true
+    
+    # Filter to only forks that should be processed (forkFound = true)
+    $forksToProcess = $existingForks | Where-Object { $_.forkFound -eq $true }
+    
+    if ($forksToProcess.Count -eq 0) {
+        Write-Message -message "No forks to process (all have forkFound = false)" -logToSummary $true
+        return @{}
+    }
+    
+    Write-Message -message "Found [$($forksToProcess.Count)] forks to process out of [$($existingForks.Count)] total" -logToSummary $true
+    
+    # Calculate chunk size (round up to ensure all items are included)
+    $chunkSize = [Math]::Ceiling($forksToProcess.Count / $numberOfChunks)
+    Write-Message -message "Each chunk will process up to [$chunkSize] forks" -logToSummary $true
+    
+    # Split into chunks
+    $chunks = @{}
+    for ($i = 0; $i -lt $numberOfChunks; $i++) {
+        $startIndex = $i * $chunkSize
+        $endIndex = [Math]::Min(($startIndex + $chunkSize - 1), ($forksToProcess.Count - 1))
+        
+        if ($startIndex -lt $forksToProcess.Count) {
+            # Get the subset of forks for this chunk
+            $chunkForks = @()
+            for ($j = $startIndex; $j -le $endIndex; $j++) {
+                $chunkForks += $forksToProcess[$j].name
+            }
+            
+            $chunks[$i] = $chunkForks
+            Write-Message -message "Chunk [$i]: [$($chunkForks.Count)] forks (indices $startIndex-$endIndex)" -logToSummary $true
+        }
+    }
+    
+    return $chunks
+}
+
+<#
+    .SYNOPSIS
+    Saves a partial status update for a specific chunk of forks.
+    
+    .DESCRIPTION
+    Saves only the forks that were processed by this job to a partial status file.
+    This file will be uploaded as an artifact and merged later.
+    
+    .PARAMETER processedForks
+    The forks that were processed by this job (with updated fields like lastSynced)
+    
+    .PARAMETER chunkId
+    The identifier for this chunk (used in filename)
+    
+    .PARAMETER outputPath
+    The path where the partial status file should be saved
+    
+    .EXAMPLE
+    Save-PartialStatusUpdate -processedForks $forks -chunkId 0 -outputPath "./status-partial-0.json"
+#>
+function Save-PartialStatusUpdate {
+    Param (
+        $processedForks,
+        [int] $chunkId,
+        [string] $outputPath = "status-partial-$chunkId.json"
+    )
+    
+    Write-Message -message "Saving partial status update for chunk [$chunkId] to [$outputPath]" -logToSummary $true
+    
+    if ($null -eq $processedForks -or $processedForks.Count -eq 0) {
+        Write-Message -message "No forks to save for chunk [$chunkId]" -logToSummary $true
+        # Save empty array to indicate this chunk completed but had no changes
+        "[]" | Out-File -FilePath $outputPath -Encoding UTF8
+        return $true
+    }
+    
+    Write-Message -message "Saving [$($processedForks.Count)] processed forks for chunk [$chunkId]" -logToSummary $true
+    
+    # Convert to JSON and save
+    $json = ConvertTo-Json -InputObject $processedForks -Depth 10
+    [System.IO.File]::WriteAllText($outputPath, $json, [System.Text.Encoding]::UTF8)
+    
+    Write-Message -message "✓ Saved partial status for chunk [$chunkId]" -logToSummary $true
+    return $true
+}
+
+<#
+    .SYNOPSIS
+    Merges partial status updates from multiple chunks into the main status file.
+    
+    .DESCRIPTION
+    Takes the current full status.json and applies updates from all partial status files.
+    Updates are merged by name - if a fork exists in a partial update, its data is merged into the main status.
+    
+    .PARAMETER currentStatus
+    The current full status array from status.json
+    
+    .PARAMETER partialStatusFiles
+    Array of file paths to partial status files from each chunk
+    
+    .EXAMPLE
+    $mergedStatus = Merge-PartialStatusUpdates -currentStatus $status -partialStatusFiles @("status-partial-0.json", "status-partial-1.json")
+#>
+function Merge-PartialStatusUpdates {
+    Param (
+        $currentStatus,
+        [string[]] $partialStatusFiles
+    )
+    
+    Write-Message -message "Merging partial status updates from [$($partialStatusFiles.Count)] chunks" -logToSummary $true
+    
+    # Create a hashtable for fast lookup by name
+    $statusByName = @{}
+    foreach ($item in $currentStatus) {
+        $statusByName[$item.name] = $item
+    }
+    
+    $totalUpdates = 0
+    $totalChunks = $partialStatusFiles.Count
+    
+    foreach ($partialFile in $partialStatusFiles) {
+        if (-not (Test-Path $partialFile)) {
+            Write-Warning "Partial status file not found: [$partialFile]"
+            continue
+        }
+        
+        Write-Host "Processing partial status file: [$partialFile]"
+        
+        try {
+            $jsonContent = Get-Content $partialFile -Raw
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM
+            $partialStatus = $jsonContent | ConvertFrom-Json
+            
+            if ($null -eq $partialStatus -or $partialStatus.Count -eq 0) {
+                Write-Host "  No updates in this chunk"
+                continue
+            }
+            
+            Write-Host "  Found [$($partialStatus.Count)] updates in this chunk"
+            
+            # Merge each updated fork
+            foreach ($updatedFork in $partialStatus) {
+                if ($statusByName.ContainsKey($updatedFork.name)) {
+                    # Update existing entry
+                    # Copy all properties from updated fork to the existing one
+                    $existing = $statusByName[$updatedFork.name]
+                    
+                    # Get all properties from the updated fork
+                    $updatedFork.PSObject.Properties | ForEach-Object {
+                        $propName = $_.Name
+                        $propValue = $_.Value
+                        
+                        # Update or add the property
+                        if (Get-Member -InputObject $existing -Name $propName -MemberType Properties) {
+                            $existing.$propName = $propValue
+                        } else {
+                            $existing | Add-Member -Name $propName -Value $propValue -MemberType NoteProperty -Force
+                        }
+                    }
+                    
+                    $totalUpdates++
+                } else {
+                    Write-Warning "Fork [$($updatedFork.name)] from partial status not found in current status"
+                }
+            }
+        }
+        catch {
+            Write-Error "Failed to process partial status file [$partialFile]: $($_.Exception.Message)"
+            continue
+        }
+    }
+    
+    Write-Message -message "✓ Merged [$totalUpdates] fork updates from [$totalChunks] chunks into main status" -logToSummary $true
+    
+    # Convert hashtable back to array
+    return $statusByName.Values
+}
