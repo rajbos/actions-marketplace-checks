@@ -367,3 +367,6 @@ GetRateLimitInfo -access_token $access_token -access_token_destination $access_t
 Write-Host "End of script, added [$numberOfReposToDo] forked repos"
 # show the current location
 Write-Host "Current location: $(Get-Location)"
+
+# Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
+exit 0
