@@ -158,3 +158,7 @@ Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outp
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
 Write-Message -message "✓ Chunk [$chunkId] processing complete" -logToSummary $true
+
+# Explicitly exit with success code to prevent PowerShell from propagating
+# any non-zero exit codes from git or API commands
+exit 0

@@ -204,6 +204,7 @@ jobs:
           name: status-partial-${{ matrix.chunk-id }}
           path: status-partial-${{ matrix.chunk-id }}.json
           retention-days: 1
+          if-no-files-found: warn
 
   consolidate:
     name: Consolidate results and update storage
