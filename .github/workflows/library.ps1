@@ -631,6 +631,56 @@ function SplitUrlLastPart {
     return $repo
 }
 
+<#
+    .SYNOPSIS
+    Formats rate limit information as a markdown table.
+    
+    .DESCRIPTION
+    Takes rate limit data and outputs it as a formatted markdown table.
+    Converts Unix timestamp to human-readable time remaining.
+    
+    .PARAMETER rateData
+    The rate limit object containing limit, used, remaining, and reset properties
+    
+    .PARAMETER title
+    Optional title to display above the table
+    
+    .EXAMPLE
+    Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
+#>
+function Format-RateLimitTable {
+    Param (
+        $rateData,
+        [string] $title = "Rate Limit Status"
+    )
+    
+    # Convert Unix timestamp to human-readable time
+    $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rateData.reset).UtcDateTime
+    $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+    
+    # Format time remaining as human-readable string
+    if ($timeUntilReset.TotalMinutes -lt 1) {
+        $resetDisplay = "< 1 minute"
+    } elseif ($timeUntilReset.TotalHours -lt 1) {
+        $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
+    } else {
+        $hours = [math]::Floor($timeUntilReset.TotalHours)
+        $minutes = [math]::Floor($timeUntilReset.Minutes)
+        if ($minutes -eq 0) {
+            $resetDisplay = "$hours hours"
+        } else {
+            $resetDisplay = "$hours hours $minutes minutes"
+        }
+    }
+    
+    Write-Message -message "**${title}:**" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Limit | Used | Remaining | Resets In |" -logToSummary $true
+    Write-Message -message "|------:|-----:|----------:|-----------|" -logToSummary $true
+    Write-Message -message "| $($rateData.limit) | $($rateData.used) | $($rateData.remaining) | $resetDisplay |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+}
+
 function GetRateLimitInfo {
     Param (
         $access_token,
@@ -639,23 +689,13 @@ function GetRateLimitInfo {
     $url = "rate_limit"
     $response = ApiCall -method GET -url $url -access_token $access_token
 
-    # Format rate limit info as a table
-    Write-Message -message "**Rate Limit Status:**" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Limit | Used | Remaining | Reset (Unix) |" -logToSummary $true
-    Write-Message -message "|------:|-----:|----------:|-------------:|" -logToSummary $true
-    Write-Message -message "| $($response.rate.limit) | $($response.rate.used) | $($response.rate.remaining) | $($response.rate.reset) |" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    # Format rate limit info as a table using the helper function
+    Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
 
     if ($access_token -ne $access_token_destination) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
-        Write-Message -message "**Access Token Destination Rate Limit Status:**" -logToSummary $true
-        Write-Message -message "" -logToSummary $true
-        Write-Message -message "| Limit | Used | Remaining | Reset (Unix) |" -logToSummary $true
-        Write-Message -message "|------:|-----:|----------:|-------------:|" -logToSummary $true
-        Write-Message -message "| $($response2.rate.limit) | $($response2.rate.used) | $($response2.rate.remaining) | $($response2.rate.reset) |" -logToSummary $true
-        Write-Message -message "" -logToSummary $true
+        Format-RateLimitTable -rateData $response2.rate -title "Access Token Destination Rate Limit Status"
     }
 
     if ($response.rate.limit -eq 60) {
