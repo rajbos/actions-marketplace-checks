@@ -1,24 +1,47 @@
 Param (
   $actions,
-  $numberOfReposToDo = 100,
+  $forkNames,  # Array of fork names to process in this chunk
+  [int] $chunkId = 0,
   $access_token = $env:GITHUB_TOKEN,
   $access_token_destination = $env:GITHUB_TOKEN
 )
 
 . $PSScriptRoot/library.ps1
 
-Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $forkNames.Count
 
-function UpdateForkedRepos {
+function UpdateForkedReposChunk {
     Param (
         $existingForks,
-        [int] $numberOfReposToDo
+        $forkNamesToProcess,
+        [int] $chunkId
     )
 
-    Write-Message -message "Running mirror sync for [$($existingForks.Count)] mirrors" -logToSummary $true
+    Write-Message -message "# Chunk [$chunkId] - Mirror Sync" -logToSummary $true
+    Write-Message -message "Processing [$($forkNamesToProcess.Count)] mirrors in this chunk" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    # Create a hashtable for fast lookup
+    $forksByName = @{}
+    foreach ($fork in $existingForks) {
+        $forksByName[$fork.name] = $fork
+    }
+    
+    # Filter to only the forks we should process in this chunk
+    $forksToProcess = @()
+    foreach ($forkName in $forkNamesToProcess) {
+        if ($forksByName.ContainsKey($forkName)) {
+            $forksToProcess += $forksByName[$forkName]
+        }
+        else {
+            Write-Warning "Fork [$forkName] not found in status, skipping"
+        }
+    }
+    
+    Write-Message -message "Found [$($forksToProcess.Count)] forks to process" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     
     $i = 0
-    $max = $numberOfReposToDo
     $synced = 0
     $failed = 0
     $upToDate = 0
@@ -26,13 +49,7 @@ function UpdateForkedRepos {
     $upstreamNotFound = 0
     $skipped = 0
 
-    foreach ($existingFork in $existingForks) {
-
-        if ($i -ge $max) {
-            # do not run too long
-            Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
-            break
-        }
+    foreach ($existingFork in $forksToProcess) {
 
         # Skip repos that don't have forkFound property or where it's false
         if ($null -eq $existingFork.forkFound -or $existingFork.forkFound -eq $false) {
@@ -51,7 +68,7 @@ function UpdateForkedRepos {
             continue
         }
 
-        Write-Host "$($i+1)/$max Syncing mirror [actions-marketplace-validations/$($existingFork.name)] with upstream [$upstreamOwner/$upstreamRepo]"
+        Write-Host "$($i+1)/$($forksToProcess.Count) Syncing mirror [actions-marketplace-validations/$($existingFork.name)] with upstream [$upstreamOwner/$upstreamRepo]"
         
         $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
         
@@ -61,7 +78,7 @@ function UpdateForkedRepos {
                 $upToDate++
             }
             else {
-                Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
+                Write-Host "$i/$($forksToProcess.Count) Successfully synced mirror [$($existingFork.name)]"
                 $synced++
                 # Update the sync timestamp
                 $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
@@ -76,30 +93,30 @@ function UpdateForkedRepos {
             $errorType = $result.error_type
             
             if ($errorType -eq "upstream_not_found") {
-                Write-Warning "$i/$max Upstream repository not found for mirror [$($existingFork.name)] - marking as unavailable"
+                Write-Warning "$i/$($forksToProcess.Count) Upstream repository not found for mirror [$($existingFork.name)] - marking as unavailable"
                 $upstreamNotFound++
                 # Mark the upstream as not found so we skip it in future runs
                 $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force
             }
             elseif ($errorType -eq "mirror_not_found") {
-                Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - marking forkFound as false"
+                Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking forkFound as false"
                 $existingFork.forkFound = $false
                 $failed++
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
-                Write-Warning "$i/$max Merge conflict detected for mirror [$($existingFork.name)]"
+                Write-Warning "$i/$($forksToProcess.Count) Merge conflict detected for mirror [$($existingFork.name)]"
                 $conflicts++
             }
             elseif ($errorType -eq "auth_error") {
-                Write-Warning "$i/$max Authentication error for mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$($forksToProcess.Count) Authentication error for mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
             }
             elseif ($errorType -eq "git_reference_error" -or $errorType -eq "ambiguous_refspec") {
-                Write-Warning "$i/$max Git reference error for mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$($forksToProcess.Count) Git reference error for mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
             }
             else {
-                Write-Warning "$i/$max Failed to sync mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$($forksToProcess.Count) Failed to sync mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
             }
             
@@ -113,9 +130,8 @@ function UpdateForkedRepos {
     }
 
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "## Mirror Sync Run Summary" -logToSummary $true
+    Write-Message -message "## Chunk [$chunkId] - Mirror Sync Summary" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "### Current Run Statistics" -logToSummary $true
     Write-Message -message "| Status | Count |" -logToSummary $true
     Write-Message -message "|--------|------:|" -logToSummary $true
     Write-Message -message "| ✅ Synced | $synced |" -logToSummary $true
@@ -127,65 +143,22 @@ function UpdateForkedRepos {
     Write-Message -message "| **Total Processed** | **$i** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    return $existingForks
+    return $forksToProcess
 }
 
-function ShowOverallDatasetStatistics {
-    Param (
-        $existingForks
-    )
-    
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "### Overall Dataset Statistics" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    
-    # Calculate 7-day window
-    $sevenDaysAgo = (Get-Date).AddDays(-7)
-    
-    # Total repos in dataset
-    $totalRepos = $existingForks.Count
-    
-    # Count repos with forkFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
-    
-    # Count repos synced in the last 7 days
-    $reposSyncedLast7Days = ($existingForks | Where-Object { 
-        if ($_.lastSynced) {
-            try {
-                $syncDate = [DateTime]::Parse($_.lastSynced)
-                return $syncDate -gt $sevenDaysAgo
-            } catch {
-                Write-Debug "Failed to parse lastSynced date for repo: $($_.name)"
-                return $false
-            }
-        }
-        return $false
-    }).Count
-    
-    # Calculate percentages
-    if ($reposWithMirrors -gt 0) {
-        $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
-        $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
-    } else {
-        $percentChecked = 0
-        $percentRemaining = 0
-    }
-    
-    $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
-    
-    Write-Message -message "**Total Repositories in Dataset:** $totalRepos" -logToSummary $true
-    Write-Message -message "**Repositories with Valid Mirrors:** $reposWithMirrors" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "#### Last 7 Days Activity" -logToSummary $true
-    Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
-    Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
-    Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
-    Write-Message -message "| ⏳ Repos Not Checked Yet | $reposNotChecked | ${percentRemaining}% |" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-}
+Write-Message -message "Starting chunk [$chunkId] with [$($forkNames.Count)] forks to process" -logToSummary $true
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
-$existingForks = UpdateForkedRepos -existingForks $actions -numberOfReposToDo $numberOfReposToDo
-ShowOverallDatasetStatistics -existingForks $existingForks
-SaveStatus -existingForks $existingForks
+
+$processedForks = UpdateForkedReposChunk -existingForks $actions -forkNamesToProcess $forkNames -chunkId $chunkId
+
+# Save partial status update for this chunk
+Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outputPath "status-partial-$chunkId.json"
+
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
+
+Write-Message -message "✓ Chunk [$chunkId] processing complete" -logToSummary $true
+
+# Explicitly exit with success code to prevent PowerShell from propagating
+# any non-zero exit codes from git or API commands
+exit 0

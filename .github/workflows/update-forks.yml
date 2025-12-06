@@ -174,20 +174,14 @@ jobs:
               $jsonContent = $jsonContent -replace '^\uFEFF', ''
               $existingForks = $jsonContent | ConvertFrom-Json
           } catch {
-              Write-Host "=== STATUS.JSON PARSE ERROR (FATAL) ==="
-              Write-Host "JSON parsing failed: $($_.Exception.Message)"
-              Write-Host "This is a fatal error - exiting with code 1"
-              Write-Host "==============================="
+              Write-Error "Failed to parse status.json: $($_.Exception.Message)"
               exit 1
           }
 
           # Load chunk work
           $chunkFile = "chunk-$chunkId.json"
           if (-not (Test-Path $chunkFile)) {
-              Write-Host "=== CHUNK FILE MISSING (FATAL) ==="
-              Write-Host "Chunk file not found: $chunkFile"
-              Write-Host "This is a fatal error - exiting with code 1"
-              Write-Host "==============================="
+              Write-Error "Chunk file not found: $chunkFile"
               exit 1
           }
 
@@ -196,24 +190,12 @@ jobs:
           Write-Message -message "" -logToSummary $true
 
           # Process the chunk
-          # Note: Per-mirror git errors are logged as warnings within the chunk script
-          # and do NOT cause exit 1. Only fatal script errors will cause exit 1.
-          try {
-              ./.github/workflows/update-forks-chunk.ps1 `
-                -actions $existingForks `
-                -forkNames $forkNames `
-                -chunkId $chunkId `
-                -access_token "${{ steps.get_workflow_token.outputs.token }}" `
-                -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
-              Write-Host "Chunk processing completed successfully"
-          } catch {
-              Write-Host "=== FATAL ERROR IN CHUNK PROCESSING ==="
-              Write-Host "Error: $($_.Exception.Message)"
-              Write-Host "Stack trace: $($_.ScriptStackTrace)"
-              Write-Host "This is a fatal error - exiting with code 1"
-              Write-Host "=========================================="
-              exit 1
-          }
+          ./.github/workflows/update-forks-chunk.ps1 `
+            -actions $existingForks `
+            -forkNames $forkNames `
+            -chunkId $chunkId `
+            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
+            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
 
       - name: Upload partial status for chunk ${{ matrix.chunk-id }}
         if: always()
@@ -222,6 +204,7 @@ jobs:
           name: status-partial-${{ matrix.chunk-id }}
           path: status-partial-${{ matrix.chunk-id }}.json
           retention-days: 1
+          if-no-files-found: warn
 
   consolidate:
     name: Consolidate results and update storage
@@ -239,11 +222,10 @@ jobs:
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # FATAL ERROR: If status.json cannot be downloaded, the workflow cannot proceed
           . ./.github/workflows/library.ps1
           $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to download status.json from blob storage - this is a fatal error"
+            Write-Error "Failed to download status.json from blob storage"
             exit 1
           }
 
@@ -252,11 +234,10 @@ jobs:
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          # FATAL ERROR: If failedForks.json cannot be downloaded, the workflow cannot proceed
           . ./.github/workflows/library.ps1
           $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to download failedForks.json from blob storage - this is a fatal error"
+            Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
 
