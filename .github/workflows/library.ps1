@@ -542,6 +542,22 @@ function ApiCall {
         }
         else {
             # if the call failure is expected, suppress the error
+            if ($returnErrorInfo) {
+                # Return error information instead of throwing
+                $statusCode = 0
+                if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+                    $statusCode = $_.Exception.Response.StatusCode.value__
+                }
+                $message = if ($messageData -and $messageData.message) { $messageData.message } else { "Unknown error" }
+                
+                return @{
+                    Error = $true
+                    StatusCode = $statusCode
+                    Message = $message
+                    Url = $url
+                }
+            }
+            
             if (!$hideFailedCall) {
                 Write-Host "Error calling $url, status code [$($result.StatusCode)]"
                 Write-Host "MessageData: " $messageData
@@ -551,16 +567,6 @@ function ApiCall {
                 }
                 else {
                     Write-Host "Content: " $result.Content
-                }
-
-                if ($returnErrorInfo) {
-                    # Return error information instead of throwing
-                    return @{
-                        Error = $true
-                        StatusCode = $_.Exception.Response.StatusCode.value__
-                        Message = $messageData.message
-                        Url = $url
-                    }
                 }
 
                 throw

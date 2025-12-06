@@ -28,6 +28,33 @@ Import-Module powershell-yaml -Force
 # default variables
 $forkOrg = "actions-marketplace-validations"
 
+# Helper function to check if an error is a 404
+function Is404Error {
+    Param (
+        [string]$errorMessage
+    )
+    return $errorMessage -like "*404*" -or $errorMessage -like "*Not Found*"
+}
+
+# Helper function to report error details
+function ReportErrorDetails {
+    Param (
+        [string]$errorType,
+        [array]$errorDetails,
+        [int]$limit = 10
+    )
+    
+    if ($errorDetails.Count -gt 0) {
+        Write-Host ""
+        Write-Host "$errorType Details (first $limit):"
+        $errorDetails | Select-Object -First $limit | ForEach-Object { Write-Host "  - $_" }
+        if ($errorDetails.Count -gt $limit) {
+            Write-Host "  ... and $($errorDetails.Count - $limit) more"
+        }
+    }
+}
+
+
 function GetRepoInfo {
     Param (
         $owner,
@@ -201,7 +228,7 @@ function GetActionType {
         $fileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
         
         # Check if ApiCall returned an error
-        if ($fileContent -is [hashtable] -and $fileContent.Error) {
+        if (($fileContent -is [hashtable]) -and ($fileContent.ContainsKey('Error')) -and $fileContent.Error) {
             Write-Host "Error downloading action definition file for [$owner/$repo]: StatusCode $($fileContent.StatusCode), Message: $($fileContent.Message)"
             
             # Track action file 404 errors if error tracking is initialized
@@ -220,12 +247,12 @@ function GetActionType {
         }
     }
     catch {
-        Write-Host "Exception downloading action definition file for [$owner/$repo]: $($_.Exception.Message)"
+        $errorMsg = $_.Exception.Message
+        Write-Host "Exception downloading action definition file for [$owner/$repo]: $errorMsg"
         
         # Track action file 404 errors if error tracking is initialized
         if ($null -ne $script:errorCounts) {
-            $errorMsg = $_.Exception.Message
-            if ($errorMsg -like "*404*" -or $errorMsg -like "*Not Found*") {
+            if (Is404Error -errorMessage $errorMsg) {
                 $script:errorCounts.ActionFile404++
                 $script:errorDetails.ActionFile404 += "$owner/$repo : $($response.download_url)"
             }
@@ -345,7 +372,7 @@ function MakeRepoInfoCall {
         
         # Track fork 404 errors if error tracking is initialized
         if ($null -ne $script:errorCounts) {
-            if ($errorMsg -like "*404*" -or $errorMsg -like "*Not Found*") {
+            if (Is404Error -errorMessage $errorMsg) {
                 $script:errorCounts.ForkRepo404++
                 $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
             }
@@ -699,7 +726,7 @@ function GetMoreInfo {
                     Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $errorMsg"
                     
                     # Track upstream repo 404 errors
-                    if ($errorMsg -like "*404*" -or $errorMsg -like "*Not Found*") {
+                    if (Is404Error -errorMessage $errorMsg) {
                         $script:errorCounts.UpstreamRepo404++
                         $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
                     }
@@ -724,7 +751,7 @@ function GetMoreInfo {
                         Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $forkErrorMsg"
                         
                         # Track fork 404 errors
-                        if ($forkErrorMsg -like "*404*" -or $forkErrorMsg -like "*Not Found*") {
+                        if (Is404Error -errorMessage $forkErrorMsg) {
                             $script:errorCounts.ForkRepo404++
                             $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
                         }
@@ -872,41 +899,10 @@ function GetMoreInfo {
     Write-Host "=================================="
     
     # Log detailed error information if there are errors
-    if ($script:errorCounts.UpstreamRepo404 -gt 0) {
-        Write-Host ""
-        Write-Host "Upstream Repo 404 Details (first 10):"
-        $script:errorDetails.UpstreamRepo404 | Select-Object -First 10 | ForEach-Object { Write-Host "  - $_" }
-        if ($script:errorDetails.UpstreamRepo404.Count -gt 10) {
-            Write-Host "  ... and $($script:errorDetails.UpstreamRepo404.Count - 10) more"
-        }
-    }
-    
-    if ($script:errorCounts.ForkRepo404 -gt 0) {
-        Write-Host ""
-        Write-Host "Fork Repo 404 Details (first 10):"
-        $script:errorDetails.ForkRepo404 | Select-Object -First 10 | ForEach-Object { Write-Host "  - $_" }
-        if ($script:errorDetails.ForkRepo404.Count -gt 10) {
-            Write-Host "  ... and $($script:errorDetails.ForkRepo404.Count - 10) more"
-        }
-    }
-    
-    if ($script:errorCounts.ActionFile404 -gt 0) {
-        Write-Host ""
-        Write-Host "Action File 404 Details (first 10):"
-        $script:errorDetails.ActionFile404 | Select-Object -First 10 | ForEach-Object { Write-Host "  - $_" }
-        if ($script:errorDetails.ActionFile404.Count -gt 10) {
-            Write-Host "  ... and $($script:errorDetails.ActionFile404.Count - 10) more"
-        }
-    }
-    
-    if ($script:errorCounts.OtherErrors -gt 0) {
-        Write-Host ""
-        Write-Host "Other Error Details (first 5):"
-        $script:errorDetails.OtherErrors | Select-Object -First 5 | ForEach-Object { Write-Host "  - $_" }
-        if ($script:errorDetails.OtherErrors.Count -gt 5) {
-            Write-Host "  ... and $($script:errorDetails.OtherErrors.Count - 5) more"
-        }
-    }
+    ReportErrorDetails -errorType "Upstream Repo 404" -errorDetails $script:errorDetails.UpstreamRepo404 -limit 10
+    ReportErrorDetails -errorType "Fork Repo 404" -errorDetails $script:errorDetails.ForkRepo404 -limit 10
+    ReportErrorDetails -errorType "Action File 404" -errorDetails $script:errorDetails.ActionFile404 -limit 10
+    ReportErrorDetails -errorType "Other Error" -errorDetails $script:errorDetails.OtherErrors -limit 5
     Write-Host ""
 
     #return ($actions, $existingForks) ? where does this $actions come from?
