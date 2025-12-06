@@ -1222,7 +1222,7 @@ function GetFoundSecretCount {
         Write-Message "" -logToSummary $true
 
         # log all resuls into a json file
-        Set-Content -Path secretScanningAlerts.json -Value (ConvertTo-Json $alertsResult -Depth 10)
+        Set-Content -Path $secretScanningAlertsFile -Value (ConvertTo-Json $alertsResult -Depth 10)
     }
     catch {
         Write-Message "Failed to get secret scanning alerts" -logToSummary $true
@@ -1774,9 +1774,10 @@ function SyncMirrorWithUpstream {
         }
         Write-Debug "Current branch: [$currentBranch]"
         
-        # Add upstream remote (no auth needed for public repos, but we'll use it for private ones)
-        Write-Debug "Adding upstream remote [https://github.com/$upstreamOwner/$upstreamRepo.git]"
-        git remote add upstream "https://github.com/$upstreamOwner/$upstreamRepo.git" 2>&1 | Out-Null
+        # Add upstream remote with authentication to avoid rate limiting
+        Write-Debug "Adding upstream remote with authentication"
+        $upstreamCloneUrl = "https://x:$access_token@github.com/$upstreamOwner/$upstreamRepo.git"
+        git remote add upstream $upstreamCloneUrl 2>&1 | Out-Null
         
         # Fetch from upstream with retry logic
         Write-Debug "Fetching from upstream"

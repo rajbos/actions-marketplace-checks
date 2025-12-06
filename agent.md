@@ -179,6 +179,8 @@ This workflow runs daily (and on every PR/push) to validate blob storage access.
 |-------------|-------------|
 | `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access). Format: `https://{storage}.blob.core.windows.net/{container}/{base-path}?{sas-params}` |
 
+Note: do not introduce new secrets without asking for approval first. We use the secrets that are available in the existing workflows.
+
 #### Local Development with Blob Storage
 
 For local testing, set environment variables before running scripts:
@@ -238,6 +240,7 @@ Use the helper script `blob-helper.ps1` for manual operations:
 4. **Error Handling**: Use try-catch blocks for API calls and file operations
 5. **Comments**: Add descriptive comments for complex logic
 6. **Write-Host**: Use for logging and progress messages
+7. When logging variables, we wrap the variable part in brackets: `Log string with [@value] in the middle` to improve readability
 
 ### Key Functions and Patterns
 
