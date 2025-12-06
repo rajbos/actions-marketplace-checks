@@ -8,9 +8,9 @@ BeforeAll {
     $global:status = $null
     $global:failedForks = $null
 
-    $actionsFile = "actions.json"
-    $statusFile = "status.json"
-    $failedForksFile = "failedForks.json"
+    $actionsFile = "$PSScriptRoot/test-data/actions.json"
+    $statusFile = "$PSScriptRoot/test-data/status.json"
+    $failedForksFile = "$PSScriptRoot/test-data/failedForks.json"
 
     # load actions
     $actions = (Get-Content $actionsFile | ConvertFrom-Json)

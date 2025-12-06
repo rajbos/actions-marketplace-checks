@@ -52,7 +52,7 @@ Describe "Blob Storage Wrapper Functions" {
 
         It "Should fail with invalid SAS token URL" {
             # SAS URL should point to a folder (e.g., 'data'), not a specific blob
-            $result = Get-ActionsJsonFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/container/data?sv=invalid"
+            $result = Get-ActionsJsonFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/container/data?sv=invalid" -ErrorAction SilentlyContinue
             $result | Should -Be $false
         }
     }
@@ -69,7 +69,7 @@ Describe "Blob Storage Wrapper Functions" {
 
         It "Should fail with invalid SAS token URL" {
             # SAS URL should point to a folder (e.g., 'data'), not a specific blob
-            $result = Get-StatusFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/container/data?sv=invalid"
+            $result = Get-StatusFromBlobStorage -sasToken "https://invalid.blob.core.windows.net/container/data?sv=invalid" -ErrorAction SilentlyContinue
             $result | Should -Be $false
         }
     }
@@ -92,7 +92,7 @@ Describe "Blob Storage Wrapper Functions" {
             }
             
             try {
-                $result = Set-StatusToBlobStorage -sasToken "https://test.blob.core.windows.net/test/actions.json?sv=test"
+                $result = Set-StatusToBlobStorage -sasToken "https://test.blob.core.windows.net/test/actions.json?sv=test" -ErrorAction SilentlyContinue
                 $result | Should -Be $false
             }
             finally {
@@ -139,7 +139,7 @@ Describe "Blob Storage Wrapper Functions" {
     Context "Blob storage URL handling" {
         It "Should use full URL when sasToken starts with https://" {
             # SAS URL should point to a folder (e.g., 'data'), not a specific blob
-            { Get-StatusFromBlobStorage -sasToken "https://example.blob.core.windows.net/container/data?sv=test" } | Should -Not -Throw
+            { Get-StatusFromBlobStorage -sasToken "https://example.blob.core.windows.net/container/data?sv=test" -ErrorAction SilentlyContinue } | Should -Not -Throw
         }
     }
 }
