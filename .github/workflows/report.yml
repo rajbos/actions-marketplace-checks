@@ -1,4 +1,4 @@
-# report the data stored in the repository
+# report the data stored in Azure Blob Storage
 name: Generate report
 
 on:
@@ -19,7 +19,19 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
 
       - name: Get App Token
         id: get_workflow_token
@@ -32,18 +44,46 @@ jobs:
       - shell: pwsh
         name: Run reporting script
         run: |
-           $actions=(cat status.json | ConvertFrom-Json)
+           try {
+               # Clean BOM if present before parsing JSON
+               $jsonContent = Get-Content status.json -Raw
+               $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+               $actions = $jsonContent | ConvertFrom-Json
+           } catch {
+               Write-Host "=== STATUS.JSON PARSE ERROR ==="
+               Write-Host "JSON parsing failed: $($_.Exception.Message)"
+               Write-Host "First 10 lines of status.json:"
+               Get-Content status.json | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
+               try { $filePath = Resolve-Path status.json -ErrorAction Stop } catch { $filePath = "$PWD/status.json" }
+               Write-Host "See the file at: $filePath"
+               Write-Host "Stopping workflow with exit 1 due to parse failure."
+               Write-Host "==============================="
+               exit 1
+           }
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            $token="${{ steps.get_workflow_token.outputs.token }}"  # this one expires after an hour
            $token="${{ secrets.ACCESS_TOKEN }}"                    # using this to prevent issues in the current run, as it takes 1h 42mins atm
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination $token
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload secretScanningAlerts.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-SecretScanningAlertsToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload secretScanningAlerts.json to blob storage"
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v5
         with:
           name: report
           path: VulnerableRepos-**.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: SecretScanningAlerts
           path: secretScanningAlerts.json

@@ -46,5 +46,12 @@ Tests for the cleanup functionality are located in `tests/cleanup.Tests.ps1` and
 ```powershell
 Invoke-Pester -Path ./tests/cleanup.Tests.ps1
 ```
+## Workflows
+
+This repository includes several automated workflows:
+
+- **[Enable Dependabot](.github/workflows/dependabot-updates.yml)**: Automatically enables Dependabot on mirrored repositories to detect security vulnerabilities
+- **[Update Mirrors](.github/workflows/update-forks.yml)**: Automatically syncs all mirrored repositories with their upstream sources (runs daily at 2 AM UTC)
+- **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status
 
 The dataset is scraped in this repo: [rajbos/github-azure-devops-marketplace-extension-news](https://github.com/rajbos/github-azure-devops-marketplace-extension-news)

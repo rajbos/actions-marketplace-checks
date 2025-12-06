@@ -2,7 +2,8 @@ Param (
   $actions,
   $numberOfReposToDo = 10,
   $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN
+  $access_token_destination = $env:GITHUB_TOKEN,
+  [switch]$skipSecretScanSummary = $false
 )
 
 . $PSScriptRoot/library.ps1
@@ -16,6 +17,10 @@ if ($env:APP_PEM_KEY) {
     # get a token to use from the app
     $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
 }
+else {
+  # use the one send in as a file param
+  $accessToken = $access_token
+}
 
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
@@ -23,6 +28,33 @@ Import-Module powershell-yaml -Force
 
 # default variables
 $forkOrg = "actions-marketplace-validations"
+
+# Helper function to check if an error is a 404
+function Is404Error {
+    Param (
+        [string]$errorMessage
+    )
+    return $errorMessage -like "*404*" -or $errorMessage -like "*Not Found*"
+}
+
+# Helper function to report error details
+function ReportErrorDetails {
+    Param (
+        [string]$errorType,
+        [array]$errorDetails,
+        [int]$limit = 10
+    )
+    
+    if ($errorDetails.Count -gt 0) {
+        Write-Host ""
+        Write-Host "$errorType Details (first $limit):"
+        $errorDetails | Select-Object -First $limit | ForEach-Object { Write-Host "  - $_" }
+        if ($errorDetails.Count -gt $limit) {
+            Write-Host "  ... and $($errorDetails.Count - $limit) more"
+        }
+    }
+}
+
 
 function GetRepoInfo {
     Param (
@@ -193,7 +225,27 @@ function GetActionType {
 
     # load the file
     Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
-    $fileContent = ApiCall -method GET -url $response.download_url -access_token $access_token
+    $fileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
+    
+    # Check if ApiCall returned an error
+    if (($fileContent -is [hashtable]) -and ($fileContent.ContainsKey('Error'))) {
+        Write-Host "Error downloading action definition file for [$owner/$repo]: StatusCode $($fileContent.StatusCode), Message: $($fileContent.Message)"
+        
+        # Track action file 404 errors if error tracking is initialized
+        if ($null -ne $script:errorCounts) {
+            if ($fileContent.StatusCode -eq 404) {
+                $script:errorCounts.ActionFile404++
+                $script:errorDetails.ActionFile404 += "$owner/$repo : $($response.download_url)"
+            }
+            else {
+                $script:errorCounts.OtherErrors++
+                $script:errorDetails.OtherErrors += "$owner/$repo : StatusCode $($fileContent.StatusCode)"
+            }
+        }
+        
+        return ("Error downloading file", "No file found", "No file found")
+    }
+    
     Write-Debug "response: $($fileContent)"
     try {
         $yaml = ConvertFrom-Yaml $fileContent
@@ -296,7 +348,20 @@ function MakeRepoInfoCall {
         $response = ApiCall -method GET -url $url -access_token $access_token
     }
     catch {
-        Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $($_.Exception.Message)"
+        $errorMsg = $_.Exception.Message
+        Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $errorMsg"
+        
+        # Track fork 404 errors if error tracking is initialized
+        if ($null -ne $script:errorCounts) {
+            if (Is404Error -errorMessage $errorMsg) {
+                $script:errorCounts.ForkRepo404++
+                $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+            }
+            else {
+                $script:errorCounts.OtherErrors++
+                $script:errorDetails.OtherErrors += "$forkOrg/$($action.name) : $errorMsg"
+            }
+        }
     }
 
     return $response
@@ -307,6 +372,20 @@ function GetInfo {
         $access_token,
         $startTime
     )
+
+    # Initialize error tracking
+    $script:errorCounts = @{
+        UpstreamRepo404 = 0
+        ForkRepo404 = 0
+        ActionFile404 = 0
+        OtherErrors = 0
+    }
+    $script:errorDetails = @{
+        UpstreamRepo404 = @()
+        ForkRepo404 = @()
+        ActionFile404 = @()
+        OtherErrors = @()
+    }
 
     # get information from the action files
     $i = $existingForks.Count
@@ -492,19 +571,36 @@ function GetRepoDockerBaseImage {
     $dockerBaseImage = ""
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
+        $repoUrl = "https://github.com/$owner/$repo"
+        $dockerfilePath = "Dockerfile"
+        $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
         try {
-            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
-            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -$access_token $access_token
-            $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
+            $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
+            if ($hasValidDownloadUrl) {
+                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
+                $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+            }
+            else {
+                Write-Host "Error: No download_url found for Dockerfile in [$owner/$repo]"
+            }
         }
         catch {
             Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message), trying lowercase file"
             # retry with lowercase dockerfile name
             $url = "/repos/$owner/$repo/contents/dockerfile"
+            $dockerfilePath = "dockerfile"
+            $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
             try {
-                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
-                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token
-                $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
+                $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
+                if ($hasValidDownloadUrl) {
+                    $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
+                    $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                }
+                else {
+                    Write-Host "Error: No download_url found for dockerfile in [$owner/$repo]"
+                }
             }
             catch {
                 Write-Host "Error getting dockerfile for [$owner/$repo]: $($_.Exception.Message)"
@@ -527,7 +623,7 @@ function EnableSecretScanning {
 
     $url = "/repos/$owner/$repo"
     $body = "{""security_and_analysis"": {""secret_scanning"": {""status"": ""enabled""}}}"
-    $patchResult = ApiCall -method PATCH -url $url -body $body access_token $access_token -expected 200
+    $patchResult = ApiCall -method PATCH -url $url -body $body -access_token $access_token -expected 200
 
     return $patchResult
 }
@@ -586,7 +682,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
                 Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -startTime $startTime
+                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
                         $action.forkFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
@@ -624,6 +720,40 @@ function GetMoreInfo {
                     }
                 }
                 catch {
+                    $errorMsg = $_.Exception.Message
+                    Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $errorMsg"
+                    
+                    # Track upstream repo 404 errors
+                    if (Is404Error -errorMessage $errorMsg) {
+                        $script:errorCounts.UpstreamRepo404++
+                        $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
+                    }
+                    else {
+                        $script:errorCounts.OtherErrors++
+                        $script:errorDetails.OtherErrors += "$owner/$repo : $errorMsg"
+                    }
+                    
+                    # Check if our forked copy exists
+                    try {
+                        $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
+                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -access_token $access_token -hideFailedCall $true
+                        if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
+                            Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
+                        }
+                        else {
+                            Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
+                        }
+                    }
+                    catch {
+                        $forkErrorMsg = $_.Exception.Message
+                        Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $forkErrorMsg"
+                        
+                        # Track fork 404 errors
+                        if (Is404Error -errorMessage $forkErrorMsg) {
+                            $script:errorCounts.ForkRepo404++
+                            $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+                        }
+                    }
                     # continue with next one
                 }
             }
@@ -632,7 +762,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.tagInfo)) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -startTime $startTime
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
 
@@ -674,7 +804,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.releaseInfo)) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -startTime $startTime
+                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
 
@@ -754,6 +884,33 @@ function GetMoreInfo {
     }
     Write-Host "Ended the cleanup with [$($existingForks.Count)] actions"
 
+    # Report error summary
+    Write-Host ""
+    Write-Host "=================================="
+    Write-Host "Error Summary for this run:"
+    Write-Host "=================================="
+    
+    # Calculate total errors
+    $totalErrors = 0
+    foreach ($key in $script:errorCounts.Keys) {
+        $totalErrors += $script:errorCounts[$key]
+    }
+    
+    # Display error counts
+    Write-Host "Upstream Repo 404 Errors: $($script:errorCounts.UpstreamRepo404)"
+    Write-Host "Fork Repo 404 Errors: $($script:errorCounts.ForkRepo404)"
+    Write-Host "Action File 404 Errors: $($script:errorCounts.ActionFile404)"
+    Write-Host "Other Errors: $($script:errorCounts.OtherErrors)"
+    Write-Host "Total Errors: $totalErrors"
+    Write-Host "=================================="
+    
+    # Log detailed error information if there are errors
+    ReportErrorDetails -errorType "Upstream Repo 404" -errorDetails $script:errorDetails.UpstreamRepo404 -limit 10
+    ReportErrorDetails -errorType "Fork Repo 404" -errorDetails $script:errorDetails.ForkRepo404 -limit 10
+    ReportErrorDetails -errorType "Action File 404" -errorDetails $script:errorDetails.ActionFile404 -limit 10
+    ReportErrorDetails -errorType "Other Error" -errorDetails $script:errorDetails.OtherErrors -limit 5
+    Write-Host ""
+
     #return ($actions, $existingForks) ? where does this $actions come from?
     return ($null, $existingForks)
 }
@@ -792,9 +949,14 @@ function Run {
     ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -access_token $access_token_destination -startTime $startTime
     SaveStatus -existingForks $existingForks
 
-    GetFoundSecretCount -access_token_destination $access_token_destination
+    if (-not $skipSecretScanSummary) {
+        GetFoundSecretCount -access_token_destination $access_token_destination
+    }
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 }
 
 # main call
 Run -actions $actions -access_token $access_token -access_token_destination $access_token_destination
+
+# Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
+exit 0

@@ -5,6 +5,7 @@ on:
     paths:
     - .github/workflows/*.ps1
     - .github/tests/*.ps1
+    - .github/workflows/peter-test.yml
 
 defaults:
   run:
@@ -14,11 +15,22 @@ jobs:
   pester-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Get current actions list
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
-          curl "${{ secrets.BLOB_SAS_TOKEN }}" > actions.json
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
+          }
+          
+          Write-Host "First 10 lines of actions.json:"
+          Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
       
       - name: Run Pester Tests
         run: Invoke-Pester -Output Detailed

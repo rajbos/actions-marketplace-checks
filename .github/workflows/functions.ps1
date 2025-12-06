@@ -7,7 +7,7 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
-Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 function GetForkedActionRepoList {
     Param (
@@ -82,6 +82,17 @@ function ForkActionRepos {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
             break
         }
+        
+        # Check if token is about to expire (less than 5 minutes remaining)
+        if ($null -ne $script:tokenExpirationTime) {
+            if (Test-TokenExpiration -expirationTime $script:tokenExpirationTime -warningMinutes 5) {
+                $timeRemaining = $script:tokenExpirationTime - [DateTime]::UtcNow
+                Write-Message -message "Stopping repo processing loop: Token will expire in $([math]::Round($timeRemaining.TotalMinutes, 1)) minutes (less than 5 minutes). Processed $i repos." -logToSummary $true
+                Write-Host "Breaking loop to prevent token expiration issues. This is not an error."
+                break
+            }
+        }
+        
         Write-Host "$i/$max Checking repo [$owner/$repo]"
         # check if fork already exists
         $forkedRepoName = $action.forkedRepoName
@@ -168,6 +179,16 @@ function EnableDependabotForForkedActions {
             Write-Host "Reached max number of repos to do, exiting: i:[$($i)], max:[$($max)], numberOfReposToDo:[$($numberOfReposToDo)]"
         }
 
+        # Check if token is about to expire (less than 5 minutes remaining)
+        if ($null -ne $script:tokenExpirationTime) {
+            if (Test-TokenExpiration -expirationTime $script:tokenExpirationTime -warningMinutes 5) {
+                $timeRemaining = $script:tokenExpirationTime - [DateTime]::UtcNow
+                Write-Message -message "Stopping dependabot enablement loop: Token will expire in $([math]::Round($timeRemaining.TotalMinutes, 1)) minutes (less than 5 minutes)." -logToSummary $true
+                Write-Host "Breaking loop to prevent token expiration issues. This is not an error."
+                break
+            }
+        }
+
         $repo = $action.repo
         $owner = $action.owner
         $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
@@ -211,7 +232,7 @@ function ForkActionRepo {
 
     # check if the source repo exists
     $url = "repos/$owner/$repo"
-    $status = ApiCall -method GET -url $url -body $null -expected 200
+    $status = ApiCall -method GET -url $url -body $null -expected 200 -access_token $access_token
     if ($status -eq $false) {
         Write-Host "Repo [$owner/$repo] does not exist"
         return $false
@@ -220,7 +241,7 @@ function ForkActionRepo {
     # check if the destination repo already exists
     $newRepoName = GetForkedRepoName -owner $owner -repo $repo
     $url = "repos/$forkOrg/$newRepoName"
-    $status = ApiCall -method GET -url $url -body $null -expected 200
+    $status = ApiCall -method GET -url $url -body $null -expected 200 -access_token $access_token_destination
     if ($status -eq $true) {
         Write-Host "Repo [$forkOrg/$newRepoName] already exists"
         return $true
@@ -240,9 +261,13 @@ function ForkActionRepo {
         Start-Sleep -Seconds 20
         
         Write-Host "Created destination for [$owner/$repo] to [$forkOrg/$($newRepoName)]"
-        # disable actions on the new repo, to prevent them from running on push (not needed, actions disabled on org leve)
-        # $url = "repos/$forkOrg/$newRepoName/actions/permissions"
-        # $response = ApiCall -method PUT -url $url -body "{`"enabled`":false}" -expected 204
+        
+        # Disable GitHub Actions on the new repo before pushing code to prevent workflows from running
+        Write-Host "Disabling GitHub Actions for [$forkOrg/$newRepoName] before push"
+        $disableResult = Disable-GitHubActions -owner $forkOrg -repo $newRepoName -access_token $access_token_destination
+        if (-not $disableResult) {
+            Write-Warning "Could not disable GitHub Actions for [$forkOrg/$newRepoName], continuing with push anyway"
+        }
         
         try {
             # cd to temp directory
@@ -314,7 +339,17 @@ function ForkActionRepo {
 }
 
 Write-Host "Got $($actions.Length) actions"
-GetRateLimitInfo
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
+
+# Get token expiration time and store it for checking during the loop
+$script:tokenExpirationTime = Get-TokenExpirationTime -access_token $access_token_destination
+if ($null -eq $script:tokenExpirationTime) {
+    Write-Warning "Could not determine token expiration time. Continuing without expiration checks."
+}
+else {
+    $timeUntilExpiration = $script:tokenExpirationTime - [DateTime]::UtcNow
+    Write-Host "Token will expire in $([math]::Round($timeUntilExpiration.TotalMinutes, 1)) minutes at $($script:tokenExpirationTime) UTC"
+}
 
 # load the list of forked repos
 ($existingForks, $failedForks) = GetForkedActionRepos -access_token $access_token_destination
@@ -327,8 +362,11 @@ Write-Host "Ended up with $($existingForks.Count) forked repos"
 # save the status
 SaveStatus -existingForks $existingForks
 
-GetRateLimitInfo
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
 Write-Host "End of script, added [$numberOfReposToDo] forked repos"
 # show the current location
 Write-Host "Current location: $(Get-Location)"
+
+# Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
+exit 0

@@ -1,4 +1,6 @@
 actions.json
+status.json
+failedForks.json
 .env
 log.txt
 VulnerableRepos.txt
@@ -8,3 +10,8 @@ VulnerableRepos-Composite.txt
 VulnerableRepos-Node.txt
 mirroredRepos
 secretScanningAlerts.json
+testResults.xml
+*-old.yml
+chunk-*.json
+status-partial-*.json
+failedForks-partial-*.json
