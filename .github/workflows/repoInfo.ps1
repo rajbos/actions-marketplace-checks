@@ -224,41 +224,21 @@ function GetActionType {
 
     # load the file
     Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
-    try {
-        $fileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
-        
-        # Check if ApiCall returned an error
-        if (($fileContent -is [hashtable]) -and ($fileContent.ContainsKey('Error')) -and $fileContent.Error) {
-            Write-Host "Error downloading action definition file for [$owner/$repo]: StatusCode $($fileContent.StatusCode), Message: $($fileContent.Message)"
-            
-            # Track action file 404 errors if error tracking is initialized
-            if ($null -ne $script:errorCounts) {
-                if ($fileContent.StatusCode -eq 404) {
-                    $script:errorCounts.ActionFile404++
-                    $script:errorDetails.ActionFile404 += "$owner/$repo : $($response.download_url)"
-                }
-                else {
-                    $script:errorCounts.OtherErrors++
-                    $script:errorDetails.OtherErrors += "$owner/$repo : StatusCode $($fileContent.StatusCode)"
-                }
-            }
-            
-            return ("Error downloading file", "No file found", "No file found")
-        }
-    }
-    catch {
-        $errorMsg = $_.Exception.Message
-        Write-Host "Exception downloading action definition file for [$owner/$repo]: $errorMsg"
+    $fileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
+    
+    # Check if ApiCall returned an error
+    if (($fileContent -is [hashtable]) -and ($fileContent.ContainsKey('Error'))) {
+        Write-Host "Error downloading action definition file for [$owner/$repo]: StatusCode $($fileContent.StatusCode), Message: $($fileContent.Message)"
         
         # Track action file 404 errors if error tracking is initialized
         if ($null -ne $script:errorCounts) {
-            if (Is404Error -errorMessage $errorMsg) {
+            if ($fileContent.StatusCode -eq 404) {
                 $script:errorCounts.ActionFile404++
                 $script:errorDetails.ActionFile404 += "$owner/$repo : $($response.download_url)"
             }
             else {
                 $script:errorCounts.OtherErrors++
-                $script:errorDetails.OtherErrors += "$owner/$repo : $errorMsg"
+                $script:errorDetails.OtherErrors += "$owner/$repo : StatusCode $($fileContent.StatusCode)"
             }
         }
         
