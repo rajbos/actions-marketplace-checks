@@ -350,6 +350,7 @@ function ApiCall {
         [int] $backOff = 5,
         [int] $maxResultCount = 0,
         [bool] $hideFailedCall = $false,
+        [bool] $returnErrorInfo = $false,
         $access_token = $env:GITHUB_TOKEN
     )
     
@@ -550,6 +551,16 @@ function ApiCall {
                 }
                 else {
                     Write-Host "Content: " $result.Content
+                }
+
+                if ($returnErrorInfo) {
+                    # Return error information instead of throwing
+                    return @{
+                        Error = $true
+                        StatusCode = $_.Exception.Response.StatusCode.value__
+                        Message = $messageData.message
+                        Url = $url
+                    }
                 }
 
                 throw
