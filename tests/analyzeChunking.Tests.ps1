@@ -125,6 +125,40 @@ Describe "Analyze Workflow Chunking Functions" {
             $chunks[0] | Should -Not -Contain "action1"
             $chunks[0] | Should -Not -Contain "action2"
         }
+        
+        It "Should compute identifier from RepoUrl when name and forkedRepoName are missing (marketplace actions)" {
+            # This simulates actions from the marketplace with RepoUrl property (capital R)
+            $testData = @(
+                @{ RepoUrl = "https://github.com/actions/checkout"; Title = "Checkout"; Publisher = "actions" }
+                @{ RepoUrl = "https://github.com/actions/setup-node"; Title = "Setup Node"; Publisher = "actions" }
+                @{ RepoUrl = "https://github.com/docker/build-push-action"; Title = "Build and Push"; Publisher = "docker" }
+            )
+            
+            $chunks = Split-ActionsIntoChunks -actions $testData -numberOfChunks 2
+            
+            $chunks.Count | Should -Be 2
+            # Should compute identifiers from RepoUrl
+            $allChunkItems = $chunks[0] + $chunks[1]
+            $allChunkItems.Count | Should -Be 3
+            $allChunkItems | Should -Contain "actions_checkout"
+            $allChunkItems | Should -Contain "actions_setup-node"
+            $allChunkItems | Should -Contain "docker_build-push-action"
+        }
+        
+        It "Should compute identifier from lowercase repoUrl when name and forkedRepoName are missing" {
+            # This tests with lowercase repoUrl (used in some contexts)
+            $testData = @(
+                @{ repoUrl = "https://github.com/actions/cache"; title = "Cache" }
+                @{ repoUrl = "https://github.com/actions/upload-artifact"; title = "Upload Artifact" }
+            )
+            
+            $chunks = Split-ActionsIntoChunks -actions $testData -numberOfChunks 1
+            
+            $chunks.Count | Should -Be 1
+            $chunks[0].Count | Should -Be 2
+            $chunks[0] | Should -Contain "actions_cache"
+            $chunks[0] | Should -Contain "actions_upload-artifact"
+        }
     }
     
     Context "Integration with existing Split-ForksIntoChunks" {

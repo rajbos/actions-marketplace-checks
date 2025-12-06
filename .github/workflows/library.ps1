@@ -2149,8 +2149,30 @@ function Split-ActionsIntoChunks {
                 elseif ($null -ne $actionsToProcess[$j].name -and $actionsToProcess[$j].name -ne "") {
                     $chunkActions += $actionsToProcess[$j].name
                 }
+                # Fall back to computing from RepoUrl (used for marketplace actions)
+                elseif ($null -ne $actionsToProcess[$j].RepoUrl -and $actionsToProcess[$j].RepoUrl -ne "") {
+                    ($owner, $repo) = SplitUrl -url $actionsToProcess[$j].RepoUrl
+                    if ($null -ne $owner -and $null -ne $repo) {
+                        $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+                        $chunkActions += $forkedRepoName
+                    }
+                    else {
+                        Write-Warning "Action at index $j has RepoUrl but could not extract owner/repo: $($actionsToProcess[$j].RepoUrl)"
+                    }
+                }
+                # Also check lowercase repoUrl for consistency
+                elseif ($null -ne $actionsToProcess[$j].repoUrl -and $actionsToProcess[$j].repoUrl -ne "") {
+                    ($owner, $repo) = SplitUrl -url $actionsToProcess[$j].repoUrl
+                    if ($null -ne $owner -and $null -ne $repo) {
+                        $forkedRepoName = GetForkedRepoName -owner $owner -repo $repo
+                        $chunkActions += $forkedRepoName
+                    }
+                    else {
+                        Write-Warning "Action at index $j has repoUrl but could not extract owner/repo: $($actionsToProcess[$j].repoUrl)"
+                    }
+                }
                 else {
-                    Write-Warning "Action at index $j has no valid identifier (no name or forkedRepoName)"
+                    Write-Warning "Action at index $j has no valid identifier (no name, forkedRepoName, or RepoUrl/repoUrl)"
                 }
             }
             
