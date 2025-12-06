@@ -45,7 +45,7 @@ Describe "Blob Storage Change Detection" {
             $nonExistentFile = Join-Path $tempPath "nonexistent-$(New-Guid).json"
             
             # Should fail when failIfMissing is true
-            $result = Set-JsonToBlobStorage -sasToken "https://test.blob.core.windows.net/test/data?sv=test" -blobFileName "test.json" -localFilePath $nonExistentFile -failIfMissing $true
+            $result = Set-JsonToBlobStorage -sasToken "https://test.blob.core.windows.net/test/data?sv=test" -blobFileName "test.json" -localFilePath $nonExistentFile -failIfMissing $true -ErrorAction SilentlyContinue
             $result | Should -Be $false
         }
     }
