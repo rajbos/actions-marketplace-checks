@@ -60,8 +60,10 @@ function ProcessForkingChunk {
         }
     }
     
-    # For each action to process, call functions.ps1 with just that action
-    # This is a simple approach that reuses existing logic
+    # Process each action individually by calling functions.ps1
+    # Note: This processes one action at a time to maintain isolation and
+    # avoid complex refactoring of the existing functions.ps1 script.
+    # While this adds some overhead, it ensures correctness and maintainability.
     $processedForks = @()
     $forkedCount = 0
     

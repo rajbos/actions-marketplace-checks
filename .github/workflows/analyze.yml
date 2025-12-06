@@ -41,6 +41,8 @@ jobs:
   prepare:
     name: Prepare work distribution
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       matrix-forking: ${{ steps.split-work.outputs.matrix-forking }}
       matrix-repoinfo: ${{ steps.split-work.outputs.matrix-repoinfo }}
@@ -274,7 +276,7 @@ jobs:
           # Load actions
           try {
               $jsonContent = Get-Content actions.json -Raw
-              $jsonContent = $jsonContent -replace '^﻿', ''
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
               $actions = $jsonContent | ConvertFrom-Json
           } catch {
               Write-Error "Failed to parse actions.json: $($_.Exception.Message)"
@@ -373,7 +375,7 @@ jobs:
           # Load current status
           try {
               $jsonContent = Get-Content status.json -Raw
-              $jsonContent = $jsonContent -replace '^﻿', ''
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
               $currentStatus = $jsonContent | ConvertFrom-Json
           } catch {
               Write-Error "Failed to parse status.json: $($_.Exception.Message)"
@@ -429,7 +431,7 @@ jobs:
           # Load actions
           try {
               $jsonContent = Get-Content actions.json -Raw
-              $jsonContent = $jsonContent -replace '^﻿', ''
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
               $actions = $jsonContent | ConvertFrom-Json
           } catch {
               Write-Error "Failed to parse actions.json: $($_.Exception.Message)"
@@ -469,6 +471,8 @@ jobs:
     needs: [prepare, fork-repos, repo-info]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     concurrency:
       group: repo-state-updates
       cancel-in-progress: false
@@ -532,7 +536,7 @@ jobs:
           # Load current status
           try {
               $jsonContent = Get-Content status.json -Raw
-              $jsonContent = $jsonContent -replace '^﻿', ''
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
               $currentStatus = $jsonContent | ConvertFrom-Json
           } catch {
               Write-Error "Failed to parse status.json: $($_.Exception.Message)"
@@ -570,7 +574,7 @@ jobs:
               if (Test-Path "failedForks.json") {
                   try {
                       $failedContent = Get-Content "failedForks.json" -Raw
-                      $failedContent = $failedContent -replace '^﻿', ''
+                      $failedContent = $failedContent -replace '^\uFEFF', ''
                       $allFailedForks = $failedContent | ConvertFrom-Json
                   } catch {
                       Write-Warning "Failed to parse existing failedForks.json: $($_.Exception.Message)"
@@ -582,7 +586,7 @@ jobs:
               foreach ($file in $failedForksFiles) {
                   try {
                       $partialContent = Get-Content $file -Raw
-                      $partialContent = $partialContent -replace '^﻿', ''
+                      $partialContent = $partialContent -replace '^\uFEFF', ''
                       $partialFailed = $partialContent | ConvertFrom-Json
                       if ($partialFailed) {
                           $allFailedForks += $partialFailed
@@ -608,7 +612,7 @@ jobs:
 
           # Load the merged status
           $jsonContent = Get-Content status.json -Raw
-          $jsonContent = $jsonContent -replace '^﻿', ''
+          $jsonContent = $jsonContent -replace '^\uFEFF', ''
           $existingForks = $jsonContent | ConvertFrom-Json
 
           ShowOverallDatasetStatistics -existingForks $existingForks

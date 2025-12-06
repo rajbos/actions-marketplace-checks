@@ -2108,7 +2108,7 @@ function Split-ActionsIntoChunks {
     
     $actionsToProcess = $actions
     
-    # Optionally filter to unprocessed actions
+    # Optionally filter to actions with repoUrl
     if ($filterToUnprocessed) {
         $actionsToProcess = $actions | Where-Object { 
             $null -ne $_.repoUrl -and $_.repoUrl -ne ""
