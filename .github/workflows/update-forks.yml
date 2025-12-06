@@ -36,10 +36,11 @@ jobs:
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
+          # FATAL ERROR: If status.json cannot be downloaded, the workflow cannot proceed
           . ./.github/workflows/library.ps1
           $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to download status.json from blob storage"
+            Write-Error "Failed to download status.json from blob storage - this is a fatal error"
             exit 1
           }
 
@@ -48,10 +49,11 @@ jobs:
         env:
           BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
         run: |
+          # FATAL ERROR: If failedForks.json cannot be downloaded, the workflow cannot proceed
           . ./.github/workflows/library.ps1
           $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to download failedForks.json from blob storage"
+            Write-Error "Failed to download failedForks.json from blob storage - this is a fatal error"
             exit 1
           }
 
@@ -72,13 +74,13 @@ jobs:
                $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
                $existingForks = $jsonContent | ConvertFrom-Json
            } catch {
-               Write-Host "=== STATUS.JSON PARSE ERROR ==="
+               Write-Host "=== STATUS.JSON PARSE ERROR (FATAL) ==="
                Write-Host "JSON parsing failed: $($_.Exception.Message)"
                Write-Host "First 10 lines of status.json:"
                Get-Content status.json | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
                try { $filePath = Resolve-Path status.json -ErrorAction Stop } catch { $filePath = "$PWD/status.json" }
                Write-Host "See the file at: $filePath"
-               Write-Host "Stopping workflow with exit 1 due to parse failure."
+               Write-Host "Stopping workflow with exit 1 due to fatal parse failure."
                Write-Host "==============================="
                exit 1
            }
@@ -88,7 +90,29 @@ jobs:
            $numberOfRepos = ${{ github.event.inputs.numberOfRepos || env.numberOfReposToDo }}
            Write-Host "Will process up to [$numberOfRepos] repos in this run"
            
-           ./.github/workflows/update-forks.ps1 -actions $existingForks -numberOfReposToDo $numberOfRepos -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+           # Execute the update script
+           # Note: Per-mirror git errors are logged as warnings and do NOT cause exit 1
+           # Only fatal script errors (missing files, unrecoverable errors) will cause exit 1
+           try {
+               ./.github/workflows/update-forks.ps1 -actions $existingForks -numberOfReposToDo $numberOfRepos -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+               Write-Host "Mirror sync script completed successfully"
+           } catch {
+               Write-Host "=== FATAL ERROR IN MIRROR SYNC SCRIPT ==="
+               Write-Host "Error: $($_.Exception.Message)"
+               Write-Host "Stack trace: $($_.ScriptStackTrace)"
+               Write-Host "This is a fatal error - exiting with code 1"
+               Write-Host "=========================================="
+               exit 1
+           }
+
+      - name: Upload failed forks artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-forks
+          path: failedForks.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload status.json to blob storage
         if: always()
@@ -99,8 +123,10 @@ jobs:
           . ./.github/workflows/library.ps1
           $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to upload status.json to blob storage"
-            exit 1
+            Write-Warning "Failed to upload status.json to blob storage"
+            # Don't exit 1 here - we want to continue to upload failedForks.json
+          } else {
+            Write-Host "Successfully uploaded status.json to blob storage"
           }
 
       - name: Upload failedForks.json to blob storage
@@ -112,6 +138,8 @@ jobs:
           . ./.github/workflows/library.ps1
           $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to upload failedForks.json to blob storage"
-            exit 1
+            Write-Warning "Failed to upload failedForks.json to blob storage"
+            # Don't exit 1 here - we still want the workflow to complete
+          } else {
+            Write-Host "Successfully uploaded failedForks.json to blob storage"
           }

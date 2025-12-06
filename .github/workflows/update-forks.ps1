@@ -25,6 +25,7 @@ function UpdateForkedRepos {
     $conflicts = 0
     $upstreamNotFound = 0
     $skipped = 0
+    $failedForksList = @()
 
     foreach ($existingFork in $existingForks) {
 
@@ -107,6 +108,16 @@ function UpdateForkedRepos {
             $existingFork | Add-Member -Name lastSyncError -Value $result.message -MemberType NoteProperty -Force
             $existingFork | Add-Member -Name lastSyncErrorType -Value $errorType -MemberType NoteProperty -Force
             $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+            
+            # Add to failed forks list for artifact upload
+            $failedForksList += @{
+                name = $existingFork.name
+                upstreamOwner = $upstreamOwner
+                upstreamRepo = $upstreamRepo
+                errorType = $errorType
+                errorMessage = $result.message
+                timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+            }
         }
         
         $i++ | Out-Null
@@ -127,7 +138,10 @@ function UpdateForkedRepos {
     Write-Message -message "| **Total Processed** | **$i** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    return $existingForks
+    return @{
+        existingForks = $existingForks
+        failedForks = $failedForksList
+    }
 }
 
 function ShowOverallDatasetStatistics {
@@ -185,7 +199,9 @@ function ShowOverallDatasetStatistics {
 }
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
-$existingForks = UpdateForkedRepos -existingForks $actions -numberOfReposToDo $numberOfReposToDo
+$updateResult = UpdateForkedRepos -existingForks $actions -numberOfReposToDo $numberOfReposToDo
+$existingForks = $updateResult.existingForks
+$failedForks = $updateResult.failedForks
 ShowOverallDatasetStatistics -existingForks $existingForks
-SaveStatus -existingForks $existingForks
+SaveStatus -existingForks $existingForks -failedForks $failedForks
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
