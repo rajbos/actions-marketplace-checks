@@ -639,15 +639,23 @@ function GetRateLimitInfo {
     $url = "rate_limit"
     $response = ApiCall -method GET -url $url -access_token $access_token
 
-    #Write-Host "Ratelimit info: $($response.rate | ConvertTo-Json)"
-    Write-Message -message "Ratelimit info: $($response.rate | ConvertTo-Json)"  -logToSummary $true
-    #Write-Host " - GraphQL: $($response.resources.graphql | ConvertTo-Json)"
-    #Write-Host " - GraphQL: $($response | ConvertTo-Json)"
+    # Format rate limit info as a table
+    Write-Message -message "**Rate Limit Status:**" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Limit | Used | Remaining | Reset (Unix) |" -logToSummary $true
+    Write-Message -message "|------:|-----:|----------:|-------------:|" -logToSummary $true
+    Write-Message -message "| $($response.rate.limit) | $($response.rate.used) | $($response.rate.remaining) | $($response.rate.reset) |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
 
     if ($access_token -ne $access_token_destination) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
-        Write-Message -message "Access token destination ratelimit info: $($response2.rate | ConvertTo-Json -Depth 5)" -logToSummary $true
+        Write-Message -message "**Access Token Destination Rate Limit Status:**" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| Limit | Used | Remaining | Reset (Unix) |" -logToSummary $true
+        Write-Message -message "|------:|-----:|----------:|-------------:|" -logToSummary $true
+        Write-Message -message "| $($response2.rate.limit) | $($response2.rate.used) | $($response2.rate.remaining) | $($response2.rate.reset) |" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
     }
 
     if ($response.rate.limit -eq 60) {

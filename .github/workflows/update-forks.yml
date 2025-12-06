@@ -240,6 +240,14 @@ jobs:
             exit 1
           }
 
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+
       - name: Download all partial status updates
         uses: actions/download-artifact@v4
         with:
@@ -293,6 +301,17 @@ jobs:
           $existingForks = $jsonContent | ConvertFrom-Json
 
           ShowOverallDatasetStatistics -existingForks $existingForks
+
+      - name: Check rate limit status
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "### Final Rate Limit Check" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
 
       - name: Upload status.json to blob storage
         if: always()
