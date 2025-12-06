@@ -659,14 +659,18 @@ function Format-WaitTime {
     if ($minutes -lt 1) {
         return "$seconds seconds"
     } elseif ($minutes -lt 60) {
-        return "$seconds seconds ($minutes minutes)"
+        $minuteLabel = if ($minutes -eq 1) { "minute" } else { "minutes" }
+        return "$seconds seconds ($minutes $minuteLabel)"
     } else {
         $hours = [math]::Floor($minutes / 60)
         $remainingMinutes = [math]::Round($minutes % 60, 1)
+        $hourLabel = if ($hours -eq 1) { "hour" } else { "hours" }
+        
         if ($remainingMinutes -eq 0) {
-            return "$seconds seconds ($hours hours)"
+            return "$seconds seconds ($hours $hourLabel)"
         } else {
-            return "$seconds seconds ($hours hours $remainingMinutes minutes)"
+            $minuteLabel = if ($remainingMinutes -eq 1) { "minute" } else { "minutes" }
+            return "$seconds seconds ($hours $hourLabel $remainingMinutes $minuteLabel)"
         }
     }
 }

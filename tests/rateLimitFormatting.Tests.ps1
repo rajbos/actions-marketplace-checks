@@ -14,7 +14,7 @@ Describe "Rate Limit Formatting Tests" {
 
         It "Should format 1 minute correctly" {
             $result = Format-WaitTime -totalSeconds 60
-            $result | Should -Be "60 seconds (1 minutes)"
+            $result | Should -Be "60 seconds (1 minute)"
         }
 
         It "Should format multiple minutes correctly" {
@@ -24,12 +24,12 @@ Describe "Rate Limit Formatting Tests" {
 
         It "Should format 1 hour correctly" {
             $result = Format-WaitTime -totalSeconds 3600
-            $result | Should -Be "3600 seconds (1 hours)"
+            $result | Should -Be "3600 seconds (1 hour)"
         }
 
         It "Should format hours and minutes correctly" {
             $result = Format-WaitTime -totalSeconds 5400
-            $result | Should -Be "5400 seconds (1 hours 30 minutes)"
+            $result | Should -Be "5400 seconds (1 hour 30 minutes)"
         }
 
         It "Should format 20 minutes (1200 seconds) correctly" {
