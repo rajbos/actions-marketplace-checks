@@ -1727,7 +1727,7 @@ function SyncMirrorWithUpstream {
         Write-Debug "Current branch: [$currentBranch]"
         
         # Add upstream remote with authentication to avoid rate limiting
-        Write-Debug "Adding upstream remote [https://github.com/$upstreamOwner/$upstreamRepo.git]"
+        Write-Debug "Adding upstream remote with authentication"
         $upstreamCloneUrl = "https://x:$access_token@github.com/$upstreamOwner/$upstreamRepo.git"
         git remote add upstream $upstreamCloneUrl 2>&1 | Out-Null
         
