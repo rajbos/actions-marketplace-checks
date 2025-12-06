@@ -617,6 +617,15 @@ jobs:
 
           ShowOverallDatasetStatistics -existingForks $existingForks
 
+      - name: Show secret scanning summary
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+
+          GetFoundSecretCount -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+
       - name: Check rate limit status
         shell: pwsh
         run: |
