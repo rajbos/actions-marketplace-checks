@@ -570,19 +570,34 @@ function GetRepoDockerBaseImage {
     $dockerBaseImage = ""
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
+        $repoUrl = "https://github.com/$owner/$repo"
+        $dockerfilePath = "Dockerfile"
+        $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
         try {
-            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
-            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token
-            $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
+            if ($null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne "") {
+                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
+                $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+            }
+            else {
+                Write-Host "Error: No download_url found for Dockerfile in [$owner/$repo]"
+            }
         }
         catch {
             Write-Host "Error getting Dockerfile for [$owner/$repo]: $($_.Exception.Message), trying lowercase file"
             # retry with lowercase dockerfile name
             $url = "/repos/$owner/$repo/contents/dockerfile"
+            $dockerfilePath = "dockerfile"
+            $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
             try {
-                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
-                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token
-                $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
+                if ($null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne "") {
+                    $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
+                    $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                }
+                else {
+                    Write-Host "Error: No download_url found for dockerfile in [$owner/$repo]"
+                }
             }
             catch {
                 Write-Host "Error getting dockerfile for [$owner/$repo]: $($_.Exception.Message)"

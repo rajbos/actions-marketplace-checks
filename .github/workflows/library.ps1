@@ -351,7 +351,8 @@ function ApiCall {
         [int] $maxResultCount = 0,
         [bool] $hideFailedCall = $false,
         [bool] $returnErrorInfo = $false,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        [string] $contextInfo = ""
     )
     
     # Validate that access token is not null or empty before making API calls
@@ -370,10 +371,14 @@ function ApiCall {
 
     # prevent errors with empty urls
     if ($null -eq $url -or $url -eq "") {
-        Write-Message -message "ApiCall Url is empty" -logToSummary $true
+        Write-Message -message "ApiCall Url is empty" -logToSummary $true | Out-Null
         # show the method that called this function
-        Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | ForEach-Object { $_.Command })" -logToSummary $true
-        return false
+        Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | ForEach-Object { $_.Command })" -logToSummary $true | Out-Null
+        # show additional context if provided
+        if ($contextInfo -ne "") {
+            Write-Message -message $contextInfo -logToSummary $true | Out-Null
+        }
+        return $false
     }
     # prevent errors with starting slashes
     if ($url.StartsWith("/")) {
