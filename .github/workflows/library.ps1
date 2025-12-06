@@ -2141,16 +2141,39 @@ function Split-ActionsIntoChunks {
             # Get the subset of action names for this chunk
             $chunkActions = @()
             for ($j = $startIndex; $j -le $endIndex; $j++) {
+                $action = $actionsToProcess[$j]
+                $identifier = $null
+                
                 # Try forkedRepoName first (used for actions from actions.json)
-                if ($null -ne $actionsToProcess[$j].forkedRepoName -and $actionsToProcess[$j].forkedRepoName -ne "") {
-                    $chunkActions += $actionsToProcess[$j].forkedRepoName
+                if ($null -ne $action.forkedRepoName -and $action.forkedRepoName -ne "") {
+                    $identifier = $action.forkedRepoName
                 }
                 # Fall back to name property (used for status.json entries)
-                elseif ($null -ne $actionsToProcess[$j].name -and $actionsToProcess[$j].name -ne "") {
-                    $chunkActions += $actionsToProcess[$j].name
+                elseif ($null -ne $action.name -and $action.name -ne "") {
+                    $identifier = $action.name
+                }
+                # Fall back to computing from RepoUrl or repoUrl (used for marketplace actions)
+                else {
+                    $repoUrlValue = if ($null -ne $action.RepoUrl -and $action.RepoUrl -ne "") { $action.RepoUrl } 
+                                   elseif ($null -ne $action.repoUrl -and $action.repoUrl -ne "") { $action.repoUrl } 
+                                   else { $null }
+                    
+                    if ($null -ne $repoUrlValue) {
+                        ($owner, $repo) = SplitUrl -url $repoUrlValue
+                        if ($null -ne $owner -and $null -ne $repo) {
+                            $identifier = GetForkedRepoName -owner $owner -repo $repo
+                        }
+                        else {
+                            Write-Warning "Action at index $j has RepoUrl/repoUrl but could not extract owner/repo: $repoUrlValue"
+                        }
+                    }
+                }
+                
+                if ($null -ne $identifier) {
+                    $chunkActions += $identifier
                 }
                 else {
-                    Write-Warning "Action at index $j has no valid identifier (no name or forkedRepoName)"
+                    Write-Warning "Action at index $j has no valid identifier (no name, forkedRepoName, or RepoUrl/repoUrl)"
                 }
             }
             
