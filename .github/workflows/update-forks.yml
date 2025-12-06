@@ -323,8 +323,10 @@ jobs:
           . ./.github/workflows/library.ps1
           $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to upload status.json to blob storage"
-            exit 1
+            Write-Warning "Failed to upload status.json to blob storage"
+            # Don't exit 1 here - we want to continue to upload failedForks.json
+          } else {
+            Write-Host "Successfully uploaded status.json to blob storage"
           }
 
       - name: Upload failedForks.json to blob storage
@@ -336,6 +338,8 @@ jobs:
           . ./.github/workflows/library.ps1
           $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to upload failedForks.json to blob storage"
-            exit 1
+            Write-Warning "Failed to upload failedForks.json to blob storage"
+            # Don't exit 1 here - we still want the workflow to complete
+          } else {
+            Write-Host "Successfully uploaded failedForks.json to blob storage"
           }
