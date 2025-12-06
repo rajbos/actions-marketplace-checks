@@ -371,12 +371,12 @@ function ApiCall {
 
     # prevent errors with empty urls
     if ($null -eq $url -or $url -eq "") {
-        Write-Message -message "ApiCall Url is empty" -logToSummary $true | Out-Null
+        Write-Message -message "ApiCall Url is empty" -logToSummary $true
         # show the method that called this function
-        Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | ForEach-Object { $_.Command })" -logToSummary $true | Out-Null
+        Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | ForEach-Object { $_.Command })" -logToSummary $true
         # show additional context if provided
         if ($contextInfo -ne "") {
-            Write-Message -message $contextInfo -logToSummary $true | Out-Null
+            Write-Message -message $contextInfo -logToSummary $true
         }
         return $false
     }
@@ -1313,7 +1313,7 @@ function Write-Message {
     )
     Write-Host $message
     if ($logToSummary) {
-        $message >> $env:GITHUB_STEP_SUMMARY
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $message
     }
 }
 
