@@ -33,10 +33,20 @@ function GetReposToCleanup {
             $reason = "Original repo no longer exists (forkFound=false)"
         }
         
-        # Criterion 2: Action type shows the repo is invalid
-      
-        
-       
+        # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
+        if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
+            ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
+            ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
+            
+            # Only mark for cleanup if the original repo no longer exists
+            if ($repo.forkFound -eq $false) {
+                $shouldCleanup = $true
+                if ($reason -ne "") {
+                    $reason += " AND "
+                }
+                $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
+            }
+        }
         
         if ($shouldCleanup) {
             $reposToCleanup.Add(@{

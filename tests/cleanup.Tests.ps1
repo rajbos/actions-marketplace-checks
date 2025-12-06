@@ -21,9 +21,20 @@ BeforeAll {
                 $reason = "Original repo no longer exists (forkFound=false)"
             }
             
-           
-            
-           
+            # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
+            if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
+                ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
+                ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
+                
+                # Only mark for cleanup if the original repo no longer exists
+                if ($repo.forkFound -eq $false) {
+                    $shouldCleanup = $true
+                    if ($reason -ne "") {
+                        $reason += " AND "
+                    }
+                    $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
+                }
+            }
             
             if ($shouldCleanup) {
                 $reposToCleanup.Add(@{
@@ -65,70 +76,6 @@ Describe "GetReposToCleanup" {
         $result[0].reason | Should -BeLike "*forkFound=false*"
     }
     
-    It "Should identify repos with invalid action type 'No file found'" {
-        # Arrange
-        $repos = @(
-            @{
-                name = "test_repo1"
-                owner = "test"
-                forkFound = $true
-                actionType = @{ actionType = "No file found" }
-            },
-            @{
-                name = "test_repo2"
-                owner = "test"
-                forkFound = $true
-                actionType = @{ actionType = "Node" }
-            }
-        )
-        
-        # Act
-        $result = GetReposToCleanupForTest -repos $repos
-        
-        # Assert
-        $result.Count | Should -Be 1
-        $result[0].name | Should -Be "test_repo1"
-        $result[0].reason | Should -BeLike "*Invalid action type: No file found*"
-    }
-    
-    It "Should identify repos with invalid action type 'No owner found'" {
-        # Arrange
-        $repos = @(
-            @{
-                name = "test_repo1"
-                owner = "test"
-                forkFound = $true
-                actionType = @{ actionType = "No owner found" }
-            }
-        )
-        
-        # Act
-        $result = GetReposToCleanupForTest -repos $repos
-        
-        # Assert
-        $result.Count | Should -Be 1
-        $result[0].reason | Should -BeLike "*Invalid action type: No owner found*"
-    }
-    
-    It "Should identify repos with invalid action type 'No repo found'" {
-        # Arrange
-        $repos = @(
-            @{
-                name = "test_repo1"
-                owner = "test"
-                forkFound = $true
-                actionType = @{ actionType = "No repo found" }
-            }
-        )
-        
-        # Act
-        $result = GetReposToCleanupForTest -repos $repos
-        
-        # Assert
-        $result.Count | Should -Be 1
-        $result[0].reason | Should -BeLike "*Invalid action type: No repo found*"
-    }
-    
     It "Should identify empty repos with no content when forkFound is false" {
         # Arrange
         $repos = @(
@@ -140,31 +87,6 @@ Describe "GetReposToCleanup" {
                 repoSize = 0
                 tagInfo = @()
                 releaseInfo = @()
-            }
-        )
-        
-        # Act
-        $result = GetReposToCleanupForTest -repos $repos
-        
-        # Assert
-        $result.Count | Should -Be 1
-        $result[0].reason | Should -BeLike "*Empty repo with no content*"
-    }
-    
-    It "Should identify empty repos with no content when actionType is 'No file found'" {
-        # Arrange
-        $repos = @(
-            @{
-                name = "test_repo1"
-                owner = "test"
-                forkFound = $true
-                actionType = @{ 
-                    actionType = "No file found"
-                    fileFound = "No file found"
-                }
-                repoSize = $null
-                tagInfo = $null
-                releaseInfo = $null
             }
         )
         
@@ -220,7 +142,6 @@ Describe "GetReposToCleanup" {
         # Assert
         $result.Count | Should -Be 1
         $result[0].reason | Should -BeLike "*forkFound=false*"
-        $result[0].reason | Should -BeLike "*Invalid action type*"
         $result[0].reason | Should -BeLike "*Empty repo with no content*"
     }
     
@@ -261,6 +182,5 @@ Describe "GetReposToCleanup" {
         $result.Count | Should -Be 1
         $result[0].name | Should -Be "zesticio_update-release-branch"
         $result[0].reason | Should -BeLike "*forkFound=false*"
-        $result[0].reason | Should -BeLike "*Invalid action type: No file found*"
     }
 }

@@ -22,17 +22,24 @@ jobs:
       contents: write  # Required to commit and push changes to status.json
     steps:
       - uses: actions/checkout@v5
+
+      - name: Download status.json from blob storage
+        run: |
+          curl "${{ secrets.BLOB_SAS_TOKEN_STATUS }}" > status.json
+          echo "Downloaded status.json"
+          ls -lh status.json
           
       - shell: pwsh
         name: Run cleanup script
         run: |
            ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ github.event.inputs.numberOfReposToDo || '10' }} -access_token "${{ secrets.ACCESS_TOKEN }}" -dryRun $${{ github.event.inputs.dryRun || 'true' }}
 
-      - name: Commit and push changes
+      - name: Upload status.json to blob storage
         if: github.event.inputs.dryRun != 'true'
+        env:
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.BLOB_SAS_TOKEN_STATUS_WRITE }}
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add status.json
-          git commit -m "Update status.json after cleanup" || echo "No changes to commit"
-          git push
+          # Upload status.json back to blob storage
+          curl -X PUT -T status.json -H "x-ms-blob-type: BlockBlob" "${{ secrets.BLOB_SAS_TOKEN_STATUS_WRITE }}"
+          echo "Uploaded status.json to blob storage"
+
