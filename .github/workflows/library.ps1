@@ -350,6 +350,7 @@ function ApiCall {
         [int] $backOff = 5,
         [int] $maxResultCount = 0,
         [bool] $hideFailedCall = $false,
+        [bool] $returnErrorInfo = $false,
         $access_token = $env:GITHUB_TOKEN
     )
     
@@ -541,6 +542,29 @@ function ApiCall {
         }
         else {
             # if the call failure is expected, suppress the error
+            if ($returnErrorInfo) {
+                # Return error information instead of throwing
+                $statusCode = 0
+                $message = "Unknown error"
+                
+                # Safely extract status code with nested null checks
+                if ($null -ne $_.Exception -and $null -ne $_.Exception.Response -and $null -ne $_.Exception.Response.StatusCode) {
+                    $statusCode = $_.Exception.Response.StatusCode.value__
+                }
+                
+                # Safely extract message with property check
+                if ($null -ne $messageData -and ($messageData.PSObject.Properties['message'])) {
+                    $message = $messageData.message
+                }
+                
+                return @{
+                    Error = $true
+                    StatusCode = $statusCode
+                    Message = $message
+                    Url = $url
+                }
+            }
+            
             if (!$hideFailedCall) {
                 Write-Host "Error calling $url, status code [$($result.StatusCode)]"
                 Write-Host "MessageData: " $messageData
