@@ -56,4 +56,26 @@ Describe "Rate Limit Formatting Tests" {
                 Should -Not -Throw
         }
     }
+
+    Context "Test-RateLimitExceeded function" {
+        BeforeEach {
+            # Reset the global flag before each test
+            $global:RateLimitExceeded = $false
+        }
+
+        It "Should return false when rate limit is not exceeded" {
+            $result = Test-RateLimitExceeded
+            $result | Should -Be $false
+        }
+
+        It "Should return true when rate limit flag is set" {
+            $global:RateLimitExceeded = $true
+            $result = Test-RateLimitExceeded
+            $result | Should -Be $true
+        }
+
+        It "Should reset to false for next test" {
+            Test-RateLimitExceeded | Should -Be $false
+        }
+    }
 }
