@@ -871,11 +871,19 @@ function GetMoreInfo {
     Write-Host "=================================="
     Write-Host "Error Summary for this run:"
     Write-Host "=================================="
+    
+    # Calculate total errors
+    $totalErrors = 0
+    foreach ($key in $script:errorCounts.Keys) {
+        $totalErrors += $script:errorCounts[$key]
+    }
+    
+    # Display error counts
     Write-Host "Upstream Repo 404 Errors: $($script:errorCounts.UpstreamRepo404)"
     Write-Host "Fork Repo 404 Errors: $($script:errorCounts.ForkRepo404)"
     Write-Host "Action File 404 Errors: $($script:errorCounts.ActionFile404)"
     Write-Host "Other Errors: $($script:errorCounts.OtherErrors)"
-    Write-Host "Total Errors: $(($script:errorCounts.UpstreamRepo404 + $script:errorCounts.ForkRepo404 + $script:errorCounts.ActionFile404 + $script:errorCounts.OtherErrors))"
+    Write-Host "Total Errors: $totalErrors"
     Write-Host "=================================="
     
     # Log detailed error information if there are errors

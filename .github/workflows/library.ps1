@@ -545,10 +545,17 @@ function ApiCall {
             if ($returnErrorInfo) {
                 # Return error information instead of throwing
                 $statusCode = 0
-                if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+                $message = "Unknown error"
+                
+                # Safely extract status code with nested null checks
+                if ($null -ne $_.Exception -and $null -ne $_.Exception.Response -and $null -ne $_.Exception.Response.StatusCode) {
                     $statusCode = $_.Exception.Response.StatusCode.value__
                 }
-                $message = if ($messageData -and $messageData.message) { $messageData.message } else { "Unknown error" }
+                
+                # Safely extract message with property check
+                if ($null -ne $messageData -and ($messageData.PSObject.Properties['message'])) {
+                    $message = $messageData.message
+                }
                 
                 return @{
                     Error = $true
