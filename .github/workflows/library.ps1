@@ -375,7 +375,7 @@ function ApiCall {
         # show the method that called this function
         Write-Message -message "ApiCall was called from: $(Get-PSCallStack | Select-Object -Skip 1 | Select-Object -First 1 | ForEach-Object { $_.Command })" -logToSummary $true
         # show additional context if provided
-        if ($contextInfo -ne "") {
+        if (-not [string]::IsNullOrEmpty($contextInfo)) {
             Write-Message -message $contextInfo -logToSummary $true
         }
         return $false

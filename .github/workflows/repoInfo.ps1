@@ -575,7 +575,8 @@ function GetRepoDockerBaseImage {
         $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
         try {
             $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
-            if ($null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne "") {
+            $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
+            if ($hasValidDownloadUrl) {
                 $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
                 $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
             }
@@ -591,7 +592,8 @@ function GetRepoDockerBaseImage {
             $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
             try {
                 $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
-                if ($null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne "") {
+                $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
+                if ($hasValidDownloadUrl) {
                     $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
                     $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
                 }
