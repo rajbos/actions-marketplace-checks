@@ -1,0 +1,57 @@
+name: Cleanup Invalid Repos
+on:
+  workflow_dispatch:
+    inputs:
+      numberOfReposToDo:
+        description: 'Number of repos to cleanup'
+        required: false
+        default: '10'
+      dryRun:
+        description: 'Dry run (true/false)'
+        required: false
+        default: 'true'
+
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+    
+jobs:
+  cleanup-invalid-repos:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to commit and push changes to status.json
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download status.json from blob storage
+        run: |
+          # Extract base URL and construct status.json URL
+          # BLOB_SAS_TOKEN points to the /data container, we need /data/status/status.json
+          baseUrl="${{ secrets.BLOB_SAS_TOKEN }}"
+          # Remove the query string to get base path
+          basePath=$(echo "$baseUrl" | cut -d'?' -f1)
+          # Get the SAS query
+          sasQuery=$(echo "$baseUrl" | cut -d'?' -f2-)
+          # Construct the full URL for status.json
+          statusUrl="${basePath}/status/status.json?${sasQuery}"
+          curl "$statusUrl" > status.json
+          echo "Downloaded status.json"
+          ls -lh status.json
+          
+      - shell: pwsh
+        name: Run cleanup script
+        run: |
+           ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ github.event.inputs.numberOfReposToDo || '10' }} -access_token "${{ secrets.ACCESS_TOKEN }}" -dryRun $${{ github.event.inputs.dryRun || 'true' }}
+
+      - name: Upload status.json to blob storage
+        if: github.event.inputs.dryRun != 'true'
+        run: |
+          # Upload status.json back to blob storage using the same SAS token
+          baseUrl="${{ secrets.BLOB_SAS_TOKEN }}"
+          basePath=$(echo "$baseUrl" | cut -d'?' -f1)
+          sasQuery=$(echo "$baseUrl" | cut -d'?' -f2-)
+          statusUrl="${basePath}/status/status.json?${sasQuery}"
+          curl -X PUT -T status.json -H "x-ms-blob-type: BlockBlob" "$statusUrl"
+          echo "Uploaded status.json to blob storage"
+
+
