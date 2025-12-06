@@ -286,7 +286,6 @@ jobs:
         shell: pwsh
         run: |
           . ./.github/workflows/library.ps1
-          . ./.github/workflows/update-forks.ps1
 
           # Load the merged status
           $jsonContent = Get-Content status.json -Raw

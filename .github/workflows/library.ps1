@@ -2137,3 +2137,74 @@ function Merge-PartialStatusUpdates {
     # Convert hashtable back to array
     return $statusByName.Values
 }
+
+<#
+    .SYNOPSIS
+    Shows overall dataset statistics for the repository mirrors.
+    
+    .DESCRIPTION
+    Calculates and displays statistics about the mirror dataset including:
+    - Total repositories in dataset
+    - Repositories with valid mirrors (forkFound = true)
+    - Repositories synced in the last 7 days
+    - Percentage coverage
+    
+    .PARAMETER existingForks
+    The array of fork objects from status.json
+    
+    .EXAMPLE
+    ShowOverallDatasetStatistics -existingForks $forks
+#>
+function ShowOverallDatasetStatistics {
+    Param (
+        $existingForks
+    )
+    
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "### Overall Dataset Statistics" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    # Calculate 7-day window
+    $sevenDaysAgo = (Get-Date).AddDays(-7)
+    
+    # Total repos in dataset
+    $totalRepos = $existingForks.Count
+    
+    # Count repos with forkFound = true (valid mirrors)
+    $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
+    
+    # Count repos synced in the last 7 days
+    $reposSyncedLast7Days = ($existingForks | Where-Object { 
+        if ($_.lastSynced) {
+            try {
+                $syncDate = [DateTime]::Parse($_.lastSynced)
+                return $syncDate -gt $sevenDaysAgo
+            } catch {
+                Write-Debug "Failed to parse lastSynced date for repo: $($_.name)"
+                return $false
+            }
+        }
+        return $false
+    }).Count
+    
+    # Calculate percentages
+    if ($reposWithMirrors -gt 0) {
+        $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
+        $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
+    } else {
+        $percentChecked = 0
+        $percentRemaining = 0
+    }
+    
+    $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
+    
+    Write-Message -message "**Total Repositories in Dataset:** $totalRepos" -logToSummary $true
+    Write-Message -message "**Repositories with Valid Mirrors:** $reposWithMirrors" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "#### Last 7 Days Activity" -logToSummary $true
+    Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
+    Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
+    Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
+    Write-Message -message "| ⏳ Repos Not Checked Yet | $reposNotChecked | ${percentRemaining}% |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+}
