@@ -2141,19 +2141,39 @@ function Split-ActionsIntoChunks {
             # Get the subset of action names for this chunk
             $chunkActions = @()
             for ($j = $startIndex; $j -le $endIndex; $j++) {
-                # Store action name for lookup
-                if ($null -ne $actionsToProcess[$j].name -and $actionsToProcess[$j].name -ne "") {
+                # Try forkedRepoName first (used for actions from actions.json)
+                if ($null -ne $actionsToProcess[$j].forkedRepoName -and $actionsToProcess[$j].forkedRepoName -ne "") {
+                    $chunkActions += $actionsToProcess[$j].forkedRepoName
+                }
+                # Fall back to name property (used for status.json entries)
+                elseif ($null -ne $actionsToProcess[$j].name -and $actionsToProcess[$j].name -ne "") {
                     $chunkActions += $actionsToProcess[$j].name
                 }
-                # If no name, try using forkedRepoName
-                elseif ($null -ne $actionsToProcess[$j].forkedRepoName -and $actionsToProcess[$j].forkedRepoName -ne "") {
-                    $chunkActions += $actionsToProcess[$j].forkedRepoName
+                else {
+                    Write-Warning "Action at index $j has no valid identifier (no name or forkedRepoName)"
                 }
             }
             
             $chunks[$i] = $chunkActions
             Write-Message -message "Chunk [$i]: [$($chunkActions.Count)] actions (indices $startIndex-$endIndex)" -logToSummary $true
         }
+    }
+    
+    # Check if we actually created any chunks with work
+    $totalActionsInChunks = 0
+    foreach ($chunkId in $chunks.Keys) {
+        $totalActionsInChunks += $chunks[$chunkId].Count
+    }
+    
+    if ($totalActionsInChunks -eq 0 -and $actionsToProcess.Count -gt 0) {
+        Write-Message -message "⚠️ WARNING: No actions were added to chunks. This may indicate a problem with action identifiers." -logToSummary $true
+        Write-Message -message "Actions have the following properties: $($actionsToProcess[0].PSObject.Properties.Name -join ', ')" -logToSummary $true
+    }
+    elseif ($totalActionsInChunks -eq 0) {
+        Write-Message -message "ℹ️ No work to be done - no actions to process" -logToSummary $true
+    }
+    else {
+        Write-Message -message "✓ Successfully distributed [$totalActionsInChunks] actions across [$($chunks.Keys.Count)] chunks" -logToSummary $true
     }
     
     return $chunks

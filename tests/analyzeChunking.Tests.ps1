@@ -108,6 +108,23 @@ Describe "Analyze Workflow Chunking Functions" {
             $chunks[0] | Should -Contain "owner1_repo1"
             $chunks[0] | Should -Contain "owner2_repo2"
         }
+        
+        It "Should prioritize forkedRepoName over name property" {
+            $testData = @(
+                @{ forkedRepoName = "owner1_repo1"; name = "action1"; repoUrl = "https://github.com/owner1/repo1" }
+                @{ forkedRepoName = "owner2_repo2"; name = "action2"; repoUrl = "https://github.com/owner2/repo2" }
+            )
+            
+            $chunks = Split-ActionsIntoChunks -actions $testData -numberOfChunks 1
+            
+            $chunks.Count | Should -Be 1
+            $chunks[0].Count | Should -Be 2
+            # Should use forkedRepoName, not name
+            $chunks[0] | Should -Contain "owner1_repo1"
+            $chunks[0] | Should -Contain "owner2_repo2"
+            $chunks[0] | Should -Not -Contain "action1"
+            $chunks[0] | Should -Not -Contain "action2"
+        }
     }
     
     Context "Integration with existing Split-ForksIntoChunks" {
