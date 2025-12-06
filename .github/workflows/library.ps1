@@ -817,7 +817,7 @@ function FilterActionsToProcess {
     # flatten the list for faster processing
     $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
-    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+    $existingForksNames = @($existingForks | ForEach-Object { $_.name } | Sort-Object)
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
     $lastIndex = 0
     $actionsToProcess = $actionsToProcess | ForEach-Object {
@@ -831,7 +831,7 @@ function FilterActionsToProcess {
                 break
             }
             # check first letter, since we sorted we do not need to go any further
-            if ($existingForksNames[$j].ToLower()[0] -gt $forkedRepoName.ToLower()[0]) {
+            if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
                 $lastIndex = $j
                 break
             }
@@ -853,7 +853,7 @@ function FilterActionsToProcessDependabot {
     # flatten the list for faster processing
     $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
-    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+    $existingForksNames = @($existingForks | ForEach-Object { $_.name } | Sort-Object)
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
     $j = 0
     $existingFork = $null
@@ -893,7 +893,7 @@ function FilterActionsToProcessDependabot-Improved {
     # flatten the list for faster processing
     $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
-    $existingForksNames = $existingForks | ForEach-Object { $_.name } | Sort-Object
+    $existingForksNames = @($existingForks | ForEach-Object { $_.name } | Sort-Object)
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
     $j = 0
     $existingFork = $null
