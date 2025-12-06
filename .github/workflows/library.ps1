@@ -451,12 +451,12 @@ function ApiCall {
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
                 if ($rateLimitReset.TotalSeconds -gt 1200) {
-                    $message = "Rate limit is low or hit (Remaining/Used) [$($rateLimitRemaining)/$($rateLimitUsed)], and we need to wait for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing, which would mean continuing at [$oUNIXDate UTC]. This is longer then 20 minutes, so we are stopping the execution"
+                    Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                    $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
                     Write-Message -message $message -logToSummary $true
                     throw $message
                 }
-                $message = "Rate limit is low or hit (Remaining/Used) [$($rateLimitRemaining)/$($rateLimitUsed)], waiting for [$([math]::Round($rateLimitReset.TotalSeconds, 0))] seconds before continuing. Continuing at [$oUNIXDate UTC]"
-                Write-Message -message $message -logToSummary $true
+                Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Warning"
                 Write-Host ""
                 Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
             }
@@ -672,6 +672,33 @@ function SplitUrlLastPart {
     .EXAMPLE
     Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
 #>
+function Format-WaitTime {
+    Param (
+        [double] $totalSeconds
+    )
+    
+    $seconds = [math]::Round($totalSeconds, 0)
+    $minutes = [math]::Round($totalSeconds / 60, 1)
+    
+    if ($minutes -lt 1) {
+        return "$seconds seconds"
+    } elseif ($minutes -lt 60) {
+        $minuteLabel = if ($minutes -eq 1) { "minute" } else { "minutes" }
+        return "$seconds seconds ($minutes $minuteLabel)"
+    } else {
+        $hours = [math]::Floor($minutes / 60)
+        $remainingMinutes = [math]::Round($minutes % 60, 1)
+        $hourLabel = if ($hours -eq 1) { "hour" } else { "hours" }
+        
+        if ($remainingMinutes -eq 0) {
+            return "$seconds seconds ($hours $hourLabel)"
+        } else {
+            $minuteLabel = if ($remainingMinutes -eq 1) { "minute" } else { "minutes" }
+            return "$seconds seconds ($hours $hourLabel $remainingMinutes $minuteLabel)"
+        }
+    }
+}
+
 function Format-RateLimitTable {
     Param (
         $rateData,
@@ -702,6 +729,26 @@ function Format-RateLimitTable {
     Write-Message -message "| Limit | Used | Remaining | Resets In |" -logToSummary $true
     Write-Message -message "|------:|-----:|----------:|-----------|" -logToSummary $true
     Write-Message -message "| $($rateData.limit) | $($rateData.used) | $($rateData.remaining) | $resetDisplay |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+}
+
+function Format-RateLimitErrorTable {
+    Param (
+        [int] $remaining,
+        [int] $used,
+        [double] $waitSeconds,
+        [DateTime] $continueAt,
+        [string] $errorType = "Error"
+    )
+    
+    $waitTime = Format-WaitTime -totalSeconds $waitSeconds
+    
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "**Rate Limit ${errorType}:**" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
+    Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
+    Write-Message -message "| $remaining | $used | $waitTime | $continueAt |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
 
