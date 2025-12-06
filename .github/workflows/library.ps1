@@ -2077,6 +2077,83 @@ function Disable-GitHubActions {
     .EXAMPLE
     $chunks = Split-ForksIntoChunks -existingForks $forks -numberOfChunks 4
 #>
+<#
+    .SYNOPSIS
+    Splits actions into chunks for parallel processing.
+    
+    .DESCRIPTION
+    Splits the actions array into multiple chunks for parallel processing.
+    Each chunk contains action names that should be processed together.
+    
+    .PARAMETER actions
+    The array of action objects to split
+    
+    .PARAMETER numberOfChunks
+    Number of chunks to create (default: 4)
+    
+    .PARAMETER filterToUnprocessed
+    If true, filter to only actions that need processing (no forkFound or repoUrl exists)
+    
+    .EXAMPLE
+    $chunks = Split-ActionsIntoChunks -actions $actions -numberOfChunks 4
+#>
+function Split-ActionsIntoChunks {
+    Param (
+        $actions,
+        [int] $numberOfChunks = 4,
+        [bool] $filterToUnprocessed = $false
+    )
+    
+    Write-Message -message "Splitting actions into [$numberOfChunks] chunks for parallel processing" -logToSummary $true
+    
+    $actionsToProcess = $actions
+    
+    # Optionally filter to unprocessed actions
+    if ($filterToUnprocessed) {
+        $actionsToProcess = $actions | Where-Object { 
+            $null -ne $_.repoUrl -and $_.repoUrl -ne ""
+        }
+    }
+    
+    if ($actionsToProcess.Count -eq 0) {
+        Write-Message -message "No actions to process" -logToSummary $true
+        return @{}
+    }
+    
+    Write-Message -message "Found [$($actionsToProcess.Count)] actions to process out of [$($actions.Count)] total" -logToSummary $true
+    
+    # Calculate chunk size (round up to ensure all items are included)
+    $chunkSize = [Math]::Ceiling($actionsToProcess.Count / $numberOfChunks)
+    Write-Message -message "Each chunk will process up to [$chunkSize] actions" -logToSummary $true
+    
+    # Split into chunks
+    $chunks = @{}
+    for ($i = 0; $i -lt $numberOfChunks; $i++) {
+        $startIndex = $i * $chunkSize
+        $endIndex = [Math]::Min(($startIndex + $chunkSize - 1), ($actionsToProcess.Count - 1))
+        
+        if ($startIndex -lt $actionsToProcess.Count) {
+            # Get the subset of action names for this chunk
+            $chunkActions = @()
+            for ($j = $startIndex; $j -le $endIndex; $j++) {
+                # Store action name for lookup
+                if ($null -ne $actionsToProcess[$j].name -and $actionsToProcess[$j].name -ne "") {
+                    $chunkActions += $actionsToProcess[$j].name
+                }
+                # If no name, try using forkedRepoName
+                elseif ($null -ne $actionsToProcess[$j].forkedRepoName -and $actionsToProcess[$j].forkedRepoName -ne "") {
+                    $chunkActions += $actionsToProcess[$j].forkedRepoName
+                }
+            }
+            
+            $chunks[$i] = $chunkActions
+            Write-Message -message "Chunk [$i]: [$($chunkActions.Count)] actions (indices $startIndex-$endIndex)" -logToSummary $true
+        }
+    }
+    
+    return $chunks
+}
+
 function Split-ForksIntoChunks {
     Param (
         $existingForks,

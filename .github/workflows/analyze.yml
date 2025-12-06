@@ -1,4 +1,4 @@
-# Fork new action repos
+# Fork new action repos and get repo data (Parallelized)
 # Get new data from Dependabot
 # Store the data in Azure Blob Storage
 
@@ -9,23 +9,42 @@ on:
     paths:
       - .github/workflows/analyze.yml
       - .github/workflows/functions.ps1
+      - .github/workflows/functions-chunk.ps1
+      - .github/workflows/repoInfo.ps1
+      - .github/workflows/repoInfo-chunk.ps1
 
   schedule:
      #- cron: '*/60 * * * *'
      - cron: '1 */1 * * *'
 
   workflow_dispatch:
+    inputs:
+      numberOfReposForking:
+        description: 'Number of repos to fork (default: 250)'
+        required: false
+        default: '250'
+      numberOfReposRepoInfo:
+        description: 'Number of repos for repo info (default: 250)'
+        required: false
+        default: '250'
+      numberOfChunks:
+        description: 'Number of parallel chunks (default: 4)'
+        required: false
+        default: '4'
 
 env:
-  numberOfReposToDo: 250
-  numberOfReposToDoRepoInfo: 250
+  numberOfReposForking: 250
+  numberOfReposRepoInfo: 250
+  numberOfChunks: 4
 
 jobs:
-  check-em-all:
-    concurrency:
-      group: repo-state-updates
-      cancel-in-progress: false
+  prepare:
+    name: Prepare work distribution
     runs-on: ubuntu-latest
+    outputs:
+      matrix-forking: ${{ steps.split-work.outputs.matrix-forking }}
+      matrix-repoinfo: ${{ steps.split-work.outputs.matrix-repoinfo }}
+      chunks: ${{ steps.split-work.outputs.chunks }}
     steps:
       - uses: actions/checkout@v6
 
@@ -70,41 +89,165 @@ jobs:
             exit 1
           }
 
-      - name: Get App Token
-        id: get_workflow_token2
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-
-      - shell: pwsh
-        name: "Gotta check 'em all: functions"
+      - name: Split work into chunks
+        id: split-work
+        shell: pwsh
         run: |
-           # Debug: Show first 10 lines of actions.json
-           Write-Host "First 10 lines of actions.json:"
-           Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-           
-           # Clean BOM if present before parsing JSON
-           $jsonContent = Get-Content actions.json -Raw
-           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
-           try {
-               $actions = $jsonContent | ConvertFrom-Json
-           } catch {
-               Write-Host "ERROR: JSON parsing failed"
-               Write-Host "First 10 lines of content:"
-               Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-               throw $_
-           }
-           Write-Host "Found [$($actions.Length)] actions in the datafile"
-           Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
-           Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
+          . ./.github/workflows/library.ps1
 
-           # fork repos and load Dependabot status
-           # used to be secrets.ACCESS_TOKEN, but that expired. trying with app token
-           ./.github/workflows/functions.ps1 -actions $actions -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token2.outputs.token }}" -access_token_destination ${{ steps.get_workflow_token2.outputs.token }}
+          Write-Message -message "# Work Distribution for Parallel Processing" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
 
-      # get a new token for the next script, as it might have expired already
+          try {
+              # Clean BOM if present before parsing JSON
+              $jsonContent = Get-Content actions.json -Raw
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+              $actions = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Host "=== ACTIONS.JSON PARSE ERROR ==="
+              Write-Host "JSON parsing failed: $($_.Exception.Message)"
+              Write-Host "First 10 lines of actions.json:"
+              Get-Content actions.json | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
+              exit 1
+          }
+
+          Write-Message -message "Found [$($actions.Length)] total actions in the datafile" -logToSummary $true
+
+          # Use workflow inputs if available, otherwise use env variables
+          $numberOfReposForking = [int]("${{ github.event.inputs.numberOfReposForking }}" -ne "" ? "${{ github.event.inputs.numberOfReposForking }}" : "${{ env.numberOfReposForking }}")
+          $numberOfReposRepoInfo = [int]("${{ github.event.inputs.numberOfReposRepoInfo }}" -ne "" ? "${{ github.event.inputs.numberOfReposRepoInfo }}" : "${{ env.numberOfReposRepoInfo }}")
+          $numberOfChunks = [int]("${{ github.event.inputs.numberOfChunks }}" -ne "" ? "${{ github.event.inputs.numberOfChunks }}" : "${{ env.numberOfChunks }}")
+
+          Write-Message -message "Configuration: Forking up to [$numberOfReposForking] repos, RepoInfo up to [$numberOfReposRepoInfo] repos, using [$numberOfChunks] parallel jobs" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load existing status
+          try {
+              $statusContent = Get-Content status.json -Raw
+              $statusContent = $statusContent -replace '^\uFEFF', ''
+              $existingForks = $statusContent | ConvertFrom-Json
+          } catch {
+              Write-Host "=== STATUS.JSON PARSE ERROR ==="
+              Write-Host "JSON parsing failed: $($_.Exception.Message)"
+              exit 1
+          }
+
+          # Limit actions for forking
+          $actionsForForking = $actions | Where-Object { $null -ne $_.repoUrl -and $_.repoUrl -ne "" } | Select-Object -First $numberOfReposForking
+          
+          # Limit existing forks for repo info
+          $forksForRepoInfo = $existingForks | Where-Object { $_.forkFound -eq $true } | Select-Object -First $numberOfReposRepoInfo
+
+          # Split the work for forking
+          $chunksForkingRaw = Split-ActionsIntoChunks -actions $actionsForForking -numberOfChunks $numberOfChunks
+          
+          # Split the work for repo info
+          $chunksRepoInfoRaw = Split-ForksIntoChunks -existingForks $forksForRepoInfo -numberOfChunks $numberOfChunks
+
+          # Create matrix configuration
+          $matrixIdsFork = @()
+          $matrixIdsRepoInfo = @()
+          
+          foreach ($chunkId in $chunksForkingRaw.Keys) {
+              $matrixIdsFork += $chunkId
+          }
+          foreach ($chunkId in $chunksRepoInfoRaw.Keys) {
+              $matrixIdsRepoInfo += $chunkId
+          }
+
+          # Sort to ensure consistent order
+          $matrixIdsFork = $matrixIdsFork | Sort-Object
+          $matrixIdsRepoInfo = $matrixIdsRepoInfo | Sort-Object
+
+          # Save chunks to files for each matrix job to pick up
+          foreach ($chunkId in $matrixIdsFork) {
+              $chunkFile = "chunk-forking-$chunkId.json"
+              $chunksForkingRaw[$chunkId] | ConvertTo-Json -Compress | Out-File $chunkFile -Encoding UTF8
+              Write-Host "Saved forking chunk [$chunkId] to [$chunkFile] with [$($chunksForkingRaw[$chunkId].Count)] actions"
+          }
+
+          foreach ($chunkId in $matrixIdsRepoInfo) {
+              $chunkFile = "chunk-repoinfo-$chunkId.json"
+              $chunksRepoInfoRaw[$chunkId] | ConvertTo-Json -Compress | Out-File $chunkFile -Encoding UTF8
+              Write-Host "Saved repoinfo chunk [$chunkId] to [$chunkFile] with [$($chunksRepoInfoRaw[$chunkId].Count)] forks"
+          }
+
+          # Output matrix configurations
+          $matrixForkingJson = ConvertTo-Json -InputObject $matrixIdsFork -Compress
+          $matrixRepoInfoJson = ConvertTo-Json -InputObject $matrixIdsRepoInfo -Compress
+          Write-Host "Forking matrix configuration: $matrixForkingJson"
+          Write-Host "RepoInfo matrix configuration: $matrixRepoInfoJson"
+
+          # Set outputs for next jobs
+          "matrix-forking=$matrixForkingJson" >> $env:GITHUB_OUTPUT
+          "matrix-repoinfo=$matrixRepoInfoJson" >> $env:GITHUB_OUTPUT
+          "chunks=$($matrixIdsFork.Count)" >> $env:GITHUB_OUTPUT
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Work distribution complete. Starting parallel jobs." -logToSummary $true
+
+      - name: Upload chunk files
+        uses: actions/upload-artifact@v4
+        with:
+          name: work-chunks
+          path: chunk-*.json
+          retention-days: 1
+
+  fork-repos:
+    name: Fork repos (chunk ${{ matrix.chunk-id }})
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk-id: ${{ fromJson(needs.prepare.outputs.matrix-forking) }}
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
+            exit 1
+          }
+
+      - name: Download actions.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
+          }
+
+      - name: Download work chunks
+        uses: actions/download-artifact@v4
+        with:
+          name: work-chunks
+          path: .
+
       - name: Get App Token
         id: get_workflow_token
         uses: rajbos-actions/workflow-application-token-action@v3.0.0
@@ -113,29 +256,373 @@ jobs:
           application_private_key: ${{ secrets.Automation_App_Key }}
           organization: actions-marketplace-validations
 
-      - shell: pwsh
-        name: "Gotta check 'em all: repoInfo"
+      - name: Install PowerShell modules
+        shell: pwsh
         run: |
-           # Debug: Show first 10 lines of actions.json
-           Write-Host "First 10 lines of actions.json:"
-           Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-           
-           # Clean BOM if present before parsing JSON
-           $jsonContent = Get-Content actions.json -Raw
-           $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
-           try {
-               $actions = $jsonContent | ConvertFrom-Json
-           } catch {
-               Write-Host "ERROR: JSON parsing failed"
-               Write-Host "First 10 lines of content:"
-               Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-               throw $_
-           }
-           Write-Host "Found [$($actions.Length)] actions in the datafile"
+          Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
+          Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
 
-           # get repo information
-           # used to be secrets.ACCESS_TOKEN, but that expired. trying with app token
-           ${{ github.workspace }}/.github/workflows/repoInfo.ps1 -actions $actions -numberofReposToDo ${{ env.numberOfReposToDoRepoInfo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+      - name: Process forking chunk ${{ matrix.chunk-id }}
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          $chunkId = ${{ matrix.chunk-id }}
+          Write-Message -message "# Processing Forking Chunk [$chunkId]" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load actions
+          try {
+              $jsonContent = Get-Content actions.json -Raw
+              $jsonContent = $jsonContent -replace '^﻿', ''
+              $actions = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse actions.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          # Load chunk work
+          $chunkFile = "chunk-forking-$chunkId.json"
+          if (-not (Test-Path $chunkFile)) {
+              Write-Error "Chunk file not found: $chunkFile"
+              exit 1
+          }
+
+          $actionNames = Get-Content $chunkFile | ConvertFrom-Json
+          Write-Message -message "Loaded [$($actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Process the chunk
+          ./.github/workflows/functions-chunk.ps1 `
+            -actions $actions `
+            -actionNames $actionNames `
+            -chunkId $chunkId `
+            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
+            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+
+      - name: Upload partial status for forking chunk ${{ matrix.chunk-id }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: status-partial-functions-${{ matrix.chunk-id }}
+          path: status-partial-functions-${{ matrix.chunk-id }}.json
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Upload partial failed forks for chunk ${{ matrix.chunk-id }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failedForks-partial-${{ matrix.chunk-id }}
+          path: failedForks-partial-${{ matrix.chunk-id }}.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  repo-info:
+    name: Get repo info (chunk ${{ matrix.chunk-id }})
+    needs: [prepare, fork-repos]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk-id: ${{ fromJson(needs.prepare.outputs.matrix-repoinfo) }}
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download actions.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
+          }
+
+      - name: Download all partial forking updates
+        uses: actions/download-artifact@v4
+        with:
+          pattern: status-partial-functions-*
+          path: partial-functions/
+          merge-multiple: true
+
+      - name: Merge forking updates into status
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "# Merging Forking Updates Before RepoInfo" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load current status
+          try {
+              $jsonContent = Get-Content status.json -Raw
+              $jsonContent = $jsonContent -replace '^﻿', ''
+              $currentStatus = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse status.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          # Find all partial status files from forking
+          $partialFiles = Get-ChildItem -Path "partial-functions" -Filter "status-partial-functions-*.json" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+          
+          if ($partialFiles) {
+              Write-Message -message "Found [$($partialFiles.Count)] partial forking status files to merge" -logToSummary $true
+              
+              # Merge all partial updates
+              $mergedStatus = Merge-PartialStatusUpdates -currentStatus $currentStatus -partialStatusFiles $partialFiles
+              
+              # Save merged status
+              Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+              SaveStatus -existingForks $mergedStatus
+          } else {
+              Write-Message -message "No partial forking updates found to merge" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+
+      - name: Download work chunks
+        uses: actions/download-artifact@v4
+        with:
+          name: work-chunks
+          path: .
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+
+      - name: Install PowerShell modules
+        shell: pwsh
+        run: |
+          Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
+
+      - name: Process repo info chunk ${{ matrix.chunk-id }}
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          $chunkId = ${{ matrix.chunk-id }}
+          Write-Message -message "# Processing RepoInfo Chunk [$chunkId]" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load actions
+          try {
+              $jsonContent = Get-Content actions.json -Raw
+              $jsonContent = $jsonContent -replace '^﻿', ''
+              $actions = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse actions.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          # Load chunk work
+          $chunkFile = "chunk-repoinfo-$chunkId.json"
+          if (-not (Test-Path $chunkFile)) {
+              Write-Error "Chunk file not found: $chunkFile"
+              exit 1
+          }
+
+          $actionNames = Get-Content $chunkFile | ConvertFrom-Json
+          Write-Message -message "Loaded [$($actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Process the chunk
+          ./.github/workflows/repoInfo-chunk.ps1 `
+            -actions $actions `
+            -actionNames $actionNames `
+            -chunkId $chunkId `
+            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
+            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+
+      - name: Upload partial status for repo info chunk ${{ matrix.chunk-id }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: status-partial-repoinfo-${{ matrix.chunk-id }}
+          path: status-partial-repoinfo-${{ matrix.chunk-id }}.json
+          retention-days: 1
+          if-no-files-found: warn
+
+  consolidate:
+    name: Consolidate results and update storage
+    needs: [prepare, fork-repos, repo-info]
+    if: always()
+    runs-on: ubuntu-latest
+    concurrency:
+      group: repo-state-updates
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
+            exit 1
+          }
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+
+      - name: Download all partial status updates
+        uses: actions/download-artifact@v4
+        with:
+          pattern: status-partial-*
+          path: partial-updates/
+          merge-multiple: true
+
+      - name: Download all partial failed forks updates
+        uses: actions/download-artifact@v4
+        with:
+          pattern: failedForks-partial-*
+          path: partial-failed/
+          merge-multiple: true
+
+      - name: Merge partial updates and save
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "# Consolidating Results from All Chunks" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load current status
+          try {
+              $jsonContent = Get-Content status.json -Raw
+              $jsonContent = $jsonContent -replace '^﻿', ''
+              $currentStatus = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse status.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          Write-Message -message "Loaded current status with [$($currentStatus.Count)] forks" -logToSummary $true
+
+          # Find all partial status files
+          $partialFiles = Get-ChildItem -Path "partial-updates" -Filter "status-partial-*.json" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+          
+          if ($partialFiles) {
+              Write-Message -message "Found [$($partialFiles.Count)] partial status files to merge" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+
+              # Merge all partial updates
+              $mergedStatus = Merge-PartialStatusUpdates -currentStatus $currentStatus -partialStatusFiles $partialFiles
+
+              # Save merged status
+              Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+              SaveStatus -existingForks $mergedStatus
+          } else {
+              Write-Message -message "No partial status files found to merge" -logToSummary $true
+          }
+
+          # Merge failed forks
+          $failedForksFiles = Get-ChildItem -Path "partial-failed" -Filter "failedForks-partial-*.json" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+          
+          if ($failedForksFiles) {
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "Found [$($failedForksFiles.Count)] partial failed forks files to merge" -logToSummary $true
+              
+              # Load current failed forks
+              $allFailedForks = @()
+              if (Test-Path "failedForks.json") {
+                  try {
+                      $failedContent = Get-Content "failedForks.json" -Raw
+                      $failedContent = $failedContent -replace '^﻿', ''
+                      $allFailedForks = $failedContent | ConvertFrom-Json
+                  } catch {
+                      Write-Warning "Failed to parse existing failedForks.json: $($_.Exception.Message)"
+                      $allFailedForks = @()
+                  }
+              }
+              
+              # Merge partial failed forks
+              foreach ($file in $failedForksFiles) {
+                  try {
+                      $partialContent = Get-Content $file -Raw
+                      $partialContent = $partialContent -replace '^﻿', ''
+                      $partialFailed = $partialContent | ConvertFrom-Json
+                      if ($partialFailed) {
+                          $allFailedForks += $partialFailed
+                      }
+                  } catch {
+                      Write-Warning "Failed to process failed forks file [$file]: $($_.Exception.Message)"
+                  }
+              }
+              
+              # Remove duplicates and save
+              $uniqueFailedForks = $allFailedForks | Sort-Object -Property name -Unique
+              Write-Message -message "Merged failed forks: [$($uniqueFailedForks.Count)] unique entries" -logToSummary $true
+              SaveStatus -failedForks $uniqueFailedForks
+          }
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Consolidation complete" -logToSummary $true
+
+      - name: Show overall statistics
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          # Load the merged status
+          $jsonContent = Get-Content status.json -Raw
+          $jsonContent = $jsonContent -replace '^﻿', ''
+          $existingForks = $jsonContent | ConvertFrom-Json
+
+          ShowOverallDatasetStatistics -existingForks $existingForks
+
+      - name: Check rate limit status
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "### Final Rate Limit Check" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
 
       - name: Upload status.json to blob storage
         if: always()
@@ -146,8 +633,10 @@ jobs:
           . ./.github/workflows/library.ps1
           $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to upload status.json to blob storage"
-            exit 1
+            Write-Warning "Failed to upload status.json to blob storage"
+            # Don't exit 1 here - we want to continue to upload failedForks.json
+          } else {
+            Write-Host "Successfully uploaded status.json to blob storage"
           }
 
       - name: Upload failedForks.json to blob storage
@@ -159,6 +648,8 @@ jobs:
           . ./.github/workflows/library.ps1
           $result = Set-FailedForksToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
           if (-not $result) {
-            Write-Error "Failed to upload failedForks.json to blob storage"
-            exit 1
+            Write-Warning "Failed to upload failedForks.json to blob storage"
+            # Don't exit 1 here - we still want the workflow to complete
+          } else {
+            Write-Host "Successfully uploaded failedForks.json to blob storage"
           }
