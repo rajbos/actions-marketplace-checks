@@ -1,0 +1,455 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="166" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2025-12-06" time="18:40:27">
+  <environment machine-name="runnervmoqczp" platform="Linux" nunit-version="2.5.8.0" user-domain="" os-version="6.11.0-1018-azure" cwd="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks" clr-version="8.0.21" user="runner" />
+  <culture-info current-culture="" current-uiculture="" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="6.6903" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/blobStorage.Tests.ps1" executed="True" result="Success" success="True" time="1.317" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/blobStorage.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Blob Storage Common Functions" executed="True" result="Success" success="True" time="0.1934" asserts="0" description="Blob Storage Common Functions">
+            <results>
+              <test-suite type="TestFixture" name="Blob Storage Common Functions.Get-JsonFromBlobStorage function" executed="True" result="Success" success="True" time="0.1558" asserts="0" description="Blob Storage Common Functions.Get-JsonFromBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Common Functions.Get-JsonFromBlobStorage function.Should have function defined" time="0.0992" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Blob Storage Common Functions.Get-JsonFromBlobStorage function.Should have required parameters" time="0.0313" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Common Functions.Set-JsonToBlobStorage function" executed="True" result="Success" success="True" time="0.1806" asserts="0" description="Blob Storage Common Functions.Set-JsonToBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Common Functions.Set-JsonToBlobStorage function.Should have function defined" time="0.008" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Blob Storage Common Functions.Set-JsonToBlobStorage function.Should have required parameters" time="0.0115" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Blob Storage Wrapper Functions" executed="True" result="Success" success="True" time="0.8822" asserts="0" description="Blob Storage Wrapper Functions">
+            <results>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Get-ActionsJsonFromBlobStorage function" executed="True" result="Success" success="True" time="0.4381" asserts="0" description="Blob Storage Wrapper Functions.Get-ActionsJsonFromBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Wrapper Functions.Get-ActionsJsonFromBlobStorage function.Should have function defined" time="0.007" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required sasToken parameter" name="Blob Storage Wrapper Functions.Get-ActionsJsonFromBlobStorage function.Should have required sasToken parameter" time="0.0053" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have optional localFilePath parameter" name="Blob Storage Wrapper Functions.Get-ActionsJsonFromBlobStorage function.Should have optional localFilePath parameter" time="0.005" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should fail with invalid SAS token URL" name="Blob Storage Wrapper Functions.Get-ActionsJsonFromBlobStorage function.Should fail with invalid SAS token URL" time="0.4153" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Get-StatusFromBlobStorage function" executed="True" result="Success" success="True" time="0.5178" asserts="0" description="Blob Storage Wrapper Functions.Get-StatusFromBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Wrapper Functions.Get-StatusFromBlobStorage function.Should have function defined" time="0.0202" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required sasToken parameter" name="Blob Storage Wrapper Functions.Get-StatusFromBlobStorage function.Should have required sasToken parameter" time="0.0123" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should fail with invalid SAS token URL" name="Blob Storage Wrapper Functions.Get-StatusFromBlobStorage function.Should fail with invalid SAS token URL" time="0.0339" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Set-StatusToBlobStorage function" executed="True" result="Success" success="True" time="0.5784" asserts="0" description="Blob Storage Wrapper Functions.Set-StatusToBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Wrapper Functions.Set-StatusToBlobStorage function.Should have function defined" time="0.01" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required sasToken parameter" name="Blob Storage Wrapper Functions.Set-StatusToBlobStorage function.Should have required sasToken parameter" time="0.0125" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should fail when status.json does not exist" name="Blob Storage Wrapper Functions.Set-StatusToBlobStorage function.Should fail when status.json does not exist" time="0.0251" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Get-FailedForksFromBlobStorage function" executed="True" result="Success" success="True" time="0.6029" asserts="0" description="Blob Storage Wrapper Functions.Get-FailedForksFromBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Wrapper Functions.Get-FailedForksFromBlobStorage function.Should have function defined" time="0.0095" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required sasToken parameter" name="Blob Storage Wrapper Functions.Get-FailedForksFromBlobStorage function.Should have required sasToken parameter" time="0.0092" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Set-FailedForksToBlobStorage function" executed="True" result="Success" success="True" time="0.6302" asserts="0" description="Blob Storage Wrapper Functions.Set-FailedForksToBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Wrapper Functions.Set-FailedForksToBlobStorage function.Should have function defined" time="0.0083" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required sasToken parameter" name="Blob Storage Wrapper Functions.Set-FailedForksToBlobStorage function.Should have required sasToken parameter" time="0.0084" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Set-SecretScanningAlertsToBlobStorage function" executed="True" result="Success" success="True" time="0.6519" asserts="0" description="Blob Storage Wrapper Functions.Set-SecretScanningAlertsToBlobStorage function">
+                <results>
+                  <test-case description="Should have function defined" name="Blob Storage Wrapper Functions.Set-SecretScanningAlertsToBlobStorage function.Should have function defined" time="0.0067" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required sasToken parameter" name="Blob Storage Wrapper Functions.Set-SecretScanningAlertsToBlobStorage function.Should have required sasToken parameter" time="0.0097" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Wrapper Functions.Blob storage URL handling" executed="True" result="Success" success="True" time="0.685" asserts="0" description="Blob Storage Wrapper Functions.Blob storage URL handling">
+                <results>
+                  <test-case description="Should use full URL when sasToken starts with https://" name="Blob Storage Wrapper Functions.Blob storage URL handling.Should use full URL when sasToken starts with https://" time="0.0279" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Status file path configuration" executed="True" result="Success" success="True" time="0.9307" asserts="0" description="Status file path configuration">
+            <results>
+              <test-case description="Should have statusFile variable defined" name="Status file path configuration.Should have statusFile variable defined" time="0.0081" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should have failedStatusFile variable defined" name="Status file path configuration.Should have failedStatusFile variable defined" time="0.0056" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should have secretScanningAlertsFile variable defined" name="Status file path configuration.Should have secretScanningAlertsFile variable defined" time="0.0056" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should have statusBlobFileName constant defined" name="Status file path configuration.Should have statusBlobFileName constant defined" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should have failedForksBlobFileName constant defined" name="Status file path configuration.Should have failedForksBlobFileName constant defined" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should have secretScanningAlertsBlobFileName constant defined" name="Status file path configuration.Should have secretScanningAlertsBlobFileName constant defined" time="0.0101" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/blobStorageChangeDetection.Tests.ps1" executed="True" result="Success" success="True" time="0.3133" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/blobStorageChangeDetection.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Blob Storage Change Detection" executed="True" result="Success" success="True" time="0.194" asserts="0" description="Blob Storage Change Detection">
+            <results>
+              <test-suite type="TestFixture" name="Blob Storage Change Detection.Set-JsonToBlobStorage change detection logic" executed="True" result="Success" success="True" time="0.0564" asserts="0" description="Blob Storage Change Detection.Set-JsonToBlobStorage change detection logic">
+                <results>
+                  <test-case description="Should detect when file content has changed" name="Blob Storage Change Detection.Set-JsonToBlobStorage change detection logic.Should detect when file content has changed" time="0.0207" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle file existence check before upload" name="Blob Storage Change Detection.Set-JsonToBlobStorage change detection logic.Should handle file existence check before upload" time="0.0176" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should fail when file doesn't exist and failIfMissing is true" name="Blob Storage Change Detection.Set-JsonToBlobStorage change detection logic.Should fail when file doesn't exist and failIfMissing is true" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Change Detection.Enhanced logging in blob operations" executed="True" result="Success" success="True" time="0.0986" asserts="0" description="Blob Storage Change Detection.Enhanced logging in blob operations">
+                <results>
+                  <test-case description="Get-JsonFromBlobStorage should use Write-Message for logging" name="Blob Storage Change Detection.Enhanced logging in blob operations.Get-JsonFromBlobStorage should use Write-Message for logging" time="0.0116" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Set-JsonToBlobStorage should use Write-Message for logging" name="Blob Storage Change Detection.Enhanced logging in blob operations.Set-JsonToBlobStorage should use Write-Message for logging" time="0.0148" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Get-ActionsJsonFromBlobStorage should use Write-Message for logging" name="Blob Storage Change Detection.Enhanced logging in blob operations.Get-ActionsJsonFromBlobStorage should use Write-Message for logging" time="0.0096" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Change Detection.Status symbols in log messages" executed="True" result="Success" success="True" time="0.1352" asserts="0" description="Blob Storage Change Detection.Status symbols in log messages">
+                <results>
+                  <test-case description="Should use success symbol (✓) for successful operations" name="Blob Storage Change Detection.Status symbols in log messages.Should use success symbol (✓) for successful operations" time="0.0103" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use warning symbol (⚠️) for errors and warnings" name="Blob Storage Change Detection.Status symbols in log messages.Should use warning symbol (⚠️) for errors and warnings" time="0.0099" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use info symbol (ℹ️) for informational messages" name="Blob Storage Change Detection.Status symbols in log messages.Should use info symbol (ℹ️) for informational messages" time="0.0091" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Blob Storage Change Detection.File comparison logic" executed="True" result="Success" success="True" time="0.1885" asserts="0" description="Blob Storage Change Detection.File comparison logic">
+                <results>
+                  <test-case description="Set-JsonToBlobStorage should compare file content before uploading" name="Blob Storage Change Detection.File comparison logic.Set-JsonToBlobStorage should compare file content before uploading" time="0.0133" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use SHA256 hashing for efficient file comparison" name="Blob Storage Change Detection.File comparison logic.Should use SHA256 hashing for efficient file comparison" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle case when remote file doesn't exist" name="Blob Storage Change Detection.File comparison logic.Should handle case when remote file doesn't exist" time="0.0095" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should skip upload when files match" name="Blob Storage Change Detection.File comparison logic.Should skip upload when files match" time="0.0116" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Wrapper Functions Logging" executed="True" result="Success" success="True" time="0.2418" asserts="0" description="Wrapper Functions Logging">
+            <results>
+              <test-suite type="TestFixture" name="Wrapper Functions Logging.Status wrapper functions" executed="True" result="Success" success="True" time="0.0419" asserts="0" description="Wrapper Functions Logging.Status wrapper functions">
+                <results>
+                  <test-case description="Set-StatusToBlobStorage should use enhanced Set-JsonToBlobStorage" name="Wrapper Functions Logging.Status wrapper functions.Set-StatusToBlobStorage should use enhanced Set-JsonToBlobStorage" time="0.0185" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Set-FailedForksToBlobStorage should use enhanced Set-JsonToBlobStorage" name="Wrapper Functions Logging.Status wrapper functions.Set-FailedForksToBlobStorage should use enhanced Set-JsonToBlobStorage" time="0.0082" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Get-StatusFromBlobStorage should use enhanced Get-JsonFromBlobStorage" name="Wrapper Functions Logging.Status wrapper functions.Get-StatusFromBlobStorage should use enhanced Get-JsonFromBlobStorage" time="0.0084" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/dockerBaseImage.Tests.ps1" executed="True" result="Success" success="True" time="0.1439" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/dockerBaseImage.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="GetDockerBaseImageNameFromContent" executed="True" result="Success" success="True" time="0.1127" asserts="0" description="GetDockerBaseImageNameFromContent">
+            <results>
+              <test-case description="Should extract base image from simple Dockerfile" name="GetDockerBaseImageNameFromContent.Should extract base image from simple Dockerfile" time="0.019" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should extract base image from multi-line Dockerfile" name="GetDockerBaseImageNameFromContent.Should extract base image from multi-line Dockerfile" time="0.0093" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should handle Dockerfile from jeremyoverman/cloudflared-service-token-scp-proxy" name="GetDockerBaseImageNameFromContent.Should handle Dockerfile from jeremyoverman/cloudflared-service-token-scp-proxy" time="0.0102" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should handle Dockerfile with Windows line endings" name="GetDockerBaseImageNameFromContent.Should handle Dockerfile with Windows line endings" time="0.0098" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should return empty string for null content" name="GetDockerBaseImageNameFromContent.Should return empty string for null content" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should return empty string for empty content" name="GetDockerBaseImageNameFromContent.Should return empty string for empty content" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should handle Dockerfile with FROM as" name="GetDockerBaseImageNameFromContent.Should handle Dockerfile with FROM as" time="0.0094" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should handle Dockerfile with no tag" name="GetDockerBaseImageNameFromContent.Should handle Dockerfile with no tag" time="0.009" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/filtering.Tests.ps1" executed="True" result="Success" success="True" time="0.1701" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/filtering.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="FilterActionsToProcess" executed="True" result="Success" success="True" time="0.0345" asserts="0" description="FilterActionsToProcess">
+            <results>
+              <test-case description="Should filter the list " name="FilterActionsToProcess.Should filter the list " time="0.0294" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="FilterActionsToProcessDependabot" executed="True" result="Success" success="True" time="0.0515" asserts="0" description="FilterActionsToProcessDependabot">
+            <results>
+              <test-case description="Should filter the list " name="FilterActionsToProcessDependabot.Should filter the list " time="0.0127" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="FilterActionsToProcessDependabot-Improved" executed="True" result="Success" success="True" time="0.068" asserts="0" description="FilterActionsToProcessDependabot-Improved">
+            <results>
+              <test-case description="Should filter the list " name="FilterActionsToProcessDependabot-Improved.Should filter the list " time="0.0122" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="FlattenActionsList" executed="True" result="Success" success="True" time="0.1" asserts="0" description="FlattenActionsList">
+            <results>
+              <test-case description="Should return the same count of items" name="FlattenActionsList.Should return the same count of items" time="0.0209" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/forkSync.Tests.ps1" executed="True" result="Success" success="True" time="1.6007" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/forkSync.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Mirror Sync Tests" executed="True" result="Success" success="True" time="1.5317" asserts="0" description="Mirror Sync Tests">
+            <results>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.SyncMirrorWithUpstream function" executed="True" result="Success" success="True" time="0.0616" asserts="0" description="Mirror Sync Tests.SyncMirrorWithUpstream function">
+                <results>
+                  <test-case description="Should have function defined" name="Mirror Sync Tests.SyncMirrorWithUpstream function.Should have function defined" time="0.0096" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Mirror Sync Tests.SyncMirrorWithUpstream function.Should have required parameters" time="0.0096" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return validation error for empty upstream owner" name="Mirror Sync Tests.SyncMirrorWithUpstream function.Should return validation error for empty upstream owner" time="0.0203" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return validation error for empty upstream repo" name="Mirror Sync Tests.SyncMirrorWithUpstream function.Should return validation error for empty upstream repo" time="0.0086" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return validation error for null upstream owner" name="Mirror Sync Tests.SyncMirrorWithUpstream function.Should return validation error for null upstream owner" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.Test-RepositoryExists function" executed="True" result="Success" success="True" time="0.1156" asserts="0" description="Mirror Sync Tests.Test-RepositoryExists function">
+                <results>
+                  <test-case description="Should have function defined" name="Mirror Sync Tests.Test-RepositoryExists function.Should have function defined" time="0.0077" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Mirror Sync Tests.Test-RepositoryExists function.Should have required parameters" time="0.0143" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for empty owner" name="Mirror Sync Tests.Test-RepositoryExists function.Should return false for empty owner" time="0.0088" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for empty repo" name="Mirror Sync Tests.Test-RepositoryExists function.Should return false for empty repo" time="0.0065" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for null owner" name="Mirror Sync Tests.Test-RepositoryExists function.Should return false for null owner" time="0.006" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for whitespace-only owner" name="Mirror Sync Tests.Test-RepositoryExists function.Should return false for whitespace-only owner" time="0.0059" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.Invoke-GitCommandWithRetry function" executed="True" result="Success" success="True" time="0.2386" asserts="0" description="Mirror Sync Tests.Invoke-GitCommandWithRetry function">
+                <results>
+                  <test-case description="Should have function defined" name="Mirror Sync Tests.Invoke-GitCommandWithRetry function.Should have function defined" time="0.0085" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Mirror Sync Tests.Invoke-GitCommandWithRetry function.Should have required parameters" time="0.0102" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return success for git version command" name="Mirror Sync Tests.Invoke-GitCommandWithRetry function.Should return success for git version command" time="0.0359" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return failure for non-existent command" name="Mirror Sync Tests.Invoke-GitCommandWithRetry function.Should return failure for non-existent command" time="0.0628" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.UpdateForkedRepos function from update-forks.ps1" executed="True" result="Success" success="True" time="0.2644" asserts="0" description="Mirror Sync Tests.UpdateForkedRepos function from update-forks.ps1">
+                <results>
+                  <test-case description="Should have UpdateForkedRepos function defined after script execution" name="Mirror Sync Tests.UpdateForkedRepos function from update-forks.ps1.Should have UpdateForkedRepos function defined after script execution" time="0.0214" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.Disable-GitHubActions function" executed="True" result="Success" success="True" time="0.321" asserts="0" description="Mirror Sync Tests.Disable-GitHubActions function">
+                <results>
+                  <test-case description="Should have function defined" name="Mirror Sync Tests.Disable-GitHubActions function.Should have function defined" time="0.0077" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Mirror Sync Tests.Disable-GitHubActions function.Should have required parameters" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for empty owner" name="Mirror Sync Tests.Disable-GitHubActions function.Should return false for empty owner" time="0.0102" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for empty repo" name="Mirror Sync Tests.Disable-GitHubActions function.Should return false for empty repo" time="0.0068" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for null owner" name="Mirror Sync Tests.Disable-GitHubActions function.Should return false for null owner" time="0.006" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for whitespace-only owner" name="Mirror Sync Tests.Disable-GitHubActions function.Should return false for whitespace-only owner" time="0.0062" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false for whitespace-only repo" name="Mirror Sync Tests.Disable-GitHubActions function.Should return false for whitespace-only repo" time="0.0061" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function" executed="True" result="Success" success="True" time="0.4152" asserts="0" description="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function">
+                <results>
+                  <test-case description="Should have function defined" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function.Should have function defined" time="0.0118" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function.Should have required parameters" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return failure for empty owner" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function.Should return failure for empty owner" time="0.0213" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return failure for empty repo" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function.Should return failure for empty repo" time="0.0161" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return failure for null owner" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function.Should return failure for null owner" time="0.016" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return failure for whitespace-only owner" name="Mirror Sync Tests.Get-RepositoryDefaultBranchCommit function.Should return failure for whitespace-only owner" time="0.0103" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function" executed="True" result="Success" success="True" time="1.5018" asserts="0" description="Mirror Sync Tests.Compare-RepositoryCommitHashes function">
+                <results>
+                  <test-case description="Should have function defined" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should have function defined" time="0.0087" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameters" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should have required parameters" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return can_compare false for empty source owner" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should return can_compare false for empty source owner" time="0.0105" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return can_compare false for empty source repo" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should return can_compare false for empty source repo" time="0.0064" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return can_compare false for empty mirror owner" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should return can_compare false for empty mirror owner" time="1.0206" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return can_compare false for empty mirror repo" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should return can_compare false for empty mirror repo" time="0.0191" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have error message when comparison fails" name="Mirror Sync Tests.Compare-RepositoryCommitHashes function.Should have error message when comparison fails" time="0.0065" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Mirror Sync Tests.LFS handling in SyncMirrorWithUpstream" executed="True" result="Success" success="True" time="1.5263" asserts="0" description="Mirror Sync Tests.LFS handling in SyncMirrorWithUpstream">
+                <results>
+                  <test-case description="Should set GIT_LFS_SKIP_SMUDGE environment variable during sync operations" name="Mirror Sync Tests.LFS handling in SyncMirrorWithUpstream.Should set GIT_LFS_SKIP_SMUDGE environment variable during sync operations" time="0.0077" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have cleanup code for GIT_LFS_SKIP_SMUDGE environment variable" name="Mirror Sync Tests.LFS handling in SyncMirrorWithUpstream.Should have cleanup code for GIT_LFS_SKIP_SMUDGE environment variable" time="0.0061" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should mention LFS in debug messages" name="Mirror Sync Tests.LFS handling in SyncMirrorWithUpstream.Should mention LFS in debug messages" time="0.0059" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/jsonDepth.Tests.ps1" executed="True" result="Success" success="True" time="0.1259" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/jsonDepth.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="JSON Serialization Depth" executed="True" result="Success" success="True" time="0.0987" asserts="0" description="JSON Serialization Depth">
+            <results>
+              <test-suite type="TestFixture" name="JSON Serialization Depth.ConvertTo-Json depth parameter usage" executed="True" result="Success" success="True" time="0.0792" asserts="0" description="JSON Serialization Depth.ConvertTo-Json depth parameter usage">
+                <results>
+                  <test-case description="Should serialize complex nested objects without truncation" name="JSON Serialization Depth.ConvertTo-Json depth parameter usage.Should serialize complex nested objects without truncation" time="0.0529" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should demonstrate truncation with insufficient depth" name="JSON Serialization Depth.ConvertTo-Json depth parameter usage.Should demonstrate truncation with insufficient depth" time="0.0153" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="GetFoundSecretCount should use ConvertTo-Json with -Depth parameter" name="JSON Serialization Depth.ConvertTo-Json depth parameter usage.GetFoundSecretCount should use ConvertTo-Json with -Depth parameter" time="0.006" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="JSON Serialization Depth.SaveStatus function depth parameter" executed="True" result="Success" success="True" time="0.0946" asserts="0" description="JSON Serialization Depth.SaveStatus function depth parameter">
+                <results>
+                  <test-case description="Should use sufficient depth for status.json" name="JSON Serialization Depth.SaveStatus function depth parameter.Should use sufficient depth for status.json" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/nodeVersionReport.Tests.ps1" executed="True" result="Success" success="True" time="0.0791" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/nodeVersionReport.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="GroupNodeVersionsAndCount" executed="True" result="Success" success="True" time="0.0541" asserts="0" description="GroupNodeVersionsAndCount">
+            <results>
+              <test-case description="Should count node versions correctly" name="GroupNodeVersionsAndCount.Should count node versions correctly" time="0.0193" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should handle empty array" name="GroupNodeVersionsAndCount.Should handle empty array" time="0.0071" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should handle single version" name="GroupNodeVersionsAndCount.Should handle single version" time="0.0098" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="Should sort versions correctly" name="GroupNodeVersionsAndCount.Should sort versions correctly" time="0.0132" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/parallelUpdate.Tests.ps1" executed="True" result="Success" success="True" time="0.3973" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/parallelUpdate.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Parallel Update Functions" executed="True" result="Success" success="True" time="0.3452" asserts="0" description="Parallel Update Functions">
+            <results>
+              <test-suite type="TestFixture" name="Parallel Update Functions.Split-ForksIntoChunks function" executed="True" result="Success" success="True" time="0.1223" asserts="0" description="Parallel Update Functions.Split-ForksIntoChunks function">
+                <results>
+                  <test-case description="Should split forks evenly into chunks" name="Parallel Update Functions.Split-ForksIntoChunks function.Should split forks evenly into chunks" time="0.037" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle uneven splits" name="Parallel Update Functions.Split-ForksIntoChunks function.Should handle uneven splits" time="0.0362" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should only include forks with forkFound = true" name="Parallel Update Functions.Split-ForksIntoChunks function.Should only include forks with forkFound = true" time="0.0138" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle empty fork list" name="Parallel Update Functions.Split-ForksIntoChunks function.Should handle empty fork list" time="0.0082" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle all forks with forkFound = false" name="Parallel Update Functions.Split-ForksIntoChunks function.Should handle all forks with forkFound = false" time="0.0084" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle more chunks than forks" name="Parallel Update Functions.Split-ForksIntoChunks function.Should handle more chunks than forks" time="0.0139" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Parallel Update Functions.Save-PartialStatusUpdate function" executed="True" result="Success" success="True" time="0.1859" asserts="0" description="Parallel Update Functions.Save-PartialStatusUpdate function">
+                <results>
+                  <test-case description="Should save partial status to file" name="Parallel Update Functions.Save-PartialStatusUpdate function.Should save partial status to file" time="0.0314" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle empty fork list" name="Parallel Update Functions.Save-PartialStatusUpdate function.Should handle empty fork list" time="0.0153" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle null fork list" name="Parallel Update Functions.Save-PartialStatusUpdate function.Should handle null fork list" time="0.0124" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Parallel Update Functions.Merge-PartialStatusUpdates function" executed="True" result="Success" success="True" time="0.2881" asserts="0" description="Parallel Update Functions.Merge-PartialStatusUpdates function">
+                <results>
+                  <test-case description="Should merge updates from multiple chunks" name="Parallel Update Functions.Merge-PartialStatusUpdates function.Should merge updates from multiple chunks" time="0.0453" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle missing partial files gracefully" name="Parallel Update Functions.Merge-PartialStatusUpdates function.Should handle missing partial files gracefully" time="0.0111" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should add new properties from partial updates" name="Parallel Update Functions.Merge-PartialStatusUpdates function.Should add new properties from partial updates" time="0.0288" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle empty partial update files" name="Parallel Update Functions.Merge-PartialStatusUpdates function.Should handle empty partial update files" time="0.0123" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Parallel Update Functions.End-to-end workflow simulation" executed="True" result="Success" success="True" time="0.3412" asserts="0" description="Parallel Update Functions.End-to-end workflow simulation">
+                <results>
+                  <test-case description="Should handle complete split-process-merge workflow" name="Parallel Update Functions.End-to-end workflow simulation.Should handle complete split-process-merge workflow" time="0.0488" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/rateLimitFormatting.Tests.ps1" executed="True" result="Success" success="True" time="0.1536" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/rateLimitFormatting.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Rate Limit Formatting Tests" executed="True" result="Success" success="True" time="0.1062" asserts="0" description="Rate Limit Formatting Tests">
+            <results>
+              <test-suite type="TestFixture" name="Rate Limit Formatting Tests.Format-WaitTime function" executed="True" result="Success" success="True" time="0.0688" asserts="0" description="Rate Limit Formatting Tests.Format-WaitTime function">
+                <results>
+                  <test-case description="Should format less than 1 minute correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format less than 1 minute correctly" time="0.017" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format 1 minute correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format 1 minute correctly" time="0.008" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format multiple minutes correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format multiple minutes correctly" time="0.0106" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format 1 hour correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format 1 hour correctly" time="0.0088" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format hours and minutes correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format hours and minutes correctly" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format 20 minutes (1200 seconds) correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format 20 minutes (1200 seconds) correctly" time="0.0064" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format 23 minutes (1386 seconds) correctly" name="Rate Limit Formatting Tests.Format-WaitTime function.Should format 23 minutes (1386 seconds) correctly" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Rate Limit Formatting Tests.Format-RateLimitErrorTable function" executed="True" result="Success" success="True" time="0.1023" asserts="0" description="Rate Limit Formatting Tests.Format-RateLimitErrorTable function">
+                <results>
+                  <test-case description="Should format rate limit error table without errors" name="Rate Limit Formatting Tests.Format-RateLimitErrorTable function.Should format rate limit error table without errors" time="0.0175" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should format rate limit warning table without errors" name="Rate Limit Formatting Tests.Format-RateLimitErrorTable function.Should format rate limit warning table without errors" time="0.0117" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/tokenExpiration.Tests.ps1" executed="True" result="Success" success="True" time="1.1075" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/tokenExpiration.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Token Expiration Tests" executed="True" result="Success" success="True" time="1.0768" asserts="0" description="Token Expiration Tests">
+            <results>
+              <test-suite type="TestFixture" name="Token Expiration Tests.Get-TokenExpirationTime function" executed="True" result="Success" success="True" time="0.9489" asserts="0" description="Token Expiration Tests.Get-TokenExpirationTime function">
+                <results>
+                  <test-case description="Should have function defined" name="Token Expiration Tests.Get-TokenExpirationTime function.Should have function defined" time="0.0069" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameter access_token" name="Token Expiration Tests.Get-TokenExpirationTime function.Should have required parameter access_token" time="0.0184" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return null for invalid token" name="Token Expiration Tests.Get-TokenExpirationTime function.Should return null for invalid token" time="0.9186" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Token Expiration Tests.Test-TokenExpiration function" executed="True" result="Success" success="True" time="1.0461" asserts="0" description="Token Expiration Tests.Test-TokenExpiration function">
+                <results>
+                  <test-case description="Should have function defined" name="Token Expiration Tests.Test-TokenExpiration function.Should have function defined" time="0.0079" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have required parameter expirationTime" name="Token Expiration Tests.Test-TokenExpiration function.Should have required parameter expirationTime" time="0.0123" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should have optional parameter warningMinutes with default value 5" name="Token Expiration Tests.Test-TokenExpiration function.Should have optional parameter warningMinutes with default value 5" time="0.0243" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return true when expiration is less than 5 minutes away" name="Token Expiration Tests.Test-TokenExpiration function.Should return true when expiration is less than 5 minutes away" time="0.0136" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return false when expiration is more than 5 minutes away" name="Token Expiration Tests.Test-TokenExpiration function.Should return false when expiration is more than 5 minutes away" time="0.0067" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return true when expiration is exactly 5 minutes away" name="Token Expiration Tests.Test-TokenExpiration function.Should return true when expiration is exactly 5 minutes away" time="0.0067" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should return true when token has already expired" name="Token Expiration Tests.Test-TokenExpiration function.Should return true when token has already expired" time="0.0067" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should respect custom warningMinutes parameter" name="Token Expiration Tests.Test-TokenExpiration function.Should respect custom warningMinutes parameter" time="0.0066" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should respect custom warningMinutes parameter - false case" name="Token Expiration Tests.Test-TokenExpiration function.Should respect custom warningMinutes parameter - false case" time="0.0067" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Token Expiration Tests.Token expiration workflow integration" executed="True" result="Success" success="True" time="1.0727" asserts="0" description="Token Expiration Tests.Token expiration workflow integration">
+                <results>
+                  <test-case description="Should have token expiration check in functions.ps1" name="Token Expiration Tests.Token expiration workflow integration.Should have token expiration check in functions.ps1" time="0.0082" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should check token expiration in the loop" name="Token Expiration Tests.Token expiration workflow integration.Should check token expiration in the loop" time="0.0077" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should use 5 minutes as the warning threshold" name="Token Expiration Tests.Token expiration workflow integration.Should use 5 minutes as the warning threshold" time="0.0065" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/tokenValidation.Tests.ps1" executed="True" result="Success" success="True" time="0.9322" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/tokenValidation.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Token Validation Tests" executed="True" result="Success" success="True" time="0.9034" asserts="0" description="Token Validation Tests">
+            <results>
+              <test-suite type="TestFixture" name="Token Validation Tests.Test-AccessTokens function" executed="True" result="Success" success="True" time="0.4838" asserts="0" description="Token Validation Tests.Test-AccessTokens function">
+                <results>
+                  <test-case description="Should throw error when accessToken is null" name="Token Validation Tests.Test-AccessTokens function.Should throw error when accessToken is null" time="0.1135" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw error when accessToken is empty string" name="Token Validation Tests.Test-AccessTokens function.Should throw error when accessToken is empty string" time="0.0892" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw error when accessToken is whitespace" name="Token Validation Tests.Test-AccessTokens function.Should throw error when accessToken is whitespace" time="0.0874" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw error when access_token_destination is null" name="Token Validation Tests.Test-AccessTokens function.Should throw error when access_token_destination is null" time="0.0885" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw error when access_token_destination is empty string" name="Token Validation Tests.Test-AccessTokens function.Should throw error when access_token_destination is empty string" time="0.0868" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should not throw error when both tokens are valid" name="Token Validation Tests.Test-AccessTokens function.Should not throw error when both tokens are valid" time="0.0078" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should set GITHUB_TOKEN environment variable" name="Token Validation Tests.Test-AccessTokens function.Should set GITHUB_TOKEN environment variable" time="0.0059" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Token Validation Tests.ApiCall function token validation" executed="True" result="Success" success="True" time="0.8359" asserts="0" description="Token Validation Tests.ApiCall function token validation">
+                <results>
+                  <test-case description="Should throw error when access_token is null" name="Token Validation Tests.ApiCall function token validation.Should throw error when access_token is null" time="0.1156" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw error when access_token is empty string" name="Token Validation Tests.ApiCall function token validation.Should throw error when access_token is empty string" time="0.1182" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should throw error when access_token is whitespace" name="Token Validation Tests.ApiCall function token validation.Should throw error when access_token is whitespace" time="0.1141" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Token Validation Tests.ApiCall hideFailedCall parameter" executed="True" result="Success" success="True" time="0.8997" asserts="0" description="Token Validation Tests.ApiCall hideFailedCall parameter">
+                <results>
+                  <test-case description="Should not output 'Log message' when hideFailedCall is true" name="Token Validation Tests.ApiCall hideFailedCall parameter.Should not output 'Log message' when hideFailedCall is true" time="0.0162" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should output 'Log message' when hideFailedCall is false" name="Token Validation Tests.ApiCall hideFailedCall parameter.Should output 'Log message' when hideFailedCall is false" time="0.0437" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/updateForksSummary.Tests.ps1" executed="True" result="Success" success="True" time="0.3498" asserts="0" description="/home/runner/work/actions-marketplace-checks/actions-marketplace-checks/tests/updateForksSummary.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Update Forks Summary Functions" executed="True" result="Success" success="True" time="0.32" asserts="0" description="Update Forks Summary Functions">
+            <results>
+              <test-suite type="TestFixture" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function" executed="True" result="Success" success="True" time="0.1018" asserts="0" description="Update Forks Summary Functions.ShowOverallDatasetStatistics function">
+                <results>
+                  <test-case description="Should have function defined" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function.Should have function defined" time="0.0057" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle empty dataset" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function.Should handle empty dataset" time="0.0222" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle dataset with no mirrors" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function.Should handle dataset with no mirrors" time="0.015" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should calculate statistics correctly for repos with recent syncs" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function.Should calculate statistics correctly for repos with recent syncs" time="0.0231" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle repos without lastSynced property" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function.Should handle repos without lastSynced property" time="0.0135" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle malformed lastSynced dates gracefully" name="Update Forks Summary Functions.ShowOverallDatasetStatistics function.Should handle malformed lastSynced dates gracefully" time="0.0182" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Update Forks Summary Functions.UpdateForkedRepos function" executed="True" result="Success" success="True" time="0.2707" asserts="0" description="Update Forks Summary Functions.UpdateForkedRepos function">
+                <results>
+                  <test-case description="Should have function defined" name="Update Forks Summary Functions.UpdateForkedRepos function.Should have function defined" time="0.0057" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should handle empty fork list" name="Update Forks Summary Functions.UpdateForkedRepos function.Should handle empty fork list" time="0.1354" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should skip repos without forkFound" name="Update Forks Summary Functions.UpdateForkedRepos function.Should skip repos without forkFound" time="0.024" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Update Forks Summary Functions.Summary output format" executed="True" result="Success" success="True" time="0.2867" asserts="0" description="Update Forks Summary Functions.Summary output format">
+                <results>
+                  <test-case description="Should use Write-Message with logToSummary parameter" name="Update Forks Summary Functions.Summary output format.Should use Write-Message with logToSummary parameter" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should include markdown table format in summary" name="Update Forks Summary Functions.Summary output format.Should include markdown table format in summary" time="0.005" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Update Forks Summary Functions.Dataset statistics calculations" executed="True" result="Success" success="True" time="0.3167" asserts="0" description="Update Forks Summary Functions.Dataset statistics calculations">
+                <results>
+                  <test-case description="Should calculate 7-day window correctly" name="Update Forks Summary Functions.Dataset statistics calculations.Should calculate 7-day window correctly" time="0.0147" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should calculate percentages" name="Update Forks Summary Functions.Dataset statistics calculations.Should calculate percentages" time="0.0065" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Should count repos with valid mirrors" name="Update Forks Summary Functions.Dataset statistics calculations.Should count repos with valid mirrors" time="0.005" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
