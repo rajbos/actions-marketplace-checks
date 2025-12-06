@@ -68,6 +68,13 @@ function ProcessForkingChunk {
     $forkedCount = 0
     
     foreach ($action in $actionsToProcess) {
+        # Check if rate limit was exceeded before processing next action
+        if (Test-RateLimitExceeded) {
+            Write-Message -message "⚠️ Rate limit exceeded (20+ minute wait), stopping chunk processing early" -logToSummary $true
+            Write-Message -message "Processed [$forkedCount] actions before rate limit was reached" -logToSummary $true
+            break
+        }
+        
         Write-Host "Processing action: $($action.name)"
         
         # Create a temp actions array with just this one action

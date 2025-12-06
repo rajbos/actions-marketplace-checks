@@ -95,6 +95,12 @@ function ProcessRepoInfoChunk {
             -access_token_destination $access_token_destination `
             -skipSecretScanSummary
         
+        # Check if rate limit was exceeded during processing
+        if (Test-RateLimitExceeded) {
+            Write-Message -message "⚠️ Rate limit exceeded (20+ minute wait) during repo info processing" -logToSummary $true
+            Write-Message -message "Partial results will be saved" -logToSummary $true
+        }
+        
         $processedCount = $forksToProcess.Count
     } catch {
         Write-Warning "Failed to process repo info chunk: $($_.Exception.Message)"

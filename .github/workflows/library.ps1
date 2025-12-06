@@ -1,4 +1,7 @@
 
+# Global flag to track if rate limit was exceeded (20+ minute wait)
+$global:RateLimitExceeded = $false
+
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
@@ -459,7 +462,11 @@ function ApiCall {
                     Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
                     $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
                     Write-Message -message $message -logToSummary $true
-                    throw $message
+                    Write-Warning $message
+                    # Set global flag to indicate rate limit exceeded
+                    $global:RateLimitExceeded = $true
+                    # Return null to indicate we should stop processing
+                    return $null
                 }
                 Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Warning"
                 Write-Host ""
@@ -765,18 +772,50 @@ function GetRateLimitInfo {
     $url = "rate_limit"
     $response = ApiCall -method GET -url $url -access_token $access_token
 
+    # Check if rate limit was exceeded (returns null)
+    if ($null -eq $response) {
+        if (Test-RateLimitExceeded) {
+            Write-Message -message "⚠️ Rate limit check skipped - rate limit exceeded (20+ minute wait)" -logToSummary $true
+            return
+        } else {
+            Write-Warning "Failed to get rate limit info - API call returned null"
+            return
+        }
+    }
+
     # Format rate limit info as a table using the helper function
     Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
 
     if ($access_token -ne $access_token_destination) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
-        Format-RateLimitTable -rateData $response2.rate -title "Access Token Destination Rate Limit Status"
+        if ($null -ne $response2) {
+            Format-RateLimitTable -rateData $response2.rate -title "Access Token Destination Rate Limit Status"
+        }
     }
 
     if ($response.rate.limit -eq 60) {
         throw "Rate limit is 60, this is not enough to run this script, check the token that is used"
     }
+}
+
+<#
+    .SYNOPSIS
+    Checks if the global rate limit exceeded flag is set.
+    
+    .DESCRIPTION
+    Returns true if the rate limit was exceeded (wait time > 20 minutes) during API calls.
+    This can be used by calling scripts to gracefully stop processing and save partial results.
+    
+    .EXAMPLE
+    if (Test-RateLimitExceeded) {
+        Write-Host "Rate limit exceeded, saving partial results and exiting gracefully"
+        Save-PartialStatusUpdate -processedForks $forks -chunkId $chunkId
+        exit 0
+    }
+#>
+function Test-RateLimitExceeded {
+    return $global:RateLimitExceeded
 }
 
 function Get-TokenExpirationTime {
