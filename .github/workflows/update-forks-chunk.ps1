@@ -51,8 +51,16 @@ function UpdateForkedReposChunk {
 
     foreach ($existingFork in $forksToProcess) {
 
-        # Skip repos that don't have forkFound property or where it's false
-            if ($null -eq $existingFork.mirrorFound -or $existingFork.mirrorFound -eq $false) {
+        # Ensure default flags if missing
+        if ($null -eq $existingFork.mirrorFound) {
+            $existingFork | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty -Force
+        }
+        if ($null -eq $existingFork.upstreamFound) {
+            $existingFork | Add-Member -Name upstreamFound -Value $true -MemberType NoteProperty -Force
+        }
+
+        # Skip repos when mirrorFound is false
+        if ($existingFork.mirrorFound -eq $false) {
             Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
             $skipped++
             continue

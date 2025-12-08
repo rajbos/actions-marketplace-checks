@@ -2387,19 +2387,16 @@ function Merge-PartialStatusUpdates {
             
             Write-Host "  Found [$($partialStatus.Count)] updates in this chunk"
             
-            # Merge each updated fork
+            # Merge each updated fork from the partial status into the current status
             foreach ($updatedFork in $partialStatus) {
                 if ($statusByName.ContainsKey($updatedFork.name)) {
-                    # Update existing entry
-                    # Copy all properties from updated fork to the existing one
+                    # Update existing entry by copying properties from the updated fork
                     $existing = $statusByName[$updatedFork.name]
                     
-                    # Get all properties from the updated fork
                     $updatedFork.PSObject.Properties | ForEach-Object {
                         $propName = $_.Name
                         $propValue = $_.Value
                         
-                        # Update or add the property
                         if (Get-Member -InputObject $existing -Name $propName -MemberType Properties) {
                             $existing.$propName = $propValue
                         } else {
