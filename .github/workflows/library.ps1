@@ -1314,6 +1314,9 @@ function GetFoundSecretCount {
 
         # summarize the number of alerts per secret_type_display_name
         $alertTypes = @{}
+        Write-Message "<details>" -logToSummary $true
+        Write-Message "<summary>View secret scanning alerts details</summary>" -logToSummary $true
+        Write-Message "" -logToSummary $true
         Write-Message "|Alert type| Count |" -logToSummary $true
         Write-Message "|---| ---: |" -logToSummary $true
         foreach ($alert in $alertsResult) {
@@ -1334,6 +1337,7 @@ function GetFoundSecretCount {
 
         Write-Message "" -logToSummary $true
         Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
+        Write-Message "</details>" -logToSummary $true
         Write-Message "" -logToSummary $true
 
         # log all resuls into a json file
