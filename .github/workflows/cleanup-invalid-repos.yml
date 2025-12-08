@@ -37,11 +37,19 @@ jobs:
           curl "$statusUrl" > status.json
           echo "Downloaded status.json"
           ls -lh status.json
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
           
       - shell: pwsh
         name: Run cleanup script
         run: |
-           ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ github.event.inputs.numberOfReposToDo || '10' }} -access_token "${{ secrets.ACCESS_TOKEN }}" -dryRun $${{ github.event.inputs.dryRun || 'true' }}
+           ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ github.event.inputs.numberOfReposToDo || '10' }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -dryRun $${{ github.event.inputs.dryRun || 'true' }}
 
       - name: Upload status.json to blob storage
         if: github.event.inputs.dryRun != 'true'
