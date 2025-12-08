@@ -10,14 +10,14 @@ Describe "Parallel Update Functions" {
     Context "Split-ForksIntoChunks function" {
         It "Should split forks evenly into chunks" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true }
-                @{ name = "repo2"; forkFound = $true }
-                @{ name = "repo3"; forkFound = $true }
-                @{ name = "repo4"; forkFound = $true }
-                @{ name = "repo5"; forkFound = $true }
-                @{ name = "repo6"; forkFound = $true }
-                @{ name = "repo7"; forkFound = $true }
-                @{ name = "repo8"; forkFound = $true }
+                @{ name = "repo1"; mirrorFound = $true }
+                @{ name = "repo2"; mirrorFound = $true }
+                @{ name = "repo3"; mirrorFound = $true }
+                @{ name = "repo4"; mirrorFound = $true }
+                @{ name = "repo5"; mirrorFound = $true }
+                @{ name = "repo6"; mirrorFound = $true }
+                @{ name = "repo7"; mirrorFound = $true }
+                @{ name = "repo8"; mirrorFound = $true }
             )
             
             $chunks = Split-ForksIntoChunks -existingForks $testData -numberOfChunks 2
@@ -29,11 +29,11 @@ Describe "Parallel Update Functions" {
         
         It "Should handle uneven splits" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true }
-                @{ name = "repo2"; forkFound = $true }
-                @{ name = "repo3"; forkFound = $true }
-                @{ name = "repo4"; forkFound = $true }
-                @{ name = "repo5"; forkFound = $true }
+                @{ name = "repo1"; mirrorFound = $true }
+                @{ name = "repo2"; mirrorFound = $true }
+                @{ name = "repo3"; mirrorFound = $true }
+                @{ name = "repo4"; mirrorFound = $true }
+                @{ name = "repo5"; mirrorFound = $true }
             )
             
             $chunks = Split-ForksIntoChunks -existingForks $testData -numberOfChunks 2
@@ -43,12 +43,12 @@ Describe "Parallel Update Functions" {
             $chunks[1].Count | Should -Be 2
         }
         
-        It "Should only include forks with forkFound = true" {
+        It "Should only include forks with mirrorFound = true" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true }
-                @{ name = "repo2"; forkFound = $false }
-                @{ name = "repo3"; forkFound = $true }
-                @{ name = "repo4" }  # No forkFound property
+                @{ name = "repo1"; mirrorFound = $true }
+                @{ name = "repo2"; mirrorFound = $false }
+                @{ name = "repo3"; mirrorFound = $true }
+                @{ name = "repo4" }  # No mirrorFound property
             )
             
             $chunks = Split-ForksIntoChunks -existingForks $testData -numberOfChunks 2
@@ -66,10 +66,10 @@ Describe "Parallel Update Functions" {
             $chunks.Count | Should -Be 0
         }
         
-        It "Should handle all forks with forkFound = false" {
+        It "Should handle all forks with mirrorFound = false" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $false }
-                @{ name = "repo2"; forkFound = $false }
+                @{ name = "repo1"; mirrorFound = $false }
+                @{ name = "repo2"; mirrorFound = $false }
             )
             
             $chunks = Split-ForksIntoChunks -existingForks $testData -numberOfChunks 2
@@ -79,8 +79,8 @@ Describe "Parallel Update Functions" {
         
         It "Should handle more chunks than forks" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true }
-                @{ name = "repo2"; forkFound = $true }
+                @{ name = "repo1"; mirrorFound = $true }
+                @{ name = "repo2"; mirrorFound = $true }
             )
             
             $chunks = Split-ForksIntoChunks -existingForks $testData -numberOfChunks 5
@@ -112,8 +112,8 @@ Describe "Parallel Update Functions" {
         
         It "Should save partial status to file" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true; lastSynced = "2024-01-01T00:00:00Z" }
-                @{ name = "repo2"; forkFound = $true; lastSynced = "2024-01-02T00:00:00Z" }
+                @{ name = "repo1"; mirrorFound = $true; lastSynced = "2024-01-01T00:00:00Z" }
+                @{ name = "repo2"; mirrorFound = $true; lastSynced = "2024-01-02T00:00:00Z" }
             )
             
             $outputPath = Join-Path $script:testDir "status-partial-0.json"
@@ -171,17 +171,17 @@ Describe "Parallel Update Functions" {
         It "Should merge updates from multiple chunks" {
             # Create current status
             $currentStatus = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true; lastSynced = $null }
-                [PSCustomObject]@{ name = "repo2"; forkFound = $true; lastSynced = $null }
-                [PSCustomObject]@{ name = "repo3"; forkFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo2"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo3"; mirrorFound = $true; lastSynced = $null }
             )
             
             # Create partial updates
             $partial1 = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true; lastSynced = "2024-01-01T00:00:00Z" }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true; lastSynced = "2024-01-01T00:00:00Z" }
             )
             $partial2 = @(
-                [PSCustomObject]@{ name = "repo2"; forkFound = $true; lastSynced = "2024-01-02T00:00:00Z" }
+                [PSCustomObject]@{ name = "repo2"; mirrorFound = $true; lastSynced = "2024-01-02T00:00:00Z" }
             )
             
             $partial1File = Join-Path $script:testDir "status-partial-0.json"
@@ -209,7 +209,7 @@ Describe "Parallel Update Functions" {
         
         It "Should handle missing partial files gracefully" {
             $currentStatus = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true }
             )
             
             $nonExistentFile = Join-Path $script:testDir "nonexistent.json"
@@ -220,11 +220,11 @@ Describe "Parallel Update Functions" {
         
         It "Should add new properties from partial updates" {
             $currentStatus = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true }
             )
             
             $partial = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true; lastSyncError = "Some error"; upstreamAvailable = $false }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true; lastSyncError = "Some error"; upstreamAvailable = $false }
             )
             
             $partialFile = Join-Path $script:testDir "status-partial-0.json"
@@ -239,7 +239,7 @@ Describe "Parallel Update Functions" {
         
         It "Should handle empty partial update files" {
             $currentStatus = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true }
             )
             
             $partialFile = Join-Path $script:testDir "status-partial-empty.json"
@@ -266,10 +266,10 @@ Describe "Parallel Update Functions" {
         It "Should handle complete split-process-merge workflow" {
             # Initial status
             $initialStatus = @(
-                [PSCustomObject]@{ name = "repo1"; forkFound = $true; lastSynced = $null }
-                [PSCustomObject]@{ name = "repo2"; forkFound = $true; lastSynced = $null }
-                [PSCustomObject]@{ name = "repo3"; forkFound = $true; lastSynced = $null }
-                [PSCustomObject]@{ name = "repo4"; forkFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo1"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo2"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo3"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "repo4"; mirrorFound = $true; lastSynced = $null }
             )
             
             # Split into chunks
@@ -290,7 +290,7 @@ Describe "Parallel Update Functions" {
                     # Clone the object
                     $processed = [PSCustomObject]@{
                         name = $fork.name
-                        forkFound = $fork.forkFound
+                        mirrorFound = $fork.mirrorFound
                         lastSynced = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
                     }
                     $processedForks += $processed

@@ -40,7 +40,7 @@ BeforeAll {
                 break
             }
 
-            if ($null -eq $existingFork.forkFound -or $existingFork.forkFound -eq $false) {
+            if ($null -eq $existingFork.mirrorFound -or $existingFork.mirrorFound -eq $false) {
                 Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
                 $skipped++
                 continue
@@ -88,7 +88,7 @@ BeforeAll {
         
         $totalRepos = $existingForks.Count
         
-        $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
+        $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
         
         $reposSyncedLast7Days = ($existingForks | Where-Object { 
             if ($_.lastSynced) {
@@ -140,8 +140,8 @@ Describe "Update Forks Summary Functions" {
 
         It "Should handle dataset with no mirrors" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $false }
-                @{ name = "repo2"; forkFound = $false }
+                @{ name = "repo1"; mirrorFound = $false }
+                @{ name = "repo2"; mirrorFound = $false }
             )
             
             { ShowOverallDatasetStatistics -existingForks $testData } | Should -Not -Throw
@@ -152,10 +152,10 @@ Describe "Update Forks Summary Functions" {
             $oldDate = (Get-Date).AddDays(-10).ToString("yyyy-MM-ddTHH:mm:ssZ")
             
             $testData = @(
-                @{ name = "repo1"; forkFound = $true; lastSynced = $recentDate }
-                @{ name = "repo2"; forkFound = $true; lastSynced = $oldDate }
-                @{ name = "repo3"; forkFound = $true; lastSynced = $null }
-                @{ name = "repo4"; forkFound = $false }
+                @{ name = "repo1"; mirrorFound = $true; lastSynced = $recentDate }
+                @{ name = "repo2"; mirrorFound = $true; lastSynced = $oldDate }
+                @{ name = "repo3"; mirrorFound = $true; lastSynced = $null }
+                @{ name = "repo4"; mirrorFound = $false }
             )
             
             # This should not throw an error
@@ -164,8 +164,8 @@ Describe "Update Forks Summary Functions" {
 
         It "Should handle repos without lastSynced property" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true }
-                @{ name = "repo2"; forkFound = $true }
+                @{ name = "repo1"; mirrorFound = $true }
+                @{ name = "repo2"; mirrorFound = $true }
             )
             
             { ShowOverallDatasetStatistics -existingForks $testData } | Should -Not -Throw
@@ -173,9 +173,9 @@ Describe "Update Forks Summary Functions" {
 
         It "Should handle malformed lastSynced dates gracefully" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $true; lastSynced = "invalid-date" }
-                @{ name = "repo2"; forkFound = $true; lastSynced = "not-a-date-at-all" }
-                @{ name = "repo3"; forkFound = $true; lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+                @{ name = "repo1"; mirrorFound = $true; lastSynced = "invalid-date" }
+                @{ name = "repo2"; mirrorFound = $true; lastSynced = "not-a-date-at-all" }
+                @{ name = "repo3"; mirrorFound = $true; lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
             )
             
             # Should not throw even with malformed dates
@@ -198,10 +198,10 @@ Describe "Update Forks Summary Functions" {
             $result.Count | Should -Be 0
         }
 
-        It "Should skip repos without forkFound" {
+        It "Should skip repos without mirrorFound" {
             $testData = @(
-                @{ name = "repo1"; forkFound = $false }
-                @{ name = "repo2" } # No forkFound property
+                @{ name = "repo1"; mirrorFound = $false }
+                @{ name = "repo2" } # No mirrorFound property
             )
             
             Mock SyncMirrorWithUpstream { return @{ success = $true; message = "Already up to date" } }
@@ -238,7 +238,7 @@ Describe "Update Forks Summary Functions" {
 
         It "Should count repos with valid mirrors" {
             $functionContent = (Get-Command ShowOverallDatasetStatistics).ScriptBlock.ToString()
-            $functionContent | Should -Match 'forkFound -eq \$true'
+            $functionContent | Should -Match 'mirrorFound -eq \$true'
         }
     }
 }

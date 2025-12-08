@@ -34,8 +34,8 @@ function UpdateForkedRepos {
             break
         }
 
-        # Skip repos that don't have forkFound property or where it's false
-        if ($null -eq $existingFork.forkFound -or $existingFork.forkFound -eq $false) {
+            # Skip repos that don't have mirrorFound property or where it's false
+            if ($null -eq $existingFork.mirrorFound -or $existingFork.mirrorFound -eq $false) {
             Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
             $skipped++
             continue
@@ -82,8 +82,8 @@ function UpdateForkedRepos {
                 $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force
             }
             elseif ($errorType -eq "mirror_not_found") {
-                Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - marking forkFound as false"
-                $existingFork.forkFound = $false
+                Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - marking mirrorFound as false"
+                $existingFork.mirrorFound = $false
                 $failed++
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
@@ -145,8 +145,8 @@ function ShowOverallDatasetStatistics {
     # Total repos in dataset
     $totalRepos = $existingForks.Count
     
-    # Count repos with forkFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
+    # Count repos with mirrorFound = true (valid mirrors)
+    $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 

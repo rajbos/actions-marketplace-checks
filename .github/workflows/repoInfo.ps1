@@ -300,7 +300,7 @@ function CheckForInfoUpdateNeeded {
     )
 
     # skip actions where we cannot find the fork anymore
-    if (!$action.ForkFound) {
+    if (!$action.mirrorFound) {
         return $false
     }
     # check actionType field missing or not filled actionType in it
@@ -410,8 +410,8 @@ function GetInfo {
         # back fill the 'owner' field with info from the fork
         $hasField = Get-Member -inputobject $action -name "owner" -Membertype Properties
         if (!$hasField) {
-            $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
-            if ($hasField -and !$action.forkFound) {
+            $hasField = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
+            if ($hasField -and !$action.mirrorFound) {
                 # skip this one to prevent us from keeping checking on erroneous repos
                 continue
             }
@@ -421,19 +421,19 @@ function GetInfo {
                 if ($response -and $response.parent) {
                     # load owner info from parent
                     $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
-                    $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+                    $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
                 } else {
                     # new entry with leading owner name
                     $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
-                    $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+                    $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
                 }
         }
         else {
-            # owner field is filled, let's check if forkFound field already exists
-            $hasField = Get-Member -inputobject $action -name "forkFound" -Membertype Properties
+            # owner field is filled, let's check if mirrorFound field already exists
+            $hasField = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
             if (!$hasField) {
                 # owner is known, so this fork exists
-                $action | Add-Member -Name forkFound -Value $true -MemberType NoteProperty
+                $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
                 $i++ | Out-Null
             }
         }
@@ -663,7 +663,7 @@ function GetMoreInfo {
                 break
             }
 
-            if (!$action.forkFound) {
+            if (!$action.upstreamFound) {
                 Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
                 continue
             }
@@ -684,7 +684,7 @@ function GetMoreInfo {
                 try {
                     ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
-                        $action.forkFound = $false
+                        $action.upstreamFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
                         $actionNoLongerExists = @{
                             action = $($action.name)

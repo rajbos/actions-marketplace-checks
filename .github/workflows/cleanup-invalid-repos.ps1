@@ -7,6 +7,36 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+function EnsureDefaultStatusFlags {
+    Param (
+        $statusFile
+    )
+
+    if (-not (Test-Path $statusFile)) {
+        Write-Error "Status file not found at [$statusFile]"
+        return
+    }
+
+    Write-Host "Ensuring default flags (mirrorFound/upstreamFound) exist in status items"
+    $status = Get-Content $statusFile | ConvertFrom-Json
+
+    foreach ($item in $status) {
+        if ($null -eq $item.mirrorFound) {
+            $item | Add-Member -NotePropertyName mirrorFound -NotePropertyValue $true -Force
+        }
+        if ($null -eq $item.upstreamFound) {
+            $item | Add-Member -NotePropertyName upstreamFound -NotePropertyValue $true -Force
+        }
+    }
+
+    if ($updated) {
+        Write-Host "Default flags added; saving updated status to [$statusFile]"
+        $status | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+    } else {
+        Write-Host "Status already contains required flags; no changes made"
+    }
+}
+
 function GetReposToCleanup {
     Param (
         $statusFile
@@ -27,10 +57,10 @@ function GetReposToCleanup {
         $shouldCleanup = $false
         $reason = ""
         
-        # Criterion 1: Original repo no longer exists (forkFound is false)
-        if ($repo.forkFound -eq $false) {
+        # Criterion 1: Original repo no longer exists (upstreamFound=false)
+        if ($repo.upstreamFound -eq $false) {
             $shouldCleanup = $true
-            $reason = "Original repo no longer exists (forkFound=false)"
+            $reason = "Original repo no longer exists (upstreamFound=false)"
         }
         
         # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
@@ -39,7 +69,7 @@ function GetReposToCleanup {
             ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
             
             # Only mark for cleanup if the original repo no longer exists
-            if ($repo.forkFound -eq $false) {
+            if ($repo.upstreamFound -eq $false) {
                 $shouldCleanup = $true
                 if ($reason -ne "") {
                     $reason += " AND "
@@ -141,6 +171,7 @@ if ($access_token) {
 }
 
 # Get repos to cleanup from status file
+EnsureDefaultStatusFlags -statusFile $statusFile
 $reposToCleanup = GetReposToCleanup -statusFile $statusFile
 
 # Limit to numberOfReposToDo

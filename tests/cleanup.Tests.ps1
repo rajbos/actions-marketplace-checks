@@ -15,10 +15,10 @@ BeforeAll {
             $shouldCleanup = $false
             $reason = ""
             
-            # Criterion 1: Original repo no longer exists (forkFound is false)
-            if ($repo.forkFound -eq $false) {
+            # Criterion 1: Original repo no longer exists (upstreamFound is false)
+            if ($repo.upstreamFound -eq $false) {
                 $shouldCleanup = $true
-                $reason = "Original repo no longer exists (forkFound=false)"
+                $reason = "Original repo no longer exists (upstreamFound=false)"
             }
             
             # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
@@ -27,7 +27,7 @@ BeforeAll {
                 ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
                 
                 # Only mark for cleanup if the original repo no longer exists
-                if ($repo.forkFound -eq $false) {
+                if ($repo.upstreamFound -eq $false) {
                     $shouldCleanup = $true
                     if ($reason -ne "") {
                         $reason += " AND "
@@ -50,19 +50,19 @@ BeforeAll {
 }
 
 Describe "GetReposToCleanup" {
-    It "Should identify repos where forkFound is false" {
+    It "Should identify repos where upstreamFound is false" {
         # Arrange
         $repos = @(
             @{
                 name = "test_repo1"
                 owner = "test"
-                forkFound = $false
+                upstreamFound = $false
                 actionType = @{ actionType = "Node" }
             },
             @{
                 name = "test_repo2"
                 owner = "test"
-                forkFound = $true
+                upstreamFound = $true
                 actionType = @{ actionType = "Node" }
             }
         )
@@ -73,16 +73,16 @@ Describe "GetReposToCleanup" {
         # Assert
         $result.Count | Should -Be 1
         $result[0].name | Should -Be "test_repo1"
-        $result[0].reason | Should -BeLike "*forkFound=false*"
+        $result[0].reason | Should -BeLike "*upstreamFound=false*"
     }
     
-    It "Should identify empty repos with no content when forkFound is false" {
+    It "Should identify empty repos with no content when upstreamFound is false" {
         # Arrange
         $repos = @(
             @{
                 name = "test_repo1"
                 owner = "test"
-                forkFound = $false
+                upstreamFound = $false
                 actionType = @{ actionType = "Node" }
                 repoSize = 0
                 tagInfo = @()
@@ -104,7 +104,7 @@ Describe "GetReposToCleanup" {
             @{
                 name = "test_repo1"
                 owner = "test"
-                forkFound = $true
+                upstreamFound = $true
                 actionType = @{ actionType = "Node" }
                 repoSize = 0
                 tagInfo = @("v1.0.0")
@@ -125,7 +125,7 @@ Describe "GetReposToCleanup" {
             @{
                 name = "test_repo1"
                 owner = "test"
-                forkFound = $false
+                upstreamFound = $false
                 actionType = @{ 
                     actionType = "No file found"
                     fileFound = "No file found"
@@ -141,7 +141,7 @@ Describe "GetReposToCleanup" {
         
         # Assert
         $result.Count | Should -Be 1
-        $result[0].reason | Should -BeLike "*forkFound=false*"
+        $result[0].reason | Should -BeLike "*upstreamFound=false*"
         $result[0].reason | Should -BeLike "*Empty repo with no content*"
     }
     
@@ -151,7 +151,7 @@ Describe "GetReposToCleanup" {
             @{
                 name = "zesticio_update-release-branch"
                 owner = "actions-marketplace-validations"
-                forkFound = $false
+                upstreamFound = $false
                 actionType = @{
                     actionType = "No file found"
                     actionDockerType = "No file found"
@@ -181,6 +181,6 @@ Describe "GetReposToCleanup" {
         # Assert
         $result.Count | Should -Be 1
         $result[0].name | Should -Be "zesticio_update-release-branch"
-        $result[0].reason | Should -BeLike "*forkFound=false*"
+        $result[0].reason | Should -BeLike "*upstreamFound=false*"
     }
 }

@@ -52,7 +52,7 @@ function UpdateForkedReposChunk {
     foreach ($existingFork in $forksToProcess) {
 
         # Skip repos that don't have forkFound property or where it's false
-        if ($null -eq $existingFork.forkFound -or $existingFork.forkFound -eq $false) {
+            if ($null -eq $existingFork.mirrorFound -or $existingFork.mirrorFound -eq $false) {
             Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
             $skipped++
             continue
@@ -99,8 +99,8 @@ function UpdateForkedReposChunk {
                 $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force
             }
             elseif ($errorType -eq "mirror_not_found") {
-                Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking forkFound as false"
-                $existingFork.forkFound = $false
+                    Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking mirrorFound as false"
+                    $existingFork.mirrorFound = $false
                 $failed++
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {

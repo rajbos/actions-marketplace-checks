@@ -786,7 +786,7 @@ function GetRateLimitInfo {
     # Format rate limit info as a table using the helper function
     Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
 
-    if ($access_token -ne $access_token_destination -and $access_token_destination != "" ) {
+    if ($access_token -ne $access_token_destination -and $access_token_destination -ne "" ) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
         if ($null -ne $response2) {
@@ -1352,7 +1352,10 @@ function Write-Message {
     )
     Write-Host $message
     if ($logToSummary) {
-        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $message
+        $summaryPath = $env:GITHUB_STEP_SUMMARY
+        if ($null -ne $summaryPath -and ($summaryPath.Trim()).Length -gt 0) {
+            Add-Content -Path $summaryPath -Value $message
+        }
     }
 }
 
@@ -2109,7 +2112,7 @@ function Disable-GitHubActions {
     
     .DESCRIPTION
     Takes a list of forks and splits them into a specified number of chunks.
-    Only includes forks that have forkFound = true.
+    Only includes forks that have mirrorFound = true.
     Returns a hashtable mapping chunk index to the list of fork names.
     
     .PARAMETER existingForks
@@ -2136,7 +2139,7 @@ function Disable-GitHubActions {
     Number of chunks to create (default: 4)
     
     .PARAMETER filterToUnprocessed
-    If true, filter to only actions that need processing (no forkFound or repoUrl exists)
+    If true, filter to only actions that need processing (mirrorFound = true and repoUrl exists)
     
     .EXAMPLE
     $chunks = Split-ActionsIntoChunks -actions $actions -numberOfChunks 4
@@ -2249,11 +2252,11 @@ function Split-ForksIntoChunks {
     
     Write-Message -message "Splitting forks into [$numberOfChunks] chunks for parallel processing" -logToSummary $true
     
-    # Filter to only forks that should be processed (forkFound = true)
-    $forksToProcess = $existingForks | Where-Object { $_.forkFound -eq $true }
+    # Filter to only forks that should be processed (mirrorFound = true)
+    $forksToProcess = $existingForks | Where-Object { $_.mirrorFound -eq $true }
     
     if ($forksToProcess.Count -eq 0) {
-        Write-Message -message "No forks to process (all have forkFound = false)" -logToSummary $true
+        Write-Message -message "No forks to process (all have mirrorFound = false)" -logToSummary $true
         return @{}
     }
     
@@ -2429,7 +2432,7 @@ function Merge-PartialStatusUpdates {
     .DESCRIPTION
     Calculates and displays statistics about the mirror dataset including:
     - Total repositories in dataset
-    - Repositories with valid mirrors (forkFound = true)
+    - Repositories with valid mirrors (mirrorFound = true)
     - Repositories synced in the last 7 days
     - Percentage coverage
     
@@ -2454,8 +2457,8 @@ function ShowOverallDatasetStatistics {
     # Total repos in dataset
     $totalRepos = $existingForks.Count
     
-    # Count repos with forkFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
+    # Count repos with mirrorFound = true (valid mirrors)
+    $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 
