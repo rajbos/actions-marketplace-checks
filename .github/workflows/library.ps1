@@ -786,7 +786,7 @@ function GetRateLimitInfo {
     # Format rate limit info as a table using the helper function
     Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
 
-    if ($access_token -ne $access_token_destination) {
+    if ($access_token -ne $access_token_destination -and $access_token_destination != "" ) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
         if ($null -ne $response2) {
@@ -795,7 +795,7 @@ function GetRateLimitInfo {
     }
 
     if ($response.rate.limit -eq 60) {
-        throw "Rate limit is 60, this is not enough to run this script, check the token that is used"
+        throw "Rate limit is 60, this is not enough to run any of these scripts, check the token that is used"
     }
 }
 
