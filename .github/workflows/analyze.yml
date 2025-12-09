@@ -31,10 +31,6 @@ on:
         description: 'Number of parallel chunks (default: 4)'
         required: false
         default: '4'
-      runMigration:
-        description: 'One-time: backfill mirrorFound/upstreamFound flags in status.json'
-        required: false
-        default: 'false'
 
 env:
   numberOfReposForking: 250
@@ -609,12 +605,6 @@ jobs:
           Write-Message -message "" -logToSummary $true
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
-      - name: Backfill status flags (one-time)
-        if: ${{ github.event.inputs.runMigration == 'true' }}
-        shell: pwsh
-        run: |
-          Write-Host "Running one-time status flags migration on status.json"
-          & ./.github/workflows/migrate-status-flags.ps1 -statusFile "status.json"
 
       - name: Show overall statistics
         shell: pwsh

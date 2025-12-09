@@ -934,7 +934,6 @@ function FilterActionsToProcess {
     # for faster searching, convert to single string array instead of objects
     $existingForksNames = @($existingForks | ForEach-Object { $_.name } | Sort-Object)
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
-    $lastIndex = 0
     $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
@@ -1014,23 +1013,20 @@ function FilterActionsToProcessDependabot-Improved {
     $existingFork = $null
     $forkedRepoName = ""
     $found = $false
-    $lastIndex = 0
     $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
         # for loop since the existingForksNames is a sorted array
-        for ($j = $lastIndex = 0; $j -lt $existingForksNames.Count; $j++) {
+        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
             if ($existingForksNames[$j] -eq $forkedRepoName) {
                 $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
                 if ($existingFork.dependabot) {
                     $found = $true
-                    $lastIndex = $j
                 }
                 break
             }
             # check first letter, since we sorted we do not need to go any further
             if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
-                $lastIndex = $j
                 break
             }
         }
@@ -1911,14 +1907,14 @@ function SyncMirrorWithUpstream {
         
         # Check if upstream has the target branch using explicit refs
         $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
-        $branchCheckOutput = git show-ref --verify $upstreamBranchRef 2>&1
+        git show-ref --verify $upstreamBranchRef 2>&1 | Out-Null
         
         if ($LASTEXITCODE -ne 0) {
             # Try master branch if main doesn't exist
             if ($currentBranch -eq "main") {
                 $currentBranch = "master"
                 $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
-                $branchCheckOutput = git show-ref --verify $upstreamBranchRef 2>&1
+                git show-ref --verify $upstreamBranchRef 2>&1 | Out-Null
             }
         }
         
@@ -2365,7 +2361,6 @@ function Merge-PartialStatusUpdates {
     }
     
     $totalUpdates = 0
-    $totalChunks = $partialStatusFiles.Count
     
     foreach ($partialFile in $partialStatusFiles) {
         if (-not (Test-Path $partialFile)) {
@@ -2416,7 +2411,7 @@ function Merge-PartialStatusUpdates {
         }
     }
     
-    Write-Message -message "✓ Merged [$totalUpdates] fork updates from [$totalChunks] chunks into main status" -logToSummary $true
+    Write-Message -message "✓ Merged [$totalUpdates] fork updates from [$($partialStatusFiles.Count)] chunks into main status" -logToSummary $true
     
     # Convert hashtable back to array
     return $statusByName.Values
