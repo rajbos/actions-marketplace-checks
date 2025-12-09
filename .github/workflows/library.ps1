@@ -766,7 +766,9 @@ function Format-RateLimitErrorTable {
 
 function GetRateLimitInfo {
     Param (
+        [string]
         $access_token,
+        [string]
         $access_token_destination
     )
     $url = "rate_limit"
