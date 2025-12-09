@@ -16,8 +16,8 @@ on:
 
   push:
     paths: 
-      .github/workflows/cleanup-invalid-repos.yml    
-      .github\workflows\cleanup-invalid-repos.ps1
+      - .github/workflows/cleanup-invalid-repos.yml    
+      - .github/workflows/cleanup-invalid-repos.ps1
     
 jobs:
   cleanup-invalid-repos:
