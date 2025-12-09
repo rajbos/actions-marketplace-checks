@@ -189,6 +189,24 @@ foreach ($repo in $reposToCleanup) {
 }
 Write-Host ""
 
+# Write summary to GitHub Step Summary
+Write-Message -message "" -logToSummary $true
+Write-Message -message "## Cleanup Summary" -logToSummary $true
+Write-Message -message "Owner: [$owner]" -logToSummary $true
+Write-Message -message "Number of repos considered: [$numberOfReposToDo]" -logToSummary $true
+Write-Message -message "Dry run: [$dryRun]" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "Found [$($reposToCleanup.Count)] repos to cleanup" -logToSummary $true
+if ($reposToCleanup.Count -gt 0) {
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Repository | Reason |" -logToSummary $true
+    Write-Message -message "|-----------|--------|" -logToSummary $true
+    foreach ($repo in $reposToCleanup) {
+        Write-Message -message "| $($repo.name) | $($repo.reason) |" -logToSummary $true
+    }
+    Write-Message -message "" -logToSummary $true
+}
+
 # Remove the repos
 if ($reposToCleanup.Count -gt 0) {
     RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun
