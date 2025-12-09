@@ -7,36 +7,6 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
-function EnsureDefaultStatusFlags {
-    Param (
-        $statusFile
-    )
-
-    if (-not (Test-Path $statusFile)) {
-        Write-Error "Status file not found at [$statusFile]"
-        return
-    }
-
-    Write-Host "Ensuring default flags (mirrorFound/upstreamFound) exist in status items"
-    $status = Get-Content $statusFile | ConvertFrom-Json
-
-    foreach ($item in $status) {
-        if ($null -eq $item.mirrorFound) {
-            $item | Add-Member -NotePropertyName mirrorFound -NotePropertyValue $true -Force
-        }
-        if ($null -eq $item.upstreamFound) {
-            $item | Add-Member -NotePropertyName upstreamFound -NotePropertyValue $true -Force
-        }
-    }
-
-    if ($updated) {
-        Write-Host "Default flags added; saving updated status to [$statusFile]"
-        $status | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
-    } else {
-        Write-Host "Status already contains required flags; no changes made"
-    }
-}
-
 function GetReposToCleanup {
     Param (
         $statusFile
@@ -171,7 +141,6 @@ if ($access_token) {
 }
 
 # Get repos to cleanup from status file
-EnsureDefaultStatusFlags -statusFile $statusFile
 $reposToCleanup = GetReposToCleanup -statusFile $statusFile
 
 # Limit to numberOfReposToDo
