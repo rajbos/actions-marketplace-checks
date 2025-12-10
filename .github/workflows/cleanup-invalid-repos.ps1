@@ -50,10 +50,22 @@ function GetReposToCleanup {
         }
         
         if ($shouldCleanup) {
+            # Derive upstream full name from our mirror repo name in form owner_reponame
+            $upstreamFullName = $null
+            if ($repo.name -and ($repo.name -match '_')) {
+                $firstUnderscoreIndex = $repo.name.IndexOf('_')
+                if ($firstUnderscoreIndex -gt 0 -and $firstUnderscoreIndex -lt ($repo.name.Length - 1)) {
+                    $upOwner = $repo.name.Substring(0, $firstUnderscoreIndex)
+                    $upName = $repo.name.Substring($firstUnderscoreIndex + 1)
+                    $upstreamFullName = "$upOwner/$upName"
+                }
+            }
+
             $reposToCleanup.Add(@{
                 name = $repo.name
                 owner = $repo.owner
                 reason = $reason
+                upstreamFullName = $upstreamFullName
             }) | Out-Null
         }
     }
@@ -181,13 +193,18 @@ if ($reposToCleanup.Count -gt 0) {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "Showing first 15 of [$($reposToCleanup.Count)] repos:" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "| # | Repository | Reason |" -logToSummary $true
-    Write-Message -message "|---:|-----------|--------|" -logToSummary $true
+    Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
+    Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
     $index = 1
     foreach ($repo in ($reposToCleanup | Select-Object -First 15)) {
         $repoLink = "https://github.com/$owner/$($repo.name)"
         $repoCell = "[$($repo.name)]($repoLink)"
-        Write-Message -message "| $index | $repoCell | $($repo.reason) |" -logToSummary $true
+        $upstreamCell = "n/a"
+        if ($repo.upstreamFullName) {
+            $upstreamLink = "https://github.com/$($repo.upstreamFullName)"
+            $upstreamCell = "[$($repo.upstreamFullName)]($upstreamLink)"
+        }
+        Write-Message -message "| $index | $repoCell | $upstreamCell | $($repo.reason) |" -logToSummary $true
         $index++
     }
     Write-Message -message "" -logToSummary $true
