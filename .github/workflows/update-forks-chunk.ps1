@@ -81,6 +81,9 @@ function UpdateForkedReposChunk {
         $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
         
         if ($result.success) {
+            # Update the sync timestamp for all successfully checked repos
+            $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+            
             if ($result.message -like "*Already up to date*") {
                 Write-Debug "Mirror [$($existingFork.name)] already up to date"
                 $upToDate++
@@ -88,8 +91,6 @@ function UpdateForkedReposChunk {
             else {
                 Write-Host "$i/$($forksToProcess.Count) Successfully synced mirror [$($existingFork.name)]"
                 $synced++
-                # Update the sync timestamp
-                $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
             }
             # Clear any previous sync errors on success
             if (Get-Member -InputObject $existingFork -Name "lastSyncError" -MemberType Properties) {
