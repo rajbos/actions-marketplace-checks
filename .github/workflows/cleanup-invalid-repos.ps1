@@ -22,11 +22,20 @@ function GetReposToCleanup {
     Write-Host "Loaded [$($status.Count)] repos from status file"
     
     $reposToCleanup = New-Object System.Collections.ArrayList
+    $validStatus = New-Object System.Collections.ArrayList
+    $invalidEntries = New-Object System.Collections.ArrayList
     $countUpstreamMissing = 0
     $countEmptyRepos = 0
     $countSkippedDueToUpstreamAvailable = 0
     
     foreach ($repo in $status) {
+        # Detect invalid entries (owner null/empty or name '_' or empty)
+        $isInvalid = ($null -eq $repo) -or ([string]::IsNullOrEmpty($repo.name)) -or ($repo.name -eq "_") -or ([string]::IsNullOrEmpty($repo.owner))
+        if ($isInvalid) {
+            $invalidEntries.Add($repo) | Out-Null
+            # Skip further processing for invalid entries
+            continue
+        }
         $shouldCleanup = $false
         $reason = ""
         
@@ -77,11 +86,28 @@ function GetReposToCleanup {
                 reason = $reason
                 upstreamFullName = $upstreamFullName
             }) | Out-Null
+            # Do not add to valid list; will be removed separately via RemoveReposFromStatus
+        }
+        else {
+            # Keep valid and not-to-clean entries
+            $validStatus.Add($repo) | Out-Null
         }
     }
     
     Write-Host "Found [$($reposToCleanup.Count)] repos to cleanup"
     Write-Host "  Diagnostics: upstream missing=[$countUpstreamMissing], empty repos=[$countEmptyRepos], skipped (upstream exists, mirror missing)=[$countSkippedDueToUpstreamAvailable]"
+    if ($invalidEntries.Count -gt 0) {
+        Write-Host "  Diagnostics: invalid entries removed from status=[$($invalidEntries.Count)]"
+        # Overwrite status file once with valid entries + entries to be cleaned (so they remain until deletion completes)
+        $validCombined = @()
+        $validCombined += $validStatus
+        # Include cleanup candidates so they still exist for deletion process; they will be removed later if dryRun is false
+        $validCombined += $reposToCleanup | ForEach-Object { $_ }
+        $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+        if ($env:BLOB_SAS_TOKEN) {
+            try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
+        }
+    }
     Write-Host "" # empty line for readability
     Write-Output -NoEnumerate $reposToCleanup
 }

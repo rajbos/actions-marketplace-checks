@@ -75,17 +75,19 @@ function Get-ActionsJsonFromBlobStorage {
             $message = "⚠️ ERROR: Failed to download Actions-Full-Overview.Json - file not found after download"
             Write-Message -message $message -logToSummary $true
             Write-Error $message
-            return $false
+        # Guard against marketplace landing pages and malformed URLs
+        if ($null -eq $url) {
+            return $null
         }
-    }
-    catch {
+        if ($url.StartsWith("https://github.com/marketplace/actions")) {
+            return "", ""
+        }
         $message = "⚠️ ERROR: Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
-        Write-Message -message $message -logToSummary $true
-        Write-Error $message
-        return $false
-    }
 }
 
+        if ($urlParts.Length -lt 2) {
+            return "", ""
+        }
 <#
     .SYNOPSIS
     Common function to download a JSON file from Azure Blob Storage.
@@ -1412,7 +1414,10 @@ function GetForkedActionRepos {
     $counter = 0
     foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
-
+        # Skip invalid URLs that would produce an underscore-only name
+        if ([string]::IsNullOrEmpty($owner) -or [string]::IsNullOrEmpty($repo)) {
+            continue
+        }
         $actionStatus | Add-Member -Name name -Value (GetForkedRepoName -owner $owner -repo $repo) -MemberType NoteProperty
         $counter++
     }
