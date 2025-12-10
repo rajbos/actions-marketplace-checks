@@ -179,10 +179,16 @@ Write-Message -message "" -logToSummary $true
 
 if ($reposToCleanup.Count -gt 0) {
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Repository | Reason |" -logToSummary $true
-    Write-Message -message "|-----------|--------|" -logToSummary $true
-    foreach ($repo in $reposToCleanup) {
-        Write-Message -message "| $($repo.name) | $($repo.reason) |" -logToSummary $true
+    Write-Message -message "Showing first 15 of [$($reposToCleanup.Count)] repos:" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| # | Repository | Reason |" -logToSummary $true
+    Write-Message -message "|---:|-----------|--------|" -logToSummary $true
+    $index = 1
+    foreach ($repo in ($reposToCleanup | Select-Object -First 15)) {
+        $repoLink = "https://github.com/$owner/$($repo.name)"
+        $repoCell = "[$($repo.name)]($repoLink)"
+        Write-Message -message "| $index | $repoCell | $($repo.reason) |" -logToSummary $true
+        $index++
     }
     Write-Message -message "" -logToSummary $true
 }
