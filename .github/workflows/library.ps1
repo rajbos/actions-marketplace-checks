@@ -948,6 +948,12 @@ function FilterActionsToProcess {
     $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
     $existingForksNames = @($existingForks | ForEach-Object { $_.name } | Sort-Object)
+    # initialize lastIndex for optimized forward scanning
+    $lastIndex = 0
+    if ($existingForksNames.Count -eq 0) {
+        # nothing to filter against, return the flattened list as-is
+        return $actionsToProcess
+    }
     # filter the actions list down to the set we still need to fork (not known in the existingForks list)
     $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName

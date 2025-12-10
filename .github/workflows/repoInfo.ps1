@@ -454,16 +454,48 @@ function GetInfo {
             $action.mirrorLastUpdated = $response.updated_at
         }
 
-        # store repo size
+        # store repo size (only set when we have a valid value)
         $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
-        if (!$hasField) {
-            if ($null -eq $response) {
-                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
-            }
-            $action | Add-Member -Name repoSize -Value $response.size -MemberType NoteProperty
+        if ($null -eq $response) {
+            # try fork first
+            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
+        }
+
+        $sizeValue = $null
+        if ($null -ne $response -and $null -ne $response.size) {
+            $sizeValue = $response.size
         }
         else {
-            $action.repoSize = $response.size
+            # fallback: try upstream repo to get size
+            try {
+                ($owner, $repo) = GetOrgActionInfo($action.name)
+                if ($owner -and $repo) {
+                    $upstreamUrl = "/repos/$owner/$repo"
+                    $upstreamResponse = ApiCall -method GET -url $upstreamUrl -access_token $access_token -hideFailedCall $true
+                    if ($null -ne $upstreamResponse -and $null -ne $upstreamResponse.size) {
+                        $sizeValue = $upstreamResponse.size
+                    }
+                }
+            }
+            catch {
+                # ignore and leave sizeValue as $null
+            }
+        }
+
+        if (!$hasField) {
+            if ($null -ne $sizeValue) {
+                $action | Add-Member -Name repoSize -Value $sizeValue -MemberType NoteProperty
+            }
+            else {
+                # explicitly mark as unknown when we cannot determine size
+                $action | Add-Member -Name repoSize -Value $null -MemberType NoteProperty
+            }
+        }
+        else {
+            # only update when we have a valid size; do not overwrite non-null with null
+            if ($null -ne $sizeValue) {
+                $action.repoSize = $sizeValue
+            }
         }
 
         # store dependent information

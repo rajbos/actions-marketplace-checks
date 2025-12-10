@@ -433,8 +433,14 @@ function ReportAgeInsights {
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
         LogMessage "|Description    | Info|"
         LogMessage "|---            | ---:|"
-        LogMessage "|Total          | $($global:repoInfo)"
-        LogMessage "|Analyzed       | $($global:countRepoSize)|"
+        LogMessage "|Total (with repo info) | $($global:repoInfo)"
+        LogMessage "|Repos with size info   | $($global:countRepoSize)|"
+        # percentage of actions that have repo size info
+        $sizeCoveragePct = 0
+        if ($actions.Count -gt 0) {
+            $sizeCoveragePct = [math]::Round(($global:countRepoSize / $actions.Count) * 100, 2)
+        }
+        LogMessage "|Coverage (of all actions) | $sizeCoveragePct%|"
         LogMessage "|Sum reposizes  | $([math]::Round($global:sumRepoSize / 1024, 0)) GiB|"
         LogMessage "|Repos > 100MiB | $($global:countRepoSizeBiggerThen100Mb)|"
         LogMessage "|Average size   | $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) MiB|"
