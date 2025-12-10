@@ -406,7 +406,7 @@ function ReportAgeInsights {
     LogMessage "|Updated within last 3 months   | $global:updatedLastQuarter|$([math]::Round($global:updatedLastQuarter /$global:repoInfo * 100 , 1))%|"
     LogMessage "|Updated within last 3-6 months | $global:updatedLast6Months|$([math]::Round($global:updatedLast6Months /$global:repoInfo * 100 , 1))%|"
     LogMessage "|Updated within last 6-12 months| $global:updatedLast12Months|$([math]::Round($global:updatedLast12Months/$global:repoInfo * 100 , 1))%|"
-    LogMessage "|Updated more then 12 months ago| $global:moreThen12Months|$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated more than 12 months ago| $global:moreThen12Months|$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
     LogMessage ""
     LogMessage "### Additional information:"
     LogMessage "|Description    | Info|"
