@@ -22,6 +22,8 @@ function GetReposToCleanup {
     Write-Host "Loaded [$($status.Count)] repos from status file"
     
     $reposToCleanup = New-Object System.Collections.ArrayList
+    $countUpstreamMissing = 0
+    $countEmptyRepos = 0
     
     foreach ($repo in $status) {
         $shouldCleanup = $false
@@ -31,21 +33,20 @@ function GetReposToCleanup {
         if ($repo.upstreamFound -eq $false) {
             $shouldCleanup = $true
             $reason = "Original repo no longer exists (upstreamFound=false)"
+            $countUpstreamMissing++
         }
         
         # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
         if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
             ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
             ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
-            
-            # Only mark for cleanup if the original repo no longer exists
-            if ($repo.upstreamFound -eq $false) {
-                $shouldCleanup = $true
-                if ($reason -ne "") {
-                    $reason += " AND "
-                }
-                $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
+            $countEmptyRepos++
+            # Mark empty forks for cleanup regardless of upstream state
+            $shouldCleanup = $true
+            if ($reason -ne "") {
+                $reason += " AND "
             }
+            $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
         }
         
         if ($shouldCleanup) {
@@ -58,6 +59,7 @@ function GetReposToCleanup {
     }
     
     Write-Host "Found [$($reposToCleanup.Count)] repos to cleanup"
+    Write-Host "  Diagnostics: upstream missing=[$countUpstreamMissing], empty repos=[$countEmptyRepos]"
     Write-Host "" # empty line for readability
     Write-Output -NoEnumerate $reposToCleanup
 }
@@ -173,6 +175,8 @@ Write-Message -message "Number of repos considered: [$numberOfReposToDo]" -logTo
 Write-Message -message "Dry run: [$dryRun]" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "Found [$($reposToCleanup.Count)] repos eligible to cleanup" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
 if ($reposToCleanup.Count -gt 0) {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Repository | Reason |" -logToSummary $true
