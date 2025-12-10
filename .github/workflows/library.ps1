@@ -39,6 +39,7 @@ $script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
     .EXAMPLE
     Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
 #>
+
 function Get-ActionsJsonFromBlobStorage {
     Param (
         [Parameter(Mandatory=$true)]
@@ -75,6 +76,8 @@ function Get-ActionsJsonFromBlobStorage {
             $message = "⚠️ ERROR: Failed to download Actions-Full-Overview.Json - file not found after download"
             Write-Message -message $message -logToSummary $true
             Write-Error $message
+        }
+
         # Guard against marketplace landing pages and malformed URLs
         if ($null -eq $url) {
             return $null
@@ -83,11 +86,19 @@ function Get-ActionsJsonFromBlobStorage {
             return "", ""
         }
         $message = "⚠️ ERROR: Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
-}
 
         if ($urlParts.Length -lt 2) {
             return "", ""
         }
+    }
+    catch {
+        $message = "⚠️ ERROR: Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
+        return $false
+    }
+}
+
 <#
     .SYNOPSIS
     Common function to download a JSON file from Azure Blob Storage.
