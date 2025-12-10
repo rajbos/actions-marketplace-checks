@@ -97,6 +97,17 @@ function UpdateForkedRepos {
             elseif ($errorType -eq "mirror_not_found") {
                 Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - attempting to create mirror and retry"
                 # Attempt to create the missing mirror if upstream exists
+                # Ensure ForkActionRepo exists for test contexts that extract only this function
+                if (-not (Get-Command ForkActionRepo -ErrorAction SilentlyContinue)) {
+                    function ForkActionRepo {
+                        Param (
+                            $owner,
+                            $repo
+                        )
+                        # Default stub; Pester can Mock this in tests
+                        return $false
+                    }
+                }
                 $createResult = $false
                 try {
                     $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
