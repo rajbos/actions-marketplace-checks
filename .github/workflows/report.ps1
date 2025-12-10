@@ -396,7 +396,7 @@ function ReportAgeInsights {
     }
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
-    LogMessage "|Analyzed|Total: $($global:repoInfo)|Analyzed: $($repoInformation.reposAnalyzed) repos|100%|"
+    LogMessage "|Analyzed|Total: $($global:repoInfo)|Analyzed: $($global:repoInfo) repos|100%|"
     LogMessage "|---|---|---|---|"
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
     LogMessage "|Oldest repository             |$($timeSpan.Days) days old            |||"
