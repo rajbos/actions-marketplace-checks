@@ -114,6 +114,43 @@ Describe "Mirror Sync Tests" {
             $functionMatch.Success | Should -Be $true
             $functionMatch.Value | Should -Not -BeNullOrEmpty
         }
+
+        It "Should create missing mirror and retry sync when mirror_not_found" {
+            # Arrange: define UpdateForkedRepos function only
+            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-forks.ps1 -Raw
+            $functionMatch = [regex]::Match($scriptContent, 'function UpdateForkedRepos\s*\{[\s\S]*?\n\}(?=\s*\n)')
+            $functionMatch.Success | Should -Be $true
+            Invoke-Expression $functionMatch.Value
+
+            # Prepare a single existing fork entry
+            $existingForks = @(@{ name = "and-fm_k8s-yaml-action"; mirrorFound = $true })
+
+            # Mock upstream owner/repo resolution from name
+            Mock GetOrgActionInfo { return @("and-fm", "k8s-yaml-action") }
+
+            # Track sync calls to simulate first failure then success on retry
+            $script:syncCalls = 0
+            Mock SyncMirrorWithUpstream {
+                $script:syncCalls++ | Out-Null
+                if ($script:syncCalls -eq 1) {
+                    return @{ success = $false; message = "Mirror repository not found"; error_type = "mirror_not_found" }
+                }
+                else {
+                    return @{ success = $true; message = "Successfully fetched and merged from upstream" }
+                }
+            }
+
+            # Mock mirror creation to succeed
+            Mock ForkActionRepo { return $true }
+
+            # Act: run update for 1 repo
+            $result = UpdateForkedRepos -existingForks $existingForks -numberOfReposToDo 1
+
+            # Assert: lastSynced should be set and mirrorFound remain true
+            $result.Count | Should -Be 1
+            $result[0].mirrorFound | Should -Be $true
+            $result[0] | Should -HaveProperty lastSynced
+        }
     }
     
     Context "Disable-GitHubActions function" {
