@@ -24,10 +24,20 @@ function GetReposToCleanup {
     $reposToCleanup = New-Object System.Collections.ArrayList
     $countUpstreamMissing = 0
     $countEmptyRepos = 0
+    $countSkippedDueToUpstreamAvailable = 0
     
     foreach ($repo in $status) {
         $shouldCleanup = $false
         $reason = ""
+        
+        # If upstream exists but our mirror is missing, do NOT cleanup
+        $upstreamAvailable = ($repo.upstreamFound -eq $true)
+        $mirrorMissing = ($null -eq $repo.mirrorFound -or $repo.mirrorFound -eq $false)
+        if ($upstreamAvailable -and $mirrorMissing) {
+            $countSkippedDueToUpstreamAvailable++
+            Write-Debug "Skipping cleanup for [$($repo.name)] because upstream exists and mirror is missing, mirror should be created in another script/run"
+            continue
+        }
         
         # Criterion 1: Original repo no longer exists (upstreamFound=false)
         if ($repo.upstreamFound -eq $false) {
@@ -71,7 +81,7 @@ function GetReposToCleanup {
     }
     
     Write-Host "Found [$($reposToCleanup.Count)] repos to cleanup"
-    Write-Host "  Diagnostics: upstream missing=[$countUpstreamMissing], empty repos=[$countEmptyRepos]"
+    Write-Host "  Diagnostics: upstream missing=[$countUpstreamMissing], empty repos=[$countEmptyRepos], skipped (upstream exists, mirror missing)=[$countSkippedDueToUpstreamAvailable]"
     Write-Host "" # empty line for readability
     Write-Output -NoEnumerate $reposToCleanup
 }
