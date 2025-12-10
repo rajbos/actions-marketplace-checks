@@ -39,6 +39,7 @@ $script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
     .EXAMPLE
     Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
 #>
+
 function Get-ActionsJsonFromBlobStorage {
     Param (
         [Parameter(Mandatory=$true)]
@@ -75,7 +76,19 @@ function Get-ActionsJsonFromBlobStorage {
             $message = "⚠️ ERROR: Failed to download Actions-Full-Overview.Json - file not found after download"
             Write-Message -message $message -logToSummary $true
             Write-Error $message
-            return $false
+        }
+
+        # Guard against marketplace landing pages and malformed URLs
+        if ($null -eq $url) {
+            return $null
+        }
+        if ($url.StartsWith("https://github.com/marketplace/actions")) {
+            return "", ""
+        }
+        $message = "⚠️ ERROR: Failed to download $script:actionsBlobFileName from blob storage: $($_.Exception.Message)"
+
+        if ($urlParts.Length -lt 2) {
+            return "", ""
         }
     }
     catch {
@@ -766,7 +779,9 @@ function Format-RateLimitErrorTable {
 
 function GetRateLimitInfo {
     Param (
+        [string]
         $access_token,
+        [string]
         $access_token_destination
     )
     $url = "rate_limit"
@@ -786,7 +801,7 @@ function GetRateLimitInfo {
     # Format rate limit info as a table using the helper function
     Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
 
-    if ($access_token -ne $access_token_destination) {
+    if ($access_token -ne $access_token_destination -and $access_token_destination -ne "" ) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
         if ($null -ne $response2) {
@@ -795,7 +810,7 @@ function GetRateLimitInfo {
     }
 
     if ($response.rate.limit -eq 60) {
-        throw "Rate limit is 60, this is not enough to run this script, check the token that is used"
+        throw "Rate limit is 60, this is not enough to run any of these scripts, check the token that is used"
     }
 }
 
@@ -933,8 +948,13 @@ function FilterActionsToProcess {
     $actionsToProcess = FlattenActionsList -actions $actionsToProcess | Sort-Object -Property forkedRepoName
     # for faster searching, convert to single string array instead of objects
     $existingForksNames = @($existingForks | ForEach-Object { $_.name } | Sort-Object)
-    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
+    # initialize lastIndex for optimized forward scanning
     $lastIndex = 0
+    if ($existingForksNames.Count -eq 0) {
+        # nothing to filter against, return the flattened list as-is
+        return $actionsToProcess
+    }
+    # filter the actions list down to the set we still need to fork (not known in the existingForks list)
     $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
@@ -1014,23 +1034,20 @@ function FilterActionsToProcessDependabot-Improved {
     $existingFork = $null
     $forkedRepoName = ""
     $found = $false
-    $lastIndex = 0
     $actionsToProcess = $actionsToProcess | ForEach-Object {
         $forkedRepoName = $_.forkedRepoName
         $found = $false
         # for loop since the existingForksNames is a sorted array
-        for ($j = $lastIndex = 0; $j -lt $existingForksNames.Count; $j++) {
+        for ($j = 0; $j -lt $existingForksNames.Count; $j++) {
             if ($existingForksNames[$j] -eq $forkedRepoName) {
                 $existingFork = $existingForks | Where-Object { $_.name -eq $forkedRepoName }
                 if ($existingFork.dependabot) {
                     $found = $true
-                    $lastIndex = $j
                 }
                 break
             }
             # check first letter, since we sorted we do not need to go any further
             if ($existingForksNames[$j][0] -gt $forkedRepoName[0]) {
-                $lastIndex = $j
                 break
             }
         }
@@ -1356,7 +1373,10 @@ function Write-Message {
     )
     Write-Host $message
     if ($logToSummary) {
-        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $message
+        $summaryPath = $env:GITHUB_STEP_SUMMARY
+        if ($null -ne $summaryPath -and ($summaryPath.Trim()).Length -gt 0) {
+            Add-Content -Path $summaryPath -Value $message
+        }
     }
 }
 
@@ -1415,7 +1435,10 @@ function GetForkedActionRepos {
     $counter = 0
     foreach ($actionStatus in $actions){
         ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
-
+        # Skip invalid URLs that would produce an underscore-only name
+        if ([string]::IsNullOrEmpty($owner) -or [string]::IsNullOrEmpty($repo)) {
+            continue
+        }
         $actionStatus | Add-Member -Name name -Value (GetForkedRepoName -owner $owner -repo $repo) -MemberType NoteProperty
         $counter++
     }
@@ -1912,14 +1935,14 @@ function SyncMirrorWithUpstream {
         
         # Check if upstream has the target branch using explicit refs
         $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
-        $branchCheckOutput = git show-ref --verify $upstreamBranchRef 2>&1
+        git show-ref --verify $upstreamBranchRef 2>&1 | Out-Null
         
         if ($LASTEXITCODE -ne 0) {
             # Try master branch if main doesn't exist
             if ($currentBranch -eq "main") {
                 $currentBranch = "master"
                 $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
-                $branchCheckOutput = git show-ref --verify $upstreamBranchRef 2>&1
+                git show-ref --verify $upstreamBranchRef 2>&1 | Out-Null
             }
         }
         
@@ -2113,7 +2136,7 @@ function Disable-GitHubActions {
     
     .DESCRIPTION
     Takes a list of forks and splits them into a specified number of chunks.
-    Only includes forks that have forkFound = true.
+    Only includes forks that have mirrorFound = true.
     Returns a hashtable mapping chunk index to the list of fork names.
     
     .PARAMETER existingForks
@@ -2140,7 +2163,7 @@ function Disable-GitHubActions {
     Number of chunks to create (default: 4)
     
     .PARAMETER filterToUnprocessed
-    If true, filter to only actions that need processing (no forkFound or repoUrl exists)
+    If true, filter to only actions that need processing (mirrorFound = true and repoUrl exists)
     
     .EXAMPLE
     $chunks = Split-ActionsIntoChunks -actions $actions -numberOfChunks 4
@@ -2253,11 +2276,11 @@ function Split-ForksIntoChunks {
     
     Write-Message -message "Splitting forks into [$numberOfChunks] chunks for parallel processing" -logToSummary $true
     
-    # Filter to only forks that should be processed (forkFound = true)
-    $forksToProcess = $existingForks | Where-Object { $_.forkFound -eq $true }
+    # Filter to only forks that should be processed (mirrorFound = true)
+    $forksToProcess = $existingForks | Where-Object { $_.mirrorFound -eq $true }
     
     if ($forksToProcess.Count -eq 0) {
-        Write-Message -message "No forks to process (all have forkFound = false)" -logToSummary $true
+        Write-Message -message "No forks to process (all have mirrorFound = false)" -logToSummary $true
         return @{}
     }
     
@@ -2366,7 +2389,6 @@ function Merge-PartialStatusUpdates {
     }
     
     $totalUpdates = 0
-    $totalChunks = $partialStatusFiles.Count
     
     foreach ($partialFile in $partialStatusFiles) {
         if (-not (Test-Path $partialFile)) {
@@ -2388,19 +2410,16 @@ function Merge-PartialStatusUpdates {
             
             Write-Host "  Found [$($partialStatus.Count)] updates in this chunk"
             
-            # Merge each updated fork
+            # Merge each updated fork from the partial status into the current status
             foreach ($updatedFork in $partialStatus) {
                 if ($statusByName.ContainsKey($updatedFork.name)) {
-                    # Update existing entry
-                    # Copy all properties from updated fork to the existing one
+                    # Update existing entry by copying properties from the updated fork
                     $existing = $statusByName[$updatedFork.name]
                     
-                    # Get all properties from the updated fork
                     $updatedFork.PSObject.Properties | ForEach-Object {
                         $propName = $_.Name
                         $propValue = $_.Value
                         
-                        # Update or add the property
                         if (Get-Member -InputObject $existing -Name $propName -MemberType Properties) {
                             $existing.$propName = $propValue
                         } else {
@@ -2420,7 +2439,7 @@ function Merge-PartialStatusUpdates {
         }
     }
     
-    Write-Message -message "✓ Merged [$totalUpdates] fork updates from [$totalChunks] chunks into main status" -logToSummary $true
+    Write-Message -message "✓ Merged [$totalUpdates] fork updates from [$($partialStatusFiles.Count)] chunks into main status" -logToSummary $true
     
     # Convert hashtable back to array
     return $statusByName.Values
@@ -2433,7 +2452,7 @@ function Merge-PartialStatusUpdates {
     .DESCRIPTION
     Calculates and displays statistics about the mirror dataset including:
     - Total repositories in dataset
-    - Repositories with valid mirrors (forkFound = true)
+    - Repositories with valid mirrors (mirrorFound = true)
     - Repositories synced in the last 7 days
     - Percentage coverage
     
@@ -2458,8 +2477,8 @@ function ShowOverallDatasetStatistics {
     # Total repos in dataset
     $totalRepos = $existingForks.Count
     
-    # Count repos with forkFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
+    # Count repos with mirrorFound = true (valid mirrors)
+    $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 

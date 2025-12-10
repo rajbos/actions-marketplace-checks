@@ -171,10 +171,10 @@ Describe "Analyze Workflow Chunking Functions" {
             )
             
             $testForks = @(
-                @{ name = "fork1"; forkFound = $true }
-                @{ name = "fork2"; forkFound = $true }
-                @{ name = "fork3"; forkFound = $true }
-                @{ name = "fork4"; forkFound = $true }
+                @{ name = "fork1"; mirrorFound = $true }
+                @{ name = "fork2"; mirrorFound = $true }
+                @{ name = "fork3"; mirrorFound = $true }
+                @{ name = "fork4"; mirrorFound = $true }
             )
             
             $actionChunks = Split-ActionsIntoChunks -actions $testActions -numberOfChunks 2

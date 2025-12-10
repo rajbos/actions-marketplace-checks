@@ -34,8 +34,18 @@ function UpdateForkedRepos {
             break
         }
 
-        # Skip repos that don't have forkFound property or where it's false
-        if ($null -eq $existingFork.forkFound -or $existingFork.forkFound -eq $false) {
+            # Ensure default flags if missing (support hashtable or object)
+            if ($null -eq $existingFork.mirrorFound) {
+                if ($existingFork -is [hashtable]) { $existingFork["mirrorFound"] = $true }
+                else { $existingFork | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty -Force }
+            }
+            if ($null -eq $existingFork.upstreamFound) {
+                if ($existingFork -is [hashtable]) { $existingFork["upstreamFound"] = $true }
+                else { $existingFork | Add-Member -Name upstreamFound -Value $true -MemberType NoteProperty -Force }
+            }
+
+            # Skip repos that don't have mirrorFound property or where it's false
+            if ($existingFork.mirrorFound -eq $false) {
             Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
             $skipped++
             continue
@@ -55,59 +65,126 @@ function UpdateForkedRepos {
         
         $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
         
-        if ($result.success) {
-            # Update the sync timestamp for all successfully checked repos
-            $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
-            
-            if ($result.message -like "*Already up to date*") {
+        # Normalize result for hashtable or object
+        $resultSuccess = if ($result -is [hashtable]) { $result["success"] } else { $result.success }
+        $resultMessage = if ($result -is [hashtable]) { $result["message"] } else { $result.message }
+        $resultErrorType = if ($result -is [hashtable]) { $result["error_type"] } else { $result.error_type }
+
+        if ($resultSuccess) {
+            if ($resultMessage -like "*Already up to date*") {
                 Write-Debug "Mirror [$($existingFork.name)] already up to date"
                 $upToDate++
             }
             else {
                 Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
                 $synced++
+                # Update the sync timestamp
+                if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
+                else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
             }
             # Clear any previous sync errors on success
             if (Get-Member -InputObject $existingFork -Name "lastSyncError" -MemberType Properties) {
-                $existingFork.lastSyncError = $null
+                if ($existingFork -is [hashtable]) { $existingFork["lastSyncError"] = $null }
+                else { $existingFork.lastSyncError = $null }
             }
         }
         else {
             # Handle different error types
-            $errorType = $result.error_type
+            $errorType = $resultErrorType
             
             if ($errorType -eq "upstream_not_found") {
                 Write-Warning "$i/$max Upstream repository not found for mirror [$($existingFork.name)] - marking as unavailable"
                 $upstreamNotFound++
                 # Mark the upstream as not found so we skip it in future runs
-                $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force
+                if ($existingFork -is [hashtable]) { $existingFork["upstreamAvailable"] = $false }
+                else { $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force }
             }
             elseif ($errorType -eq "mirror_not_found") {
-                Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - marking forkFound as false"
-                $existingFork.forkFound = $false
-                $failed++
+                Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - attempting to create mirror and retry"
+                # Attempt to create the missing mirror if upstream exists
+                # Ensure ForkActionRepo exists for test contexts that extract only this function
+                if (-not (Get-Command ForkActionRepo -ErrorAction SilentlyContinue)) {
+                    function ForkActionRepo {
+                        Param (
+                            $owner,
+                            $repo
+                        )
+                        # Default stub; Pester can Mock this in tests
+                        return $false
+                    }
+                }
+                $createResult = $false
+                try {
+                    $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
+                }
+                catch {
+                    Write-Warning "Error while creating mirror [$upstreamOwner/$upstreamRepo]: $($_.Exception.Message)"
+                    $createResult = $false
+                }
+
+                if ($createResult) {
+                    # Mark mirrorFound true and retry one sync
+                    if ($existingFork -is [hashtable]) { $existingFork["mirrorFound"] = $true } else { $existingFork.mirrorFound = $true }
+                    Write-Host "Created mirror [$forkOrg/$($existingFork.name)], retrying sync"
+                    $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+                    # Normalize retry result
+                    $retrySuccess = if ($retry -is [hashtable]) { $retry["success"] } else { $retry.success }
+                    $retryMessage = if ($retry -is [hashtable]) { $retry["message"] } else { $retry.message }
+                    $retryErrorType = if ($retry -is [hashtable]) { $retry["error_type"] } else { $retry.error_type }
+                    if ($retrySuccess) {
+                        if ($retryMessage -like "*Already up to date*") { $upToDate++ } else { $synced++ }
+                        if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") } else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
+                        if (Get-Member -InputObject $existingFork -Name "lastSyncError" -MemberType Properties) { if ($existingFork -is [hashtable]) { $existingFork["lastSyncError"] = $null } else { $existingFork.lastSyncError = $null } }
+                    }
+                    else {
+                        Write-Warning "Retry sync failed for [$($existingFork.name)]: $retryMessage"
+                        $failed++
+                        if ($existingFork -is [hashtable]) {
+                            $existingFork["lastSyncError"] = $retryMessage
+                            $existingFork["lastSyncErrorType"] = $retryErrorType
+                            $existingFork["lastSyncAttempt"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+                        }
+                        else {
+                            $existingFork | Add-Member -Name lastSyncError -Value $retryMessage -MemberType NoteProperty -Force
+                            $existingFork | Add-Member -Name lastSyncErrorType -Value $retryErrorType -MemberType NoteProperty -Force
+                            $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+                        }
+                    }
+                }
+                else {
+                    Write-Warning "Could not create mirror for [$upstreamOwner/$upstreamRepo]; marking mirrorFound as false"
+                    if ($existingFork -is [hashtable]) { $existingFork["mirrorFound"] = $false } else { $existingFork.mirrorFound = $false }
+                    $failed++
+                }
             }
-            elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
+            elseif ($errorType -eq "merge_conflict" -or $resultMessage -like "*Merge conflict*") {
                 Write-Warning "$i/$max Merge conflict detected for mirror [$($existingFork.name)]"
                 $conflicts++
             }
             elseif ($errorType -eq "auth_error") {
-                Write-Warning "$i/$max Authentication error for mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$max Authentication error for mirror [$($existingFork.name)]: $resultMessage"
                 $failed++
             }
             elseif ($errorType -eq "git_reference_error" -or $errorType -eq "ambiguous_refspec") {
-                Write-Warning "$i/$max Git reference error for mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$max Git reference error for mirror [$($existingFork.name)]: $resultMessage"
                 $failed++
             }
             else {
-                Write-Warning "$i/$max Failed to sync mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$i/$max Failed to sync mirror [$($existingFork.name)]: $resultMessage"
                 $failed++
             }
             
             # Track failed sync with error details
-            $existingFork | Add-Member -Name lastSyncError -Value $result.message -MemberType NoteProperty -Force
-            $existingFork | Add-Member -Name lastSyncErrorType -Value $errorType -MemberType NoteProperty -Force
-            $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+            if ($existingFork -is [hashtable]) {
+                $existingFork["lastSyncError"] = $resultMessage
+                $existingFork["lastSyncErrorType"] = $errorType
+                $existingFork["lastSyncAttempt"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+            }
+            else {
+                $existingFork | Add-Member -Name lastSyncError -Value $resultMessage -MemberType NoteProperty -Force
+                $existingFork | Add-Member -Name lastSyncErrorType -Value $errorType -MemberType NoteProperty -Force
+                $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+            }
         }
         
         $i++ | Out-Null
@@ -146,8 +223,8 @@ function ShowOverallDatasetStatistics {
     # Total repos in dataset
     $totalRepos = $existingForks.Count
     
-    # Count repos with forkFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
+    # Count repos with mirrorFound = true (valid mirrors)
+    $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 

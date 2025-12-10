@@ -605,6 +605,7 @@ jobs:
           Write-Message -message "" -logToSummary $true
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
+
       - name: Show overall statistics
         shell: pwsh
         run: |
