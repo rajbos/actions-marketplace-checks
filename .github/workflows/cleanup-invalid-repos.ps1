@@ -58,6 +58,7 @@ function GetReposToCleanup {
     }
     
     Write-Host "Found [$($reposToCleanup.Count)] repos to cleanup"
+    Write-Host "" # empty line for readability
     Write-Output -NoEnumerate $reposToCleanup
 }
 
@@ -65,11 +66,13 @@ function RemoveRepos {
     Param (
         $repos,
         $owner,
-        $dryRun
+        $dryRun,
+        $maxCount
     )
 
     $i = 1
     $repoCount = $repos.Count
+    $deletedCount = 0
     
     if ($dryRun) {
         Write-Host "DRY RUN MODE - No repos will be actually deleted"
@@ -78,6 +81,9 @@ function RemoveRepos {
     
     foreach ($repo in $repos) 
     {
+        if ($maxCount -and $deletedCount -ge $maxCount) {
+            break
+        }
         $repoName = $repo.name
         Write-Host "$($i)/$($repoCount) Would delete repo [$($owner)/$($repoName)]"
         Write-Host "  Reason: $($repo.reason)"
@@ -87,14 +93,21 @@ function RemoveRepos {
             try {
                 ApiCall -method DELETE -url $url -access_token $access_token
                 Write-Host "  Successfully deleted [$owner/$repoName]"
+                $deletedCount++
             }
             catch {
                 Write-Host "  Error deleting [$owner/$repoName]: $($_.Exception.Message)"
             }
         }
+        else {
+            # In dry run, we still count towards the max to simulate selection of X repos to cleanup
+            $deletedCount++
+        }
         
         $i++
     }
+
+    Write-Host "Processed [$deletedCount] repos (limit: [$maxCount])"
 }
 
 function RemoveReposFromStatus {
@@ -143,12 +156,6 @@ if ($access_token) {
 # Get repos to cleanup from status file
 $reposToCleanup = GetReposToCleanup -statusFile $statusFile
 
-# Limit to numberOfReposToDo
-if ($reposToCleanup.Count -gt $numberOfReposToDo) {
-    Write-Host "Limiting cleanup to first [$numberOfReposToDo] repos (total found: [$($reposToCleanup.Count)])"
-    $reposToCleanup = $reposToCleanup | Select-Object -First $numberOfReposToDo
-}
-
 # Display summary
 Write-Host ""
 Write-Host "Summary of repos to cleanup:"
@@ -165,7 +172,7 @@ Write-Message -message "Owner: [$owner]" -logToSummary $true
 Write-Message -message "Number of repos considered: [$numberOfReposToDo]" -logToSummary $true
 Write-Message -message "Dry run: [$dryRun]" -logToSummary $true
 Write-Message -message "" -logToSummary $true
-Write-Message -message "Found [$($reposToCleanup.Count)] repos to cleanup" -logToSummary $true
+Write-Message -message "Found [$($reposToCleanup.Count)] repos eligible to cleanup" -logToSummary $true
 if ($reposToCleanup.Count -gt 0) {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Repository | Reason |" -logToSummary $true
@@ -178,11 +185,13 @@ if ($reposToCleanup.Count -gt 0) {
 
 # Remove the repos
 if ($reposToCleanup.Count -gt 0) {
-    RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun
+    RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun -maxCount $numberOfReposToDo
     
     if (-not $dryRun) {
         # Update status file to remove deleted repos
-        RemoveReposFromStatus -repos $reposToCleanup -statusFile $statusFile
+        # Only remove up to numberOfReposToDo from status
+        $reposRemoved = $reposToCleanup | Select-Object -First $numberOfReposToDo
+        RemoveReposFromStatus -repos $reposRemoved -statusFile $statusFile
     }
 }
 else {
