@@ -7,7 +7,7 @@ name: Get repo info
 on:
   push:
     paths:
-      - .github/workflows/repo-info.yml
+      - .github/workflows/repoInfo.yml
       - .github/workflows/repoInfo.ps1
 
   schedule:
