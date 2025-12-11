@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  numberOfReposToDo: 50 # 100 repos often takes longer then an hour and then the access_token is no longer valid
+  numberOfReposToDo: 500 
 
 jobs:
   get-repo-information:
