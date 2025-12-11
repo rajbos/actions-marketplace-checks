@@ -32,16 +32,16 @@ function ProcessForkingChunk {
     Add-ChunkMessage -buffer $summaryBuffer -message "Processing [$($actionNamesToProcess.Count)] actions in this chunk"
     Add-ChunkMessage -buffer $summaryBuffer -message ""
     
-    # Create a hashtable for fast lookup
+    # Create a hashtable for fast lookup (case-insensitive)
     $actionsByName = @{}
     foreach ($action in $allActions) {
         if ($null -ne $action.name -and $action.name -ne "") {
-            $actionsByName[$action.name] = $action
+            $actionsByName[$action.name.ToLower()] = $action
             continue
         }
 
         if ($null -ne $action.forkedRepoName -and $action.forkedRepoName -ne "") {
-            $actionsByName[$action.forkedRepoName] = $action
+            $actionsByName[$action.forkedRepoName.ToLower()] = $action
             continue
         }
 
@@ -54,7 +54,7 @@ function ProcessForkingChunk {
                 if ($segments.Length -ge 2) {
                     $derivedKey = "$($segments[0])/$($segments[1])"
                     if ($derivedKey -ne "") {
-                        $actionsByName[$derivedKey] = $action
+                        $actionsByName[$derivedKey.ToLower()] = $action
                     }
                 }
             } catch {
@@ -71,8 +71,9 @@ function ProcessForkingChunk {
     # Filter to only the actions we should process in this chunk
     $actionsToProcess = @()
     foreach ($actionName in $actionNamesToProcess) {
-        if ($actionsByName.ContainsKey($actionName)) {
-            $actionsToProcess += $actionsByName[$actionName]
+        $lookupKey = $actionName.ToLower()
+        if ($actionsByName.ContainsKey($lookupKey)) {
+            $actionsToProcess += $actionsByName[$lookupKey]
         } else {
             Write-Warning "Action [$actionName] not found in actions list, skipping"
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
