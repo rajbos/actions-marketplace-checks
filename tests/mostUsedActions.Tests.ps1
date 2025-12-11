@@ -211,7 +211,7 @@ Describe "GetMostUsedActionsList" {
         for ($i = 1; $i -le 15; $i++) {
             $script:actions += @{ 
                 name = "owner$i`_action$i"
-                dependents = @{ dependents = "$($1000 - $i * 10)" }
+                dependents = @{ dependents = "$(1000 - $i * 10)" }
             }
         }
         
