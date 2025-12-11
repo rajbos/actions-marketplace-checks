@@ -22,6 +22,10 @@ else {
   $accessToken = $access_token
 }
 
+# log token lengths
+Write-Host "Using access token of length: [$($accessToken.Length)]"
+Write-Host "Using access token destination of length: [$($access_token_destination.Length)]"
+
 Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
 Import-Module powershell-yaml -Force
