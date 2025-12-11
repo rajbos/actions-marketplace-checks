@@ -34,14 +34,17 @@ function ProcessForkingChunk {
     
     # Create a hashtable for fast lookup (case-insensitive)
     $actionsByName = @{}
+    $keyStats = [ordered]@{ fromName = 0; fromForkedRepoName = 0; fromRepoUrl = 0; invalidRepoUrl = 0 }
     foreach ($action in $allActions) {
         if ($null -ne $action.name -and $action.name -ne "") {
             $actionsByName[$action.name.ToLower()] = $action
+            $keyStats.fromName++
             continue
         }
 
         if ($null -ne $action.forkedRepoName -and $action.forkedRepoName -ne "") {
             $actionsByName[$action.forkedRepoName.ToLower()] = $action
+            $keyStats.fromForkedRepoName++
             continue
         }
 
@@ -55,18 +58,32 @@ function ProcessForkingChunk {
                     $derivedKey = "$($segments[0])/$($segments[1])"
                     if ($derivedKey -ne "") {
                         $actionsByName[$derivedKey.ToLower()] = $action
+                        $keyStats.fromRepoUrl++
                     }
                 }
             } catch {
                 # Ignore URL parse errors; no key added in this case
+                $keyStats.invalidRepoUrl++
             }
         }
     }
     
-    # show hashtable count and a sample of keys for quick verification
+    # show hashtable count, origin stats, and a sample of keys for quick verification
     Write-Message -message "Total actions available for processing: [$($actionsByName.Count)]" -logToSummary $true
-    $sampleKeys = ($actionsByName.Keys | Select-Object -First 3) -join ', '
+    Write-Host "Key origin stats: name=$($keyStats.fromName), forkedRepoName=$($keyStats.fromForkedRepoName), repoUrl-derived=$($keyStats.fromRepoUrl), invalidRepoUrl=$($keyStats.invalidRepoUrl)"
+    $sampleKeys = ($actionsByName.Keys | Select-Object -First 5) -join ', '
     if ($sampleKeys) { Write-Host "Sample keys: $sampleKeys" }
+
+    # Log a tiny sample of action fields to validate schema
+    $firstAction = $allActions | Select-Object -First 1
+    if ($null -ne $firstAction) {
+        $schemaPreview = [ordered]@{
+            name = $firstAction.name
+            forkedRepoName = $firstAction.forkedRepoName
+            repoUrl = $firstAction.repoUrl
+        } | ConvertTo-Json -Compress
+        Write-Host "Action schema preview: $schemaPreview"
+    }
     
     # Filter to only the actions we should process in this chunk
     $actionsToProcess = @()
@@ -75,7 +92,16 @@ function ProcessForkingChunk {
         if ($actionsByName.ContainsKey($lookupKey)) {
             $actionsToProcess += $actionsByName[$lookupKey]
         } else {
-            Write-Warning "Action [$actionName] not found in actions list, skipping"
+            # Enhanced diagnostics for unmatched names
+            $altUnderscoreToSlash = $lookupKey -replace '_','/'
+            $hasAlt = $actionsByName.ContainsKey($altUnderscoreToSlash)
+            $prefixMatches = $actionsByName.Keys | Where-Object { $_.StartsWith($lookupKey) } | Select-Object -First 3
+            $containsMatches = $actionsByName.Keys | Where-Object { $_ -like "*${lookupKey}*" } | Select-Object -First 3
+
+            Write-Warning "Action [$actionName] not found. lookupKey=[$lookupKey]; altUnderscoreToSlash=[$altUnderscoreToSlash]; altExists=[$hasAlt]"
+            if ($prefixMatches) { Write-Host "Near prefix matches: $(($prefixMatches -join ', '))" }
+            if ($containsMatches) { Write-Host "Near contains matches: $(($containsMatches -join ', '))" }
+
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
         }
     }
