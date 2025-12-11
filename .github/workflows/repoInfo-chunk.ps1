@@ -1,3 +1,11 @@
+# Chunk processing script for gathering repository information
+# This script processes a subset of forked repos for info gathering in parallel with other chunks.
+#
+# Note on logging: This script uses conditional step summary logging. Messages are always
+# written to the job console logs (Write-Host), but are only written to the GitHub
+# Step Summary when errors or warnings occur. This keeps the step summary clean when
+# everything is working correctly, while still providing visibility when issues arise.
+
 Param (
   $actions,
   $actionNames,  # Array of action names (fork names) to process in this chunk
