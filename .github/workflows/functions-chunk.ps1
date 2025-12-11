@@ -32,7 +32,7 @@ function ProcessForkingChunk {
     Add-ChunkMessage -buffer $summaryBuffer -message "Processing [$($actionNamesToProcess.Count)] actions in this chunk"
     Add-ChunkMessage -buffer $summaryBuffer -message ""
     
-    # Create a hashtable for fast lookup (case-insensitive)
+    # Create a hashtable for fast lookup (case-insensitive), pre-normalized once
     $actionsByName = @{}
     $keyStats = [ordered]@{ fromName = 0; fromForkedRepoName = 0; fromRepoUrl = 0; invalidRepoUrl = 0 }
     foreach ($action in $allActions) {
@@ -53,7 +53,9 @@ function ProcessForkingChunk {
             $repoUrlStr = $action.repoUrl.Trim()
             # Handle plain owner/repo strings (no scheme/host)
             if ($repoUrlStr -match '^[^/]+/[^/]+$') {
-                $actionsByName[$repoUrlStr.ToLower()] = $action
+                $normalized = $repoUrlStr.ToLower()
+                $actionsByName[$normalized] = $action
+                if ($null -eq $action.name -or $action.name -eq "") { $action.name = $normalized }
                 $keyStats.fromRepoUrl++
             } else {
                 try {
@@ -63,7 +65,9 @@ function ProcessForkingChunk {
                     if ($segments.Length -ge 2) {
                         $derivedKey = "$( $segments[0] )/$( $segments[1] )"
                         if ($derivedKey -ne "") {
-                            $actionsByName[$derivedKey.ToLower()] = $action
+                            $normalized = $derivedKey.ToLower()
+                            $actionsByName[$normalized] = $action
+                            if ($null -eq $action.name -or $action.name -eq "") { $action.name = $normalized }
                             $keyStats.fromRepoUrl++
                         }
                     }
@@ -92,29 +96,24 @@ function ProcessForkingChunk {
         Write-Host "Action schema preview: $schemaPreview"
     }
     
-    # Filter to only the actions we should process in this chunk
+    # Normalize chunk names upfront (lowercase + underscore→slash) then do single-pass lookups
+    $normalizedChunkNames = @()
+    foreach ($nm in $actionNamesToProcess) {
+        if ($null -ne $nm -and $nm -ne "") {
+            $normalizedChunkNames += ($nm.ToLower() -replace '_','/')
+        }
+    }
+
     $actionsToProcess = @()
-    foreach ($actionName in $actionNamesToProcess) {
-        $lookupKey = $actionName.ToLower()
+    foreach ($lookupKey in $normalizedChunkNames) {
         if ($actionsByName.ContainsKey($lookupKey)) {
             $actionsToProcess += $actionsByName[$lookupKey]
         } else {
-            # Enhanced diagnostics for unmatched names
-            $altUnderscoreToSlash = $lookupKey -replace '_','/'
-            $hasAlt = $actionsByName.ContainsKey($altUnderscoreToSlash)
-            $prefixMatches = $actionsByName.Keys | Where-Object { $_.StartsWith($lookupKey) } | Select-Object -First 3
-            $containsMatches = $actionsByName.Keys | Where-Object { $_ -like "*${lookupKey}*" } | Select-Object -First 3
-
-            if ($hasAlt) {
-                Write-Host "Using underscore→slash variant for [$actionName] => [$altUnderscoreToSlash]"
-                $actionsToProcess += $actionsByName[$altUnderscoreToSlash]
-            } else {
-                Write-Warning "Action [$actionName] not found. lookupKey=[$lookupKey]; altUnderscoreToSlash=[$altUnderscoreToSlash]; altExists=[$hasAlt]"
-                if ($prefixMatches) { Write-Host "Near prefix matches: $(($prefixMatches -join ', '))" }
-                if ($containsMatches) { Write-Host "Near contains matches: $(($containsMatches -join ', '))" }
-
-                Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
-            }
+            # Brief diagnostics for unmatched names (reduced per-item noise)
+            $prefixMatches = $actionsByName.Keys | Where-Object { $_.StartsWith($lookupKey) } | Select-Object -First 2
+            $containsMatches = $actionsByName.Keys | Where-Object { $_ -like "*${lookupKey}*" } | Select-Object -First 2
+            Write-Warning "Action key [$lookupKey] not found. Prefix: $(($prefixMatches -join ', ')) Contains: $(($containsMatches -join ', '))"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$lookupKey] not found in actions list, skipping" -isError $true
         }
     }
     
