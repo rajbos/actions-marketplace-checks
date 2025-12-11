@@ -102,7 +102,7 @@ jobs:
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
            # get repo information
-           ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+           ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
 
       - name: Upload status.json to blob storage
         if: always()
