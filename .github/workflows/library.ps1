@@ -1564,6 +1564,11 @@ function GetForkedActionRepos {
 
     foreach ($action in $actions) {
         # check if action is already in $statusTable
+        # guard against null/empty names to avoid null index errors
+        if ([string]::IsNullOrWhiteSpace($action.name)) {
+            Write-Host "Skipping action with missing name from RepoUrl: [$($action.RepoUrl)]"
+            continue
+        }
         $found = $statusTable[$action.name]
 
         if (!$found) {
