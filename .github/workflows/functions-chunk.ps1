@@ -37,13 +37,36 @@ function ProcessForkingChunk {
     foreach ($action in $allActions) {
         if ($null -ne $action.name -and $action.name -ne "") {
             $actionsByName[$action.name] = $action
-        } elseif ($null -ne $action.forkedRepoName -and $action.forkedRepoName -ne "") {
+            continue
+        }
+
+        if ($null -ne $action.forkedRepoName -and $action.forkedRepoName -ne "") {
             $actionsByName[$action.forkedRepoName] = $action
+            continue
+        }
+
+        # Fallback: derive owner/repo from repoUrl if present (handles actions without name/forkedRepoName)
+        if ($null -ne $action.repoUrl -and $action.repoUrl -ne "") {
+            try {
+                $uri = [Uri]$action.repoUrl
+                # Expecting paths like /owner/repo or /owner/repo/...; take first two segments
+                $segments = $uri.AbsolutePath.Trim('/').Split('/')
+                if ($segments.Length -ge 2) {
+                    $derivedKey = "$($segments[0])/$($segments[1])"
+                    if ($derivedKey -ne "") {
+                        $actionsByName[$derivedKey] = $action
+                    }
+                }
+            } catch {
+                # Ignore URL parse errors; no key added in this case
+            }
         }
     }
     
-    # show hashtable count
+    # show hashtable count and a sample of keys for quick verification
     Write-Message -message "Total actions available for processing: [$($actionsByName.Count)]" -logToSummary $true
+    $sampleKeys = ($actionsByName.Keys | Select-Object -First 3) -join ', '
+    if ($sampleKeys) { Write-Host "Sample keys: $sampleKeys" }
     
     # Filter to only the actions we should process in this chunk
     $actionsToProcess = @()
