@@ -1380,6 +1380,108 @@ function Write-Message {
     }
 }
 
+# Helper functions for conditional step summary logging in chunk processing
+function Initialize-ChunkSummaryBuffer {
+    <#
+    .SYNOPSIS
+    Initializes a buffer for collecting chunk processing messages.
+    
+    .DESCRIPTION
+    Creates a hashtable to track chunk processing state including:
+    - Messages to potentially log to step summary
+    - Whether any errors/warnings occurred
+    - Chunk ID for context
+    
+    .PARAMETER chunkId
+    The chunk ID being processed
+    
+    .EXAMPLE
+    $summaryBuffer = Initialize-ChunkSummaryBuffer -chunkId 1
+    #>
+    param(
+        [int] $chunkId
+    )
+    
+    return @{
+        ChunkId = $chunkId
+        Messages = [System.Collections.ArrayList]@()
+        HasErrors = $false
+    }
+}
+
+function Add-ChunkMessage {
+    <#
+    .SYNOPSIS
+    Adds a message to the chunk summary buffer.
+    
+    .DESCRIPTION
+    Stores a message in the buffer and always writes it to console.
+    The message will only be written to step summary if errors occur.
+    
+    .PARAMETER buffer
+    The chunk summary buffer hashtable
+    
+    .PARAMETER message
+    The message to add
+    
+    .PARAMETER isError
+    Whether this message represents an error/warning condition
+    
+    .EXAMPLE
+    Add-ChunkMessage -buffer $summaryBuffer -message "Processing 10 actions"
+    Add-ChunkMessage -buffer $summaryBuffer -message "Error: Failed to fork" -isError $true
+    #>
+    param(
+        [hashtable] $buffer,
+        [string] $message,
+        [bool] $isError = $false
+    )
+    
+    # Always write to console
+    Write-Host $message
+    
+    # Store message in buffer
+    [void]$buffer.Messages.Add($message)
+    
+    # Track if this is an error
+    if ($isError) {
+        $buffer.HasErrors = $true
+    }
+}
+
+function Write-ChunkSummary {
+    <#
+    .SYNOPSIS
+    Conditionally writes chunk messages to the step summary.
+    
+    .DESCRIPTION
+    If errors occurred during chunk processing, writes all buffered messages
+    to the GitHub Step Summary. Otherwise, messages remain only in job logs.
+    
+    .PARAMETER buffer
+    The chunk summary buffer hashtable
+    
+    .EXAMPLE
+    Write-ChunkSummary -buffer $summaryBuffer
+    #>
+    param(
+        [hashtable] $buffer
+    )
+    
+    if ($buffer.HasErrors) {
+        # Write all buffered messages to step summary since there were errors
+        $summaryPath = $env:GITHUB_STEP_SUMMARY
+        if ($null -ne $summaryPath -and ($summaryPath.Trim()).Length -gt 0) {
+            Write-Host "Errors detected in chunk $($buffer.ChunkId), writing summary to step output"
+            foreach ($msg in $buffer.Messages) {
+                Add-Content -Path $summaryPath -Value $msg
+            }
+        }
+    } else {
+        Write-Host "Chunk $($buffer.ChunkId) completed successfully, summary only in job logs"
+    }
+}
+
 function GetForkedActionRepos {
     Param (
         $actions,

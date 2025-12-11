@@ -33,9 +33,12 @@ function ProcessRepoInfoChunk {
         [int] $chunkId
     )
 
-    Write-Message -message "# Chunk [$chunkId] - Repo Info Processing" -logToSummary $true
-    Write-Message -message "Processing [$($actionNamesToProcess.Count)] forks in this chunk" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    # Initialize summary buffer for conditional logging
+    $summaryBuffer = Initialize-ChunkSummaryBuffer -chunkId $chunkId
+    
+    Add-ChunkMessage -buffer $summaryBuffer -message "# Chunk [$chunkId] - Repo Info Processing"
+    Add-ChunkMessage -buffer $summaryBuffer -message "Processing [$($actionNamesToProcess.Count)] forks in this chunk"
+    Add-ChunkMessage -buffer $summaryBuffer -message ""
     
     # Get existing forks from status
     $existingForks = @()
@@ -46,10 +49,14 @@ function ProcessRepoInfoChunk {
             $existingForks = $statusContent | ConvertFrom-Json
         } catch {
             Write-Warning "Could not parse status.json: $($_.Exception.Message)"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ ERROR: Could not parse status.json: $($_.Exception.Message)" -isError $true
+            Write-ChunkSummary -buffer $summaryBuffer
             return @()
         }
     } else {
         Write-Warning "status.json not found"
+        Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ ERROR: status.json not found" -isError $true
+        Write-ChunkSummary -buffer $summaryBuffer
         return @()
     }
     
@@ -63,19 +70,23 @@ function ProcessRepoInfoChunk {
     
     # Filter to only the forks we should process in this chunk
     $forksToProcess = @()
+    $notFoundCount = 0
     foreach ($actionName in $actionNamesToProcess) {
         if ($forksByName.ContainsKey($actionName)) {
             $forksToProcess += $forksByName[$actionName]
         } else {
             Write-Warning "Fork [$actionName] not found in status, skipping"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Fork [$actionName] not found in status, skipping" -isError $true
+            $notFoundCount++
         }
     }
     
-    Write-Message -message "Found [$($forksToProcess.Count)] forks to process" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    Add-ChunkMessage -buffer $summaryBuffer -message "Found [$($forksToProcess.Count)] forks to process"
+    Add-ChunkMessage -buffer $summaryBuffer -message ""
     
     if ($forksToProcess.Count -eq 0) {
-        Write-Message -message "No forks to process in this chunk" -logToSummary $true
+        Add-ChunkMessage -buffer $summaryBuffer -message "No forks to process in this chunk"
+        Write-ChunkSummary -buffer $summaryBuffer
         return @()
     }
     
@@ -97,13 +108,14 @@ function ProcessRepoInfoChunk {
         
         # Check if rate limit was exceeded during processing
         if (Test-RateLimitExceeded) {
-            Write-Message -message "⚠️ Rate limit exceeded (20+ minute wait) during repo info processing" -logToSummary $true
-            Write-Message -message "Partial results will be saved" -logToSummary $true
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Rate limit exceeded (20+ minute wait) during repo info processing" -isError $true
+            Add-ChunkMessage -buffer $summaryBuffer -message "Partial results will be saved"
         }
         
         $processedCount = $forksToProcess.Count
     } catch {
         Write-Warning "Failed to process repo info chunk: $($_.Exception.Message)"
+        Add-ChunkMessage -buffer $summaryBuffer -message "❌ Failed to process repo info chunk: $($_.Exception.Message)" -isError $true
     } finally {
         Set-Location $currentDir
     }
@@ -124,23 +136,27 @@ function ProcessRepoInfoChunk {
             }
         } catch {
             Write-Warning "Could not read updated status.json: $($_.Exception.Message)"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ ERROR: Could not read updated status.json: $($_.Exception.Message)" -isError $true
         }
     }
     
-    Write-Message -message "✓ Processed [$processedCount] forks, found [$($processedForks.Count)] results" -logToSummary $true
+    Add-ChunkMessage -buffer $summaryBuffer -message "✓ Processed [$processedCount] forks, found [$($processedForks.Count)] results"
+    
+    # Write summary conditionally (only if errors occurred)
+    Write-ChunkSummary -buffer $summaryBuffer
     
     return $processedForks
 }
 
-Write-Message -message "# Chunk [$chunkId] RepoInfo Processing Started" -logToSummary $true
-Write-Message -message "" -logToSummary $true
+Write-Host "# Chunk [$chunkId] RepoInfo Processing Started"
+Write-Host ""
 
 Write-Host "Got $($actions.Length) total actions"
 Write-Host "Will process $($actionNames.Count) forks in this chunk"
 
 GetRateLimitInfo -access_token $accessToken -access_token_destination $access_token_destination
 
-# Process the chunk
+# Process the chunk (handles its own conditional summary logging)
 $processedForks = ProcessRepoInfoChunk -allActions $actions -actionNamesToProcess $actionNames -chunkId $chunkId
 
 # Save partial status for this chunk
@@ -149,8 +165,8 @@ Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outp
 
 GetRateLimitInfo -access_token $accessToken -access_token_destination $access_token_destination
 
-Write-Message -message "" -logToSummary $true
-Write-Message -message "✓ Chunk [$chunkId] repoInfo processing complete" -logToSummary $true
+Write-Host ""
+Write-Host "✓ Chunk [$chunkId] repoInfo processing complete"
 
 # Explicitly exit with success code
 exit 0

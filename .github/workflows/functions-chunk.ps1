@@ -17,9 +17,12 @@ function ProcessForkingChunk {
         [int] $chunkId
     )
 
-    Write-Message -message "# Chunk [$chunkId] - Forking Processing" -logToSummary $true
-    Write-Message -message "Processing [$($actionNamesToProcess.Count)] actions in this chunk" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    # Initialize summary buffer for conditional logging
+    $summaryBuffer = Initialize-ChunkSummaryBuffer -chunkId $chunkId
+    
+    Add-ChunkMessage -buffer $summaryBuffer -message "# Chunk [$chunkId] - Forking Processing"
+    Add-ChunkMessage -buffer $summaryBuffer -message "Processing [$($actionNamesToProcess.Count)] actions in this chunk"
+    Add-ChunkMessage -buffer $summaryBuffer -message ""
     
     # Create a hashtable for fast lookup
     $actionsByName = @{}
@@ -33,20 +36,23 @@ function ProcessForkingChunk {
     
     # Filter to only the actions we should process in this chunk
     $actionsToProcess = @()
+    $notFoundCount = 0
     foreach ($actionName in $actionNamesToProcess) {
         if ($actionsByName.ContainsKey($actionName)) {
             $actionsToProcess += $actionsByName[$actionName]
         } else {
             Write-Warning "Action [$actionName] not found in actions list, skipping"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
+            $notFoundCount++
         }
     }
     
-    Write-Message -message "Found [$($actionsToProcess.Count)] actions to process in chunk" -logToSummary $true
+    Add-ChunkMessage -buffer $summaryBuffer -message "Found [$($actionsToProcess.Count)] actions to process in chunk"
     
     # Filter actions to only ones with repoUrl
     $actionsToProcess = $actionsToProcess | Where-Object { $null -ne $_.repoUrl -and $_.repoUrl -ne "" }
-    Write-Message -message "Filtered to [$($actionsToProcess.Count)] actions with repoUrl" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    Add-ChunkMessage -buffer $summaryBuffer -message "Filtered to [$($actionsToProcess.Count)] actions with repoUrl"
+    Add-ChunkMessage -buffer $summaryBuffer -message ""
     
     # Get existing forks from status
     $existingForks = @()
@@ -57,6 +63,7 @@ function ProcessForkingChunk {
             $existingForks = $statusContent | ConvertFrom-Json
         } catch {
             Write-Warning "Could not parse status.json: $($_.Exception.Message)"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ ERROR: Could not parse status.json: $($_.Exception.Message)" -isError $true
         }
     }
     
@@ -66,12 +73,13 @@ function ProcessForkingChunk {
     # While this adds some overhead, it ensures correctness and maintainability.
     $processedForks = @()
     $forkedCount = 0
+    $failedCount = 0
     
     foreach ($action in $actionsToProcess) {
         # Check if rate limit was exceeded before processing next action
         if (Test-RateLimitExceeded) {
-            Write-Message -message "⚠️ Rate limit exceeded (20+ minute wait), stopping chunk processing early" -logToSummary $true
-            Write-Message -message "Processed [$forkedCount] actions before rate limit was reached" -logToSummary $true
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Rate limit exceeded (20+ minute wait), stopping chunk processing early" -isError $true
+            Add-ChunkMessage -buffer $summaryBuffer -message "Processed [$forkedCount] actions before rate limit was reached"
             break
         }
         
@@ -94,6 +102,8 @@ function ProcessForkingChunk {
             $forkedCount++
         } catch {
             Write-Warning "Failed to process action $($action.name): $($_.Exception.Message)"
+            Add-ChunkMessage -buffer $summaryBuffer -message "❌ Failed to process action $($action.name): $($_.Exception.Message)" -isError $true
+            $failedCount++
         } finally {
             # Restore directory
             Set-Location $currentDir
@@ -115,16 +125,23 @@ function ProcessForkingChunk {
             }
         } catch {
             Write-Warning "Could not read updated status.json: $($_.Exception.Message)"
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ ERROR: Could not read updated status.json: $($_.Exception.Message)" -isError $true
         }
     }
     
-    Write-Message -message "✓ Chunk [$chunkId] processed [$forkedCount] actions, found [$($processedForks.Count)] forks" -logToSummary $true
+    Add-ChunkMessage -buffer $summaryBuffer -message "✓ Chunk [$chunkId] processed [$forkedCount] actions, found [$($processedForks.Count)] forks"
+    if ($failedCount -gt 0) {
+        Add-ChunkMessage -buffer $summaryBuffer -message "❌ Failed to process [$failedCount] actions"
+    }
+    
+    # Write summary conditionally (only if errors occurred)
+    Write-ChunkSummary -buffer $summaryBuffer
     
     return $processedForks
 }
 
-Write-Message -message "# Chunk [$chunkId] Forking Processing Started" -logToSummary $true
-Write-Message -message "" -logToSummary $true
+Write-Host "# Chunk [$chunkId] Forking Processing Started"
+Write-Host ""
 
 Write-Host "Got $($actions.Length) total actions"
 Write-Host "Will process $($actionNames.Count) actions in this chunk"
@@ -138,7 +155,7 @@ if ($null -ne $script:tokenExpirationTime) {
     Write-Host "Token will expire in $([math]::Round($timeUntilExpiration.TotalMinutes, 1)) minutes"
 }
 
-# Process the chunk
+# Process the chunk (handles its own conditional summary logging)
 $processedForks = ProcessForkingChunk -allActions $actions -actionNamesToProcess $actionNames -chunkId $chunkId
 
 # Save partial status for this chunk
@@ -147,8 +164,8 @@ Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outp
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
-Write-Message -message "" -logToSummary $true
-Write-Message -message "✓ Chunk [$chunkId] forking processing complete" -logToSummary $true
+Write-Host ""
+Write-Host "✓ Chunk [$chunkId] forking processing complete"
 
 # Explicitly exit with success code
 exit 0
