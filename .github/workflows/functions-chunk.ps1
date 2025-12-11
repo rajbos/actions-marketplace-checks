@@ -41,6 +41,8 @@ function ProcessForkingChunk {
             $actionsByName[$action.forkedRepoName] = $action
         }
     }
+    # show hashtable count
+    Log-Message -buffer $summaryBuffer -message "Total actions available for processing: [$($actionsByName.Count)]"
     
     # Filter to only the actions we should process in this chunk
     $actionsToProcess = @()
