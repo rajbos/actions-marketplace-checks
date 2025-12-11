@@ -78,14 +78,12 @@ function ProcessRepoInfoChunk {
     
     # Filter to only the forks we should process in this chunk
     $forksToProcess = @()
-    $notFoundCount = 0
     foreach ($actionName in $actionNamesToProcess) {
         if ($forksByName.ContainsKey($actionName)) {
             $forksToProcess += $forksByName[$actionName]
         } else {
             Write-Warning "Fork [$actionName] not found in status, skipping"
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Fork [$actionName] not found in status, skipping" -isError $true
-            $notFoundCount++
         }
     }
     

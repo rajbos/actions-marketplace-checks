@@ -44,14 +44,12 @@ function ProcessForkingChunk {
     
     # Filter to only the actions we should process in this chunk
     $actionsToProcess = @()
-    $notFoundCount = 0
     foreach ($actionName in $actionNamesToProcess) {
         if ($actionsByName.ContainsKey($actionName)) {
             $actionsToProcess += $actionsByName[$actionName]
         } else {
             Write-Warning "Action [$actionName] not found in actions list, skipping"
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
-            $notFoundCount++
         }
     }
     
