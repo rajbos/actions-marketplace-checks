@@ -75,7 +75,7 @@ jobs:
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            # $numberOfReposToDo = $actions.Length
            $numberOfReposToDo = 1000
-           ./.github/workflows/ossf-scan.ps1 -actions $actions -numberOfReposToDo $numberOfReposToDo -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination ${{ steps.get_workflow_token.outputs.token }}
+           ./.github/workflows/ossf-scan.ps1 -actions $actions -numberOfReposToDo $numberOfReposToDo -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
 
       - name: Upload status.json to blob storage
         if: always()
