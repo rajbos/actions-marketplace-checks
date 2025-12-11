@@ -473,21 +473,46 @@ function GetMostUsedActionsList {
         LogMessage "No actions found, so cannot check for Most Used Actions"
         return
     }
+    
+    # Get all actions with dependents info
+    $dependentsInfoAvailable = $actions | Where-Object {
+        $null -ne $_ && $null -ne $_.name && $null -ne $_.dependents && $_.dependents?.dependents -ne ""
+    }
+
+    LogMessage "Found [$($dependentsInfoAvailable.Count)] actions with dependents info available"
+    LogMessage ""
+    
+    # Table 1: All most used actions (including actions org)
     LogMessage "## Most used actions:"
     LogMessage "| Repository | Dependent repos |"
     LogMessage "|---|---:|"
 
-    $dependentsInfoAvailable = $actions | Where-Object {
-        $null -ne $_ && $null -ne $_.name && !$_.name.StartsWith("actions") && $null -ne $_.dependents && $_.dependents?.dependents -ne ""
-    }
-
-    LogMessage "Found [$($dependentsInfoAvailable.Count)] actions with dependents info available"
-
-    $top10 = $dependentsInfoAvailable
+    $top10All = $dependentsInfoAvailable
         | Sort-Object -Property {[int]($_.dependents?.dependents?.Replace(" ", ""))} -Descending
         | Select-Object -First 10
 
-    foreach ($item in $top10)
+    foreach ($item in $top10All)
+    {
+        $splitted = $item.name.Split("_")
+        LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
+    }
+    
+    LogMessage ""
+    
+    # Table 2: Most used actions excluding actions org
+    LogMessage "## Most used actions (excluding actions org):"
+    LogMessage "| Repository | Dependent repos |"
+    LogMessage "|---|---:|"
+    
+    $dependentsExcludingActionsOrg = $dependentsInfoAvailable | Where-Object {
+        $null -ne $_.name -and -not $_.name.StartsWith("actions_")
+    }
+
+    $top10ExcludingActionsOrg = $dependentsExcludingActionsOrg
+        | Sort-Object -Property {[int]($_.dependents?.dependents?.Replace(" ", ""))} -Descending
+        | Select-Object -First 10
+
+    foreach ($item in $top10ExcludingActionsOrg)
     {
         $splitted = $item.name.Split("_")
         LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
