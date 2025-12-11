@@ -50,20 +50,27 @@ function ProcessForkingChunk {
 
         # Fallback: derive owner/repo from repoUrl if present (handles actions without name/forkedRepoName)
         if ($null -ne $action.repoUrl -and $action.repoUrl -ne "") {
-            try {
-                $uri = [Uri]$action.repoUrl
-                # Expecting paths like /owner/repo or /owner/repo/...; take first two segments
-                $segments = $uri.AbsolutePath.Trim('/').Split('/')
-                if ($segments.Length -ge 2) {
-                    $derivedKey = "$($segments[0])/$($segments[1])"
-                    if ($derivedKey -ne "") {
-                        $actionsByName[$derivedKey.ToLower()] = $action
-                        $keyStats.fromRepoUrl++
+            $repoUrlStr = $action.repoUrl.Trim()
+            # Handle plain owner/repo strings (no scheme/host)
+            if ($repoUrlStr -match '^[^/]+/[^/]+$') {
+                $actionsByName[$repoUrlStr.ToLower()] = $action
+                $keyStats.fromRepoUrl++
+            } else {
+                try {
+                    $uri = [Uri]$repoUrlStr
+                    # Expecting paths like /owner/repo or /owner/repo/...; take first two segments
+                    $segments = $uri.AbsolutePath.Trim('/').Split('/')
+                    if ($segments.Length -ge 2) {
+                        $derivedKey = "$( $segments[0] )/$( $segments[1] )"
+                        if ($derivedKey -ne "") {
+                            $actionsByName[$derivedKey.ToLower()] = $action
+                            $keyStats.fromRepoUrl++
+                        }
                     }
+                } catch {
+                    # Ignore URL parse errors; no key added in this case
+                    $keyStats.invalidRepoUrl++
                 }
-            } catch {
-                # Ignore URL parse errors; no key added in this case
-                $keyStats.invalidRepoUrl++
             }
         }
     }
@@ -98,11 +105,16 @@ function ProcessForkingChunk {
             $prefixMatches = $actionsByName.Keys | Where-Object { $_.StartsWith($lookupKey) } | Select-Object -First 3
             $containsMatches = $actionsByName.Keys | Where-Object { $_ -like "*${lookupKey}*" } | Select-Object -First 3
 
-            Write-Warning "Action [$actionName] not found. lookupKey=[$lookupKey]; altUnderscoreToSlash=[$altUnderscoreToSlash]; altExists=[$hasAlt]"
-            if ($prefixMatches) { Write-Host "Near prefix matches: $(($prefixMatches -join ', '))" }
-            if ($containsMatches) { Write-Host "Near contains matches: $(($containsMatches -join ', '))" }
+            if ($hasAlt) {
+                Write-Host "Using underscore→slash variant for [$actionName] => [$altUnderscoreToSlash]"
+                $actionsToProcess += $actionsByName[$altUnderscoreToSlash]
+            } else {
+                Write-Warning "Action [$actionName] not found. lookupKey=[$lookupKey]; altUnderscoreToSlash=[$altUnderscoreToSlash]; altExists=[$hasAlt]"
+                if ($prefixMatches) { Write-Host "Near prefix matches: $(($prefixMatches -join ', '))" }
+                if ($containsMatches) { Write-Host "Near contains matches: $(($containsMatches -join ', '))" }
 
-            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
+                Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$actionName] not found in actions list, skipping" -isError $true
+            }
         }
     }
     
