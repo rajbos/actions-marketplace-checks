@@ -47,8 +47,8 @@ BeforeAll {
         
         # Table 2: Most used actions excluding actions org
         LogMessage "## Most used actions (excluding actions org):"
-        LogMessage "| Repository | Dependent repos |"
-        LogMessage "|---|---:|"
+        LogMessage "| Repository | Dependent repos | Last Updated |"
+        LogMessage "|---|---:|---|"
         
         $dependentsExcludingActionsOrg = $dependentsInfoAvailable | Where-Object {
             $null -ne $_.name -and -not $_.name.StartsWith("actions_")
@@ -61,7 +61,11 @@ BeforeAll {
         foreach ($item in $top10ExcludingActionsOrg)
         {
             $splitted = $item.name.Split("_")
-            LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
+            $lastUpdated = "N/A"
+            if ($item.repoInfo -and $item.repoInfo.updated_at) {
+                $lastUpdated = $item.repoInfo.updated_at.ToString("yyyy-MM-dd")
+            }
+            LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) | $lastUpdated |"
         }
     }
 }
@@ -237,5 +241,89 @@ Describe "GetMostUsedActionsList" {
             $_ -match "^\| [^R]" -and $_ -notmatch "^---" 
         }
         $dataRows.Count | Should -Be 10
+    }
+    
+    It "Should include Last Updated column in second table only" {
+        # Arrange
+        $script:actions = @(
+            @{ 
+                name = "actions_checkout"
+                dependents = @{ dependents = "1000" }
+                repoInfo = @{ updated_at = (Get-Date "2024-01-15") }
+            }
+            @{ 
+                name = "docker_build-push-action"
+                dependents = @{ dependents = "900" }
+                repoInfo = @{ updated_at = (Get-Date "2024-02-20") }
+            }
+            @{ 
+                name = "github_codeql-action"
+                dependents = @{ dependents = "700" }
+                repoInfo = @{ updated_at = (Get-Date "2024-03-10") }
+            }
+        )
+        
+        # Act
+        GetMostUsedActionsList
+        
+        # Assert
+        $output = $script:logMessages -join "`n"
+        
+        # First table should NOT have 3 columns in header
+        $firstTableIndex = -1
+        $secondTableIndex = -1
+        for ($i = 0; $i -lt $script:logMessages.Count; $i++) {
+            if ($script:logMessages[$i] -eq "## Most used actions:") {
+                $firstTableIndex = $i
+            }
+            if ($script:logMessages[$i] -eq "## Most used actions (excluding actions org):") {
+                $secondTableIndex = $i
+            }
+        }
+        
+        # First table header should have 2 columns
+        $firstTableHeader = $script:logMessages[$firstTableIndex + 1]
+        $firstTableHeader | Should -Match "^\| Repository \| Dependent repos \|$"
+        
+        # Second table header should have 3 columns including Last Updated
+        $secondTableHeader = $script:logMessages[$secondTableIndex + 1]
+        $secondTableHeader | Should -Match "^\| Repository \| Dependent repos \| Last Updated \|$"
+        
+        # Second table should have date values in the third column
+        $secondTableDataRows = $script:logMessages[($secondTableIndex+3)..($script:logMessages.Count-1)] | Where-Object { 
+            $_ -match "^\| [^-R]" 
+        }
+        # Check that at least one row has a date format (yyyy-MM-dd) or "N/A"
+        $secondTableData = $secondTableDataRows -join "`n"
+        $secondTableData | Should -Match "\| \d{4}-\d{2}-\d{2} \|"
+    }
+    
+    It "Should show N/A for actions without repoInfo" {
+        # Arrange
+        $script:actions = @(
+            @{ 
+                name = "docker_build-push-action"
+                dependents = @{ dependents = "900" }
+                # No repoInfo
+            }
+        )
+        
+        # Act
+        GetMostUsedActionsList
+        
+        # Assert
+        $secondTableIndex = -1
+        for ($i = 0; $i -lt $script:logMessages.Count; $i++) {
+            if ($script:logMessages[$i] -eq "## Most used actions (excluding actions org):") {
+                $secondTableIndex = $i
+            }
+        }
+        
+        # Get data rows from second table
+        $secondTableDataRows = $script:logMessages[($secondTableIndex+3)..($script:logMessages.Count-1)] | Where-Object { 
+            $_ -match "^\| [^-R]" 
+        }
+        $secondTableData = $secondTableDataRows -join "`n"
+        $secondTableData | Should -Match "N/A"
     }
 }

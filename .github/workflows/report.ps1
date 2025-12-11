@@ -501,8 +501,8 @@ function GetMostUsedActionsList {
     
     # Table 2: Most used actions excluding actions org
     LogMessage "## Most used actions (excluding actions org):"
-    LogMessage "| Repository | Dependent repos |"
-    LogMessage "|---|---:|"
+    LogMessage "| Repository | Dependent repos | Last Updated |"
+    LogMessage "|---|---:|---|"
     
     $dependentsExcludingActionsOrg = $dependentsInfoAvailable | Where-Object {
         $null -ne $_.name -and -not $_.name.StartsWith("actions_")
@@ -515,7 +515,11 @@ function GetMostUsedActionsList {
     foreach ($item in $top10ExcludingActionsOrg)
     {
         $splitted = $item.name.Split("_")
-        LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
+        $lastUpdated = "N/A"
+        if ($item.repoInfo -and $item.repoInfo.updated_at) {
+            $lastUpdated = $item.repoInfo.updated_at.ToString("yyyy-MM-dd")
+        }
+        LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) | $lastUpdated |"
     }
 }
 
