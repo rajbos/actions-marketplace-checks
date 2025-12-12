@@ -55,7 +55,10 @@ function ProcessForkingChunk {
             if ($repoUrlStr -match '^[^/]+/[^/]+$') {
                 $normalized = $repoUrlStr.ToLower()
                 $actionsByName[$normalized] = $action
-                if ($null -eq $action.name -or $action.name -eq "") { $action.name = $normalized }
+                # Ensure the action has a writable 'name' property
+                $hasNameProp = $action.PSObject.Properties.Match('name').Count -gt 0
+                if (-not $hasNameProp) { $action | Add-Member -NotePropertyName name -NotePropertyValue $normalized -Force }
+                elseif ($null -eq $action.name -or $action.name -eq "") { $action.name = $normalized }
                 $keyStats.fromRepoUrl++
             } else {
                 try {
@@ -67,7 +70,10 @@ function ProcessForkingChunk {
                         if ($derivedKey -ne "") {
                             $normalized = $derivedKey.ToLower()
                             $actionsByName[$normalized] = $action
-                            if ($null -eq $action.name -or $action.name -eq "") { $action.name = $normalized }
+                            # Ensure the action has a writable 'name' property
+                            $hasNameProp = $action.PSObject.Properties.Match('name').Count -gt 0
+                            if (-not $hasNameProp) { $action | Add-Member -NotePropertyName name -NotePropertyValue $normalized -Force }
+                            elseif ($null -eq $action.name -or $action.name -eq "") { $action.name = $normalized }
                             $keyStats.fromRepoUrl++
                         }
                     }
