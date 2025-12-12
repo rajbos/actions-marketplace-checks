@@ -148,40 +148,23 @@ function ProcessForkingChunk {
     # avoid complex refactoring of the existing functions.ps1 script.
     # While this adds some overhead, it ensures correctness and maintainability.
     $processedForks = @()
-    $forkedCount = 0
     $failedCount = 0
-    
-    foreach ($action in $actionsToProcess) {
-        # Check if rate limit was exceeded before processing next action
-        if (Test-RateLimitExceeded) {
-            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Rate limit exceeded (20+ minute wait), stopping chunk processing early" -isError $true
-            Add-ChunkMessage -buffer $summaryBuffer -message "Processed [$forkedCount] actions before rate limit was reached"
-            break
-        }
-        
-        Write-Host "Processing action: $($action.name)"
-        
-        # Create a temp actions array with just this one action
-        $singleAction = @($action)
-        
-        # Save current directory
+
+    # Batch process: call functions.ps1 once for the entire chunk
+    if ($actionsToProcess.Count -gt 0) {
+        Write-Host "Processing chunk with [$($actionsToProcess.Count)] actions"
         $currentDir = Get-Location
-        
         try {
-            # Call functions.ps1 for this single action
             & "$PSScriptRoot/functions.ps1" `
-                -actions $singleAction `
-                -numberOfReposToDo 1 `
+                -actions $actionsToProcess `
+                -numberOfReposToDo $actionsToProcess.Count `
                 -access_token $access_token `
                 -access_token_destination $access_token_destination
-            
-            $forkedCount++
         } catch {
-            Write-Warning "Failed to process action $($action.name): $($_.Exception.Message)"
-            Add-ChunkMessage -buffer $summaryBuffer -message "❌ Failed to process action $($action.name): $($_.Exception.Message)" -isError $true
-            $failedCount++
+            Write-Warning "Failed to process chunk [$chunkId]: $($_.Exception.Message)"
+            Add-ChunkMessage -buffer $summaryBuffer -message "❌ Failed to process chunk [$chunkId]: $($_.Exception.Message)" -isError $true
+            $failedCount = $actionsToProcess.Count
         } finally {
-            # Restore directory
             Set-Location $currentDir
         }
     }
@@ -205,7 +188,7 @@ function ProcessForkingChunk {
         }
     }
     
-    Add-ChunkMessage -buffer $summaryBuffer -message "✓ Chunk [$chunkId] processed [$forkedCount] actions, found [$($processedForks.Count)] forks"
+    Add-ChunkMessage -buffer $summaryBuffer -message "✓ Chunk [$chunkId] processed [$($actionsToProcess.Count)] actions, found [$($processedForks.Count)] forks"
     if ($failedCount -gt 0) {
         Add-ChunkMessage -buffer $summaryBuffer -message "❌ Failed to process [$failedCount] actions"
     }
