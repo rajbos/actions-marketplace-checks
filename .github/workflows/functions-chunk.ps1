@@ -119,7 +119,16 @@ function ProcessForkingChunk {
             # Brief diagnostics for unmatched names (reduced per-item noise)
             $prefixMatches = $actionsByName.Keys | Where-Object { $_.StartsWith($lookupKey) } | Select-Object -First 2
             $containsMatches = $actionsByName.Keys | Where-Object { $_ -like "*${lookupKey}*" } | Select-Object -First 2
-            Write-Warning "Action key [$lookupKey] not found. Prefix: $(($prefixMatches -join ', ')) Contains: $(($containsMatches -join ', '))"
+
+            # Also show normalized variants we attempt and the status 'name'-style guess (slash→underscore)
+            $originalName = $actionNamesToProcess[[array]::IndexOf($normalizedChunkNames, $lookupKey)]
+            $firstUnderscoreVariant = [regex]::Replace($originalName.ToLower(), '_', '/', 1)
+            $statusNameStyle = $lookupKey -replace '/','_'
+
+            Write-Warning "Action not found. Original=[$originalName] LookupKey=[$lookupKey] FirstUnderscoreVariant=[$firstUnderscoreVariant] StatusNameGuess=[$statusNameStyle]"
+            if ($prefixMatches) { Write-Host "Near prefix matches: $(($prefixMatches -join ', '))" }
+            if ($containsMatches) { Write-Host "Near contains matches: $(($containsMatches -join ', '))" }
+
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$lookupKey] not found in actions list, skipping" -isError $true
         }
     }
