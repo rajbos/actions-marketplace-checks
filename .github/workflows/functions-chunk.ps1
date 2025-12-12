@@ -106,7 +106,8 @@ function ProcessForkingChunk {
     $normalizedChunkNames = @()
     foreach ($nm in $actionNamesToProcess) {
         if ($null -ne $nm -and $nm -ne "") {
-            $normalizedChunkNames += ($nm.ToLower() -replace '_','/')
+            # Replace only the first underscore with a slash to form owner/repo, keep underscores in repo names intact
+            $normalizedChunkNames += ([regex]::Replace($nm.ToLower(), '_', '/', 1))
         }
     }
 
