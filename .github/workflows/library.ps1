@@ -2375,6 +2375,97 @@ function Split-ActionsIntoChunks {
     return $chunks
 }
 
+<#
+    .SYNOPSIS
+    Selects forks to process with prioritization based on last sync time and cool-off periods.
+    
+    .DESCRIPTION
+    Filters and sorts forks to ensure:
+    - Only forks with mirrorFound = true are selected
+    - Forks that haven't been synced recently are prioritized
+    - Failed sync attempts respect a cool-off period before retry
+    - Upstream unavailable repos are skipped
+    
+    .PARAMETER existingForks
+    The complete array of fork objects from status.json
+    
+    .PARAMETER numberOfRepos
+    Maximum number of repos to select for processing
+    
+    .PARAMETER coolOffHoursForFailedSync
+    Hours to wait before retrying a failed sync attempt (default: 24)
+    
+    .EXAMPLE
+    $selectedForks = Select-ForksToProcess -existingForks $allForks -numberOfRepos 300 -coolOffHoursForFailedSync 24
+#>
+function Select-ForksToProcess {
+    Param (
+        $existingForks,
+        [int] $numberOfRepos = 300,
+        [int] $coolOffHoursForFailedSync = 24
+    )
+    
+    $now = Get-Date
+    $coolOffThreshold = $now.AddHours(-$coolOffHoursForFailedSync)
+    
+    Write-Message -message "Selecting up to [$numberOfRepos] forks to process" -logToSummary $true
+    Write-Message -message "Cool-off period for failed syncs: [$coolOffHoursForFailedSync] hours" -logToSummary $true
+    
+    # Filter forks that are eligible for processing
+    $eligibleForks = $existingForks | Where-Object {
+        # Must have a mirror
+        if ($_.mirrorFound -ne $true) {
+            return $false
+        }
+        
+        # Skip if upstream is marked as unavailable
+        if ($_.upstreamAvailable -eq $false) {
+            return $false
+        }
+        
+        # Check cool-off period for failed syncs
+        if ($_.lastSyncError -and $_.lastSyncAttempt) {
+            try {
+                $lastAttempt = [DateTime]::Parse($_.lastSyncAttempt)
+                if ($lastAttempt -gt $coolOffThreshold) {
+                    # Still in cool-off period
+                    return $false
+                }
+            } catch {
+                # If we can't parse the date, include it to be safe
+                Write-Debug "Failed to parse lastSyncAttempt for [$($_.name)]: $($_.lastSyncAttempt)"
+            }
+        }
+        
+        return $true
+    }
+    
+    Write-Message -message "Found [$($eligibleForks.Count)] eligible forks after filtering" -logToSummary $true
+    
+    # Sort by lastSynced date (oldest first, nulls first)
+    $sortedForks = $eligibleForks | Sort-Object -Property {
+        if ($_.lastSynced) {
+            try {
+                return [DateTime]::Parse($_.lastSynced)
+            } catch {
+                # If date parsing fails, treat as very old
+                return [DateTime]::MinValue
+            }
+        } else {
+            # Never synced - highest priority
+            return [DateTime]::MinValue
+        }
+    }
+    
+    # Select the top N repos
+    $selectedForks = $sortedForks | Select-Object -First $numberOfRepos
+    
+    Write-Message -message "Selected [$($selectedForks.Count)] forks for processing" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    return $selectedForks
+}
+
 function Split-ForksIntoChunks {
     Param (
         $existingForks,
