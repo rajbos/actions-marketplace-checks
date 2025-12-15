@@ -80,11 +80,12 @@ jobs:
           Write-Message -message "Configuration: Process up to [$numberOfRepos] repos using [$numberOfChunks] parallel jobs" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
-          # Limit forks to the numberOfRepos specified
-          $forksToLimit = $existingForks | Where-Object { $_.forkFound -eq $true } | Select-Object -First $numberOfRepos
+          # Select forks to process with prioritization based on last sync time
+          # This ensures we don't keep retrying the same repos over and over
+          $forksToProcess = Select-ForksToProcess -existingForks $existingForks -numberOfRepos $numberOfRepos -coolOffHoursForFailedSync 24
 
           # Split the work
-          $chunks = Split-ForksIntoChunks -existingForks $forksToLimit -numberOfChunks $numberOfChunks
+          $chunks = Split-ForksIntoChunks -existingForks $forksToProcess -numberOfChunks $numberOfChunks
 
           # Create matrix configuration
           $matrixIds = @()
