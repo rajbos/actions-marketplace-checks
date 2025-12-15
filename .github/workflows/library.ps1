@@ -2432,7 +2432,7 @@ function Select-ForksToProcess {
                     return $false
                 }
             } catch {
-                # If we can't parse the date, include it to be safe
+                # If we can't parse the date, include it to be safe (safer to retry than skip)
                 Write-Debug "Failed to parse lastSyncAttempt for [$($_.name)]: $($_.lastSyncAttempt)"
             }
         }
@@ -2448,7 +2448,7 @@ function Select-ForksToProcess {
             try {
                 return [DateTime]::Parse($_.lastSynced)
             } catch {
-                # If date parsing fails, treat as very old
+                # If date parsing fails, treat as very old (highest priority)
                 return [DateTime]::MinValue
             }
         } else {
