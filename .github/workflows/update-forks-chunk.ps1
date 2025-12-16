@@ -152,17 +152,41 @@ function UpdateForkedReposChunk {
     Write-Message -message "| **Total Processed** | **$i** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    return $forksToProcess
+    # Return both processed forks and statistics
+    return @{
+        processedForks = $forksToProcess
+        stats = @{
+            synced = $synced
+            upToDate = $upToDate
+            conflicts = $conflicts
+            upstreamNotFound = $upstreamNotFound
+            failed = $failed
+            skipped = $skipped
+            totalProcessed = $i
+        }
+    }
 }
 
 Write-Message -message "Starting chunk [$chunkId] with [$($forkNames.Count)] forks to process" -logToSummary $true
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
-$processedForks = UpdateForkedReposChunk -existingForks $actions -forkNamesToProcess $forkNames -chunkId $chunkId
+$result = UpdateForkedReposChunk -existingForks $actions -forkNamesToProcess $forkNames -chunkId $chunkId
 
 # Save partial status update for this chunk
-Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outputPath "status-partial-$chunkId.json"
+Save-PartialStatusUpdate -processedForks $result.processedForks -chunkId $chunkId -outputPath "status-partial-$chunkId.json"
+
+# Save chunk summary statistics for consolidation
+Save-ChunkSummary `
+    -chunkId $chunkId `
+    -synced $result.stats.synced `
+    -upToDate $result.stats.upToDate `
+    -conflicts $result.stats.conflicts `
+    -upstreamNotFound $result.stats.upstreamNotFound `
+    -failed $result.stats.failed `
+    -skipped $result.stats.skipped `
+    -totalProcessed $result.stats.totalProcessed `
+    -outputPath "chunk-summary-$chunkId.json"
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
