@@ -158,6 +158,8 @@ function RemoveRepos {
     }
 
     Write-Host "Processed [$deletedCount] repos (limit: [$maxCount])"
+    
+    return $deletedCount
 }
 
 function RemoveReposFromStatus {
@@ -247,8 +249,9 @@ if ($reposToCleanup.Count -gt 0) {
 }
 
 # Remove the repos
+$totalCleaned = 0
 if ($reposToCleanup.Count -gt 0) {
-    RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun -maxCount $numberOfReposToDo
+    $totalCleaned = RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun -maxCount $numberOfReposToDo
     
     if (-not $dryRun) {
         # Update status file to remove deleted repos
@@ -260,6 +263,11 @@ if ($reposToCleanup.Count -gt 0) {
 else {
     Write-Host "No repos found to cleanup"
 }
+
+# Add total cleaned to step summary
+Write-Message -message "" -logToSummary $true
+Write-Message -message "**Total repos cleaned: $totalCleaned**" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 if ($access_token) {
     try {
