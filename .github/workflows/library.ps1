@@ -2074,10 +2074,10 @@ function SyncMirrorWithUpstream {
             }
         }
         
-        # If repo is empty, do an initial push from upstream instead of merge
+        # If repo is empty, do an initial sync from upstream instead of merge
         if ($isEmptyRepo) {
             Write-Debug "Performing initial sync: resetting to upstream/$currentBranch"
-            # Reset the current branch to point to upstream branch
+            # Reset the current branch to point to upstream branch (this creates the first commit)
             $resetRef = "refs/remotes/upstream/$currentBranch"
             git reset --hard $resetRef 2>&1 | Out-Null
             
