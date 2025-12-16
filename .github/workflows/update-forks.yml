@@ -207,6 +207,15 @@ jobs:
           retention-days: 1
           if-no-files-found: warn
 
+      - name: Upload chunk summary for chunk ${{ matrix.chunk-id }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chunk-summary-${{ matrix.chunk-id }}
+          path: chunk-summary-${{ matrix.chunk-id }}.json
+          retention-days: 1
+          if-no-files-found: warn
+
   consolidate:
     name: Consolidate results and update storage
     needs: [prepare, update-mirrors]
@@ -256,6 +265,28 @@ jobs:
           pattern: status-partial-*
           path: partial-updates/
           merge-multiple: true
+
+      - name: Download all chunk summaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: chunk-summary-*
+          path: chunk-summaries/
+          merge-multiple: true
+
+      - name: Show consolidated chunk summary
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          # Find all chunk summary files
+          $summaryFiles = Get-ChildItem -Path "chunk-summaries" -Filter "chunk-summary-*.json" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+          
+          if ($summaryFiles) {
+            Write-Host "Found [$($summaryFiles.Count)] chunk summary files"
+            Show-ConsolidatedChunkSummary -chunkSummaryFiles $summaryFiles
+          } else {
+            Write-Warning "No chunk summary files found"
+          }
 
       - name: Merge partial updates and save
         shell: pwsh
