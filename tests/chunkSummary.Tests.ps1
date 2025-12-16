@@ -77,7 +77,7 @@ Describe "Conditional Chunk Summary Logging" {
         
         AfterEach {
             # Clean up the temporary file
-            if (Test-Path $env:GITHUB_STEP_SUMMARY) {
+            if ($null -ne $env:GITHUB_STEP_SUMMARY -and (Test-Path $env:GITHUB_STEP_SUMMARY)) {
                 Remove-Item $env:GITHUB_STEP_SUMMARY -Force
             }
             $env:GITHUB_STEP_SUMMARY = $null

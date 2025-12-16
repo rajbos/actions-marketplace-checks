@@ -102,20 +102,29 @@ function UpdateForkedRepos {
             elseif ($errorType -eq "mirror_not_found") {
                 Write-Warning "$i/$max Mirror repository not found [$($existingFork.name)] - attempting to create mirror and retry"
                 # Attempt to create the missing mirror if upstream exists
-                # Ensure ForkActionRepo exists for test contexts that extract only this function
-                if (-not (Get-Command ForkActionRepo -ErrorAction SilentlyContinue)) {
-                    function ForkActionRepo {
+                $createResult = $false
+                try {
+                    # Try to call ForkActionRepo - it may be mocked in tests or defined in functions.ps1
+                    $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
+                }
+                catch [System.Management.Automation.CommandNotFoundException] {
+                    # ForkActionRepo not found - define a stub for test contexts
+                    function script:ForkActionRepo {
                         Param (
                             $owner,
                             $repo
                         )
-                        # Default stub; Pester can Mock this in tests
+                        # Default stub for test contexts; returns false
                         return $false
                     }
-                }
-                $createResult = $false
-                try {
-                    $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
+                    # Retry the call with the stub
+                    try {
+                        $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
+                    }
+                    catch {
+                        Write-Warning "Error while creating mirror [$upstreamOwner/$upstreamRepo]: $($_.Exception.Message)"
+                        $createResult = $false
+                    }
                 }
                 catch {
                     Write-Warning "Error while creating mirror [$upstreamOwner/$upstreamRepo]: $($_.Exception.Message)"
