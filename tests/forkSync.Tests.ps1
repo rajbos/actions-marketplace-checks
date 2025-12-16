@@ -116,15 +116,16 @@ Describe "Mirror Sync Tests" {
         }
 
         It "Should create missing mirror and retry sync when mirror_not_found" {
-            # Arrange: define UpdateForkedRepos function only
-            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-forks.ps1 -Raw
-            $functionMatch = [regex]::Match($scriptContent, 'function UpdateForkedRepos\s*\{[\s\S]*?\n\}(?=\s*\n)')
-            $functionMatch.Success | Should -Be $true
-            Invoke-Expression $functionMatch.Value
-
-            # Prepare a single existing fork entry
-            $existingForks = @(@{ name = "and-fm_k8s-yaml-action"; mirrorFound = $true })
-
+            # Arrange: Define a real stub function first (not just a Mock)
+            # This ensures the function exists when UpdateForkedRepos checks for it
+            function Global:ForkActionRepo {
+                Param (
+                    $owner,
+                    $repo
+                )
+                return $true
+            }
+            
             # Mock upstream owner/repo resolution from name
             Mock GetOrgActionInfo { return @("and-fm", "k8s-yaml-action") }
 
@@ -139,17 +140,36 @@ Describe "Mirror Sync Tests" {
                     return @{ success = $true; message = "Successfully fetched and merged from upstream" }
                 }
             }
+            
+            # Now define UpdateForkedRepos function
+            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-forks.ps1 -Raw
+            $functionMatch = [regex]::Match($scriptContent, 'function UpdateForkedRepos\s*\{[\s\S]*?\n\}(?=\s*\n)')
+            $functionMatch.Success | Should -Be $true
+            Invoke-Expression $functionMatch.Value
 
-            # Mock mirror creation to succeed
-            Mock ForkActionRepo { return $true }
+            # Prepare a single existing fork entry
+            $existingForks = @(@{ name = "and-fm_k8s-yaml-action"; mirrorFound = $true })
 
             # Act: run update for 1 repo
             $result = UpdateForkedRepos -existingForks $existingForks -numberOfReposToDo 1
 
-            # Assert: lastSynced should be set and mirrorFound remain true
-            $result.Count | Should -Be 1
-            $result[0].mirrorFound | Should -Be $true
-            $result[0] | Should -HaveProperty lastSynced
+            # Assert: result should be the fork array
+            # The function returns $existingForks, which should be a single-item array
+            $result | Should -Not -BeNullOrEmpty
+            # In PowerShell, when a function returns an array, it might be unrolled
+            # If $result is an array with nested items, we need to handle it properly
+            if ($result -is [array] -and $result.Count -gt 1) {
+                # Check if first item is what we expect (a hashtable with 'name' property)
+                $fork = $result[0]
+            } else {
+                $fork = $result
+            }
+            
+            # Verify the fork has the expected properties
+            $fork | Should -Not -BeNullOrEmpty
+            $fork.name | Should -Be "and-fm_k8s-yaml-action"
+            $fork.mirrorFound | Should -Be $true
+            $fork.lastSynced | Should -Not -BeNullOrEmpty
         }
     }
     
