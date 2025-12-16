@@ -42,6 +42,20 @@ jobs:
           echo "Downloaded status.json"
           ls -lh status.json
 
+      - name: Setup parameters based on trigger
+        id: setup
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "numberOfReposToDo=100" >> $GITHUB_OUTPUT
+            echo "dryRun=false" >> $GITHUB_OUTPUT
+            echo "Running on schedule: numberOfReposToDo=100, dryRun=false"
+          else
+            echo "numberOfReposToDo=${{ github.event.inputs.numberOfReposToDo || '10' }}" >> $GITHUB_OUTPUT
+            echo "dryRun=${{ github.event.inputs.dryRun || 'true' }}" >> $GITHUB_OUTPUT
+            echo "Running manually: numberOfReposToDo=${{ github.event.inputs.numberOfReposToDo || '10' }}, dryRun=${{ github.event.inputs.dryRun || 'true' }}"
+          fi
+
       - name: Get App Token
         id: get_workflow_token
         uses: rajbos-actions/workflow-application-token-action@v3.0.0
@@ -53,10 +67,10 @@ jobs:
       - shell: pwsh
         name: Run cleanup script
         run: |
-           ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ github.event.inputs.numberOfReposToDo || '10' }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -dryRun $${{ github.event.inputs.dryRun || 'true' }}
+           ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ steps.setup.outputs.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -dryRun $${{ steps.setup.outputs.dryRun }}
 
       - name: Upload status.json to blob storage
-        if: github.event.inputs.dryRun != 'true'
+        if: steps.setup.outputs.dryRun != 'true'
         run: |
           # Upload status.json back to blob storage using the same SAS token
           baseUrl="${{ secrets.BLOB_SAS_TOKEN }}"
