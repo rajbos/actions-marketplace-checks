@@ -2557,6 +2557,179 @@ function Save-PartialStatusUpdate {
 
 <#
     .SYNOPSIS
+    Saves chunk summary statistics to a JSON file for artifact upload.
+    
+    .DESCRIPTION
+    Saves the processing summary statistics for a chunk (synced, failed, up-to-date, etc.)
+    to a JSON file that can be uploaded as an artifact and later merged to show overall statistics.
+    
+    .PARAMETER chunkId
+    The chunk ID for this summary
+    
+    .PARAMETER synced
+    Number of successfully synced mirrors
+    
+    .PARAMETER upToDate
+    Number of mirrors already up to date
+    
+    .PARAMETER conflicts
+    Number of mirrors with merge conflicts
+    
+    .PARAMETER upstreamNotFound
+    Number of mirrors where upstream was not found
+    
+    .PARAMETER failed
+    Number of mirrors that failed to sync
+    
+    .PARAMETER skipped
+    Number of mirrors that were skipped
+    
+    .PARAMETER totalProcessed
+    Total number of mirrors processed
+    
+    .PARAMETER outputPath
+    The file path to save the summary (defaults to chunk-summary-{chunkId}.json)
+    
+    .EXAMPLE
+    Save-ChunkSummary -chunkId 0 -synced 3 -upToDate 147 -conflicts 0 -upstreamNotFound 0 -failed 0 -skipped 0 -totalProcessed 150
+#>
+function Save-ChunkSummary {
+    Param (
+        [int] $chunkId,
+        [int] $synced = 0,
+        [int] $upToDate = 0,
+        [int] $conflicts = 0,
+        [int] $upstreamNotFound = 0,
+        [int] $failed = 0,
+        [int] $skipped = 0,
+        [int] $totalProcessed = 0,
+        [string] $outputPath = "chunk-summary-$chunkId.json"
+    )
+    
+    $summary = @{
+        chunkId = $chunkId
+        synced = $synced
+        upToDate = $upToDate
+        conflicts = $conflicts
+        upstreamNotFound = $upstreamNotFound
+        failed = $failed
+        skipped = $skipped
+        totalProcessed = $totalProcessed
+    }
+    
+    Write-Host "Saving chunk [$chunkId] summary to [$outputPath]"
+    
+    # Convert to JSON and save
+    $json = ConvertTo-Json -InputObject $summary -Depth 5
+    [System.IO.File]::WriteAllText($outputPath, $json, [System.Text.Encoding]::UTF8)
+    
+    Write-Host "✓ Saved chunk summary for chunk [$chunkId]"
+    return $true
+}
+
+<#
+    .SYNOPSIS
+    Merges chunk summary JSON files and displays consolidated statistics.
+    
+    .DESCRIPTION
+    Loads all chunk summary JSON files, aggregates the statistics, and displays
+    an overall summary table in the GitHub Step Summary.
+    
+    .PARAMETER chunkSummaryFiles
+    Array of file paths to chunk summary JSON files
+    
+    .EXAMPLE
+    Show-ConsolidatedChunkSummary -chunkSummaryFiles @("chunk-summary-0.json", "chunk-summary-1.json")
+#>
+function Show-ConsolidatedChunkSummary {
+    Param (
+        [string[]] $chunkSummaryFiles
+    )
+    
+    Write-Message -message "# Overall Chunk Processing Summary" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    # Initialize totals
+    $totalSynced = 0
+    $totalUpToDate = 0
+    $totalConflicts = 0
+    $totalUpstreamNotFound = 0
+    $totalFailed = 0
+    $totalSkipped = 0
+    $totalProcessed = 0
+    
+    if ($null -eq $chunkSummaryFiles -or $chunkSummaryFiles.Count -eq 0) {
+        Write-Message -message "No chunk summary files found" -logToSummary $true
+        # Return consistent structure with zero values
+        return @{
+            synced = $totalSynced
+            upToDate = $totalUpToDate
+            conflicts = $totalConflicts
+            upstreamNotFound = $totalUpstreamNotFound
+            failed = $totalFailed
+            skipped = $totalSkipped
+            totalProcessed = $totalProcessed
+        }
+    }
+    
+    # Load and aggregate all chunk summaries
+    foreach ($summaryFile in $chunkSummaryFiles) {
+        if (-not (Test-Path $summaryFile)) {
+            Write-Warning "Chunk summary file not found: [$summaryFile]"
+            continue
+        }
+        
+        Write-Host "Loading chunk summary from: [$summaryFile]"
+        
+        try {
+            $jsonContent = Get-Content $summaryFile -Raw
+            # Remove UTF-8 BOM if present (regex pattern is more reliable than string manipulation)
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''
+            $chunkSummary = $jsonContent | ConvertFrom-Json
+            
+            $totalSynced += $chunkSummary.synced
+            $totalUpToDate += $chunkSummary.upToDate
+            $totalConflicts += $chunkSummary.conflicts
+            $totalUpstreamNotFound += $chunkSummary.upstreamNotFound
+            $totalFailed += $chunkSummary.failed
+            $totalSkipped += $chunkSummary.skipped
+            $totalProcessed += $chunkSummary.totalProcessed
+            
+            Write-Host "  Chunk [$($chunkSummary.chunkId)]: Processed $($chunkSummary.totalProcessed) repos"
+        }
+        catch {
+            Write-Warning "Failed to load chunk summary file [$summaryFile]: $($_.Exception.Message)"
+            continue
+        }
+    }
+    
+    # Display consolidated summary
+    Write-Message -message "Aggregated results from [$($chunkSummaryFiles.Count)] chunks:" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Status | Count |" -logToSummary $true
+    Write-Message -message "|--------|------:|" -logToSummary $true
+    Write-Message -message "| ✅ Synced | $totalSynced |" -logToSummary $true
+    Write-Message -message "| ✓ Up to Date | $totalUpToDate |" -logToSummary $true
+    Write-Message -message "| ⚠️ Conflicts | $totalConflicts |" -logToSummary $true
+    Write-Message -message "| ❌ Upstream Not Found | $totalUpstreamNotFound |" -logToSummary $true
+    Write-Message -message "| ❌ Failed | $totalFailed |" -logToSummary $true
+    Write-Message -message "| ⏭️ Skipped | $totalSkipped |" -logToSummary $true
+    Write-Message -message "| **Total Processed** | **$totalProcessed** |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    return @{
+        synced = $totalSynced
+        upToDate = $totalUpToDate
+        conflicts = $totalConflicts
+        upstreamNotFound = $totalUpstreamNotFound
+        failed = $totalFailed
+        skipped = $totalSkipped
+        totalProcessed = $totalProcessed
+    }
+}
+
+<#
+    .SYNOPSIS
     Merges partial status updates from multiple chunks into the main status file.
     
     .DESCRIPTION
