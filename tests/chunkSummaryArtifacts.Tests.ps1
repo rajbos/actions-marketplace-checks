@@ -152,8 +152,11 @@ Describe "Chunk Summary Artifact Functions" {
         It "Should handle empty file list" {
             $result = Show-ConsolidatedChunkSummary -chunkSummaryFiles @()
             
-            # Should not throw, returns null when no files
-            $result | Should -BeNullOrEmpty
+            # Should return hashtable with zero values for consistency
+            $result | Should -Not -BeNullOrEmpty
+            $result.synced | Should -Be 0
+            $result.upToDate | Should -Be 0
+            $result.totalProcessed | Should -Be 0
         }
         
         It "Should handle missing files gracefully" {

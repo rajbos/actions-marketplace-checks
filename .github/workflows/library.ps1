@@ -2649,11 +2649,6 @@ function Show-ConsolidatedChunkSummary {
     Write-Message -message "# Overall Chunk Processing Summary" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    if ($null -eq $chunkSummaryFiles -or $chunkSummaryFiles.Count -eq 0) {
-        Write-Message -message "No chunk summary files found" -logToSummary $true
-        return
-    }
-    
     # Initialize totals
     $totalSynced = 0
     $totalUpToDate = 0
@@ -2662,6 +2657,20 @@ function Show-ConsolidatedChunkSummary {
     $totalFailed = 0
     $totalSkipped = 0
     $totalProcessed = 0
+    
+    if ($null -eq $chunkSummaryFiles -or $chunkSummaryFiles.Count -eq 0) {
+        Write-Message -message "No chunk summary files found" -logToSummary $true
+        # Return consistent structure with zero values
+        return @{
+            synced = $totalSynced
+            upToDate = $totalUpToDate
+            conflicts = $totalConflicts
+            upstreamNotFound = $totalUpstreamNotFound
+            failed = $totalFailed
+            skipped = $totalSkipped
+            totalProcessed = $totalProcessed
+        }
+    }
     
     # Load and aggregate all chunk summaries
     foreach ($summaryFile in $chunkSummaryFiles) {
@@ -2674,7 +2683,8 @@ function Show-ConsolidatedChunkSummary {
         
         try {
             $jsonContent = Get-Content $summaryFile -Raw
-            $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM
+            # Remove UTF-8 BOM if present (regex pattern is more reliable than string manipulation)
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''
             $chunkSummary = $jsonContent | ConvertFrom-Json
             
             $totalSynced += $chunkSummary.synced
@@ -2688,7 +2698,7 @@ function Show-ConsolidatedChunkSummary {
             Write-Host "  Chunk [$($chunkSummary.chunkId)]: Processed $($chunkSummary.totalProcessed) repos"
         }
         catch {
-            Write-Error "Failed to load chunk summary file [$summaryFile]: $($_.Exception.Message)"
+            Write-Warning "Failed to load chunk summary file [$summaryFile]: $($_.Exception.Message)"
             continue
         }
     }
