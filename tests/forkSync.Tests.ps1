@@ -320,4 +320,38 @@ Describe "Mirror Sync Tests" {
             $functionContent | Should -Match 'LFS skip smudge enabled'
         }
     }
+    
+    Context "Empty repository handling in SyncMirrorWithUpstream" {
+        It "Should detect empty mirror repositories (no commits)" {
+            # Verify that the code checks for empty repos by looking for the unknown revision error
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'unknown revision'
+        }
+        
+        It "Should have special handling for empty mirror repositories" {
+            # Verify that there's code to handle empty repos with initial sync
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'isEmptyRepo'
+        }
+        
+        It "Should perform initial sync for empty repositories" {
+            # Verify that the code performs a reset for empty repos instead of merge
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'Performing initial sync'
+            $functionContent | Should -Match 'git reset --hard'
+        }
+        
+        It "Should return initial_sync merge type for empty repositories" {
+            # Verify that the return value distinguishes between initial sync and merge
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            $functionContent | Should -Match 'initial_sync'
+        }
+        
+        It "Should not throw git reference error for empty repositories" {
+            # Verify that the code doesn't throw on unknown revision when it's an empty repo
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Should check for empty repo condition before throwing
+            $functionContent | Should -Match 'does not have any commits yet'
+        }
+    }
 }

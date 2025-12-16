@@ -2057,51 +2057,80 @@ function SyncMirrorWithUpstream {
             throw "Upstream branch [$currentBranch] not found"
         }
         
-        # Get the current commit hash using explicit HEAD ref
+        # Check if the mirror repo is empty (no commits yet)
+        # This happens when a repo was created via API but never had content pushed
         $beforeHash = git rev-parse HEAD 2>&1
+        $isEmptyRepo = $false
         if ($LASTEXITCODE -ne 0) {
-            throw "Failed to get current HEAD: unknown revision or path not in the working tree"
-        }
-        
-        # Try to merge upstream changes using explicit branch reference
-        Write-Debug "Merging upstream/$currentBranch"
-        $mergeRef = "refs/remotes/upstream/$currentBranch"
-        $mergeResult = git merge $mergeRef --no-edit 2>&1
-        
-        if ($LASTEXITCODE -ne 0) {
-            $mergeOutput = $mergeResult | Out-String
-            # Check if it's a conflict
-            if ($mergeOutput -like "*conflict*" -or $mergeOutput -like "*CONFLICT*") {
-                # Abort the merge
-                git merge --abort 2>&1 | Out-Null
-                throw "Merge conflict detected"
-            }
-            elseif ($mergeOutput -like "*refspec*matches more than one*") {
-                throw "Ambiguous git reference: $mergeOutput"
+            # Check if this is because the repo is empty (no commits)
+            $errorOutput = $beforeHash | Out-String
+            if ($errorOutput -like "*unknown revision*" -or $errorOutput -like "*does not have any commits yet*") {
+                Write-Debug "Mirror repository is empty (no commits), will perform initial sync from upstream"
+                $isEmptyRepo = $true
+                $beforeHash = $null
             }
             else {
-                throw "Failed to merge: $mergeOutput"
+                throw "Failed to get current HEAD: $errorOutput"
             }
         }
         
-        # Get the commit hash after merge
-        $afterHash = git rev-parse HEAD 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to get HEAD after merge"
+        # If repo is empty, do an initial push from upstream instead of merge
+        if ($isEmptyRepo) {
+            Write-Debug "Performing initial sync: resetting to upstream/$currentBranch"
+            # Reset the current branch to point to upstream branch
+            $resetRef = "refs/remotes/upstream/$currentBranch"
+            git reset --hard $resetRef 2>&1 | Out-Null
+            
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to reset to upstream branch"
+            }
+            
+            $afterHash = git rev-parse HEAD 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to get HEAD after reset"
+            }
         }
-        
-        # Check if there were any changes
-        if ($beforeHash -eq $afterHash) {
-            Write-Debug "Mirror [$owner/$repo] is already up to date"
-            # Clean up
-            Set-Location $originalDir | Out-Null
-            Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
-            # Clear LFS skip smudge environment variable
-            Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
-            return @{
-                success = $true
-                message = "Already up to date"
-                merge_type = "none"
+        else {
+            # Try to merge upstream changes using explicit branch reference
+            Write-Debug "Merging upstream/$currentBranch"
+            $mergeRef = "refs/remotes/upstream/$currentBranch"
+            $mergeResult = git merge $mergeRef --no-edit 2>&1
+            
+            if ($LASTEXITCODE -ne 0) {
+                $mergeOutput = $mergeResult | Out-String
+                # Check if it's a conflict
+                if ($mergeOutput -like "*conflict*" -or $mergeOutput -like "*CONFLICT*") {
+                    # Abort the merge
+                    git merge --abort 2>&1 | Out-Null
+                    throw "Merge conflict detected"
+                }
+                elseif ($mergeOutput -like "*refspec*matches more than one*") {
+                    throw "Ambiguous git reference: $mergeOutput"
+                }
+                else {
+                    throw "Failed to merge: $mergeOutput"
+                }
+            }
+            
+            # Get the commit hash after merge
+            $afterHash = git rev-parse HEAD 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to get HEAD after merge"
+            }
+            
+            # Check if there were any changes
+            if ($beforeHash -eq $afterHash) {
+                Write-Debug "Mirror [$owner/$repo] is already up to date"
+                # Clean up
+                Set-Location $originalDir | Out-Null
+                Remove-Item -Path $syncTempDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+                # Clear LFS skip smudge environment variable
+                Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
+                return @{
+                    success = $true
+                    message = "Already up to date"
+                    merge_type = "none"
+                }
             }
         }
         
@@ -2134,10 +2163,14 @@ function SyncMirrorWithUpstream {
         # Clear LFS skip smudge environment variable
         Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
         
+        # Return appropriate message based on whether this was an initial sync or merge
+        $message = if ($isEmptyRepo) { "Successfully performed initial sync from upstream" } else { "Successfully fetched and merged from upstream" }
+        $mergeType = if ($isEmptyRepo) { "initial_sync" } else { "merge" }
+        
         return @{
             success = $true
-            message = "Successfully fetched and merged from upstream"
-            merge_type = "merge"
+            message = $message
+            merge_type = $mergeType
         }
     }
     catch {
