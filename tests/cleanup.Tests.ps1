@@ -12,13 +12,21 @@ BeforeAll {
         $reposToCleanup = New-Object System.Collections.ArrayList
         
         foreach ($repo in $repos) {
+            # Skip if upstream exists and mirror is missing (mirror should be created)
+            $upstreamStillExists = ($repo.upstreamFound -eq $true) -and ($repo.upstreamAvailable -ne $false)
+            $mirrorMissing = ($null -eq $repo.mirrorFound -or $repo.mirrorFound -eq $false)
+            if ($upstreamStillExists -and $mirrorMissing) {
+                continue
+            }
+            
             $shouldCleanup = $false
             $reason = ""
             
-            # Criterion 1: Original repo no longer exists (upstreamFound is false)
-            if ($repo.upstreamFound -eq $false) {
+            # Criterion 1: Original repo no longer exists
+            # Check both upstreamFound=false (from initial discovery) and upstreamAvailable=false (from sync failures)
+            if ($repo.upstreamFound -eq $false -or $repo.upstreamAvailable -eq $false) {
                 $shouldCleanup = $true
-                $reason = "Original repo no longer exists (upstreamFound=false)"
+                $reason = "Original repo no longer exists (upstreamFound=$($repo.upstreamFound), upstreamAvailable=$($repo.upstreamAvailable))"
             }
             
             # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
@@ -26,14 +34,11 @@ BeforeAll {
                 ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
                 ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
                 
-                # Only mark for cleanup if the original repo no longer exists
-                if ($repo.upstreamFound -eq $false) {
-                    $shouldCleanup = $true
-                    if ($reason -ne "") {
-                        $reason += " AND "
-                    }
-                    $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
+                $shouldCleanup = $true
+                if ($reason -ne "") {
+                    $reason += " AND "
                 }
+                $reason += "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
             }
             
             if ($shouldCleanup) {
@@ -181,6 +186,48 @@ Describe "GetReposToCleanup" {
         # Assert
         $result.Count | Should -Be 1
         $result[0].name | Should -Be "zesticio_update-release-branch"
-        $result[0].reason | Should -BeLike "*upstreamFound=false*"
+        $result[0].reason | Should -BeLike "*upstreamFound=*"
+    }
+    
+    It "Should identify repos where upstreamAvailable is false (set by update workflow)" {
+        # Arrange - Repository where update workflow marked upstream as unavailable
+        $repos = @(
+            @{
+                name = "test_repo_unavailable"
+                owner = "actions-marketplace-validations"
+                upstreamFound = $true  # Initially found
+                upstreamAvailable = $false  # But later marked as unavailable by sync workflow
+                mirrorFound = $true
+                actionType = @{ actionType = "Node" }
+            }
+        )
+        
+        # Act
+        $result = GetReposToCleanupForTest -repos $repos
+        
+        # Assert
+        $result.Count | Should -Be 1
+        $result[0].name | Should -Be "test_repo_unavailable"
+        $result[0].reason | Should -BeLike "*upstreamAvailable=False*"
+    }
+    
+    It "Should NOT cleanup repos where upstream exists but mirror is missing" {
+        # Arrange - Upstream still exists but mirror hasn't been created yet
+        $repos = @(
+            @{
+                name = "test_repo_no_mirror"
+                owner = "actions-marketplace-validations"
+                upstreamFound = $true
+                upstreamAvailable = $true  # Explicitly not false
+                mirrorFound = $false
+                actionType = @{ actionType = "Node" }
+            }
+        )
+        
+        # Act
+        $result = GetReposToCleanupForTest -repos $repos
+        
+        # Assert
+        $result.Count | Should -Be 0  # Should not cleanup - mirror should be created instead
     }
 }
