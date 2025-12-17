@@ -40,18 +40,20 @@ function GetReposToCleanup {
         $reason = ""
         
         # If upstream exists but our mirror is missing, do NOT cleanup
-        $upstreamAvailable = ($repo.upstreamFound -eq $true)
+        # Check both upstreamFound (set during initial discovery) and upstreamAvailable (set during sync failures)
+        $upstreamStillExists = ($repo.upstreamFound -eq $true) -and ($repo.upstreamAvailable -ne $false)
         $mirrorMissing = ($null -eq $repo.mirrorFound -or $repo.mirrorFound -eq $false)
-        if ($upstreamAvailable -and $mirrorMissing) {
+        if ($upstreamStillExists -and $mirrorMissing) {
             $countSkippedDueToUpstreamAvailable++
             Write-Debug "Skipping cleanup for [$($repo.name)] because upstream exists and mirror is missing, mirror should be created in another script/run"
             continue
         }
         
-        # Criterion 1: Original repo no longer exists (upstreamFound=false)
-        if ($repo.upstreamFound -eq $false) {
+        # Criterion 1: Original repo no longer exists 
+        # Check both upstreamFound=false (from initial discovery) and upstreamAvailable=false (from sync failures)
+        if ($repo.upstreamFound -eq $false -or $repo.upstreamAvailable -eq $false) {
             $shouldCleanup = $true
-            $reason = "Original repo no longer exists (upstreamFound=false)"
+            $reason = "Original repo no longer exists (upstreamFound=$($repo.upstreamFound), upstreamAvailable=$($repo.upstreamAvailable))"
             $countUpstreamMissing++
         }
         
