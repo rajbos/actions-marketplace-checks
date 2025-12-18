@@ -4,14 +4,6 @@ Goal: Run checks on actions in the marketplace: I have a private datasource of a
 
 Information being loaded (see the [report workflow](.github/workflows/report.yml)) for all actions in that dataset:
 
-|Information|Description|
-|---|---|
-|Type of Action|Docker, Node or Composite action|
-|Node versions|Node version used (e.g., node12, node16, node20) for Node-based actions|
-|Declaration of the Action|action.yml, action.yaml, Dockerfile|
-|Docker image setup|Dockerfile in repo or remote image url (e.g. Docker hub, GitHub Container Registry, etc.|
-|Security alerts|Fork the Action and enabling Dependabot (works only for Node actions), then read back the security alerts|
-
 ## Cleanup of Invalid Repos
 
 The repository includes a cleanup workflow that automatically identifies and removes forked repos that are no longer valid. This helps keep the `actions-marketplace-validations` organization clean.
