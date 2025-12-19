@@ -31,6 +31,7 @@ jobs:
   prepare:
     name: Prepare work distribution
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       matrix: ${{ steps.split-work.outputs.matrix }}
       chunks: ${{ steps.split-work.outputs.chunks }}
@@ -125,6 +126,7 @@ jobs:
     name: Update mirrors (chunk ${{ matrix.chunk-id }})
     needs: prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -221,6 +223,7 @@ jobs:
     needs: [prepare, update-mirrors]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     concurrency:
       group: repo-state-updates
       cancel-in-progress: false

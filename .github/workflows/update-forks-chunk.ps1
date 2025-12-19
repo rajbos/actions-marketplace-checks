@@ -51,6 +51,14 @@ function UpdateForkedReposChunk {
 
     foreach ($existingFork in $forksToProcess) {
 
+        # Check if rate limit has been exceeded with long reset time
+        if (Test-RateLimitExceeded) {
+            Write-Warning "Rate limit exceeded with long reset time, stopping chunk processing"
+            Write-Message -message "⚠️ Rate limit exceeded - stopping chunk [$chunkId] processing early" -logToSummary $true
+            Write-Message -message "Processed [$i] out of [$($forksToProcess.Count)] forks before hitting rate limit" -logToSummary $true
+            break
+        }
+
         # Ensure default flags if missing
         if ($null -eq $existingFork.mirrorFound) {
             $existingFork | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty -Force
