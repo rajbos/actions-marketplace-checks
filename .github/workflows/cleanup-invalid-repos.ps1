@@ -21,6 +21,7 @@ function GetReposToCleanup {
                 upstreamMissingOnly = 0
                 emptyOnly = 0
                 bothUpstreamMissingAndEmpty = 0
+                totalEligible = 0
                 skippedUpstreamAvailable = 0
                 invalidEntries = 0
             }
@@ -142,13 +143,14 @@ function GetReposToCleanup {
     }
     Write-Host "" # empty line for readability
     
-    # Return both repos and category counts
+    # Return both repos and category counts (including total for convenience)
     return @{
         repos = $reposToCleanup
         categories = @{
             upstreamMissingOnly = $countUpstreamMissingOnly
             emptyOnly = $countEmptyOnly
             bothUpstreamMissingAndEmpty = $countBothUpstreamMissingAndEmpty
+            totalEligible = $totalEligibleForCleanup
             skippedUpstreamAvailable = $countSkippedDueToUpstreamAvailable
             invalidEntries = $invalidEntries.Count
         }
@@ -270,14 +272,11 @@ Write-Message -message "Number of repos to process (max): [$numberOfReposToDo]" 
 Write-Message -message "Dry run: [$dryRun]" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
-# Calculate totals for the summary table
-$totalEligibleForCleanup = $categories.upstreamMissingOnly + $categories.emptyOnly + $categories.bothUpstreamMissingAndEmpty
-
 Write-Message -message "### Repository Status Breakdown" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "| Category | Count | Description |" -logToSummary $true
 Write-Message -message "|----------|------:|-------------|" -logToSummary $true
-Write-Message -message "| **Eligible for Cleanup** | **$totalEligibleForCleanup** | **Total repos that can be cleaned up** |" -logToSummary $true
+Write-Message -message "| **Eligible for Cleanup** | **$($categories.totalEligible)** | **Total repos that can be cleaned up** |" -logToSummary $true
 Write-Message -message "| → Upstream missing (has content) | $($categories.upstreamMissingOnly) | Upstream repo deleted, our mirror has content |" -logToSummary $true
 Write-Message -message "| → Empty repo (upstream exists) | $($categories.emptyOnly) | Empty mirror, upstream still available |" -logToSummary $true
 Write-Message -message "| → Both upstream missing & empty | $($categories.bothUpstreamMissingAndEmpty) | Upstream deleted and mirror is empty |" -logToSummary $true

@@ -1,8 +1,9 @@
 Import-Module Pester
 
 BeforeAll {
-    # Import the cleanup script functions by dot-sourcing it
-    # We'll need to define the function to mimic the updated GetReposToCleanup
+    # Define test function that mirrors the cleanup logic
+    # Note: We duplicate the logic here to keep tests isolated and avoid dependencies on the main script
+    # This allows tests to run independently and catches regressions in the categorization logic
     
     function GetReposToCleanupWithCategories {
         Param (
