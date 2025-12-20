@@ -219,6 +219,69 @@ Describe "Chunk Summary Artifact Functions" {
             $result.synced | Should -Be 5
             $result.totalProcessed | Should -Be 15
         }
+        
+        It "Should save and consolidate failed repos information" {
+            # Create chunk summaries with failed repos
+            $failedRepos1 = @(
+                @{
+                    name = "owner1_repo1"
+                    errorType = "upstream_not_found"
+                    errorMessage = "Upstream repository not found"
+                },
+                @{
+                    name = "owner2_repo2"
+                    errorType = "merge_conflict"
+                    errorMessage = "Merge conflict detected"
+                }
+            )
+            
+            $failedRepos2 = @(
+                @{
+                    name = "owner3_repo3"
+                    errorType = "auth_error"
+                    errorMessage = "Authentication failed"
+                }
+            )
+            
+            $summary1 = @{
+                chunkId = 0
+                synced = 3
+                upToDate = 147
+                conflicts = 1
+                upstreamNotFound = 1
+                failed = 1
+                skipped = 0
+                totalProcessed = 150
+                failedRepos = $failedRepos1
+            }
+            
+            $summary2 = @{
+                chunkId = 1
+                synced = 5
+                upToDate = 143
+                conflicts = 0
+                upstreamNotFound = 0
+                failed = 1
+                skipped = 0
+                totalProcessed = 150
+                failedRepos = $failedRepos2
+            }
+            
+            $file1 = Join-Path $script:testDir "chunk-summary-0.json"
+            $file2 = Join-Path $script:testDir "chunk-summary-1.json"
+            
+            $summary1 | ConvertTo-Json -Depth 5 | Out-File $file1 -Encoding UTF8
+            $summary2 | ConvertTo-Json -Depth 5 | Out-File $file2 -Encoding UTF8
+            
+            # Consolidate
+            $result = Show-ConsolidatedChunkSummary -chunkSummaryFiles @($file1, $file2)
+            
+            # Verify aggregated totals are correct
+            $result.synced | Should -Be 8
+            $result.conflicts | Should -Be 1
+            $result.upstreamNotFound | Should -Be 1
+            $result.failed | Should -Be 2
+        }
     }
     
     Context "Integration with update-forks-chunk.ps1 pattern" {
@@ -242,6 +305,58 @@ Describe "Chunk Summary Artifact Functions" {
             $testStats.Keys | Should -Contain "failed"
             $testStats.Keys | Should -Contain "skipped"
             $testStats.Keys | Should -Contain "totalProcessed"
+        }
+        
+        It "Should save chunk summary with failed repos" {
+            # Create temp directory for tests
+            $testDir = [System.IO.Path]::GetTempPath() + [System.Guid]::NewGuid().ToString()
+            New-Item -ItemType Directory -Path $testDir | Out-Null
+            
+            try {
+                $outputPath = Join-Path $testDir "chunk-summary-with-failed.json"
+                
+                $failedRepos = @(
+                    @{
+                        name = "owner1_repo1"
+                        errorType = "upstream_not_found"
+                        errorMessage = "Upstream repository not found"
+                    },
+                    @{
+                        name = "owner2_repo2"
+                        errorType = "git_reference_error"
+                        errorMessage = "Reference error"
+                    }
+                )
+                
+                $result = Save-ChunkSummary `
+                    -chunkId 0 `
+                    -synced 3 `
+                    -upToDate 145 `
+                    -conflicts 0 `
+                    -upstreamNotFound 1 `
+                    -failed 1 `
+                    -skipped 0 `
+                    -totalProcessed 150 `
+                    -failedRepos $failedRepos `
+                    -outputPath $outputPath
+                
+                $result | Should -Be $true
+                Test-Path $outputPath | Should -Be $true
+                
+                # Verify content includes failed repos
+                $saved = Get-Content $outputPath | ConvertFrom-Json
+                $saved.failedRepos.Count | Should -Be 2
+                $saved.failedRepos[0].name | Should -Be "owner1_repo1"
+                $saved.failedRepos[0].errorType | Should -Be "upstream_not_found"
+                $saved.failedRepos[1].name | Should -Be "owner2_repo2"
+                $saved.failedRepos[1].errorType | Should -Be "git_reference_error"
+            }
+            finally {
+                # Cleanup
+                if (Test-Path $testDir) {
+                    Remove-Item -Path $testDir -Recurse -Force
+                }
+            }
         }
     }
 }
