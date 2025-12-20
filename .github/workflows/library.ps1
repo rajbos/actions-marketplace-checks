@@ -2620,6 +2620,9 @@ function Save-PartialStatusUpdate {
     .PARAMETER totalProcessed
     Total number of mirrors processed
     
+    .PARAMETER failedRepos
+    Array of failed repos with details (name, errorType, errorMessage)
+    
     .PARAMETER outputPath
     The file path to save the summary (defaults to chunk-summary-{chunkId}.json)
     
@@ -2636,6 +2639,7 @@ function Save-ChunkSummary {
         [int] $failed = 0,
         [int] $skipped = 0,
         [int] $totalProcessed = 0,
+        [array] $failedRepos = @(),
         [string] $outputPath = "chunk-summary-$chunkId.json"
     )
     
@@ -2648,6 +2652,7 @@ function Save-ChunkSummary {
         failed = $failed
         skipped = $skipped
         totalProcessed = $totalProcessed
+        failedRepos = $failedRepos
     }
     
     Write-Host "Saving chunk [$chunkId] summary to [$outputPath]"
@@ -2691,6 +2696,10 @@ function Show-ConsolidatedChunkSummary {
     $totalSkipped = 0
     $totalProcessed = 0
     
+    # Initialize failure breakdown tracking
+    $failuresByType = @{}
+    $allFailedRepos = @()
+    
     if ($null -eq $chunkSummaryFiles -or $chunkSummaryFiles.Count -eq 0) {
         Write-Message -message "No chunk summary files found" -logToSummary $true
         # Return consistent structure with zero values
@@ -2728,6 +2737,25 @@ function Show-ConsolidatedChunkSummary {
             $totalSkipped += $chunkSummary.skipped
             $totalProcessed += $chunkSummary.totalProcessed
             
+            # Collect failed repos if available
+            if ($chunkSummary.failedRepos -and $chunkSummary.failedRepos.Count -gt 0) {
+                foreach ($failedRepo in $chunkSummary.failedRepos) {
+                    $allFailedRepos += $failedRepo
+                    
+                    # Count by error type for breakdown
+                    $errorType = $failedRepo.errorType
+                    if ([string]::IsNullOrEmpty($errorType)) {
+                        $errorType = "unknown"
+                    }
+                    
+                    if ($failuresByType.ContainsKey($errorType)) {
+                        $failuresByType[$errorType] += 1
+                    } else {
+                        $failuresByType[$errorType] = 1
+                    }
+                }
+            }
+            
             Write-Host "  Chunk [$($chunkSummary.chunkId)]: Processed $($chunkSummary.totalProcessed) repos"
         }
         catch {
@@ -2749,6 +2777,56 @@ function Show-ConsolidatedChunkSummary {
     Write-Message -message "| ⏭️ Skipped | $totalSkipped |" -logToSummary $true
     Write-Message -message "| **Total Processed** | **$totalProcessed** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+    
+    # Display failure breakdown if there are failures
+    if ($failuresByType.Count -gt 0) {
+        Write-Message -message "## Failure Breakdown by Category" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| Error Type | Count |" -logToSummary $true
+        Write-Message -message "|------------|------:|" -logToSummary $true
+        
+        # Sort by count descending for better visibility
+        $sortedFailures = $failuresByType.GetEnumerator() | Sort-Object -Property Value -Descending
+        foreach ($entry in $sortedFailures) {
+            Write-Message -message "| $($entry.Key) | $($entry.Value) |" -logToSummary $true
+        }
+        Write-Message -message "" -logToSummary $true
+    }
+    
+    # Display first 10 failed repos with clickable links in a collapsible section
+    if ($allFailedRepos.Count -gt 0) {
+        Write-Message -message "## Failed Repositories" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "Total failed repositories: **$($allFailedRepos.Count)**" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "<details>" -logToSummary $true
+        Write-Message -message "<summary>Click to view first 10 failed repositories</summary>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| Repository | Error Type | Error Message |" -logToSummary $true
+        Write-Message -message "|------------|------------|---------------|" -logToSummary $true
+        
+        # Take first 10 repos
+        $first10Failed = $allFailedRepos | Select-Object -First 10
+        foreach ($failedRepo in $first10Failed) {
+            $repoName = $failedRepo.name
+            $errorType = $failedRepo.errorType
+            $errorMessage = $failedRepo.errorMessage
+            
+            # Create clickable GitHub link
+            $repoLink = "[$repoName](https://github.com/actions-marketplace-validations/$repoName)"
+            
+            # Truncate error message if too long
+            if ($errorMessage -and $errorMessage.Length -gt 100) {
+                $errorMessage = $errorMessage.Substring(0, 97) + "..."
+            }
+            
+            Write-Message -message "| $repoLink | $errorType | $errorMessage |" -logToSummary $true
+        }
+        
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "</details>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+    }
     
     return @{
         synced = $totalSynced

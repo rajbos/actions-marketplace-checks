@@ -48,6 +48,7 @@ function UpdateForkedReposChunk {
     $conflicts = 0
     $upstreamNotFound = 0
     $skipped = 0
+    $failedReposList = @()
 
     foreach ($existingFork in $forksToProcess) {
 
@@ -114,27 +115,69 @@ function UpdateForkedReposChunk {
                 $upstreamNotFound++
                 # Mark the upstream as not found so we skip it in future runs
                 $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force
+                
+                # Add to failed repos list
+                $failedReposList += @{
+                    name = $existingFork.name
+                    errorType = $errorType
+                    errorMessage = $result.message
+                }
             }
             elseif ($errorType -eq "mirror_not_found") {
                     Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking mirrorFound as false"
                     $existingFork.mirrorFound = $false
                 $failed++
+                
+                # Add to failed repos list
+                $failedReposList += @{
+                    name = $existingFork.name
+                    errorType = $errorType
+                    errorMessage = $result.message
+                }
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
                 Write-Warning "$i/$($forksToProcess.Count) Merge conflict detected for mirror [$($existingFork.name)]"
                 $conflicts++
+                
+                # Add to failed repos list
+                $failedReposList += @{
+                    name = $existingFork.name
+                    errorType = if ($errorType) { $errorType } else { "merge_conflict" }
+                    errorMessage = $result.message
+                }
             }
             elseif ($errorType -eq "auth_error") {
                 Write-Warning "$i/$($forksToProcess.Count) Authentication error for mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
+                
+                # Add to failed repos list
+                $failedReposList += @{
+                    name = $existingFork.name
+                    errorType = $errorType
+                    errorMessage = $result.message
+                }
             }
             elseif ($errorType -eq "git_reference_error" -or $errorType -eq "ambiguous_refspec") {
                 Write-Warning "$i/$($forksToProcess.Count) Git reference error for mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
+                
+                # Add to failed repos list
+                $failedReposList += @{
+                    name = $existingFork.name
+                    errorType = $errorType
+                    errorMessage = $result.message
+                }
             }
             else {
                 Write-Warning "$i/$($forksToProcess.Count) Failed to sync mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
+                
+                # Add to failed repos list with generic error type
+                $failedReposList += @{
+                    name = $existingFork.name
+                    errorType = if ($errorType) { $errorType } else { "unknown" }
+                    errorMessage = $result.message
+                }
             }
             
             # Track failed sync with error details
@@ -172,6 +215,7 @@ function UpdateForkedReposChunk {
             skipped = $skipped
             totalProcessed = $i
         }
+        failedRepos = $failedReposList
     }
 }
 
@@ -194,6 +238,7 @@ Save-ChunkSummary `
     -failed $result.stats.failed `
     -skipped $result.stats.skipped `
     -totalProcessed $result.stats.totalProcessed `
+    -failedRepos $result.failedRepos `
     -outputPath "chunk-summary-$chunkId.json"
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
