@@ -142,7 +142,7 @@ function UpdateForkedReposChunk {
                 # Add to failed repos list
                 $failedReposList += @{
                     name = $existingFork.name
-                    errorType = if ($errorType) { $errorType } else { "merge_conflict" }
+                    errorType = "merge_conflict"
                     errorMessage = $result.message
                 }
             }
@@ -172,10 +172,10 @@ function UpdateForkedReposChunk {
                 Write-Warning "$i/$($forksToProcess.Count) Failed to sync mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
                 
-                # Add to failed repos list with generic error type
+                # Add to failed repos list with descriptive error type for unclassified errors
                 $failedReposList += @{
                     name = $existingFork.name
-                    errorType = if ($errorType) { $errorType } else { "unknown" }
+                    errorType = if ($errorType) { $errorType } else { "unspecified_error" }
                     errorMessage = $result.message
                 }
             }

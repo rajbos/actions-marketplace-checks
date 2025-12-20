@@ -2812,8 +2812,8 @@ function Show-ConsolidatedChunkSummary {
             $errorType = $failedRepo.errorType
             $errorMessage = $failedRepo.errorMessage
             
-            # Create clickable GitHub link
-            $repoLink = "[$repoName](https://github.com/actions-marketplace-validations/$repoName)"
+            # Create clickable GitHub link using the configured fork organization
+            $repoLink = "[$repoName](https://github.com/$forkOrg/$repoName)"
             
             # Truncate error message if too long
             if ($errorMessage -and $errorMessage.Length -gt 100) {
