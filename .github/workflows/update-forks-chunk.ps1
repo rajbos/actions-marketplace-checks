@@ -97,6 +97,10 @@ function UpdateForkedReposChunk {
                 Write-Debug "Mirror [$($existingFork.name)] already up to date"
                 $upToDate++
             }
+            elseif ($result.merge_type -eq "force_update") {
+                Write-Host "$i/$($forksToProcess.Count) Force updated mirror [$($existingFork.name)] (resolved merge conflict)"
+                $synced++
+            }
             else {
                 Write-Host "$i/$($forksToProcess.Count) Successfully synced mirror [$($existingFork.name)]"
                 $synced++

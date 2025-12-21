@@ -69,11 +69,19 @@ function UpdateForkedRepos {
         $resultSuccess = if ($result -is [hashtable]) { $result["success"] } else { $result.success }
         $resultMessage = if ($result -is [hashtable]) { $result["message"] } else { $result.message }
         $resultErrorType = if ($result -is [hashtable]) { $result["error_type"] } else { $result.error_type }
+        $resultMergeType = if ($result -is [hashtable]) { $result["merge_type"] } else { $result.merge_type }
 
         if ($resultSuccess) {
             if ($resultMessage -like "*Already up to date*") {
                 Write-Debug "Mirror [$($existingFork.name)] already up to date"
                 $upToDate++
+            }
+            elseif ($resultMergeType -eq "force_update") {
+                Write-Host "$i/$max Force updated mirror [$($existingFork.name)] (resolved merge conflict)"
+                $synced++
+                # Update the sync timestamp
+                if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
+                else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
             }
             else {
                 Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
