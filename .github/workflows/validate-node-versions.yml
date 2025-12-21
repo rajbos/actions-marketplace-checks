@@ -12,7 +12,6 @@ on:
       - main
     paths:
       - .github/workflows/validate-node-versions.yml
-      - .github/workflows/validate-node-versions.ps1
 
   schedule:
     # Run weekly on Mondays at 2 AM UTC to track Node.js version changes on runners
