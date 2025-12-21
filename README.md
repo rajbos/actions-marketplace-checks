@@ -51,7 +51,20 @@ Invoke-Pester -Path ./tests/cleanup.Tests.ps1
 This repository includes several automated workflows:
 
 - **[Enable Dependabot](.github/workflows/dependabot-updates.yml)**: Automatically enables Dependabot on mirrored repositories to detect security vulnerabilities
-- **[Update Mirrors](.github/workflows/update-forks.yml)**: Automatically syncs all mirrored repositories with their upstream sources (runs daily at 2 AM UTC)
+- **[Update Mirrors](.github/workflows/update-forks.yml)**: Automatically syncs all mirrored repositories with their upstream sources (runs every 15 minutes)
 - **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status
+
+### Mirror Sync Behavior
+
+The Update Mirrors workflow maintains synchronized copies of upstream GitHub Actions repositories. When syncing:
+
+1. **Normal Sync**: If changes can be merged cleanly, the mirror is updated via a standard merge
+2. **Merge Conflicts**: When a merge conflict is detected, the mirror is **force updated** to match the upstream repository exactly
+   - The upstream repository is always considered the source of truth
+   - Conflicts are resolved by resetting the mirror to the upstream state using `git reset --hard`
+   - A force push is used to update the mirror repository
+   - This ensures mirrors never become out of sync due to conflicts
+
+This force update behavior ensures that mirrors remain accurate copies of their upstream sources, even when there are conflicting changes.
 
 The dataset is scraped in this repo: [rajbos/github-azure-devops-marketplace-extension-news](https://github.com/rajbos/github-azure-devops-marketplace-extension-news)

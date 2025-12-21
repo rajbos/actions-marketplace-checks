@@ -354,4 +354,51 @@ Describe "Mirror Sync Tests" {
             $functionContent | Should -Match 'does not have any commits yet'
         }
     }
+    
+    Context "Force update on merge conflict in SyncMirrorWithUpstream" {
+        It "Should have force update logic for merge conflicts" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that merge conflict is detected
+            $functionContent | Should -Match 'Merge conflict detected'
+        }
+        
+        It "Should reset to upstream on merge conflict" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we reset to upstream when conflict is detected
+            $functionContent | Should -Match 'Force updating mirror to match upstream'
+            # Check that we call git reset --hard with upstream reference
+            $functionContent | Should -Match 'git reset --hard \$resetRef'
+            $functionContent | Should -Match '\$resetRef = "refs/remotes/upstream/\$currentBranch"'
+        }
+        
+        It "Should set needForcePush flag on merge conflict" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we track when force push is needed
+            $functionContent | Should -Match '\$needForcePush\s*=\s*\$true'
+        }
+        
+        It "Should use force push when needForcePush is set" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we use --force flag when pushing after conflict resolution
+            $functionContent | Should -Match '--force'
+            $functionContent | Should -Match 'Force push to mirror'
+        }
+        
+        It "Should return force_update merge type for conflict resolution" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that the return value distinguishes force updates
+            $functionContent | Should -Match 'force_update'
+            $functionContent | Should -Match 'resolved merge conflict'
+        }
+        
+        It "Should not abort merge without attempting reset" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that merge --abort is called before reset (not throwing immediately)
+            $matches = [regex]::Matches($functionContent, 'git merge --abort')
+            $matches.Count | Should -BeGreaterOrEqual 1
+            # And that we don't throw immediately after abort when it's a conflict
+            $conflictHandling = [regex]::Match($functionContent, 'if \(\$mergeOutput -like "\*conflict\*"[\s\S]*?\}')
+            $conflictHandling.Value | Should -Not -Match 'throw "Merge conflict detected"'
+        }
+    }
 }

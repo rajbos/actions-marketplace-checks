@@ -1907,6 +1907,13 @@ function SyncMirrorWithUpstream {
     # This is different from fork sync - these are mirrors created by cloning upstream repos
     # Mirror repos are named: actions-marketplace-validations/upstreamOwner_upstreamRepo
     # Upstream repos are at: github.com/upstreamOwner/upstreamRepo
+    #
+    # Merge Conflict Handling:
+    # When a merge conflict is detected, the function automatically performs a force update
+    # by resetting the mirror to match the upstream repository exactly (git reset --hard).
+    # The upstream is always considered the source of truth, and conflicts are resolved
+    # by discarding any conflicting changes in the mirror. This ensures mirrors remain
+    # accurate copies of upstream sources.
     
     Write-Debug "Syncing mirror [$owner/$repo] with upstream [$upstreamOwner/$upstreamRepo]"
     
@@ -2074,6 +2081,9 @@ function SyncMirrorWithUpstream {
             }
         }
         
+        # Flag to track if we need to force push (e.g., after conflict resolution)
+        $needForcePush = $false
+        
         # If repo is empty, do an initial sync from upstream instead of merge
         if ($isEmptyRepo) {
             Write-Debug "Performing initial sync: resetting to upstream/$currentBranch"
@@ -2102,7 +2112,19 @@ function SyncMirrorWithUpstream {
                 if ($mergeOutput -like "*conflict*" -or $mergeOutput -like "*CONFLICT*") {
                     # Abort the merge
                     git merge --abort 2>&1 | Out-Null
-                    throw "Merge conflict detected"
+                    
+                    # Force update the mirror to match upstream (upstream is always correct)
+                    Write-Warning "Merge conflict detected. Force updating mirror to match upstream."
+                    $resetRef = "refs/remotes/upstream/$currentBranch"
+                    $resetResult = git reset --hard $resetRef 2>&1
+                    
+                    if ($LASTEXITCODE -ne 0) {
+                        $resetOutput = $resetResult | Out-String
+                        throw "Failed to force reset to upstream after merge conflict: $resetOutput"
+                    }
+                    
+                    Write-Debug "Successfully force updated mirror to match upstream after conflict"
+                    $needForcePush = $true
                 }
                 elseif ($mergeOutput -like "*refspec*matches more than one*") {
                     throw "Ambiguous git reference: $mergeOutput"
@@ -2142,9 +2164,17 @@ function SyncMirrorWithUpstream {
         }
         
         # Push changes back to mirror using explicit branch reference with retry
-        Write-Debug "Pushing changes to mirror"
-        $pushRef = "HEAD:refs/heads/$currentBranch"
-        $pushResult = Invoke-GitCommandWithRetry -GitCommand "push" -GitArguments @("origin", $pushRef) -Description "Push to mirror"
+        # Use force push if we did a force reset (e.g., after conflict resolution)
+        if ($needForcePush) {
+            Write-Debug "Pushing changes to mirror with --force (after conflict resolution)"
+            $pushRef = "HEAD:refs/heads/$currentBranch"
+            $pushResult = Invoke-GitCommandWithRetry -GitCommand "push" -GitArguments @("--force", "origin", $pushRef) -Description "Force push to mirror"
+        }
+        else {
+            Write-Debug "Pushing changes to mirror"
+            $pushRef = "HEAD:refs/heads/$currentBranch"
+            $pushResult = Invoke-GitCommandWithRetry -GitCommand "push" -GitArguments @("origin", $pushRef) -Description "Push to mirror"
+        }
         
         if (-not $pushResult.Success) {
             $errorOutput = $pushResult.Output | Out-String
@@ -2163,9 +2193,19 @@ function SyncMirrorWithUpstream {
         # Clear LFS skip smudge environment variable
         Remove-Item Env:\GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
         
-        # Return appropriate message based on whether this was an initial sync or merge
-        $message = if ($isEmptyRepo) { "Successfully performed initial sync from upstream" } else { "Successfully fetched and merged from upstream" }
-        $mergeType = if ($isEmptyRepo) { "initial_sync" } else { "merge" }
+        # Return appropriate message based on whether this was an initial sync, merge, or force update
+        if ($isEmptyRepo) {
+            $message = "Successfully performed initial sync from upstream"
+            $mergeType = "initial_sync"
+        }
+        elseif ($needForcePush) {
+            $message = "Successfully force updated from upstream (resolved merge conflict)"
+            $mergeType = "force_update"
+        }
+        else {
+            $message = "Successfully fetched and merged from upstream"
+            $mergeType = "merge"
+        }
         
         return @{
             success = $true
