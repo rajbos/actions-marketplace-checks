@@ -76,19 +76,19 @@ function UpdateForkedRepos {
                 Write-Debug "Mirror [$($existingFork.name)] already up to date"
                 $upToDate++
             }
-            elseif ($resultMergeType -eq "force_update") {
-                Write-Host "$i/$max Force updated mirror [$($existingFork.name)] (resolved merge conflict)"
-                $synced++
-                # Update the sync timestamp
-                if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
-                else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
-            }
             else {
-                Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
-                $synced++
-                # Update the sync timestamp
+                # Update the sync timestamp for any successful sync (merge or force update)
                 if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
                 else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
+                
+                if ($resultMergeType -eq "force_update") {
+                    Write-Host "$i/$max Force updated mirror [$($existingFork.name)] (resolved merge conflict)"
+                    $synced++
+                }
+                else {
+                    Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
+                    $synced++
+                }
             }
             # Clear any previous sync errors on success
             if (Get-Member -InputObject $existingFork -Name "lastSyncError" -MemberType Properties) {
