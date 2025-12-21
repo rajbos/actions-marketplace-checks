@@ -1907,6 +1907,13 @@ function SyncMirrorWithUpstream {
     # This is different from fork sync - these are mirrors created by cloning upstream repos
     # Mirror repos are named: actions-marketplace-validations/upstreamOwner_upstreamRepo
     # Upstream repos are at: github.com/upstreamOwner/upstreamRepo
+    #
+    # Merge Conflict Handling:
+    # When a merge conflict is detected, the function automatically performs a force update
+    # by resetting the mirror to match the upstream repository exactly (git reset --hard).
+    # The upstream is always considered the source of truth, and conflicts are resolved
+    # by discarding any conflicting changes in the mirror. This ensures mirrors remain
+    # accurate copies of upstream sources.
     
     Write-Debug "Syncing mirror [$owner/$repo] with upstream [$upstreamOwner/$upstreamRepo]"
     
