@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - copilot/split-mermaid-diagram
     paths:
       - .github/workflows/report.yml
       - .github/workflows/report.ps1
