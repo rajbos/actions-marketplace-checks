@@ -349,7 +349,7 @@ function ReportInsightsInMarkdown {
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     LogMessage "  A[$nodeBasedActions Node based actions]"
-    $currentLetter = 1 # start at B
+    $currentLetter = 1 # B = 66 (ASCII), so 1 + 65 = 66
     foreach ($nodeVersion in $nodeVersionCount) {
         # calculate percentage of node version
         $percentage = [math]::Round($nodeVersion.Value/$nodeBasedActions * 100 , 1)
