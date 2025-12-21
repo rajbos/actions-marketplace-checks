@@ -335,20 +335,55 @@ function ReportInsightsInMarkdown {
 
     LogMessage "## Action type"
     LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
+    LogMessage ""
+    LogMessage "### Overview of action types"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    LogMessage "  A[$($repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based]"
-    LogMessage "  A-->C[$dockerBasedActions Docker based]"
-    LogMessage "  A-->D[$compositeAction Composite actions]"
-    LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
-    LogMessage "  C-->F[$remoteDockerfile Remote image]"
-    LogMessage "  A-->G[$unknownActionType Unknown]"
-    $currentLetter = 7 # start at H
-    foreach ($nodeVersion in $nodeVersionCount) {
-        # calculate percentage of node version
-        $percentage = [math]::Round($nodeVersion.Value/$nodeBasedActions * 100 , 1)
-        LogMessage "  B-->$([char]($currentLetter+65))[$($nodeVersion.Value) Node $($nodeVersion.Key) - $percentage%]"
-        $currentLetter++
+    # Calculate total from the sum of action types, not reposAnalyzed (which only counts repos with vulnerability data)
+    $totalActions = $nodeBasedActions + $dockerBasedActions + $compositeAction + $unknownActionType
+    if ($totalActions -gt 0) {
+        $nodePercentage = [math]::Round($nodeBasedActions/$totalActions * 100 , 1)
+        $dockerPercentage = [math]::Round($dockerBasedActions/$totalActions * 100 , 1)
+        $compositePercentage = [math]::Round($compositeAction/$totalActions * 100 , 1)
+        $otherPercentage = [math]::Round($unknownActionType/$totalActions * 100 , 1)
+        LogMessage "  A[$totalActions Actions]-->B[$nodeBasedActions Node based - $nodePercentage%]"
+        LogMessage "  A-->C[$dockerBasedActions Docker based - $dockerPercentage%]"
+        LogMessage "  A-->D[$compositeAction Composite actions - $compositePercentage%]"
+        LogMessage "  A-->E[$unknownActionType Other - $otherPercentage%]"
+    } else {
+        LogMessage "  A[$totalActions Actions]-->B[$nodeBasedActions Node based]"
+        LogMessage "  A-->C[$dockerBasedActions Docker based]"
+        LogMessage "  A-->D[$compositeAction Composite actions]"
+        LogMessage "  A-->E[$unknownActionType Other]"
+    }
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "### Node-based actions composition"
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    LogMessage "  A[$nodeBasedActions Node based actions]"
+    $currentLetter = 1 # B = 66 (ASCII), so 1 + 65 = 66
+    if ($nodeBasedActions -gt 0) {
+        foreach ($nodeVersion in $nodeVersionCount) {
+            # calculate percentage of node version
+            $percentage = [math]::Round($nodeVersion.Value/$nodeBasedActions * 100 , 1)
+            LogMessage "  A-->$([char]($currentLetter+65))[$($nodeVersion.Value) Node $($nodeVersion.Key) - $percentage%]"
+            $currentLetter++
+        }
+    }
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "### Docker-based actions composition"
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    if ($dockerBasedActions -gt 0) {
+        $localDockerPercentage = [math]::Round($localDockerFile/$dockerBasedActions * 100 , 1)
+        $remoteDockerPercentage = [math]::Round($remoteDockerfile/$dockerBasedActions * 100 , 1)
+        LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile - $localDockerPercentage%]"
+        LogMessage "  A-->C[$remoteDockerfile Remote image - $remoteDockerPercentage%]"
+    } else {
+        LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile]"
+        LogMessage "  A-->C[$remoteDockerfile Remote image]"
     }
     LogMessage "``````"
     LogMessage ""
