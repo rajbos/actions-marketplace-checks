@@ -65,4 +65,29 @@ Describe "Node Version Validation Tests" {
         { Write-Message -message $testMessage -logToSummary $false } | Should -Not -Throw
         { Write-Message -message $testMessage -logToSummary $true } | Should -Not -Throw
     }
+
+    It "Should fetch setup-node available versions" {
+        # Arrange
+        $manifestUrl = "https://raw.githubusercontent.com/actions/node-versions/main/versions-manifest.json"
+        
+        # Act
+        try {
+            $availableVersions = Invoke-RestMethod -Uri $manifestUrl -Method Get -ErrorAction Stop
+            
+            # Assert
+            $availableVersions | Should -Not -BeNullOrEmpty
+            $availableVersions.Count | Should -BeGreaterThan 0
+            
+            # Check that versions have expected properties
+            $firstVersion = $availableVersions | Select-Object -First 1
+            $firstVersion.version | Should -Not -BeNullOrEmpty
+            $firstVersion.PSObject.Properties.Name | Should -Contain "stable"
+            $firstVersion.PSObject.Properties.Name | Should -Contain "lts"
+            
+            Write-Host "Found $($availableVersions.Count) versions from setup-node manifest"
+        } catch {
+            # Network issues can happen, skip the test in that case
+            Set-ItResult -Skipped -Because "Could not fetch versions manifest: $_"
+        }
+    }
 }

@@ -91,4 +91,46 @@ jobs:
           }
           
           Write-Message -message "" -logToSummary $true
+          
+          # Check what versions can be installed with setup-node action
+          Write-Host "Checking available Node.js versions from setup-node action..."
+          $manifestUrl = "https://raw.githubusercontent.com/actions/node-versions/main/versions-manifest.json"
+          
+          try {
+              $availableVersions = Invoke-RestMethod -Uri $manifestUrl -Method Get -ErrorAction Stop
+              Write-Host "Successfully fetched $($availableVersions.Count) versions from setup-node manifest"
+              
+              # Group by major version and get latest stable versions
+              $stableVersions = $availableVersions | Where-Object { $_.stable -eq $true }
+              $majorVersions = $stableVersions | Group-Object { $_.version.Split('.')[0] } | 
+                  ForEach-Object { 
+                      $_.Group | Sort-Object { [Version]$_.version } -Descending | Select-Object -First 1
+                  } | Sort-Object { [Version]$_.version } -Descending
+              
+              Write-Message -message "## Node.js Versions Available via setup-node Action" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "The setup-node action can install **$($availableVersions.Count)** total versions (including pre-releases)." -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "**Latest stable version per major release:**" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "| Major Version | Latest Stable | LTS Status |" -logToSummary $true
+              Write-Message -message "|---------------|---------------|------------|" -logToSummary $true
+              
+              foreach ($version in $majorVersions | Select-Object -First 10) {
+                  $major = $version.version.Split('.')[0]
+                  $ltsStatus = if ($version.lts) { "✓ ($($version.lts))" } else { "-" }
+                  Write-Host "  - Node.js v${major}: $($version.version) (LTS: $ltsStatus)"
+                  Write-Message -message "| Node.js $major | $($version.version) | $ltsStatus |" -logToSummary $true
+              }
+              
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "_Note: Only showing the top 10 major versions. Use setup-node with node-version input to install any available version._" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              
+          } catch {
+              Write-Host "Failed to fetch setup-node versions: $_"
+              Write-Message -message "⚠️ Could not fetch available versions from setup-node action manifest." -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+          }
+          
           Write-Host "Node.js version validation complete!"
