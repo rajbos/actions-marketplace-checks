@@ -335,21 +335,34 @@ function ReportInsightsInMarkdown {
 
     LogMessage "## Action type"
     LogMessage "Action type is determined by the action definition file and can be either Node (JavaScript/TypeScript) or Docker based, or it can be a composite action. A remote image means it is pulled directly from a container registry, instead of a local file."
+    LogMessage ""
+    LogMessage "### Overview of action types"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     LogMessage "  A[$($repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based]"
     LogMessage "  A-->C[$dockerBasedActions Docker based]"
     LogMessage "  A-->D[$compositeAction Composite actions]"
-    LogMessage "  C-->E[$localDockerFile Local Dockerfile]"
-    LogMessage "  C-->F[$remoteDockerfile Remote image]"
-    LogMessage "  A-->G[$unknownActionType Unknown]"
-    $currentLetter = 7 # start at H
+    LogMessage "  A-->E[$unknownActionType Other]"
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "### Node-based actions composition"
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    LogMessage "  A[$nodeBasedActions Node based actions]"
+    $currentLetter = 1 # start at B
     foreach ($nodeVersion in $nodeVersionCount) {
         # calculate percentage of node version
         $percentage = [math]::Round($nodeVersion.Value/$nodeBasedActions * 100 , 1)
-        LogMessage "  B-->$([char]($currentLetter+65))[$($nodeVersion.Value) Node $($nodeVersion.Key) - $percentage%]"
+        LogMessage "  A-->$([char]($currentLetter+65))[$($nodeVersion.Value) Node $($nodeVersion.Key) - $percentage%]"
         $currentLetter++
     }
+    LogMessage "``````"
+    LogMessage ""
+    LogMessage "### Docker-based actions composition"
+    LogMessage "``````mermaid"
+    LogMessage "flowchart LR"
+    LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile]"
+    LogMessage "  A-->C[$remoteDockerfile Remote image]"
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
