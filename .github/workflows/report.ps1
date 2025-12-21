@@ -339,14 +339,21 @@ function ReportInsightsInMarkdown {
     LogMessage "### Overview of action types"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    $nodePercentage = [math]::Round($nodeBasedActions/$repoInformation.reposAnalyzed * 100 , 1)
-    $dockerPercentage = [math]::Round($dockerBasedActions/$repoInformation.reposAnalyzed * 100 , 1)
-    $compositePercentage = [math]::Round($compositeAction/$repoInformation.reposAnalyzed * 100 , 1)
-    $otherPercentage = [math]::Round($unknownActionType/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A[$($repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based - $nodePercentage%]"
-    LogMessage "  A-->C[$dockerBasedActions Docker based - $dockerPercentage%]"
-    LogMessage "  A-->D[$compositeAction Composite actions - $compositePercentage%]"
-    LogMessage "  A-->E[$unknownActionType Other - $otherPercentage%]"
+    if ($repoInformation.reposAnalyzed -gt 0) {
+        $nodePercentage = [math]::Round($nodeBasedActions/$repoInformation.reposAnalyzed * 100 , 1)
+        $dockerPercentage = [math]::Round($dockerBasedActions/$repoInformation.reposAnalyzed * 100 , 1)
+        $compositePercentage = [math]::Round($compositeAction/$repoInformation.reposAnalyzed * 100 , 1)
+        $otherPercentage = [math]::Round($unknownActionType/$repoInformation.reposAnalyzed * 100 , 1)
+        LogMessage "  A[$($repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based - $nodePercentage%]"
+        LogMessage "  A-->C[$dockerBasedActions Docker based - $dockerPercentage%]"
+        LogMessage "  A-->D[$compositeAction Composite actions - $compositePercentage%]"
+        LogMessage "  A-->E[$unknownActionType Other - $otherPercentage%]"
+    } else {
+        LogMessage "  A[$($repoInformation.reposAnalyzed) Actions]-->B[$nodeBasedActions Node based]"
+        LogMessage "  A-->C[$dockerBasedActions Docker based]"
+        LogMessage "  A-->D[$compositeAction Composite actions]"
+        LogMessage "  A-->E[$unknownActionType Other]"
+    }
     LogMessage "``````"
     LogMessage ""
     LogMessage "### Node-based actions composition"
@@ -365,10 +372,15 @@ function ReportInsightsInMarkdown {
     LogMessage "### Docker-based actions composition"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    $localDockerPercentage = [math]::Round($localDockerFile/$dockerBasedActions * 100 , 1)
-    $remoteDockerPercentage = [math]::Round($remoteDockerfile/$dockerBasedActions * 100 , 1)
-    LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile - $localDockerPercentage%]"
-    LogMessage "  A-->C[$remoteDockerfile Remote image - $remoteDockerPercentage%]"
+    if ($dockerBasedActions -gt 0) {
+        $localDockerPercentage = [math]::Round($localDockerFile/$dockerBasedActions * 100 , 1)
+        $remoteDockerPercentage = [math]::Round($remoteDockerfile/$dockerBasedActions * 100 , 1)
+        LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile - $localDockerPercentage%]"
+        LogMessage "  A-->C[$remoteDockerfile Remote image - $remoteDockerPercentage%]"
+    } else {
+        LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile]"
+        LogMessage "  A-->C[$remoteDockerfile Remote image]"
+    }
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
