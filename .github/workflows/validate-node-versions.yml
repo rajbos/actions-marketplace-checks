@@ -67,7 +67,7 @@ jobs:
                   foreach ($version in $nodeVersions) {
                       Write-Host "  - Node.js $version"
                       $versionPath = Join-Path $toolsCachePath $version
-                      Write-Message -message "| $version | ``$versionPath`` |" -logToSummary $true
+                      Write-Message -message "| $version | $versionPath |" -logToSummary $true
                   }
                   
                   Write-Message -message "" -logToSummary $true
