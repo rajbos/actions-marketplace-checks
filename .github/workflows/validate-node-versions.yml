@@ -1,0 +1,136 @@
+# Validate Node.js versions on GitHub-hosted runners
+# This workflow checks the default Node.js version and all versions available in the tools cache
+name: Validate Node Versions
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/validate-node-versions.yml
+
+  schedule:
+    # Run weekly on Mondays at 2 AM UTC to track Node.js version changes on runners
+    - cron: '0 2 * * 1'
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  validate-node-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check Node.js Versions
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          Write-Message -message "# Node.js Version Report" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
+          # Get the default Node.js version
+          Write-Host "Checking default Node.js version..."
+          $defaultVersion = node --version
+          Write-Host "Default Node.js version: $defaultVersion"
+          
+          Write-Message -message "## Default Node.js Version" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "The default Node.js version on the runner is: **$defaultVersion**" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
+          # Check the tools cache for all available Node.js versions
+          Write-Host "Checking tools cache for Node.js versions..."
+          $toolsCachePath = "$env:RUNNER_TOOL_CACHE/node"
+          
+          if (Test-Path $toolsCachePath) {
+              Write-Host "Tools cache path exists: $toolsCachePath"
+              $nodeVersions = Get-ChildItem -Path $toolsCachePath -Directory | Select-Object -ExpandProperty Name | Sort-Object
+              
+              if ($nodeVersions.Count -gt 0) {
+                  Write-Host "Found $($nodeVersions.Count) Node.js versions in tools cache"
+                  
+                  Write-Message -message "## Node.js Versions in Tools Cache" -logToSummary $true
+                  Write-Message -message "" -logToSummary $true
+                  Write-Message -message "Found **$($nodeVersions.Count)** Node.js versions installed in the runner's tools cache:" -logToSummary $true
+                  Write-Message -message "" -logToSummary $true
+                  Write-Message -message "| Version | Path |" -logToSummary $true
+                  Write-Message -message "|---------|------|" -logToSummary $true
+                  
+                  foreach ($version in $nodeVersions) {
+                      Write-Host "  - Node.js $version"
+                      $versionPath = Join-Path $toolsCachePath $version
+                      Write-Message -message "| $version | $versionPath |" -logToSummary $true
+                  }
+                  
+                  Write-Message -message "" -logToSummary $true
+                  
+                  # Summary stats
+                  Write-Message -message "## Summary" -logToSummary $true
+                  Write-Message -message "" -logToSummary $true
+                  Write-Message -message "- **Default version**: $defaultVersion" -logToSummary $true
+                  Write-Message -message "- **Total versions available**: $($nodeVersions.Count)" -logToSummary $true
+                  Write-Message -message "- **Version range**: $($nodeVersions[0]) to $($nodeVersions[-1])" -logToSummary $true
+              }
+              else {
+                  Write-Host "No Node.js versions found in tools cache"
+                  Write-Message -message "⚠️ No Node.js versions found in the tools cache directory." -logToSummary $true
+              }
+          }
+          else {
+              Write-Host "Tools cache path does not exist: $toolsCachePath"
+              Write-Message -message "⚠️ Tools cache path does not exist: $toolsCachePath" -logToSummary $true
+          }
+          
+          Write-Message -message "" -logToSummary $true
+          
+          # Check what versions can be installed with setup-node action
+          Write-Host "Checking available Node.js versions from setup-node action..."
+          $manifestUrl = "https://raw.githubusercontent.com/actions/node-versions/main/versions-manifest.json"
+          
+          try {
+              $availableVersions = Invoke-RestMethod -Uri $manifestUrl -Method Get -ErrorAction Stop
+              Write-Host "Successfully fetched $($availableVersions.Count) versions from setup-node manifest"
+              
+              # Group by major version and get latest stable versions
+              $stableVersions = $availableVersions | Where-Object { $_.stable -eq $true }
+              $majorVersions = $stableVersions | Group-Object { $_.version.Split('.')[0] } | 
+                  ForEach-Object { 
+                      $_.Group | Sort-Object { [Version]$_.version } -Descending | Select-Object -First 1
+                  } | Sort-Object { [Version]$_.version } -Descending
+              
+              Write-Message -message "## Node.js Versions Available via setup-node Action" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "The setup-node action can install **$($availableVersions.Count)** total versions (including pre-releases)." -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "**Latest stable version per major release:**" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "| Major Version | Latest Stable | LTS Status |" -logToSummary $true
+              Write-Message -message "|---------------|---------------|------------|" -logToSummary $true
+              
+              foreach ($version in $majorVersions | Select-Object -First 10) {
+                  $major = $version.version.Split('.')[0]
+                  $ltsStatus = if ($version.lts) { "✓ ($($version.lts))" } else { "-" }
+                  Write-Host "  - Node.js v${major}: $($version.version) (LTS: $ltsStatus)"
+                  Write-Message -message "| Node.js $major | $($version.version) | $ltsStatus |" -logToSummary $true
+              }
+              
+              Write-Message -message "" -logToSummary $true
+              Write-Message -message "_Note: Only showing the top 10 major versions. Use setup-node with node-version input to install any available version._" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              
+          } catch {
+              Write-Host "Failed to fetch setup-node versions: $_"
+              Write-Message -message "⚠️ Could not fetch available versions from setup-node action manifest." -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+          }
+          
+          Write-Host "Node.js version validation complete!"
