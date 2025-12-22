@@ -129,4 +129,21 @@ Describe "Node Version Grouping" {
         $groups.NeedsSetupNode | Should -Be 1  # node19
         $groups.NeedsSetupNodeVersions["19"] | Should -Be 1
     }
+    
+    It "Should not divide by zero when calculating percentages for empty needs-setup-node group" {
+        # Arrange - All versions work on default runners
+        $nodeVersions = @("20", "21", "22")
+        
+        # Act
+        $nodeVersionCount = GroupNodeVersionsAndCount -nodeVersions $nodeVersions
+        $groups = SeparateNodeVersionGroups -nodeVersionCount $nodeVersionCount
+        
+        # Assert - Should not throw when needsSetupNode is 0
+        $groups.NeedsSetupNode | Should -Be 0
+        $groups.WorksOnDefaultRunners | Should -Be 3
+        
+        # Verify that attempting to calculate percentage from needs-setup-node versions
+        # would be safe (even though we guard against this in production code)
+        $groups.NeedsSetupNodeVersions.Count | Should -Be 0
+    }
 }

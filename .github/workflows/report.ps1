@@ -387,13 +387,15 @@ function ReportInsightsInMarkdown {
         LogMessage "  A-->B[$worksOnDefaultRunners Works on default runners - $worksOnDefaultPercentage%]"
         LogMessage "  A-->C[$needsSetupNode Needs setup-node - $needsSetupNodePercentage%]"
         
-        # Break down the "needs setup-node" group by version
-        $currentLetter = 0 # Start from D
-        foreach ($versionKey in ($needsSetupNodeVersions.Keys | Sort-Object)) {
-            $count = $needsSetupNodeVersions[$versionKey]
-            $percentage = [math]::Round($count/$needsSetupNode * 100 , 1)
-            LogMessage "  C-->$([char]($currentLetter+68))[$count Node $versionKey - $percentage%]"
-            $currentLetter++
+        # Break down the "needs setup-node" group by version (only if there are any)
+        if ($needsSetupNode -gt 0) {
+            $currentLetter = 0 # Start from D
+            foreach ($versionKey in ($needsSetupNodeVersions.Keys | Sort-Object)) {
+                $count = $needsSetupNodeVersions[$versionKey]
+                $percentage = [math]::Round($count/$needsSetupNode * 100 , 1)
+                LogMessage "  C-->$([char]($currentLetter+68))[$count Node $versionKey - $percentage%]"
+                $currentLetter++
+            }
         }
     }
     LogMessage "``````"
