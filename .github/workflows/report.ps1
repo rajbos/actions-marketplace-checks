@@ -435,14 +435,23 @@ function ReportInsightsInMarkdown {
     LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, dockerfile or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    $ymlPercentage = [math]::Round($global:actionYmlFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A[$($repoInformation.reposAnalyzed) actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
-    $yamlPercentage = [math]::Round($global:actionYamlFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
-    $DockerPercentage = [math]::Round($global:actionDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->D[$global:actionDockerFile Dockerfile - $DockerPercentage%]"
-    $dDockerPercentage = [math]::Round($global:actiondDockerFile/$repoInformation.reposAnalyzed * 100 , 1)
-    LogMessage "  A-->E[$global:actiondDockerFile dockerfile - $dDockerPercentage%]"
+    # Calculate total actions with action definition files
+    $totalActionsWithDefinition = $global:actionYmlFile + $global:actionYamlFile + $global:actionDockerFile + $global:actiondDockerFile
+    if ($totalActionsWithDefinition -gt 0) {
+        $ymlPercentage = [math]::Round($global:actionYmlFile/$totalActionsWithDefinition * 100 , 1)
+        LogMessage "  A[$totalActionsWithDefinition actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
+        $yamlPercentage = [math]::Round($global:actionYamlFile/$totalActionsWithDefinition * 100 , 1)
+        LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
+        $DockerPercentage = [math]::Round($global:actionDockerFile/$totalActionsWithDefinition * 100 , 1)
+        LogMessage "  A-->D[$global:actionDockerFile Dockerfile - $DockerPercentage%]"
+        $dDockerPercentage = [math]::Round($global:actiondDockerFile/$totalActionsWithDefinition * 100 , 1)
+        LogMessage "  A-->E[$global:actiondDockerFile dockerfile - $dDockerPercentage%]"
+    } else {
+        LogMessage "  A[$totalActionsWithDefinition actions]-->B[$actionYmlFile action.yml]"
+        LogMessage "  A-->C[$actionYamlFile action.yaml]"
+        LogMessage "  A-->D[$global:actionDockerFile Dockerfile]"
+        LogMessage "  A-->E[$global:actiondDockerFile dockerfile]"
+    }
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Docker based actions, most used base images: "
