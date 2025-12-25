@@ -401,4 +401,55 @@ Describe "Mirror Sync Tests" {
             $conflictHandling.Value | Should -Not -Match 'throw "Merge conflict detected"'
         }
     }
+    
+    Context "Branch mismatch handling in SyncMirrorWithUpstream" {
+        It "Should detect when upstream branch is not found" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we check for branch not found
+            $functionContent | Should -Match 'Branch not found in upstream'
+        }
+        
+        It "Should query upstream default branch when branch not found" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we query the upstream's actual default branch
+            $functionContent | Should -Match 'Querying upstream.*s actual default branch'
+            $functionContent | Should -Match 'repos/\$upstreamOwner/\$upstreamRepo'
+        }
+        
+        It "Should force reset when upstream default branch differs" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we force reset when branches differ
+            $functionContent | Should -Match 'Will force reset mirror to match upstream'
+        }
+        
+        It "Should handle branch mismatch with elseif condition" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we have an elseif for needForcePush (branch mismatch)
+            $functionContent | Should -Match 'elseif \(\$needForcePush\)'
+            $functionContent | Should -Match 'Branch mismatch detected'
+        }
+    }
+    
+    Context "Unrelated histories handling in SyncMirrorWithUpstream" {
+        It "Should detect unrelated histories error during merge" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we check for unrelated histories error
+            $functionContent | Should -Match 'refusing to merge unrelated histories'
+        }
+        
+        It "Should force reset on unrelated histories" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Verify that we reset to upstream when unrelated histories is detected
+            $functionContent | Should -Match 'Unrelated histories detected'
+            $functionContent | Should -Match 'Force updating mirror to match upstream'
+        }
+        
+        It "Should abort merge before resetting on unrelated histories" {
+            $functionContent = (Get-Command SyncMirrorWithUpstream).Definition
+            # Check the unrelated histories block specifically
+            $unrelatedHistoriesBlock = [regex]::Match($functionContent, 'elseif \(\$mergeOutput -like "\*refusing to merge unrelated histories\*"[\s\S]*?\$needForcePush = \$true')
+            $unrelatedHistoriesBlock.Success | Should -Be $true
+            $unrelatedHistoriesBlock.Value | Should -Match 'git merge --abort'
+        }
+    }
 }
