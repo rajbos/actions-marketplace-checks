@@ -2061,7 +2061,43 @@ function SyncMirrorWithUpstream {
         }
         
         if ($LASTEXITCODE -ne 0) {
-            throw "Upstream branch [$currentBranch] not found"
+            # Branch not found in upstream - the upstream might have changed their default branch
+            # Query the upstream's actual default branch via API and force reset to it
+            Write-Warning "Branch [$currentBranch] not found in upstream. Querying upstream's actual default branch..."
+            
+            # Get the upstream repository's default branch
+            $upstreamDefaultBranch = $null
+            try {
+                $upstreamRepoInfo = ApiCall -method GET -url "repos/$upstreamOwner/$upstreamRepo" -access_token $access_token -hideFailedCall $true
+                if ($null -ne $upstreamRepoInfo -and $null -ne $upstreamRepoInfo.default_branch) {
+                    $upstreamDefaultBranch = $upstreamRepoInfo.default_branch
+                    Write-Debug "Upstream's default branch is: [$upstreamDefaultBranch]"
+                }
+            }
+            catch {
+                Write-Debug "Failed to query upstream's default branch: $($_.Exception.Message)"
+            }
+            
+            # If we found the upstream's default branch and it's different, use it
+            if ($null -ne $upstreamDefaultBranch -and $upstreamDefaultBranch -ne $currentBranch) {
+                Write-Warning "Upstream default branch is [$upstreamDefaultBranch], but mirror is on [$currentBranch]. Will force reset mirror to match upstream."
+                $currentBranch = $upstreamDefaultBranch
+                $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
+                
+                # Verify the upstream branch exists in our fetched refs before proceeding
+                # This is a safety check to ensure the API-provided branch name is valid
+                git show-ref --verify $upstreamBranchRef 2>&1 | Out-Null
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Upstream branch [$currentBranch] not found even after querying default branch"
+                }
+                
+                # Force the mirror to use upstream's default branch
+                # We'll set the flag to force push and reset later
+                $needForcePush = $true
+            }
+            else {
+                throw "Upstream branch [$currentBranch] not found"
+            }
         }
         
         # Check if the mirror repo is empty (no commits yet)
@@ -2081,8 +2117,11 @@ function SyncMirrorWithUpstream {
             }
         }
         
-        # Flag to track if we need to force push (e.g., after conflict resolution)
-        $needForcePush = $false
+        # Flag to track if we need to force push (e.g., after conflict resolution or branch mismatch)
+        # Note: Only initialize if not already set, as it may have been set during branch mismatch detection above
+        if ($null -eq $needForcePush) {
+            $needForcePush = $false
+        }
         
         # If repo is empty, do an initial sync from upstream instead of merge
         if ($isEmptyRepo) {
@@ -2093,6 +2132,22 @@ function SyncMirrorWithUpstream {
             
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to reset to upstream branch"
+            }
+            
+            $afterHash = git rev-parse HEAD 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to get HEAD after reset"
+            }
+        }
+        elseif ($needForcePush) {
+            # Branch mismatch detected (upstream changed its default branch)
+            # Force reset our mirror to match upstream's default branch
+            Write-Warning "Force resetting mirror to upstream's default branch [$currentBranch]"
+            $resetRef = "refs/remotes/upstream/$currentBranch"
+            git reset --hard $resetRef 2>&1 | Out-Null
+            
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to force reset to upstream branch [$currentBranch]"
             }
             
             $afterHash = git rev-parse HEAD 2>&1
@@ -2124,6 +2179,23 @@ function SyncMirrorWithUpstream {
                     }
                     
                     Write-Debug "Successfully force updated mirror to match upstream after conflict"
+                    $needForcePush = $true
+                }
+                elseif ($mergeOutput -like "*refusing to merge unrelated histories*") {
+                    # Unrelated histories error - the upstream was likely recreated or the branch changed
+                    # Abort the merge and force reset to upstream
+                    git merge --abort 2>&1 | Out-Null
+                    
+                    Write-Warning "Unrelated histories detected. Force updating mirror to match upstream."
+                    $resetRef = "refs/remotes/upstream/$currentBranch"
+                    $resetResult = git reset --hard $resetRef 2>&1
+                    
+                    if ($LASTEXITCODE -ne 0) {
+                        $resetOutput = $resetResult | Out-String
+                        throw "Failed to force reset to upstream after unrelated histories: $resetOutput"
+                    }
+                    
+                    Write-Debug "Successfully force updated mirror to match upstream after unrelated histories"
                     $needForcePush = $true
                 }
                 elseif ($mergeOutput -like "*refspec*matches more than one*") {
