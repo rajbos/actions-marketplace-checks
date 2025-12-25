@@ -362,13 +362,41 @@ function ReportInsightsInMarkdown {
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     LogMessage "  A[$nodeBasedActions Node based actions]"
-    $currentLetter = 1 # B = 66 (ASCII), so 1 + 65 = 66
+    
     if ($nodeBasedActions -gt 0) {
+        # Separate node versions into two groups: works on default runners (20+) and needs setup-node (<20)
+        $worksOnDefaultRunners = 0
+        $needsSetupNode = 0
+        $needsSetupNodeVersions = @{}
+        
         foreach ($nodeVersion in $nodeVersionCount) {
-            # calculate percentage of node version
-            $percentage = [math]::Round($nodeVersion.Value/$nodeBasedActions * 100 , 1)
-            LogMessage "  A-->$([char]($currentLetter+65))[$($nodeVersion.Value) Node $($nodeVersion.Key) - $percentage%]"
-            $currentLetter++
+            $versionNumber = [int]$nodeVersion.Key
+            if ($versionNumber -ge 20) {
+                $worksOnDefaultRunners += $nodeVersion.Value
+            } else {
+                $needsSetupNode += $nodeVersion.Value
+                $needsSetupNodeVersions[$nodeVersion.Key] = $nodeVersion.Value
+            }
+        }
+        
+        # Calculate percentages
+        $worksOnDefaultPercentage = [math]::Round($worksOnDefaultRunners/$nodeBasedActions * 100 , 1)
+        $needsSetupNodePercentage = [math]::Round($needsSetupNode/$nodeBasedActions * 100 , 1)
+        
+        # Output the two main groups
+        LogMessage "  A-->B[$worksOnDefaultRunners Works on default runners - $worksOnDefaultPercentage%]"
+        LogMessage "  A-->C[$needsSetupNode Needs setup-node - $needsSetupNodePercentage%]"
+        
+        # Break down the "needs setup-node" group by version (only if there are any)
+        if ($needsSetupNode -gt 0) {
+            $currentLetter = 0
+            foreach ($versionKey in ($needsSetupNodeVersions.Keys | Sort-Object)) {
+                $count = $needsSetupNodeVersions[$versionKey]
+                $percentage = [math]::Round($count/$needsSetupNode * 100 , 1)
+                # Start from 'D' (ASCII 68) since A, B, C are already used
+                LogMessage "  C-->$([char]([int][char]'D' + $currentLetter))[$count Node $versionKey - $percentage%]"
+                $currentLetter++
+            }
         }
     }
     LogMessage "``````"
