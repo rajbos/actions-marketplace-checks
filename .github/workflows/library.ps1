@@ -2521,6 +2521,7 @@ function Select-ForksToProcess {
     # 2. Recent failures (penalty reduces priority to prevent monopolizing the queue)
     $sortedForks = $eligibleForks | Sort-Object -Property {
         $priorityScore = 0
+        $lastSyncDate = $null
         
         # Base priority: days since last successful sync
         # Never-synced repos get high baseline priority (equivalent to 14 days old)
@@ -2534,11 +2535,13 @@ function Select-ForksToProcess {
             } catch {
                 # If date parsing fails, treat as never synced
                 $priorityScore = 14.0
+                $lastSyncDate = $null
             }
         } else {
             # Never synced - give high priority (14 days equivalent)
             # This is higher than the typical rotation cycle but can be penalized
             $priorityScore = 14.0
+            $lastSyncDate = $null
         }
         
         # Penalty: if repo had a recent failure, subtract penalty to deprioritize
@@ -2551,8 +2554,8 @@ function Select-ForksToProcess {
                 # If the last sync was never successful OR much older than last attempt,
                 # it means this repo keeps failing - apply a penalty
                 $isRepeatedFailure = $false
-                if ($_.lastSynced) {
-                    $lastSyncDate = [DateTime]::Parse($_.lastSynced)
+                if ($null -ne $lastSyncDate) {
+                    # Reuse the already-parsed lastSyncDate from above
                     # If last attempt is more recent than last success, it's a repeated failure
                     if ($lastAttemptDate -gt $lastSyncDate) {
                         $isRepeatedFailure = $true
