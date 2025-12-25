@@ -2525,8 +2525,8 @@ function Select-ForksToProcess {
         
         # Base priority: days since last successful sync
         # Never-synced repos get high baseline priority (equivalent to 14 days old)
-        # This ensures they're checked before moderately old repos, but can still be
-        # deprioritized if they have recent failures
+        # This ensures they're checked before repos synced 0-14 days ago, but can still be
+        # deprioritized if they have recent failures (penalty can reduce priority below 0)
         if ($_.lastSynced) {
             try {
                 $lastSyncDate = [DateTime]::Parse($_.lastSynced)
@@ -2551,8 +2551,9 @@ function Select-ForksToProcess {
                 $lastAttemptDate = [DateTime]::Parse($_.lastSyncAttempt)
                 $hoursSinceAttempt = ($now - $lastAttemptDate).TotalHours
                 
-                # If the last sync was never successful OR much older than last attempt,
-                # it means this repo keeps failing - apply a penalty
+                # Determine if this is a repeated failure:
+                # - If last attempt is more recent than last success, the repo failed after its last success
+                # - If never successfully synced, any attempt is a repeated failure
                 $isRepeatedFailure = $false
                 if ($null -ne $lastSyncDate) {
                     # Reuse the already-parsed lastSyncDate from above
@@ -2568,7 +2569,9 @@ function Select-ForksToProcess {
                 if ($isRepeatedFailure -and $hoursSinceAttempt -lt 168) {  # Within last 7 days
                     # Subtract penalty that decreases over time (fresher failures = larger penalty)
                     # Penalty is large enough to push failing repos below all successfully synced repos
-                    # Penalty ranges from 28 days (fresh failure) to 0 days (7 days old failure)
+                    # - Fresh failures (just past cool-off): penalty = 28 days
+                    # - 7-day-old failures: penalty = 0 days (no longer penalized)
+                    # - Failures older than 7 days: no penalty applied
                     $penalty = 28.0 * (1.0 - ($hoursSinceAttempt / 168.0))
                     $priorityScore -= $penalty
                 }
