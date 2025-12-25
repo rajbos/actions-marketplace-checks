@@ -367,12 +367,14 @@ function ReportInsightsInMarkdown {
         # Separate node versions into two groups: works on default runners (20+) and needs setup-node (<20)
         $worksOnDefaultRunners = 0
         $needsSetupNode = 0
+        $worksOnDefaultRunnersVersions = @{}
         $needsSetupNodeVersions = @{}
         
         foreach ($nodeVersion in $nodeVersionCount) {
             $versionNumber = [int]$nodeVersion.Key
             if ($versionNumber -ge 20) {
                 $worksOnDefaultRunners += $nodeVersion.Value
+                $worksOnDefaultRunnersVersions[$nodeVersion.Key] = $nodeVersion.Value
             } else {
                 $needsSetupNode += $nodeVersion.Value
                 $needsSetupNodeVersions[$nodeVersion.Key] = $nodeVersion.Value
@@ -387,14 +389,28 @@ function ReportInsightsInMarkdown {
         LogMessage "  A-->B[$worksOnDefaultRunners Works on default runners - $worksOnDefaultPercentage%]"
         LogMessage "  A-->C[$needsSetupNode Needs setup-node - $needsSetupNodePercentage%]"
         
+        # Break down the "works on default runners" group by version (only if there are any)
+        if ($worksOnDefaultRunners -gt 0) {
+            $currentLetter = 0
+            foreach ($versionKey in ($worksOnDefaultRunnersVersions.Keys | Sort-Object)) {
+                $count = $worksOnDefaultRunnersVersions[$versionKey]
+                $percentage = [math]::Round($count/$worksOnDefaultRunners * 100 , 1)
+                # Start from 'D' (ASCII 68) since A, B, C are already used
+                LogMessage "  B-->$([char]([int][char]'D' + $currentLetter))[$count Node $versionKey - $percentage%]"
+                $currentLetter++
+            }
+        }
+        
         # Break down the "needs setup-node" group by version (only if there are any)
         if ($needsSetupNode -gt 0) {
+            # Calculate the starting letter offset based on how many versions were in "works on default runners"
+            $startingOffset = $worksOnDefaultRunnersVersions.Keys.Count
             $currentLetter = 0
             foreach ($versionKey in ($needsSetupNodeVersions.Keys | Sort-Object)) {
                 $count = $needsSetupNodeVersions[$versionKey]
                 $percentage = [math]::Round($count/$needsSetupNode * 100 , 1)
-                # Start from 'D' (ASCII 68) since A, B, C are already used
-                LogMessage "  C-->$([char]([int][char]'D' + $currentLetter))[$count Node $versionKey - $percentage%]"
+                # Continue from where "works on default runners" left off
+                LogMessage "  C-->$([char]([int][char]'D' + $startingOffset + $currentLetter))[$count Node $versionKey - $percentage%]"
                 $currentLetter++
             }
         }
