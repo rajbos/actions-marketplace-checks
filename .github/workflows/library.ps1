@@ -2084,7 +2084,8 @@ function SyncMirrorWithUpstream {
                 $currentBranch = $upstreamDefaultBranch
                 $upstreamBranchRef = "refs/remotes/upstream/$currentBranch"
                 
-                # Verify the upstream branch exists
+                # Verify the upstream branch exists in our fetched refs before proceeding
+                # This is a safety check to ensure the API-provided branch name is valid
                 git show-ref --verify $upstreamBranchRef 2>&1 | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     throw "Upstream branch [$currentBranch] not found even after querying default branch"
@@ -2117,7 +2118,7 @@ function SyncMirrorWithUpstream {
         }
         
         # Flag to track if we need to force push (e.g., after conflict resolution or branch mismatch)
-        # Only initialize if not already set (it may have been set during branch mismatch detection)
+        # Note: Only initialize if not already set, as it may have been set during branch mismatch detection above
         if ($null -eq $needForcePush) {
             $needForcePush = $false
         }
@@ -2139,7 +2140,7 @@ function SyncMirrorWithUpstream {
             }
         }
         elseif ($needForcePush) {
-            # Branch mismatch detected (upstream changed default branch)
+            # Branch mismatch detected (upstream changed its default branch)
             # Force reset our mirror to match upstream's default branch
             Write-Warning "Force resetting mirror to upstream's default branch [$currentBranch]"
             $resetRef = "refs/remotes/upstream/$currentBranch"
