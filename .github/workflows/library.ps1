@@ -2515,25 +2515,89 @@ function Select-ForksToProcess {
     
     Write-Message -message "Found [$($eligibleForks.Count)] eligible forks after filtering" -logToSummary $true
     
-    # Sort by lastSynced date (oldest first, nulls first)
+    # Sort by priority score (higher score = higher priority)
+    # Priority considers:
+    # 1. Time since last successful sync (older = higher priority)
+    # 2. Recent failures (penalty reduces priority to prevent monopolizing the queue)
     $sortedForks = $eligibleForks | Sort-Object -Property {
+        $priorityScore = 0
+        
+        # Base priority: days since last successful sync
+        # Never-synced repos get high baseline priority (equivalent to 14 days old)
+        # This ensures they're checked before moderately old repos, but can still be
+        # deprioritized if they have recent failures
         if ($_.lastSynced) {
             try {
-                return [DateTime]::Parse($_.lastSynced)
+                $lastSyncDate = [DateTime]::Parse($_.lastSynced)
+                $daysSinceSync = ($now - $lastSyncDate).TotalDays
+                $priorityScore = $daysSinceSync
             } catch {
-                # If date parsing fails, treat as very old (highest priority)
-                return [DateTime]::MinValue
+                # If date parsing fails, treat as never synced
+                $priorityScore = 14.0
             }
         } else {
-            # Never synced - highest priority
-            return [DateTime]::MinValue
+            # Never synced - give high priority (14 days equivalent)
+            # This is higher than the typical rotation cycle but can be penalized
+            $priorityScore = 14.0
         }
-    }
+        
+        # Penalty: if repo had a recent failure, subtract penalty to deprioritize
+        # This prevents failing repos from monopolizing the queue
+        if ($_.lastSyncError -and $_.lastSyncAttempt) {
+            try {
+                $lastAttemptDate = [DateTime]::Parse($_.lastSyncAttempt)
+                $hoursSinceAttempt = ($now - $lastAttemptDate).TotalHours
+                
+                # If the last sync was never successful OR much older than last attempt,
+                # it means this repo keeps failing - apply a penalty
+                $isRepeatedFailure = $false
+                if ($_.lastSynced) {
+                    $lastSyncDate = [DateTime]::Parse($_.lastSynced)
+                    # If last attempt is more recent than last success, it's a repeated failure
+                    if ($lastAttemptDate -gt $lastSyncDate) {
+                        $isRepeatedFailure = $true
+                    }
+                } else {
+                    # Never had a successful sync
+                    $isRepeatedFailure = $true
+                }
+                
+                if ($isRepeatedFailure -and $hoursSinceAttempt -lt 168) {  # Within last 7 days
+                    # Subtract penalty that decreases over time (fresher failures = larger penalty)
+                    # Penalty is large enough to push failing repos below all successfully synced repos
+                    # Penalty ranges from 28 days (fresh failure) to 0 days (7 days old failure)
+                    $penalty = 28.0 * (1.0 - ($hoursSinceAttempt / 168.0))
+                    $priorityScore -= $penalty
+                }
+            } catch {
+                # If date parsing fails, no penalty
+                Write-Debug "Failed to parse lastSyncAttempt for penalty calculation: $($_.lastSyncAttempt)"
+            }
+        }
+        
+        return $priorityScore
+    } -Descending
     
-    # Select the top N repos
+    # Select the top N repos (highest priority scores)
     $selectedForks = $sortedForks | Select-Object -First $numberOfRepos
     
+    # Calculate statistics about selection
+    $reposWithRecentFailures = ($eligibleForks | Where-Object { 
+        if ($_.lastSyncError -and $_.lastSyncAttempt -and $_.lastSynced) {
+            try {
+                $lastAttemptDate = [DateTime]::Parse($_.lastSyncAttempt)
+                $lastSyncDate = [DateTime]::Parse($_.lastSynced)
+                # Has a recent failure (attempt is more recent than last success)
+                return $lastAttemptDate -gt $lastSyncDate
+            } catch {
+                return $false
+            }
+        }
+        return $false
+    }).Count
+    
     Write-Message -message "Selected [$($selectedForks.Count)] forks for processing" -logToSummary $true
+    Write-Message -message "Eligible forks with recent failures: [$reposWithRecentFailures] (deprioritized by smart sorting)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     return $selectedForks
