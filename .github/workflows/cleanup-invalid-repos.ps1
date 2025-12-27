@@ -40,7 +40,7 @@ function GetReposToCleanup {
     $countEmptyOnly = 0  # Empty but upstream exists
     $countBothUpstreamMissingAndEmpty = 0  # Both conditions met
     $countSkippedDueToUpstreamAvailable = 0  # Skipped: upstream exists but mirror missing
-    $countSkippedDueToMirrorExists = 0  # Skipped: mirror exists (even if upstream gone or appears empty)
+    $countSkippedDueToMirrorExists = 0  # Skipped: mirror exists AND upstream exists
     
     foreach ($repo in $status) {
         # Detect invalid entries (owner null/empty or name '_' or empty)
@@ -63,12 +63,12 @@ function GetReposToCleanup {
             continue
         }
         
-        # If mirror exists, do NOT cleanup - even if upstream is gone or repo appears empty
+        # If mirror exists AND upstream still exists, do NOT cleanup
         # The mirror might have content not reflected in repoSize/tags/releases metrics
-        # and should be kept or filled by other workflows
-        if ($repo.mirrorFound -eq $true) {
+        # and will be filled/synced by other workflows
+        if ($repo.mirrorFound -eq $true -and $upstreamStillExists) {
             $countSkippedDueToMirrorExists++
-            Write-Debug "Skipping cleanup for [$($repo.name)] because mirror exists (mirrorFound = true)"
+            Write-Debug "Skipping cleanup for [$($repo.name)] because mirror exists and upstream still exists"
             continue
         }
         
@@ -140,7 +140,7 @@ function GetReposToCleanup {
     Write-Host ""
     Write-Host "  Skipped (not eligible for cleanup):"
     Write-Host "    - Upstream available, mirror missing (will be created): [$countSkippedDueToUpstreamAvailable]"
-    Write-Host "    - Mirror exists (will be kept): [$countSkippedDueToMirrorExists]"
+    Write-Host "    - Mirror and upstream both exist (will be synced): [$countSkippedDueToMirrorExists]"
     if ($invalidEntries.Count -gt 0) {
         Write-Host "    - Invalid entries (removed from status): [$($invalidEntries.Count)]"
         # Overwrite status file once with valid entries + entries to be cleaned (so they remain until deletion completes)
@@ -300,7 +300,7 @@ Write-Message -message "| | | |" -logToSummary $true
 $totalSkipped = $categories.skippedUpstreamAvailable + $categories.skippedMirrorExists
 Write-Message -message "| **Not Eligible for Cleanup** | **$totalSkipped** | **Skipped - will be processed by other workflows** |" -logToSummary $true
 Write-Message -message "| → Mirror missing (upstream exists) | $($categories.skippedUpstreamAvailable) | Upstream available, mirror will be created |" -logToSummary $true
-Write-Message -message "| → Mirror exists | $($categories.skippedMirrorExists) | Mirror exists and will be kept |" -logToSummary $true
+Write-Message -message "| → Mirror and upstream both exist | $($categories.skippedMirrorExists) | Mirror and upstream exist, will be synced |" -logToSummary $true
 if ($categories.invalidEntries -gt 0) {
     Write-Message -message "| → Invalid entries | $($categories.invalidEntries) | $($categories.invalidEntries) actions removed from dataset |" -logToSummary $true
 }

@@ -19,23 +19,26 @@ BeforeAll {
                 continue
             }
             
+            # Skip if mirror exists AND upstream still exists
+            # The mirror will be filled/synced by other workflows
+            if ($repo.mirrorFound -eq $true -and $upstreamStillExists) {
+                continue
+            }
+            
             $shouldCleanup = $false
             $reason = ""
             
             # Criterion 1: Original repo no longer exists
             # Check both upstreamFound=false (from initial discovery) and upstreamAvailable=false (from sync failures)
-            # BUT: if mirror exists, don't cleanup based on upstream status alone
-            if (($repo.upstreamFound -eq $false -or $repo.upstreamAvailable -eq $false) -and ($repo.mirrorFound -ne $true)) {
+            if ($repo.upstreamFound -eq $false -or $repo.upstreamAvailable -eq $false) {
                 $shouldCleanup = $true
                 $reason = "Original repo no longer exists (upstreamFound=$($repo.upstreamFound), upstreamAvailable=$($repo.upstreamAvailable))"
             }
             
             # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
-            # BUT: if mirror exists, don't cleanup - the mirror might have content not reflected in these metrics
             if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
                 ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
-                ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0) -and
-                ($repo.mirrorFound -ne $true)) {
+                ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
                 
                 $shouldCleanup = $true
                 if ($reason -ne "") {
@@ -234,14 +237,14 @@ Describe "GetReposToCleanup" {
         $result.Count | Should -Be 0  # Should not cleanup - mirror should be created instead
     }
     
-    It "Should NOT cleanup repos where mirror exists even if it appears empty" {
-        # Arrange - Mirror exists but appears empty (the case from the issue)
+    It "Should NOT cleanup repos where mirror exists and upstream still exists" {
+        # Arrange - Mirror exists and upstream exists (the case from the issue)
         $repos = @(
             @{
                 name = "test_repo_mirror_exists"
                 owner = "actions-marketplace-validations"
-                upstreamFound = $false  # Upstream might be gone
-                mirrorFound = $true     # BUT mirror exists
+                upstreamFound = $true   # Upstream exists
+                mirrorFound = $true     # Mirror exists
                 repoSize = 0            # Appears empty
                 tagInfo = @()           # No tags
                 releaseInfo = @()       # No releases
@@ -253,6 +256,30 @@ Describe "GetReposToCleanup" {
         $result = GetReposToCleanupForTest -repos $repos
         
         # Assert
-        $result.Count | Should -Be 0  # Should NOT cleanup - mirror exists and will be filled later
+        $result.Count | Should -Be 0  # Should NOT cleanup - mirror exists and upstream exists
+    }
+    
+    It "Should cleanup repos where mirror exists but upstream is gone and mirror is empty" {
+        # Arrange - Mirror exists but upstream is gone and mirror is empty
+        $repos = @(
+            @{
+                name = "test_repo_orphaned_mirror"
+                owner = "actions-marketplace-validations"
+                upstreamFound = $false  # Upstream is gone
+                mirrorFound = $true     # Mirror exists
+                repoSize = 0            # Empty
+                tagInfo = @()           # No tags
+                releaseInfo = @()       # No releases
+                actionType = @{ actionType = "Node" }
+            }
+        )
+        
+        # Act
+        $result = GetReposToCleanupForTest -repos $repos
+        
+        # Assert
+        $result.Count | Should -Be 1  # Should cleanup - orphaned empty mirror
+        $result[0].reason | Should -BeLike "*Original repo no longer exists*"
+        $result[0].reason | Should -BeLike "*Empty repo with no content*"
     }
 }
