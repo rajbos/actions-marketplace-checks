@@ -84,6 +84,8 @@ function GetReposToCleanup {
                     ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0))
         
         # Categorize for distinct reporting
+        # Only cleanup if upstream is missing (deleted/unavailable)
+        # Do NOT cleanup empty repos if upstream still exists - they should be synced by other workflows
         if ($upstreamMissing -and $isEmpty) {
             $shouldCleanup = $true
             $reason = "Original repo no longer exists (upstreamFound=$($repo.upstreamFound), upstreamAvailable=$($repo.upstreamAvailable)) AND Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
@@ -94,11 +96,7 @@ function GetReposToCleanup {
             $reason = "Original repo no longer exists (upstreamFound=$($repo.upstreamFound), upstreamAvailable=$($repo.upstreamAvailable))"
             $countUpstreamMissingOnly++
         }
-        elseif ($isEmpty) {
-            $shouldCleanup = $true
-            $reason = "Empty repo with no content (size=$($repo.repoSize), no tags/releases)"
-            $countEmptyOnly++
-        }
+        # Removed: elseif ($isEmpty) - We should NOT cleanup empty repos if upstream still exists
         
         if ($shouldCleanup) {
             # Derive upstream full name from our mirror repo name in form owner_reponame
@@ -158,6 +156,7 @@ function GetReposToCleanup {
     # Return both repos and category counts (including total for convenience)
     return @{
         repos = $reposToCleanup
+        invalidEntries = $invalidEntries
         categories = @{
             upstreamMissingOnly = $countUpstreamMissingOnly
             emptyOnly = $countEmptyOnly
@@ -166,6 +165,7 @@ function GetReposToCleanup {
             skippedUpstreamAvailable = $countSkippedDueToUpstreamAvailable
             skippedMirrorExists = $countSkippedDueToMirrorExists
             invalidEntries = $invalidEntries.Count
+            originalStatusCount = $status.Count
         }
     }
 }
@@ -181,6 +181,7 @@ function RemoveRepos {
     $i = 1
     $repoCount = $repos.Count
     $deletedCount = 0
+    $cleanedRepos = New-Object System.Collections.ArrayList
     
     if ($dryRun) {
         Write-Host "DRY RUN MODE - No repos will be actually deleted"
@@ -201,6 +202,7 @@ function RemoveRepos {
             try {
                 ApiCall -method DELETE -url $url -access_token $access_token
                 Write-Host "  Successfully deleted [$owner/$repoName]"
+                $cleanedRepos.Add($repo) | Out-Null
                 $deletedCount++
             }
             catch {
@@ -209,6 +211,7 @@ function RemoveRepos {
         }
         else {
             # In dry run, we still count towards the max to simulate selection of X repos to cleanup
+            $cleanedRepos.Add($repo) | Out-Null
             $deletedCount++
         }
         
@@ -217,7 +220,10 @@ function RemoveRepos {
 
     Write-Host "Processed [$deletedCount] repos (limit: [$maxCount])"
     
-    return $deletedCount
+    return @{
+        count = $deletedCount
+        repos = $cleanedRepos
+    }
 }
 
 function RemoveReposFromStatus {
@@ -269,6 +275,7 @@ if ($access_token) {
 # Get repos to cleanup from status file
 $cleanupResult = GetReposToCleanup -statusFile $statusFile
 $reposToCleanup = $cleanupResult.repos
+$invalidEntries = $cleanupResult.invalidEntries
 $categories = $cleanupResult.categories
 
 # Display summary
@@ -294,7 +301,6 @@ Write-Message -message "| Category | Count | Description |" -logToSummary $true
 Write-Message -message "|----------|------:|-------------|" -logToSummary $true
 Write-Message -message "| **Eligible for Cleanup** | **$($categories.totalEligible)** | **Total repos that can be cleaned up** |" -logToSummary $true
 Write-Message -message "| → Upstream missing (has content) | $($categories.upstreamMissingOnly) | Upstream repo deleted, our mirror has content |" -logToSummary $true
-Write-Message -message "| → Empty repo (upstream exists) | $($categories.emptyOnly) | Empty mirror, upstream still available |" -logToSummary $true
 Write-Message -message "| → Both upstream missing & empty | $($categories.bothUpstreamMissingAndEmpty) | Upstream deleted and mirror is empty |" -logToSummary $true
 Write-Message -message "| | | |" -logToSummary $true
 $totalSkipped = $categories.skippedUpstreamAvailable + $categories.skippedMirrorExists
@@ -302,13 +308,48 @@ Write-Message -message "| **Not Eligible for Cleanup** | **$totalSkipped** | **S
 Write-Message -message "| → Mirror missing (upstream exists) | $($categories.skippedUpstreamAvailable) | Upstream available, mirror will be created |" -logToSummary $true
 Write-Message -message "| → Mirror and upstream both exist | $($categories.skippedMirrorExists) | Mirror and upstream exist, will be synced |" -logToSummary $true
 if ($categories.invalidEntries -gt 0) {
-    Write-Message -message "| → Invalid entries | $($categories.invalidEntries) | $($categories.invalidEntries) actions removed from dataset |" -logToSummary $true
+    $afterCount = $categories.originalStatusCount - $categories.invalidEntries
+    Write-Message -message "| → Invalid entries | $($categories.invalidEntries) | $($categories.originalStatusCount) → $afterCount actions (removed $($categories.invalidEntries)) |" -logToSummary $true
 }
 Write-Message -message "" -logToSummary $true
 
+# Show first 10 invalid entries if any
+if ($invalidEntries.Count -gt 0) {
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "<details>" -logToSummary $true
+    Write-Message -message "<summary>Invalid Entries Removed (showing first 10 of $($invalidEntries.Count))</summary>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| # | Name | Owner | Reason |" -logToSummary $true
+    Write-Message -message "|---:|------|-------|--------|" -logToSummary $true
+    $index = 1
+    foreach ($entry in ($invalidEntries | Select-Object -First 10)) {
+        $name = if ([string]::IsNullOrEmpty($entry.name)) { "(empty)" } else { $entry.name }
+        $owner = if ([string]::IsNullOrEmpty($entry.owner)) { "(empty)" } else { $entry.owner }
+        $reason = ""
+        if ($null -eq $entry) {
+            $reason = "Null entry"
+        }
+        elseif ([string]::IsNullOrEmpty($entry.name)) {
+            $reason = "Name is null or empty"
+        }
+        elseif ($entry.name -eq "_") {
+            $reason = "Name is '_'"
+        }
+        elseif ([string]::IsNullOrEmpty($entry.owner)) {
+            $reason = "Owner is null or empty"
+        }
+        Write-Message -message "| $index | $name | $owner | $reason |" -logToSummary $true
+        $index++
+    }
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "</details>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+}
+
 if ($reposToCleanup.Count -gt 0) {
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "### Repos to Clean Up (showing first 15 of $($reposToCleanup.Count))" -logToSummary $true
+    Write-Message -message "<details>" -logToSummary $true
+    Write-Message -message "<summary>Repos to Clean Up (showing first 15 of $($reposToCleanup.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
@@ -325,13 +366,18 @@ if ($reposToCleanup.Count -gt 0) {
         $index++
     }
     Write-Message -message "" -logToSummary $true
+    Write-Message -message "</details>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
 }
 
 # Remove the repos
 $totalCleaned = 0
 $totalRemovedFromStatus = 0
+$cleanedRepos = @()
 if ($reposToCleanup.Count -gt 0) {
-    $totalCleaned = RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun -maxCount $numberOfReposToDo
+    $cleanupResult = RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun -maxCount $numberOfReposToDo
+    $totalCleaned = $cleanupResult.count
+    $cleanedRepos = $cleanupResult.repos
     
     if (-not $dryRun) {
         # Update status file to remove deleted repos
@@ -342,6 +388,31 @@ if ($reposToCleanup.Count -gt 0) {
 }
 else {
     Write-Host "No repos found to cleanup"
+}
+
+# Add cleaned repos summary
+if ($cleanedRepos.Count -gt 0) {
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "<details>" -logToSummary $true
+    Write-Message -message "<summary>Repos Cleaned Up (showing first 10 of $($cleanedRepos.Count))</summary>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
+    Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
+    $index = 1
+    foreach ($repo in ($cleanedRepos | Select-Object -First 10)) {
+        $repoLink = "https://github.com/$owner/$($repo.name)"
+        $repoCell = "[$($repo.name)]($repoLink)"
+        $upstreamCell = "n/a"
+        if ($repo.upstreamFullName) {
+            $upstreamLink = "https://github.com/$($repo.upstreamFullName)"
+            $upstreamCell = "[$($repo.upstreamFullName)]($upstreamLink)"
+        }
+        Write-Message -message "| $index | $repoCell | $upstreamCell | $($repo.reason) |" -logToSummary $true
+        $index++
+    }
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "</details>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
 }
 
 # Add total cleaned to step summary
