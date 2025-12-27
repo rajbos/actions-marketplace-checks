@@ -24,15 +24,18 @@ BeforeAll {
             
             # Criterion 1: Original repo no longer exists
             # Check both upstreamFound=false (from initial discovery) and upstreamAvailable=false (from sync failures)
-            if ($repo.upstreamFound -eq $false -or $repo.upstreamAvailable -eq $false) {
+            # BUT: if mirror exists, don't cleanup based on upstream status alone
+            if (($repo.upstreamFound -eq $false -or $repo.upstreamAvailable -eq $false) -and ($repo.mirrorFound -ne $true)) {
                 $shouldCleanup = $true
                 $reason = "Original repo no longer exists (upstreamFound=$($repo.upstreamFound), upstreamAvailable=$($repo.upstreamAvailable))"
             }
             
             # Criterion 2: Empty repo with no content (repoSize is 0 or null AND no tags/releases)
+            # BUT: if mirror exists, don't cleanup - the mirror might have content not reflected in these metrics
             if (($null -eq $repo.repoSize -or $repo.repoSize -eq 0) -and
                 ($null -eq $repo.tagInfo -or $repo.tagInfo.Count -eq 0) -and
-                ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0)) {
+                ($null -eq $repo.releaseInfo -or $repo.releaseInfo.Count -eq 0) -and
+                ($repo.mirrorFound -ne $true)) {
                 
                 $shouldCleanup = $true
                 if ($reason -ne "") {
@@ -189,15 +192,15 @@ Describe "GetReposToCleanup" {
         $result[0].reason | Should -BeLike "*upstreamFound=*"
     }
     
-    It "Should identify repos where upstreamAvailable is false (set by update workflow)" {
-        # Arrange - Repository where update workflow marked upstream as unavailable
+    It "Should identify repos where upstreamAvailable is false (set by update workflow) and mirror is empty" {
+        # Arrange - Repository where update workflow marked upstream as unavailable and mirror is empty
         $repos = @(
             @{
                 name = "test_repo_unavailable"
                 owner = "actions-marketplace-validations"
                 upstreamFound = $true  # Initially found
                 upstreamAvailable = $false  # But later marked as unavailable by sync workflow
-                mirrorFound = $true
+                mirrorFound = $false  # Mirror doesn't exist or is not found
                 actionType = @{ actionType = "Node" }
             }
         )
@@ -229,5 +232,27 @@ Describe "GetReposToCleanup" {
         
         # Assert
         $result.Count | Should -Be 0  # Should not cleanup - mirror should be created instead
+    }
+    
+    It "Should NOT cleanup repos where mirror exists even if it appears empty" {
+        # Arrange - Mirror exists but appears empty (the case from the issue)
+        $repos = @(
+            @{
+                name = "test_repo_mirror_exists"
+                owner = "actions-marketplace-validations"
+                upstreamFound = $false  # Upstream might be gone
+                mirrorFound = $true     # BUT mirror exists
+                repoSize = 0            # Appears empty
+                tagInfo = @()           # No tags
+                releaseInfo = @()       # No releases
+                actionType = @{ actionType = "Node" }
+            }
+        )
+        
+        # Act
+        $result = GetReposToCleanupForTest -repos $repos
+        
+        # Assert
+        $result.Count | Should -Be 0  # Should NOT cleanup - mirror exists and will be filled later
     }
 }
