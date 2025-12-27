@@ -37,7 +37,7 @@ Describe "Status.json File Validation" {
 
         It "Should pass validation when file is larger than 5 bytes" {
             $testFile = Join-Path $script:testDir "valid.json"
-            "[{""test"":""data""}]" | Out-File -FilePath $testFile -NoNewline -Encoding UTF8
+            '[{"test":"data"}]' | Out-File -FilePath $testFile -NoNewline -Encoding UTF8
             
             $fileSize = (Get-Item $testFile).Length
             $fileSize | Should -BeGreaterThan 5
@@ -105,7 +105,7 @@ Describe "Status.json File Validation" {
     Context "Edge cases" {
         It "Should handle exactly 6 bytes (minimum valid size)" {
             $testFile = Join-Path $script:testDir "6bytes.json"
-            "[{""a"":1}]" | Out-File -FilePath $testFile -NoNewline -Encoding UTF8
+            '[{"a":1}]' | Out-File -FilePath $testFile -NoNewline -Encoding UTF8
             
             $fileSize = (Get-Item $testFile).Length
             # We expect more than 5 bytes for valid JSON

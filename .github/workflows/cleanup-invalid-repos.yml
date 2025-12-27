@@ -38,7 +38,15 @@ jobs:
           sasQuery=$(echo "$baseUrl" | cut -d'?' -f2-)
           # Construct the full URL for status.json
           statusUrl="${basePath}/status/status.json?${sasQuery}"
-          curl "$statusUrl" > status.json
+          
+          # Download with -f flag to fail on HTTP errors (404, 403, etc.)
+          # -S flag shows error messages even when silent
+          if ! curl -fS "$statusUrl" > status.json; then
+            echo "❌ ERROR: Failed to download status.json from blob storage"
+            echo "**❌ ERROR: Failed to download status.json from blob storage**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
           echo "Downloaded status.json"
           ls -lh status.json
           
