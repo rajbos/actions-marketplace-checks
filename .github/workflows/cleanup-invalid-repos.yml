@@ -46,7 +46,7 @@ jobs:
           fileSize=$(stat -c%s status.json)
           echo "File size: $fileSize bytes"
           if [ "$fileSize" -le 5 ]; then
-            echo "❌ ERROR: Downloaded status.json is too small ($fileSize bytes). File may be corrupted or empty." | tee -a $GITHUB_STEP_SUMMARY
+            echo "❌ ERROR: Downloaded status.json is too small ($fileSize bytes). File may be corrupted or empty."
             echo "**❌ ERROR: Downloaded status.json is too small ($fileSize bytes). File may be corrupted or empty.**" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
@@ -84,7 +84,7 @@ jobs:
         run: |
           # Validate file size before upload - must be bigger than 5 bytes
           if [ ! -f status.json ]; then
-            echo "❌ ERROR: status.json file not found. Cannot upload." | tee -a $GITHUB_STEP_SUMMARY
+            echo "❌ ERROR: status.json file not found. Cannot upload."
             echo "**❌ ERROR: status.json file not found. Cannot upload.**" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
@@ -92,7 +92,7 @@ jobs:
           fileSize=$(stat -c%s status.json)
           echo "File size to upload: $fileSize bytes"
           if [ "$fileSize" -le 5 ]; then
-            echo "❌ ERROR: status.json is too small ($fileSize bytes). Refusing to upload empty or corrupted file." | tee -a $GITHUB_STEP_SUMMARY
+            echo "❌ ERROR: status.json is too small ($fileSize bytes). Refusing to upload empty or corrupted file."
             echo "**❌ ERROR: status.json is too small ($fileSize bytes). Refusing to upload empty or corrupted file.**" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi

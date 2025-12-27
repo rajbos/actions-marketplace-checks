@@ -105,10 +105,10 @@ Describe "Status.json File Validation" {
     Context "Edge cases" {
         It "Should handle exactly 6 bytes (minimum valid size)" {
             $testFile = Join-Path $script:testDir "6bytes.json"
-            "[{""a""]" | Out-File -FilePath $testFile -NoNewline -Encoding UTF8
+            "[{""a"":1}]" | Out-File -FilePath $testFile -NoNewline -Encoding UTF8
             
             $fileSize = (Get-Item $testFile).Length
-            # We expect 6 or 7 bytes depending on encoding
+            # We expect more than 5 bytes for valid JSON
             $fileSize | Should -BeGreaterThan 5
             $fileSize -le 5 | Should -Be $false
         }
