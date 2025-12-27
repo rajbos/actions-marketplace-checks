@@ -38,9 +38,27 @@ jobs:
           sasQuery=$(echo "$baseUrl" | cut -d'?' -f2-)
           # Construct the full URL for status.json
           statusUrl="${basePath}/status/status.json?${sasQuery}"
-          curl "$statusUrl" > status.json
+          
+          # Download with -f flag to fail on HTTP errors (404, 403, etc.)
+          # -S flag shows error messages even when silent
+          if ! curl -fS "$statusUrl" > status.json; then
+            echo "❌ ERROR: Failed to download status.json from blob storage"
+            echo "**❌ ERROR: Failed to download status.json from blob storage**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
           echo "Downloaded status.json"
           ls -lh status.json
+          
+          # Validate file size - must be bigger than 5 bytes
+          fileSize=$(stat -c%s status.json)
+          echo "File size: $fileSize bytes"
+          if [ "$fileSize" -le 5 ]; then
+            echo "❌ ERROR: Downloaded status.json is too small ($fileSize bytes). File may be corrupted or empty."
+            echo "**❌ ERROR: Downloaded status.json is too small ($fileSize bytes). File may be corrupted or empty.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✓ status.json size validation passed ($fileSize bytes)"
 
       - name: Setup parameters based on trigger
         id: setup
@@ -72,6 +90,22 @@ jobs:
       - name: Upload status.json to blob storage
         if: steps.setup.outputs.dryRun != 'true'
         run: |
+          # Validate file size before upload - must be bigger than 5 bytes
+          if [ ! -f status.json ]; then
+            echo "❌ ERROR: status.json file not found. Cannot upload."
+            echo "**❌ ERROR: status.json file not found. Cannot upload.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
+          fileSize=$(stat -c%s status.json)
+          echo "File size to upload: $fileSize bytes"
+          if [ "$fileSize" -le 5 ]; then
+            echo "❌ ERROR: status.json is too small ($fileSize bytes). Refusing to upload empty or corrupted file."
+            echo "**❌ ERROR: status.json is too small ($fileSize bytes). Refusing to upload empty or corrupted file.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✓ status.json size validation passed ($fileSize bytes)"
+          
           # Upload status.json back to blob storage using the same SAS token
           baseUrl="${{ secrets.BLOB_SAS_TOKEN }}"
           basePath=$(echo "$baseUrl" | cut -d'?' -f1)
@@ -79,6 +113,6 @@ jobs:
           statusUrl="${basePath}/status/status.json?${sasQuery}"
           curl -X PUT -T status.json -H "x-ms-blob-type: BlockBlob" "$statusUrl"
           echo "Uploaded status.json to blob storage"
-          echo "**Uploaded status.json to blob storage**" >> $GITHUB_STEP_SUMMARY
+          echo "**✓ Uploaded status.json to blob storage ($fileSize bytes)**" >> $GITHUB_STEP_SUMMARY
 
 
