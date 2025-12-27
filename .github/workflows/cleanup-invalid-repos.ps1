@@ -309,7 +309,7 @@ Write-Message -message "## Cleanup Summary" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "### Status File Information" -logToSummary $true
 Write-Message -message "**Downloaded status.json:**" -logToSummary $true
-Write-Message -message "- Total repos in file: **$($categories.originalStatusCount)**" -logToSummary $true
+Write-Message -message "- Total repos in file: **$("{0:N0}" -f $categories.originalStatusCount)**" -logToSummary $true
 Write-Message -message "- File size: **$fileSizeFormatted**" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "### Execution Parameters" -logToSummary $true
