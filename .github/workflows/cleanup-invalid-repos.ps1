@@ -217,7 +217,7 @@ function RemoveReposFromStatus {
     
     if (-not (Test-Path $statusFile)) {
         Write-Error "Status file not found at [$statusFile]"
-        return
+        return 0
     }
     
     $status = Get-Content $statusFile | ConvertFrom-Json
@@ -226,11 +226,14 @@ function RemoveReposFromStatus {
     # Filter out the repos to cleanup
     $updatedStatus = $status | Where-Object { $repoNamesToRemove -notcontains $_.name }
     
-    Write-Host "Status file updated: [$($status.Count)] repos -> [$($updatedStatus.Count)] repos"
+    $removedCount = $status.Count - $updatedStatus.Count
+    Write-Host "Status file updated: [$($status.Count)] repos -> [$($updatedStatus.Count)] repos (removed $removedCount actions)"
     
     # Save the updated status
     $updatedStatus | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
     Write-Host "Status file saved to [$statusFile]"
+    
+    return $removedCount
 }
 
 # Main execution
@@ -284,7 +287,7 @@ Write-Message -message "| | | |" -logToSummary $true
 Write-Message -message "| **Not Eligible for Cleanup** | **$($categories.skippedUpstreamAvailable)** | **Skipped - will be processed by other workflows** |" -logToSummary $true
 Write-Message -message "| → Mirror missing (upstream exists) | $($categories.skippedUpstreamAvailable) | Upstream available, mirror will be created |" -logToSummary $true
 if ($categories.invalidEntries -gt 0) {
-    Write-Message -message "| → Invalid entries | $($categories.invalidEntries) | Removed from status file |" -logToSummary $true
+    Write-Message -message "| → Invalid entries | $($categories.invalidEntries) | $($categories.invalidEntries) actions removed from dataset |" -logToSummary $true
 }
 Write-Message -message "" -logToSummary $true
 
@@ -311,6 +314,7 @@ if ($reposToCleanup.Count -gt 0) {
 
 # Remove the repos
 $totalCleaned = 0
+$totalRemovedFromStatus = 0
 if ($reposToCleanup.Count -gt 0) {
     $totalCleaned = RemoveRepos -repos $reposToCleanup -owner $owner -dryRun $dryRun -maxCount $numberOfReposToDo
     
@@ -318,7 +322,7 @@ if ($reposToCleanup.Count -gt 0) {
         # Update status file to remove deleted repos
         # Only remove up to numberOfReposToDo from status
         $reposRemoved = $reposToCleanup | Select-Object -First $numberOfReposToDo
-        RemoveReposFromStatus -repos $reposRemoved -statusFile $statusFile
+        $totalRemovedFromStatus = RemoveReposFromStatus -repos $reposRemoved -statusFile $statusFile
     }
 }
 else {
@@ -328,6 +332,9 @@ else {
 # Add total cleaned to step summary
 Write-Message -message "" -logToSummary $true
 Write-Message -message "**Total repos cleaned: $totalCleaned**" -logToSummary $true
+if (-not $dryRun -and $totalRemovedFromStatus -gt 0) {
+    Write-Message -message "**Total actions removed from status file: $totalRemovedFromStatus**" -logToSummary $true
+}
 Write-Message -message "" -logToSummary $true
 
 if ($access_token) {
