@@ -7,9 +7,31 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+function Test-RepoExists {
+    Param (
+        $repoOwner,
+        $repoName,
+        $access_token
+    )
+    
+    try {
+        $url = "/repos/$repoOwner/$repoName"
+        $result = ApiCall -method GET -url $url -access_token $access_token -hideFailedCall $true
+        if ($result.Error) {
+            return $false
+        }
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
+
 function GetReposToCleanup {
     Param (
-        $statusFile
+        $statusFile,
+        $access_token = $null,
+        $mirrorOwner = "actions-marketplace-validations"
     )
     
     Write-Host "Loading status file from [$statusFile]"
@@ -25,8 +47,13 @@ function GetReposToCleanup {
                 skippedUpstreamAvailable = 0
                 invalidEntries = 0
             }
+            fileSize = 0
         }
     }
+    
+    # Get file size before processing
+    $fileInfo = Get-Item $statusFile
+    $fileSizeBytes = $fileInfo.Length
     
     $status = Get-Content $statusFile | ConvertFrom-Json
     Write-Host "Loaded [$($status.Count)] repos from status file"
@@ -44,7 +71,31 @@ function GetReposToCleanup {
     
     foreach ($repo in $status) {
         # Detect invalid entries (owner null/empty or name '_' or empty)
-        $isInvalid = ($null -eq $repo) -or ([string]::IsNullOrEmpty($repo.name)) -or ($repo.name -eq "_") -or ([string]::IsNullOrEmpty($repo.owner))
+        $isInvalid = ($null -eq $repo) -or ([string]::IsNullOrEmpty($repo.name)) -or ($repo.name -eq "_")
+        
+        # Special handling for null/empty owner - check if repo actually exists
+        if (-not $isInvalid -and [string]::IsNullOrEmpty($repo.owner)) {
+            # If we have an access token, verify if the repo exists before marking as invalid
+            if ($access_token -and -not [string]::IsNullOrEmpty($repo.name)) {
+                Write-Host "Validating repo with null/empty owner: [$($repo.name)]"
+                $repoExists = Test-RepoExists -repoOwner $mirrorOwner -repoName $repo.name -access_token $access_token
+                if ($repoExists) {
+                    Write-Host "  Repo exists in GitHub, fixing owner to [$mirrorOwner]"
+                    # Fix the owner field
+                    $repo.owner = $mirrorOwner
+                    $isInvalid = $false
+                }
+                else {
+                    Write-Host "  Repo does not exist in GitHub, marking as invalid"
+                    $isInvalid = $true
+                }
+            }
+            else {
+                # No access token or no name, mark as invalid
+                $isInvalid = $true
+            }
+        }
+        
         if ($isInvalid) {
             $invalidEntries.Add($repo) | Out-Null
             # Skip further processing for invalid entries
@@ -167,6 +218,7 @@ function GetReposToCleanup {
             invalidEntries = $invalidEntries.Count
             originalStatusCount = $status.Count
         }
+        fileSize = $fileSizeBytes
     }
 }
 
@@ -273,10 +325,20 @@ if ($access_token) {
 }
 
 # Get repos to cleanup from status file
-$cleanupResult = GetReposToCleanup -statusFile $statusFile
+$cleanupResult = GetReposToCleanup -statusFile $statusFile -access_token $access_token -mirrorOwner $owner
 $reposToCleanup = $cleanupResult.repos
 $invalidEntries = $cleanupResult.invalidEntries
 $categories = $cleanupResult.categories
+$statusFileSize = $cleanupResult.fileSize
+
+# Format file size for display
+$fileSizeFormatted = if ($statusFileSize -ge 1MB) {
+    "{0:N2} MB" -f ($statusFileSize / 1MB)
+} elseif ($statusFileSize -ge 1KB) {
+    "{0:N2} KB" -f ($statusFileSize / 1KB)
+} else {
+    "$statusFileSize bytes"
+}
 
 # Display summary
 Write-Host ""
@@ -290,6 +352,13 @@ Write-Host ""
 # Write summary to GitHub Step Summary
 Write-Message -message "" -logToSummary $true
 Write-Message -message "## Cleanup Summary" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "### Status File Information" -logToSummary $true
+Write-Message -message "**Downloaded status.json:**" -logToSummary $true
+Write-Message -message "- Total repos in file: **$("{0:N0}" -f $categories.originalStatusCount)**" -logToSummary $true
+Write-Message -message "- File size: **$fileSizeFormatted**" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "### Execution Parameters" -logToSummary $true
 Write-Message -message "Owner: [$owner]" -logToSummary $true
 Write-Message -message "Number of repos to process (max): [$numberOfReposToDo]" -logToSummary $true
 Write-Message -message "Dry run: [$dryRun]" -logToSummary $true
@@ -319,8 +388,8 @@ if ($invalidEntries.Count -gt 0) {
     Write-Message -message "<details>" -logToSummary $true
     Write-Message -message "<summary>Invalid Entries Removed (showing first 10 of $($invalidEntries.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "| # | Name | Owner | Reason |" -logToSummary $true
-    Write-Message -message "|---:|------|-------|--------|" -logToSummary $true
+    Write-Message -message "| # | Name | Owner | Reason | Link |" -logToSummary $true
+    Write-Message -message "|---:|------|-------|--------|------|" -logToSummary $true
     $index = 1
     foreach ($entry in ($invalidEntries | Select-Object -First 10)) {
         $name = if ([string]::IsNullOrEmpty($entry.name)) { "(empty)" } else { $entry.name }
@@ -338,7 +407,15 @@ if ($invalidEntries.Count -gt 0) {
         elseif ([string]::IsNullOrEmpty($entry.owner)) {
             $reason = "Owner is null or empty"
         }
-        Write-Message -message "| $index | $name | $owner | $reason |" -logToSummary $true
+        
+        # Create clickable link if we have valid owner and name
+        $link = "N/A"
+        if (-not [string]::IsNullOrEmpty($entry.owner) -and -not [string]::IsNullOrEmpty($entry.name) -and $entry.name -ne "_") {
+            $repoUrl = "https://github.com/$($entry.owner)/$($entry.name)"
+            $link = "[$($entry.owner)/$($entry.name)]($repoUrl)"
+        }
+        
+        Write-Message -message "| $index | $name | $owner | $reason | $link |" -logToSummary $true
         $index++
     }
     Write-Message -message "" -logToSummary $true

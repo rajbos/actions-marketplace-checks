@@ -106,6 +106,24 @@ jobs:
           fi
           echo "✓ status.json size validation passed ($fileSize bytes)"
           
+          # Count repos in the file
+          repoCount=$(jq '. | length' status.json)
+          echo "Repo count: $repoCount"
+          
+          # Format file size for display
+          if [ "$fileSize" -ge 1048576 ]; then
+            # Convert to MB
+            fileSizeMB=$(echo "scale=2; $fileSize / 1048576" | bc)
+            fileSizeFormatted="${fileSizeMB} MB"
+          elif [ "$fileSize" -ge 1024 ]; then
+            # Convert to KB
+            fileSizeKB=$(echo "scale=2; $fileSize / 1024" | bc)
+            fileSizeFormatted="${fileSizeKB} KB"
+          else
+            fileSizeFormatted="${fileSize} bytes"
+          fi
+          echo "Formatted file size: $fileSizeFormatted"
+          
           # Upload status.json back to blob storage using the same SAS token
           baseUrl="${{ secrets.BLOB_SAS_TOKEN }}"
           basePath=$(echo "$baseUrl" | cut -d'?' -f1)
@@ -113,6 +131,15 @@ jobs:
           statusUrl="${basePath}/status/status.json?${sasQuery}"
           curl -X PUT -T status.json -H "x-ms-blob-type: BlockBlob" "$statusUrl"
           echo "Uploaded status.json to blob storage"
-          echo "**✓ Uploaded status.json to blob storage ($fileSize bytes)**" >> $GITHUB_STEP_SUMMARY
+          
+          # Format repo count with thousands separator
+          repoCountFormatted=$(LC_NUMERIC=en_US.UTF-8 printf "%'d" $repoCount)
+          
+          # Write upload summary to step summary
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Upload Status File Information" >> $GITHUB_STEP_SUMMARY
+          echo "**Uploaded status.json:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Total repos in file: **${repoCountFormatted}**" >> $GITHUB_STEP_SUMMARY
+          echo "- File size: **${fileSizeFormatted}**" >> $GITHUB_STEP_SUMMARY
 
 
