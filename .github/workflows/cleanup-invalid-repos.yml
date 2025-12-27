@@ -79,5 +79,6 @@ jobs:
           statusUrl="${basePath}/status/status.json?${sasQuery}"
           curl -X PUT -T status.json -H "x-ms-blob-type: BlockBlob" "$statusUrl"
           echo "Uploaded status.json to blob storage"
+          echo "**Uploaded status.json to blob storage**" >> $GITHUB_STEP_SUMMARY
 
 
