@@ -25,8 +25,13 @@ function GetReposToCleanup {
                 skippedUpstreamAvailable = 0
                 invalidEntries = 0
             }
+            fileSize = 0
         }
     }
+    
+    # Get file size before processing
+    $fileInfo = Get-Item $statusFile
+    $fileSizeBytes = $fileInfo.Length
     
     $status = Get-Content $statusFile | ConvertFrom-Json
     Write-Host "Loaded [$($status.Count)] repos from status file"
@@ -167,6 +172,7 @@ function GetReposToCleanup {
             invalidEntries = $invalidEntries.Count
             originalStatusCount = $status.Count
         }
+        fileSize = $fileSizeBytes
     }
 }
 
@@ -277,6 +283,16 @@ $cleanupResult = GetReposToCleanup -statusFile $statusFile
 $reposToCleanup = $cleanupResult.repos
 $invalidEntries = $cleanupResult.invalidEntries
 $categories = $cleanupResult.categories
+$statusFileSize = $cleanupResult.fileSize
+
+# Format file size for display
+$fileSizeFormatted = if ($statusFileSize -ge 1MB) {
+    "{0:N2} MB" -f ($statusFileSize / 1MB)
+} elseif ($statusFileSize -ge 1KB) {
+    "{0:N2} KB" -f ($statusFileSize / 1KB)
+} else {
+    "$statusFileSize bytes"
+}
 
 # Display summary
 Write-Host ""
@@ -290,6 +306,13 @@ Write-Host ""
 # Write summary to GitHub Step Summary
 Write-Message -message "" -logToSummary $true
 Write-Message -message "## Cleanup Summary" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "### Status File Information" -logToSummary $true
+Write-Message -message "**Downloaded status.json:**" -logToSummary $true
+Write-Message -message "- Total repos in file: **$($categories.originalStatusCount)**" -logToSummary $true
+Write-Message -message "- File size: **$fileSizeFormatted**" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "### Execution Parameters" -logToSummary $true
 Write-Message -message "Owner: [$owner]" -logToSummary $true
 Write-Message -message "Number of repos to process (max): [$numberOfReposToDo]" -logToSummary $true
 Write-Message -message "Dry run: [$dryRun]" -logToSummary $true
