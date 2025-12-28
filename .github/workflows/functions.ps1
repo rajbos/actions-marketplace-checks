@@ -362,7 +362,7 @@ Write-Host "Ended up with $($existingForks.Count) forked repos"
 # save the status
 SaveStatus -existingForks $existingForks
 
-GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination -waitForRateLimit $false
 
 Write-Host "End of script, added [$numberOfReposToDo] forked repos"
 # show the current location

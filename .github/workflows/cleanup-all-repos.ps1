@@ -47,4 +47,4 @@ GetRateLimitInfo -access_token $access_token -access_token_destination $access_t
 $repos = GetAllRepos
 RemoveRepos $repos
 
-GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token -waitForRateLimit $false

@@ -368,7 +368,8 @@ function ApiCall {
         [bool] $hideFailedCall = $false,
         [bool] $returnErrorInfo = $false,
         $access_token = $env:GITHUB_TOKEN,
-        [string] $contextInfo = ""
+        [string] $contextInfo = "",
+        [bool] $waitForRateLimit = $true
     )
     
     # Validate that access token is not null or empty before making API calls
@@ -455,7 +456,7 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit
                     $response += $nextResult
                 }
             }
@@ -483,9 +484,12 @@ function ApiCall {
                 }
                 Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Warning"
                 Write-Host ""
-                Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+                # Only wait for rate limit if requested
+                if ($waitForRateLimit) {
+                    Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+                }
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
         }
 
         if ($null -ne $expected) {
@@ -514,7 +518,7 @@ function ApiCall {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
         }
         else {
             if (!$hideFailedCall) {
@@ -533,7 +537,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
@@ -549,7 +553,7 @@ function ApiCall {
                     Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
                 }
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
         }
 
         if ($null -ne $expected)
@@ -782,10 +786,12 @@ function GetRateLimitInfo {
         [string]
         $access_token,
         [string]
-        $access_token_destination
+        $access_token_destination,
+        [bool]
+        $waitForRateLimit = $true
     )
     $url = "rate_limit"
-    $response = ApiCall -method GET -url $url -access_token $access_token
+    $response = ApiCall -method GET -url $url -access_token $access_token -waitForRateLimit $waitForRateLimit
 
     # Check if rate limit was exceeded (returns null)
     if ($null -eq $response) {
@@ -803,7 +809,7 @@ function GetRateLimitInfo {
 
     if ($access_token -ne $access_token_destination -and $access_token_destination -ne "" ) {
         # check the ratelimit for the destination token as well:
-        $response2 = ApiCall -method GET -url $url -access_token $access_token_destination
+        $response2 = ApiCall -method GET -url $url -access_token $access_token_destination -waitForRateLimit $waitForRateLimit
         if ($null -ne $response2) {
             Format-RateLimitTable -rateData $response2.rate -title "Access Token Destination Rate Limit Status"
         }

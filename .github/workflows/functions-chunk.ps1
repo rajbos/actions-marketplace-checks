@@ -231,7 +231,7 @@ $processedForks = ProcessForkingChunk -allActions $actions -actionNamesToProcess
 $outputPath = "status-partial-functions-$chunkId.json"
 Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outputPath $outputPath
 
-GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
+GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination -waitForRateLimit $false
 
 Write-Host ""
 Write-Host "✓ Chunk [$chunkId] forking processing complete"
