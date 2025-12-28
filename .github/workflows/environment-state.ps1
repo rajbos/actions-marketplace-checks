@@ -64,10 +64,10 @@ Write-Message -message "" -logToSummary $true
 Write-Message -message "## Delta Analysis" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
-# Get action names from marketplace data
-# Normalize to forked repo name format (owner_repo) for consistent comparison
-$marketplaceActionNames = @{}
-foreach ($action in $actions) {
+# Helper function to normalize action names to owner_repo format
+function Get-NormalizedActionName {
+    param($action)
+    
     $normalizedName = $null
     
     # Try forkedRepoName first (already in owner_repo format)
@@ -92,6 +92,14 @@ foreach ($action in $actions) {
         }
     }
     
+    return $normalizedName
+}
+
+# Get action names from marketplace data
+# Normalize action names to owner_repo format for consistent comparison
+$marketplaceActionNames = @{}
+foreach ($action in $actions) {
+    $normalizedName = Get-NormalizedActionName -action $action
     if ($normalizedName) {
         $marketplaceActionNames[$normalizedName] = $true
     }
@@ -108,26 +116,7 @@ foreach ($fork in $existingForks) {
 # Find actions in marketplace but not tracked
 $actionsNotTracked = @()
 foreach ($action in $actions) {
-    $normalizedName = $null
-    
-    if ($action.forkedRepoName -and $action.forkedRepoName -ne "") {
-        $normalizedName = $action.forkedRepoName.ToLower()
-    }
-    elseif ($action.name -and $action.name -ne "") {
-        if ($action.name -match '/') {
-            $normalizedName = $action.name.Replace('/', '_').ToLower()
-        }
-        else {
-            $normalizedName = $action.name.ToLower()
-        }
-    }
-    elseif ($action.repoUrl -and $action.repoUrl -ne "") {
-        ($owner, $repo) = SplitUrl -url $action.repoUrl
-        if ($owner -and $repo) {
-            $normalizedName = "${owner}_${repo}".ToLower()
-        }
-    }
-    
+    $normalizedName = Get-NormalizedActionName -action $action
     if ($normalizedName -and -not $trackedActionNames.ContainsKey($normalizedName)) {
         $actionsNotTracked += $action
     }
