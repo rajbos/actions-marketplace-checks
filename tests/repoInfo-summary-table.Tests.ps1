@@ -1,7 +1,9 @@
 Import-Module Pester
 
 BeforeAll {
-    # Test to verify the summary table generation logic
+    # Note: We duplicate the Format-RepoInfoSummaryTable function here rather than
+    # importing from repoInfo.ps1 because that script has parameters and side effects
+    # that would execute during import. This is a common pattern in PowerShell testing.
     
     function Format-RepoInfoSummaryTable {
         Param (

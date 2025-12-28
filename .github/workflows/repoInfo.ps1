@@ -925,15 +925,12 @@ function GetMoreInfo {
     }
     
     # Output as table to step summary
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "## Repository Information Summary" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
     $table = Format-RepoInfoSummaryTable -metrics $metrics
-    Write-Message -message $table -logToSummary $true
-    
+    $summaryOutput = "`n## Repository Information Summary`n`n$table"
     if ($dockerBaseImageInfoAdded -gt 0) {
-        Write-Message -message "Docker base image information added for [$dockerBaseImageInfoAdded] actions" -logToSummary $true
+        $summaryOutput += "`nDocker base image information added for [$dockerBaseImageInfoAdded] actions"
     }
+    Write-Message -message $summaryOutput -logToSummary $true
 
     Write-Host "Starting the cleanup with [$($existingForks.Count)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
     foreach ($action in $originalRepoDoesNotExists) {
