@@ -50,9 +50,11 @@ Invoke-Pester -Path ./tests/cleanup.Tests.ps1
 
 This repository includes several automated workflows:
 
+- **[Analyze](.github/workflows/analyze.yml)**: Forks new action repositories and collects repo data (runs hourly)
 - **[Enable Dependabot](.github/workflows/dependabot-updates.yml)**: Automatically enables Dependabot on mirrored repositories to detect security vulnerabilities
 - **[Update Mirrors](.github/workflows/update-forks.yml)**: Automatically syncs all mirrored repositories with their upstream sources (runs every 15 minutes)
-- **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status
+- **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status (runs daily)
+- **[Environment State Documentation](.github/workflows/environment-state.yml)**: Documents the current state of the environment including coverage, freshness, and health metrics (runs daily at 10 AM UTC)
 
 ### Mirror Sync Behavior
 
@@ -66,5 +68,19 @@ The Update Mirrors workflow maintains synchronized copies of upstream GitHub Act
    - This ensures mirrors never become out of sync due to conflicts
 
 This force update behavior ensures that mirrors remain accurate copies of their upstream sources, even when there are conflicting changes.
+
+### Environment State Documentation
+
+The Environment State Documentation workflow provides a comprehensive overview of the system's current state:
+
+- **Delta Analysis**: Shows the difference between actions in the marketplace (actions.json) and tracked actions (status.json)
+- **Mirror Status**: Reports on repos with valid mirrors, forks, and sync status
+- **Sync Activity**: Tracks repos synced in the last 7 days and 30 days, identifying repos needing updates
+- **Repo Info Status**: Monitors collection of tags, releases, repo info, and action types
+- **Action Type Breakdown**: Categorizes actions by type (Node, Docker, Composite, etc.)
+- **Health Metrics**: Provides coverage, freshness, and completion percentages with status indicators
+- **Summary**: Quick overview of key statistics and pending work
+
+The workflow runs daily and generates a detailed report in the GitHub Actions step summary.
 
 The dataset is scraped in this repo: [rajbos/github-azure-devops-marketplace-extension-news](https://github.com/rajbos/github-azure-devops-marketplace-extension-news)
