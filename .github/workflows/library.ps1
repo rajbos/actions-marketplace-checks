@@ -2556,36 +2556,59 @@ function Select-ForksToProcess {
     Write-Message -message "Selecting up to [$numberOfRepos] forks to process" -logToSummary $true
     Write-Message -message "Cool-off period for failed syncs: [$coolOffHoursForFailedSync] hours" -logToSummary $true
     
-    # Filter forks that are eligible for processing
-    $eligibleForks = $existingForks | Where-Object {
+    # Track filtering statistics
+    $totalForks = $existingForks.Count
+    $filteredNoMirror = 0
+    $filteredUpstreamUnavailable = 0
+    $filteredCoolOff = 0
+    
+    # First pass: count each filter reason and collect eligible forks
+    # Use generic List for better performance and type safety with large datasets
+    $eligibleForks = [System.Collections.Generic.List[PSObject]]::new()
+    foreach ($fork in $existingForks) {
         # Must have a mirror
-        if ($_.mirrorFound -ne $true) {
-            return $false
+        if ($fork.mirrorFound -ne $true) {
+            $filteredNoMirror++
+            continue
         }
         
         # Skip if upstream is marked as unavailable
-        if ($_.upstreamAvailable -eq $false) {
-            return $false
+        if ($fork.upstreamAvailable -eq $false) {
+            $filteredUpstreamUnavailable++
+            continue
         }
         
         # Check cool-off period for failed syncs
-        if ($_.lastSyncError -and $_.lastSyncAttempt) {
+        if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttempt = [DateTime]::Parse($_.lastSyncAttempt)
+                $lastAttempt = [DateTime]::Parse($fork.lastSyncAttempt)
                 if ($lastAttempt -gt $coolOffThreshold) {
                     # Still in cool-off period
-                    return $false
+                    $filteredCoolOff++
+                    continue
                 }
             } catch {
                 # If we can't parse the date, include it to be safe (safer to retry than skip)
-                Write-Debug "Failed to parse lastSyncAttempt for [$($_.name)]: $($_.lastSyncAttempt)"
+                Write-Debug "Failed to parse lastSyncAttempt for [$($fork.name)]: $($fork.lastSyncAttempt)"
             }
         }
         
-        return $true
+        # This fork passed all filters
+        [void]$eligibleForks.Add($fork)
     }
     
-    Write-Message -message "Found [$($eligibleForks.Count)] eligible forks after filtering" -logToSummary $true
+    # Display filtering statistics
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "### Fork Selection Filtering Results" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Filter Reason | Count |" -logToSummary $true
+    Write-Message -message "|--------------|------:|" -logToSummary $true
+    Write-Message -message "| Total forks in dataset | $totalForks |" -logToSummary $true
+    Write-Message -message "| Filtered: No mirror found | $filteredNoMirror |" -logToSummary $true
+    Write-Message -message "| Filtered: Upstream unavailable | $filteredUpstreamUnavailable |" -logToSummary $true
+    Write-Message -message "| Filtered: In cool-off period (failed < ${coolOffHoursForFailedSync}h ago) | $filteredCoolOff |" -logToSummary $true
+    Write-Message -message "| **Eligible forks after filtering** | **$($eligibleForks.Count)** |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     
     # Sort by priority score (higher score = higher priority)
     # Priority considers:
@@ -2656,8 +2679,8 @@ function Select-ForksToProcess {
         return $priorityScore
     } -Descending
     
-    # Select the top N repos (highest priority scores)
-    $selectedForks = $sortedForks | Select-Object -First $numberOfRepos
+    $actualSelectCount = [Math]::Min($numberOfRepos, $sortedForks.Count)
+    $selectedForks = $sortedForks | Select-Object -First $actualSelectCount
     
     # Calculate statistics about selection
     $reposWithRecentFailures = ($eligibleForks | Where-Object { 
@@ -2674,8 +2697,18 @@ function Select-ForksToProcess {
         return $false
     }).Count
     
-    Write-Message -message "Selected [$($selectedForks.Count)] forks for processing" -logToSummary $true
-    Write-Message -message "Eligible forks with recent failures: [$reposWithRecentFailures] (deprioritized by smart sorting)" -logToSummary $true
+    Write-Message -message "### Fork Selection Summary" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "- **Requested:** [$numberOfRepos] forks" -logToSummary $true
+    Write-Message -message "- **Selected:** [$($selectedForks.Count)] forks for processing" -logToSummary $true
+    
+    if ($selectedForks.Count -lt $numberOfRepos) {
+        $shortage = $numberOfRepos - $selectedForks.Count
+        Write-Message -message "- ⚠️ **Note:** Only [$($selectedForks.Count)] eligible forks available ([$shortage] fewer than requested)" -logToSummary $true
+        Write-Message -message "  - To process more repos, wait for cool-off period to expire or resolve upstream issues" -logToSummary $true
+    }
+    
+    Write-Message -message "- Eligible forks with recent failures: [$reposWithRecentFailures] (deprioritized by smart sorting)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     return $selectedForks
@@ -3142,11 +3175,19 @@ function ShowOverallDatasetStatistics {
     $totalRepos = $existingForks.Count
     
     # Count repos with mirrorFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
+    # Wrap in @() to ensure it's always an array (PowerShell returns single items as scalars)
+    $reposWithMirrors = @($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
     
-    # Count repos synced in the last 7 days
-    $reposSyncedLast7Days = ($existingForks | Where-Object { 
-        if ($_.mirrorFound -eq $true -and $_.lastSynced) {
+    # Count repos without mirrors
+    $reposWithoutMirrors = $totalRepos - $reposWithMirrors
+    
+    # Count repos synced in the last 7 days (only from repos with mirrors)
+    # Wrap in @() to ensure it's always an array
+    $reposSyncedLast7Days = @($existingForks | Where-Object { 
+        if ($_.mirrorFound -ne $true) {
+            return $false
+        }
+        if ($_.lastSynced) {
             try {
                 $syncDate = [DateTime]::Parse($_.lastSynced)
                 return $syncDate -gt $sevenDaysAgo
@@ -3175,7 +3216,7 @@ function ShowOverallDatasetStatistics {
         return $false
     }).Count
     
-    # Calculate percentages
+    # Calculate percentages for repos with mirrors
     if ($reposWithMirrors -gt 0) {
         $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
         $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
@@ -3186,12 +3227,25 @@ function ShowOverallDatasetStatistics {
         $percentNeverSynced = 0
     }
     
+    # Calculate percentages of total dataset
+    $percentWithMirrors = [math]::Round(($reposWithMirrors / $totalRepos) * 100, 2)
+    $percentWithoutMirrors = [math]::Round(($reposWithoutMirrors / $totalRepos) * 100, 2)
+    
     $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
     
-    Write-Message -message "**Total Repositories in Dataset:** $totalRepos" -logToSummary $true
-    Write-Message -message "**Repositories with Valid Mirrors:** $reposWithMirrors" -logToSummary $true
+    # Display overall repository breakdown
+    Write-Message -message "#### Repository Status Breakdown" -logToSummary $true
+    Write-Message -message "| Category | Count | Percentage |" -logToSummary $true
+    Write-Message -message "|----------|------:|-----------:|" -logToSummary $true
+    Write-Message -message "| **Total Repositories in Dataset** | **$totalRepos** | **100%** |" -logToSummary $true
+    Write-Message -message "| └─ Repositories with Valid Mirrors | $reposWithMirrors | ${percentWithMirrors}% |" -logToSummary $true
+    Write-Message -message "| └─ Repositories without Mirrors | $reposWithoutMirrors | ${percentWithoutMirrors}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "#### Last 7 Days Activity" -logToSummary $true
+    Write-Message -message "_Note: Repositories without mirrors cannot be synced. This may be because the upstream repository no longer exists, the mirror was never created, or the mirror was deleted._" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "#### Last 7 Days Sync Activity (Valid Mirrors Only)" -logToSummary $true
+    Write-Message -message "_The following statistics are for the **$reposWithMirrors repositories with valid mirrors** only:_" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
     Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
     Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true

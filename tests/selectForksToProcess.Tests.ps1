@@ -171,4 +171,61 @@ Describe "Select-ForksToProcess" {
             $result.Count | Should -Be 50
         }
     }
+    
+    Context "Filtering statistics" {
+        It "Should report detailed filtering statistics for all filter types" {
+            $now = Get-Date
+            $forks = @(
+                # 3 forks with mirrorFound = false
+                [PSCustomObject]@{ name = "noMirror1"; mirrorFound = $false }
+                [PSCustomObject]@{ name = "noMirror2"; mirrorFound = $false }
+                [PSCustomObject]@{ name = "noMirror3"; mirrorFound = $false }
+                # 2 forks with upstreamAvailable = false
+                [PSCustomObject]@{ name = "noUpstream1"; mirrorFound = $true; upstreamAvailable = $false }
+                [PSCustomObject]@{ name = "noUpstream2"; mirrorFound = $true; upstreamAvailable = $false }
+                # 4 forks in cool-off period
+                [PSCustomObject]@{ name = "coolOff1"; mirrorFound = $true; lastSyncError = "Error"; lastSyncAttempt = $now.AddHours(-12).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+                [PSCustomObject]@{ name = "coolOff2"; mirrorFound = $true; lastSyncError = "Error"; lastSyncAttempt = $now.AddHours(-6).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+                [PSCustomObject]@{ name = "coolOff3"; mirrorFound = $true; lastSyncError = "Error"; lastSyncAttempt = $now.AddHours(-18).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+                [PSCustomObject]@{ name = "coolOff4"; mirrorFound = $true; lastSyncError = "Error"; lastSyncAttempt = $now.AddHours(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+                # 5 eligible forks
+                [PSCustomObject]@{ name = "eligible1"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "eligible2"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "eligible3"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "eligible4"; mirrorFound = $true; lastSyncError = "Error"; lastSyncAttempt = $now.AddHours(-36).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+                [PSCustomObject]@{ name = "eligible5"; mirrorFound = $true; lastSynced = $now.AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+            )
+            
+            # Capture output
+            $output = Select-ForksToProcess -existingForks $forks -numberOfRepos 100 -coolOffHoursForFailedSync 24 | Out-String
+            
+            # Verify that only 5 eligible forks were selected
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 100 -coolOffHoursForFailedSync 24
+            $result.Count | Should -Be 5
+            
+            # Verify no ineligible forks were selected
+            $result.name | Should -Not -Contain "noMirror1"
+            $result.name | Should -Not -Contain "noUpstream1"
+            $result.name | Should -Not -Contain "coolOff1"
+            
+            # Verify all eligible forks were selected
+            $result.name | Should -Contain "eligible1"
+            $result.name | Should -Contain "eligible2"
+            $result.name | Should -Contain "eligible3"
+            $result.name | Should -Contain "eligible4"
+            $result.name | Should -Contain "eligible5"
+        }
+        
+        It "Should warn when fewer eligible forks than requested" {
+            $forks = @(
+                [PSCustomObject]@{ name = "fork1"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "fork2"; mirrorFound = $true; lastSynced = $null }
+            )
+            
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 100
+            
+            # Should select all available eligible forks, not fail
+            $result.Count | Should -Be 2
+        }
+    }
 }

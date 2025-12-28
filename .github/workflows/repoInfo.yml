@@ -20,10 +20,7 @@ env:
   numberOfReposToDo: 500 
 
 jobs:
-  get-repo-information:
-    concurrency:
-      group: repo-state-updates
-      cancel-in-progress: false
+  process-repo-info:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -103,6 +100,167 @@ jobs:
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
            # get repo information
            ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+
+      - name: Upload updated status.json as artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: status-updated
+          path: status.json
+          retention-days: 1
+
+      - name: Upload updated failedForks.json as artifact
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: failedForks-updated
+          path: failedForks.json
+          retention-days: 1
+          if-no-files-found: ignore
+
+  upload-changes:
+    name: Consolidate and upload changes to blob storage
+    needs: process-repo-info
+    if: always()
+    runs-on: ubuntu-latest
+    concurrency:
+      group: repo-state-updates
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download latest status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download latest failedForks.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-FailedForksFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download failedForks.json from blob storage"
+            exit 1
+          }
+
+      - name: Download updated status from previous job
+        uses: actions/download-artifact@v5
+        with:
+          name: status-updated
+          path: updated-data/
+
+      - name: Download updated failedForks from previous job
+        uses: actions/download-artifact@v5
+        with:
+          name: failedForks-updated
+          path: updated-data/
+        continue-on-error: true
+
+      - name: Merge changes from processing job
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "# Consolidating Changes from Repo Info Processing" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load current status from blob storage
+          try {
+              $jsonContent = Get-Content status.json -Raw
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
+              $currentStatus = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse current status.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          Write-Message -message "Loaded current status from blob storage with [$($currentStatus.Count)] forks" -logToSummary $true
+
+          # Load updated status from processing job
+          $updatedStatusFile = "updated-data/status.json"
+          if (Test-Path $updatedStatusFile) {
+              try {
+                  $updatedContent = Get-Content $updatedStatusFile -Raw
+                  $updatedContent = $updatedContent -replace '^\uFEFF', ''
+                  $updatedStatus = $updatedContent | ConvertFrom-Json
+                  Write-Message -message "Loaded updated status from processing job with [$($updatedStatus.Count)] forks" -logToSummary $true
+              } catch {
+                  Write-Error "Failed to parse updated status.json: $($_.Exception.Message)"
+                  exit 1
+              }
+
+              # Create hashtable for fast lookup
+              $statusByName = @{}
+              foreach ($item in $currentStatus) {
+                  $statusByName[$item.name] = $item
+              }
+
+              # Merge updates - copy all properties from updated forks
+              $mergeCount = 0
+              foreach ($updatedFork in $updatedStatus) {
+                  if ($statusByName.ContainsKey($updatedFork.name)) {
+                      # Update existing entry - copy all properties from updated fork
+                      $existing = $statusByName[$updatedFork.name]
+                      
+                      # Use PSObject.Properties for efficient property access
+                      foreach ($prop in $updatedFork.PSObject.Properties) {
+                          $propName = $prop.Name
+                          $propValue = $prop.Value
+                          
+                          # Check if property exists using PSObject.Properties
+                          $existingProp = $existing.PSObject.Properties[$propName]
+                          if ($existingProp) {
+                              $existingProp.Value = $propValue
+                          } else {
+                              $existing | Add-Member -Name $propName -Value $propValue -MemberType NoteProperty -Force
+                          }
+                      }
+                      $mergeCount++
+                  } else {
+                      # Add new entry
+                      $statusByName[$updatedFork.name] = $updatedFork
+                      $mergeCount++
+                  }
+              }
+
+              Write-Message -message "Merged [$mergeCount] fork updates into current status" -logToSummary $true
+
+              # Convert back to array and save
+              $mergedStatus = $statusByName.Values
+              Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+              SaveStatus -existingForks $mergedStatus
+          } else {
+              Write-Message -message "No updated status.json found from processing job" -logToSummary $true
+          }
+
+          # Update failedForks if present
+          $updatedFailedForksFile = "updated-data/failedForks.json"
+          if (Test-Path $updatedFailedForksFile) {
+              try {
+                  $updatedFailedContent = Get-Content $updatedFailedForksFile -Raw
+                  $updatedFailedContent = $updatedFailedContent -replace '^\uFEFF', ''
+                  $updatedFailedForks = $updatedFailedContent | ConvertFrom-Json
+                  
+                  # Use the updated failedForks - it's based on the complete status processed by repoInfo.ps1
+                  Write-Message -message "Using updated failedForks.json with [$($updatedFailedForks.Count)] entries" -logToSummary $true
+                  SaveStatus -failedForks $updatedFailedForks
+              } catch {
+                  Write-Warning "Failed to process updated failedForks.json: $($_.Exception.Message)"
+              }
+          }
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
       - name: Upload status.json to blob storage
         if: always()
