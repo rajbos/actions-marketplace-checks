@@ -2556,15 +2556,23 @@ function Select-ForksToProcess {
     Write-Message -message "Selecting up to [$numberOfRepos] forks to process" -logToSummary $true
     Write-Message -message "Cool-off period for failed syncs: [$coolOffHoursForFailedSync] hours" -logToSummary $true
     
+    # Track filtering statistics
+    $totalForks = $existingForks.Count
+    $filteredNoMirror = 0
+    $filteredUpstreamUnavailable = 0
+    $filteredCoolOff = 0
+    
     # Filter forks that are eligible for processing
     $eligibleForks = $existingForks | Where-Object {
         # Must have a mirror
         if ($_.mirrorFound -ne $true) {
+            $filteredNoMirror++
             return $false
         }
         
         # Skip if upstream is marked as unavailable
         if ($_.upstreamAvailable -eq $false) {
+            $filteredUpstreamUnavailable++
             return $false
         }
         
@@ -2574,6 +2582,7 @@ function Select-ForksToProcess {
                 $lastAttempt = [DateTime]::Parse($_.lastSyncAttempt)
                 if ($lastAttempt -gt $coolOffThreshold) {
                     # Still in cool-off period
+                    $filteredCoolOff++
                     return $false
                 }
             } catch {
@@ -2585,7 +2594,18 @@ function Select-ForksToProcess {
         return $true
     }
     
-    Write-Message -message "Found [$($eligibleForks.Count)] eligible forks after filtering" -logToSummary $true
+    # Display filtering statistics
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "### Fork Selection Filtering Results" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Filter Reason | Count |" -logToSummary $true
+    Write-Message -message "|--------------|------:|" -logToSummary $true
+    Write-Message -message "| Total forks in dataset | $totalForks |" -logToSummary $true
+    Write-Message -message "| Filtered: No mirror found | $filteredNoMirror |" -logToSummary $true
+    Write-Message -message "| Filtered: Upstream unavailable | $filteredUpstreamUnavailable |" -logToSummary $true
+    Write-Message -message "| Filtered: In cool-off period (failed < ${coolOffHoursForFailedSync}h ago) | $filteredCoolOff |" -logToSummary $true
+    Write-Message -message "| **Eligible forks after filtering** | **$($eligibleForks.Count)** |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     
     # Sort by priority score (higher score = higher priority)
     # Priority considers:
@@ -2657,7 +2677,10 @@ function Select-ForksToProcess {
     } -Descending
     
     # Select the top N repos (highest priority scores)
-    $selectedForks = $sortedForks | Select-Object -First $numberOfRepos
+    # Note: We can only select from eligible forks, so if there are fewer eligible than requested,
+    # we'll select all eligible forks
+    $actualSelectCount = [Math]::Min($numberOfRepos, $sortedForks.Count)
+    $selectedForks = $sortedForks | Select-Object -First $actualSelectCount
     
     # Calculate statistics about selection
     $reposWithRecentFailures = ($eligibleForks | Where-Object { 
@@ -2674,8 +2697,18 @@ function Select-ForksToProcess {
         return $false
     }).Count
     
-    Write-Message -message "Selected [$($selectedForks.Count)] forks for processing" -logToSummary $true
-    Write-Message -message "Eligible forks with recent failures: [$reposWithRecentFailures] (deprioritized by smart sorting)" -logToSummary $true
+    Write-Message -message "### Fork Selection Summary" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "- **Requested:** [$numberOfRepos] forks" -logToSummary $true
+    Write-Message -message "- **Selected:** [$($selectedForks.Count)] forks for processing" -logToSummary $true
+    
+    if ($selectedForks.Count -lt $numberOfRepos) {
+        $shortage = $numberOfRepos - $selectedForks.Count
+        Write-Message -message "- ⚠️ **Note:** Only [$($selectedForks.Count)] eligible forks available ([$shortage] fewer than requested)" -logToSummary $true
+        Write-Message -message "  - To process more repos, wait for cool-off period to expire or resolve upstream issues" -logToSummary $true
+    }
+    
+    Write-Message -message "- Eligible forks with recent failures: [$reposWithRecentFailures] (deprioritized by smart sorting)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     return $selectedForks
