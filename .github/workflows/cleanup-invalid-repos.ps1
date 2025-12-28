@@ -65,6 +65,7 @@ function GetReposToCleanup {
     $reposToCleanup = New-Object System.Collections.ArrayList
     $validStatus = New-Object System.Collections.ArrayList
     $invalidEntries = New-Object System.Collections.ArrayList
+    $ownerFixed = $false  # Track if any owners were fixed
     
     # Tracking distinct, non-overlapping categories for clearer reporting
     $countUpstreamMissingOnly = 0  # Upstream missing but not empty
@@ -77,26 +78,37 @@ function GetReposToCleanup {
         # Detect invalid entries (owner null/empty or name '_' or empty)
         $isInvalid = ($null -eq $repo) -or ([string]::IsNullOrEmpty($repo.name)) -or ($repo.name -eq "_")
         
-        # Special handling for null/empty owner - check if repo actually exists
+        # Special handling for null/empty owner - extract from repo name (format: owner_repo)
         if (-not $isInvalid -and [string]::IsNullOrEmpty($repo.owner)) {
-            # If we have an access token, verify if the repo exists before marking as invalid
-            if ($access_token -and -not [string]::IsNullOrEmpty($repo.name)) {
-                Write-Host "Validating repo with null/empty owner: [$($repo.name)]"
-                $repoExists = Test-RepoExists -repoOwner $mirrorOwner -repoName $repo.name -access_token $access_token
-                if ($repoExists) {
-                    Write-Host "  Repo exists in GitHub, fixing owner to [$mirrorOwner]"
-                    # Fix the owner field
-                    $repo.owner = $mirrorOwner
-                    $isInvalid = $false
-                }
-                else {
-                    Write-Host "  Repo does not exist in GitHub, marking as invalid"
-                    $isInvalid = $true
-                }
+            # Extract owner from repo name using the pattern owner_repo
+            if ($repo.name -match '^([^_]+)_') {
+                $extractedOwner = $matches[1]
+                Write-Host "Fixing repo with null/empty owner: [$($repo.name)] -> owner: [$extractedOwner]"
+                $repo.owner = $extractedOwner
+                $ownerFixed = $true
+                $isInvalid = $false
             }
             else {
-                # No access token or no name, mark as invalid
-                $isInvalid = $true
+                # If we can't extract owner from name, verify if repo exists in mirror org
+                if ($access_token -and -not [string]::IsNullOrEmpty($repo.name)) {
+                    Write-Host "Validating repo with null/empty owner (no underscore pattern): [$($repo.name)]"
+                    $repoExists = Test-RepoExists -repoOwner $mirrorOwner -repoName $repo.name -access_token $access_token
+                    if ($repoExists) {
+                        Write-Host "  Repo exists in GitHub, fixing owner to [$mirrorOwner]"
+                        # Fix the owner field
+                        $repo.owner = $mirrorOwner
+                        $ownerFixed = $true
+                        $isInvalid = $false
+                    }
+                    else {
+                        Write-Host "  Repo does not exist in GitHub, marking as invalid"
+                        $isInvalid = $true
+                    }
+                }
+                else {
+                    # No access token or no name, mark as invalid
+                    $isInvalid = $true
+                }
             }
         }
         
@@ -200,6 +212,18 @@ function GetReposToCleanup {
         $validCombined = @()
         $validCombined += $validStatus
         # Include cleanup candidates so they still exist for deletion process; they will be removed later if dryRun is false
+        $validCombined += $reposToCleanup | ForEach-Object { $_ }
+        $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+        if ($env:BLOB_SAS_TOKEN) {
+            try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
+        }
+    }
+    elseif ($ownerFixed) {
+        Write-Host "    - Fixed owner field for repos with null/empty owner"
+        # Save status file with fixed owners
+        $validCombined = @()
+        $validCombined += $validStatus
+        # Include cleanup candidates so they still exist for deletion process
         $validCombined += $reposToCleanup | ForEach-Object { $_ }
         $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         if ($env:BLOB_SAS_TOKEN) {
