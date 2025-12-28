@@ -315,7 +315,7 @@ function RemoveReposFromStatus {
     Write-Host "Removing [$($repos.Count)] repos from status file"
     
     if (-not (Test-Path $statusFile)) {
-        Write-Error "Status file not found at [$statusFile]"
+        Write-Warning "Status file not found at [$statusFile]"
         return 0
     }
     
