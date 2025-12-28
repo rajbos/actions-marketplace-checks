@@ -210,7 +210,7 @@ Describe "Environment State - Sync Activity" {
         
         # Act - Only count repos WITH mirrors that have never been synced
         $reposNeverSynced = @($trackedForks | Where-Object { 
-            $_.mirrorFound -eq $true -and ($null -eq $_.lastSynced -or $_.lastSynced -eq "")
+            $_.mirrorFound -eq $true -and -not $_.lastSynced
         }).Count
         
         # Assert

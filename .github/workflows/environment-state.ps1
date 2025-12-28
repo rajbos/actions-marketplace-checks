@@ -215,7 +215,7 @@ $reposSyncedLast30Days = ($existingForks | Where-Object {
 
 # Only count repos WITH mirrors that have never been synced
 $reposNeverSynced = ($existingForks | Where-Object {
-    $_.mirrorFound -eq $true -and (-not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq "")
+    $_.mirrorFound -eq $true -and -not $_.lastSynced
 }).Count
 
 # Calculate percentages based on repos with mirrors
@@ -237,9 +237,9 @@ if ($reposNeverSynced -gt 0) {
     Write-Message -message "Sample of repos with mirrors that have never been synced (up to 10):" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    # Get repos that have mirrors but no lastSynced date
+    # Get repos that have mirrors but no lastSynced date (reuse same filter)
     $neverSyncedRepos = $existingForks | Where-Object {
-        $_.mirrorFound -eq $true -and (-not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq "")
+        $_.mirrorFound -eq $true -and -not $_.lastSynced
     } | Select-Object -First 10
     
     Write-Message -message "| Repo Name | Upstream | Mirror |" -logToSummary $true
