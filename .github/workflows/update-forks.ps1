@@ -245,7 +245,7 @@ function ShowOverallDatasetStatistics {
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 
-        if ($_.lastSynced) {
+        if ($_.mirrorFound -eq $true -and $_.lastSynced) {
             try {
                 $syncDate = [DateTime]::Parse($_.lastSynced)
                 return $syncDate -gt $sevenDaysAgo

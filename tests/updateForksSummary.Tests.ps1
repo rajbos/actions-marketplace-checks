@@ -91,7 +91,7 @@ BeforeAll {
         $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
         
         $reposSyncedLast7Days = ($existingForks | Where-Object { 
-            if ($_.lastSynced) {
+            if ($_.mirrorFound -eq $true -and $_.lastSynced) {
                 try {
                     $syncDate = [DateTime]::Parse($_.lastSynced)
                     return $syncDate -gt $sevenDaysAgo
