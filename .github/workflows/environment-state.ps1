@@ -64,26 +64,65 @@ Write-Message -message "" -logToSummary $true
 Write-Message -message "## Delta Analysis" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
+# Helper function to normalize action names to owner_repo format
+function Get-NormalizedActionName {
+    param($action)
+    
+    $normalizedName = $null
+    
+    # Try forkedRepoName first (should be in owner_repo format, but check to be safe)
+    if ($action.forkedRepoName -and $action.forkedRepoName -ne "") {
+        if ($action.forkedRepoName -match '/') {
+            $normalizedName = $action.forkedRepoName.Replace('/', '_').ToLower()
+        }
+        else {
+            $normalizedName = $action.forkedRepoName.ToLower()
+        }
+    }
+    # Try name field (might be in owner/repo or owner_repo format)
+    elseif ($action.name -and $action.name -ne "") {
+        # Convert owner/repo to owner_repo if needed
+        if ($action.name -match '/') {
+            $normalizedName = $action.name.Replace('/', '_').ToLower()
+        }
+        else {
+            $normalizedName = $action.name.ToLower()
+        }
+    }
+    # Fallback: derive from repoUrl
+    elseif ($action.repoUrl -and $action.repoUrl -ne "") {
+        ($owner, $repo) = SplitUrl -url $action.repoUrl
+        if ($owner -and $repo) {
+            $normalizedName = "${owner}_${repo}".ToLower()
+        }
+    }
+    
+    return $normalizedName
+}
+
 # Get action names from marketplace data
+# Normalize action names to owner_repo format for consistent comparison
 $marketplaceActionNames = @{}
 foreach ($action in $actions) {
-    if ($action.name) {
-        $marketplaceActionNames[$action.name] = $true
+    $normalizedName = Get-NormalizedActionName -action $action
+    if ($normalizedName) {
+        $marketplaceActionNames[$normalizedName] = $true
     }
 }
 
-# Get action names from status
+# Get action names from status (already in owner_repo format)
 $trackedActionNames = @{}
 foreach ($fork in $existingForks) {
     if ($fork.name) {
-        $trackedActionNames[$fork.name] = $true
+        $trackedActionNames[$fork.name.ToLower()] = $true
     }
 }
 
 # Find actions in marketplace but not tracked
 $actionsNotTracked = @()
 foreach ($action in $actions) {
-    if ($action.name -and -not $trackedActionNames.ContainsKey($action.name)) {
+    $normalizedName = Get-NormalizedActionName -action $action
+    if ($normalizedName -and -not $trackedActionNames.ContainsKey($normalizedName)) {
         $actionsNotTracked += $action
     }
 }
@@ -91,8 +130,11 @@ foreach ($action in $actions) {
 # Find actions tracked but not in marketplace anymore
 $actionsNoLongerInMarketplace = @()
 foreach ($fork in $existingForks) {
-    if ($fork.name -and -not $marketplaceActionNames.ContainsKey($fork.name)) {
-        $actionsNoLongerInMarketplace += $fork
+    if ($fork.name) {
+        $normalizedName = $fork.name.ToLower()
+        if (-not $marketplaceActionNames.ContainsKey($normalizedName)) {
+            $actionsNoLongerInMarketplace += $fork
+        }
     }
 }
 
@@ -105,22 +147,17 @@ Write-Message -message "| 🆕 Not Yet Tracked | $($actionsNotTracked.Count) | $
 Write-Message -message "| 🗑️ Tracked but No Longer in Marketplace | $($actionsNoLongerInMarketplace.Count) | $([math]::Round(($actionsNoLongerInMarketplace.Count / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
-# Show sample of untracked actions
+# Show sample of untracked actions (console only, not in summary to save space)
 if ($actionsNotTracked.Count -gt 0) {
-    Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>🆕 Sample of Actions Not Yet Tracked (up to 20)</summary>" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Action Name | Repo URL |" -logToSummary $true
-    Write-Message -message "|-------------|----------|" -logToSummary $true
+    Write-Host ""
+    Write-Host "Sample of Actions Not Yet Tracked (up to 20):"
     $sampleCount = [Math]::Min(20, $actionsNotTracked.Count)
     for ($i = 0; $i -lt $sampleCount; $i++) {
         $action = $actionsNotTracked[$i]
         $repoUrl = if ($action.repoUrl) { $action.repoUrl } else { "N/A" }
-        Write-Message -message "| $($action.name) | $repoUrl |" -logToSummary $true
+        Write-Host "  - $($action.name) | $repoUrl"
     }
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "</details>" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    Write-Host ""
 }
 
 # ============================================================================
@@ -250,23 +287,66 @@ foreach ($fork in $existingForks) {
 
 Write-Message -message "| Action Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
-foreach ($type in ($actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] })) {
+# Show only top 10 action types to keep summary size manageable (was causing 1983KB summary with thousands of types)
+$topTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] } | Select-Object -First 10
+foreach ($type in $topTypes) {
     $count = $actionTypeCount[$type]
     $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
     Write-Message -message "| $type | $count | ${percentage}% |" -logToSummary $true
 }
+# If there are more types, show a summary line
+$remainingTypes = $actionTypeCount.Keys.Count - $topTypes.Count
+if ($remainingTypes -gt 0) {
+    Write-Message -message "| _(${remainingTypes} other types)_ | ... | ... |" -logToSummary $true
+}
 Write-Message -message "" -logToSummary $true
 
+# Output full breakdown to console for reference
+Write-Host ""
+Write-Host "Full Action Type Breakdown (console only):"
+foreach ($type in ($actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] })) {
+    $count = $actionTypeCount[$type]
+    $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
+    Write-Host "  $type : $count (${percentage}%)"
+}
+
 # ============================================================================
-# 7. RATE LIMIT STATUS (if token provided)
+# 7. RATE LIMIT STATUS (if token provided) - console only
 # ============================================================================
 if ($access_token_destination -ne "") {
-    Write-Message -message "## Rate Limit Status" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-
-    GetRateLimitInfo -access_token $access_token_destination -access_token_destination $access_token_destination
-
-    Write-Message -message "" -logToSummary $true
+    Write-Host ""
+    Write-Host "Rate Limit Status (console only):"
+    Write-Host ""
+    
+    # Get rate limit info but don't log to summary to save space
+    $url = "rate_limit"
+    $response = ApiCall -method GET -url $url -access_token $access_token_destination
+    
+    if ($null -ne $response) {
+        $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($response.rate.reset).UtcDateTime
+        $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+        
+        if ($timeUntilReset.TotalMinutes -lt 1) {
+            $resetDisplay = "< 1 minute"
+        } elseif ($timeUntilReset.TotalHours -lt 1) {
+            $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
+        } else {
+            $hours = [math]::Floor($timeUntilReset.TotalHours)
+            $minutes = [math]::Floor($timeUntilReset.TotalMinutes % 60)
+            if ($minutes -eq 0) {
+                $resetDisplay = "$hours hours"
+            } else {
+                $resetDisplay = "$hours hours $minutes minutes"
+            }
+        }
+        
+        Write-Host "  Limit: $($response.rate.limit)"
+        Write-Host "  Used: $($response.rate.used)"
+        Write-Host "  Remaining: $($response.rate.remaining)"
+        Write-Host "  Resets in: $resetDisplay"
+    }
+    
+    Write-Host ""
 }
 
 # ============================================================================
