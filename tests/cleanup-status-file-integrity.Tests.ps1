@@ -5,13 +5,35 @@ BeforeAll {
     . $PSScriptRoot/../.github/workflows/library.ps1
     
     # Mock the function we're testing
+    <#
+    .SYNOPSIS
+    Test version of GetReposToCleanup that validates status file integrity.
+    
+    .DESCRIPTION
+    This is a simplified version of GetReposToCleanup that demonstrates the bug fix.
+    It separates display objects ($reposToCleanup) from persistence objects ($reposToCleanupFullObjects)
+    to ensure full repository metadata is preserved when saving status.json.
+    
+    .PARAMETER statusFile
+    Path to the status.json file to process.
+    
+    .PARAMETER access_token
+    Optional GitHub access token (not used in this test version).
+    
+    .OUTPUTS
+    Hashtable with the following structure:
+    - totalRepos: Total number of repos in the input file
+    - validRepos: Count of valid repos (including those to cleanup)
+    - invalidRepos: Count of invalid entries removed
+    - toCleanup: Count of repos eligible for cleanup
+    - validCombined: Array of full repository objects (for status file saving)
+    - reposToCleanup: Array of simplified display objects (for reporting)
+    #>
     function Test-StatusFileIntegrity {
         Param (
             $statusFile,
             $access_token = $null
         )
-        
-        # This is a simplified version of GetReposToCleanup that demonstrates the bug fix
         $status = Get-Content $statusFile | ConvertFrom-Json
         
         $reposToCleanup = New-Object System.Collections.ArrayList
