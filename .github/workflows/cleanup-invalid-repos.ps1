@@ -458,9 +458,8 @@ if ($reposToCleanup.Count -gt 0) {
     
     if (-not $dryRun) {
         # Update status file to remove deleted repos
-        # Only remove up to numberOfReposToDo from status
-        $reposRemoved = $reposToCleanup | Select-Object -First $numberOfReposToDo
-        $totalRemovedFromStatus = RemoveReposFromStatus -repos $reposRemoved -statusFile $statusFile
+        # Use the actual cleaned repos (not the original list)
+        $totalRemovedFromStatus = RemoveReposFromStatus -repos $cleanedRepos -statusFile $statusFile
     }
 }
 else {
@@ -469,9 +468,10 @@ else {
 
 # Add cleaned repos summary
 if ($cleanedRepos.Count -gt 0) {
+    $displayCount = [Math]::Min(10, $cleanedRepos.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos Cleaned Up (showing first 10 of $($cleanedRepos.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos Cleaned Up (showing first $displayCount of $($cleanedRepos.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
