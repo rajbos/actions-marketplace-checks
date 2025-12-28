@@ -245,7 +245,7 @@ function ShowOverallDatasetStatistics {
     
     # Count repos synced in the last 7 days
     $reposSyncedLast7Days = ($existingForks | Where-Object { 
-        if ($_.lastSynced) {
+        if ($_.mirrorFound -eq $true -and $_.lastSynced) {
             try {
                 $syncDate = [DateTime]::Parse($_.lastSynced)
                 return $syncDate -gt $sevenDaysAgo
@@ -257,13 +257,32 @@ function ShowOverallDatasetStatistics {
         return $false
     }).Count
     
+    # Count repos with valid mirrors but no lastSynced timestamp or unparseable timestamp
+    $reposNeverSynced = ($existingForks | Where-Object { 
+        if ($_.mirrorFound -eq $true) {
+            if ([string]::IsNullOrEmpty($_.lastSynced)) {
+                return $true
+            }
+            # Also count repos where lastSynced exists but cannot be parsed
+            try {
+                [DateTime]::Parse($_.lastSynced) | Out-Null
+                return $false
+            } catch {
+                return $true
+            }
+        }
+        return $false
+    }).Count
+    
     # Calculate percentages
     if ($reposWithMirrors -gt 0) {
         $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
         $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
+        $percentNeverSynced = [math]::Round(($reposNeverSynced / $reposWithMirrors) * 100, 2)
     } else {
         $percentChecked = 0
         $percentRemaining = 0
+        $percentNeverSynced = 0
     }
     
     $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
@@ -276,6 +295,7 @@ function ShowOverallDatasetStatistics {
     Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
     Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
     Write-Message -message "| ⏳ Repos Not Checked Yet | $reposNotChecked | ${percentRemaining}% |" -logToSummary $true
+    Write-Message -message "| 🆕 Repos Never Checked | $reposNeverSynced | ${percentNeverSynced}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
 

@@ -104,3 +104,6 @@ Test files should:
 - Do not suggest changes to `status.json` or similar data files
 - Do not increase memory usage when working with data operations
 - Do not remove existing error handling or rate limiting code
+- **Do not modify existing code unnecessarily** - only touch lines that are directly related to the feature or fix being implemented
+- **Do not fix formatting, whitespace, or style issues** in existing code unless they are directly related to the changes being made
+- **Make minimal, surgical changes** - the goal is to make the smallest possible change that solves the problem

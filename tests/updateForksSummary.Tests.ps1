@@ -91,7 +91,7 @@ BeforeAll {
         $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
         
         $reposSyncedLast7Days = ($existingForks | Where-Object { 
-            if ($_.lastSynced) {
+            if ($_.mirrorFound -eq $true -and $_.lastSynced) {
                 try {
                     $syncDate = [DateTime]::Parse($_.lastSynced)
                     return $syncDate -gt $sevenDaysAgo
@@ -103,12 +103,31 @@ BeforeAll {
             return $false
         }).Count
         
+        # Count repos with valid mirrors but no lastSynced timestamp or unparseable timestamp
+        $reposNeverSynced = ($existingForks | Where-Object { 
+            if ($_.mirrorFound -eq $true) {
+                if ([string]::IsNullOrEmpty($_.lastSynced)) {
+                    return $true
+                }
+                # Also count repos where lastSynced exists but cannot be parsed
+                try {
+                    [DateTime]::Parse($_.lastSynced) | Out-Null
+                    return $false
+                } catch {
+                    return $true
+                }
+            }
+            return $false
+        }).Count
+        
         if ($reposWithMirrors -gt 0) {
             $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
             $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
+            $percentNeverSynced = [math]::Round(($reposNeverSynced / $reposWithMirrors) * 100, 2)
         } else {
             $percentChecked = 0
             $percentRemaining = 0
+            $percentNeverSynced = 0
         }
         
         $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
@@ -121,6 +140,7 @@ BeforeAll {
         Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
         Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
         Write-Message -message "| ⏳ Repos Not Checked Yet | $reposNotChecked | ${percentRemaining}% |" -logToSummary $true
+        Write-Message -message "| 🆕 Repos Never Checked | $reposNeverSynced | ${percentNeverSynced}% |" -logToSummary $true
         Write-Message -message "" -logToSummary $true
     }
 }
@@ -181,6 +201,26 @@ Describe "Update Forks Summary Functions" {
             # Should not throw even with malformed dates
             { ShowOverallDatasetStatistics -existingForks $testData } | Should -Not -Throw
         }
+
+        It "Should count repos never synced separately" {
+            $recentDate = (Get-Date).AddDays(-3).ToString("yyyy-MM-ddTHH:mm:ssZ")
+            $oldDate = (Get-Date).AddDays(-10).ToString("yyyy-MM-ddTHH:mm:ssZ")
+            
+            $testData = @(
+                @{ name = "repo1"; mirrorFound = $true; lastSynced = $recentDate }  # Recently checked
+                @{ name = "repo2"; mirrorFound = $true; lastSynced = $oldDate }      # Checked >7 days ago
+                @{ name = "repo3"; mirrorFound = $true; lastSynced = $null }         # Never checked (null)
+                @{ name = "repo4"; mirrorFound = $true; lastSynced = "" }            # Never checked (empty)
+                @{ name = "repo5"; mirrorFound = $true }                             # Never checked (no property)
+                @{ name = "repo6"; mirrorFound = $false }                            # No mirror
+            )
+            
+            # Capture output to validate it includes the new line
+            $output = (ShowOverallDatasetStatistics -existingForks $testData) | Out-String
+            
+            # Should not throw
+            { ShowOverallDatasetStatistics -existingForks $testData } | Should -Not -Throw
+        }
     }
 
     Context "UpdateForkedRepos function" {
@@ -234,11 +274,17 @@ Describe "Update Forks Summary Functions" {
             $functionContent = (Get-Command ShowOverallDatasetStatistics).ScriptBlock.ToString()
             $functionContent | Should -Match 'percentChecked'
             $functionContent | Should -Match 'percentRemaining'
+            $functionContent | Should -Match 'percentNeverSynced'
         }
 
         It "Should count repos with valid mirrors" {
             $functionContent = (Get-Command ShowOverallDatasetStatistics).ScriptBlock.ToString()
             $functionContent | Should -Match 'mirrorFound -eq \$true'
+        }
+
+        It "Should count repos never synced" {
+            $functionContent = (Get-Command ShowOverallDatasetStatistics).ScriptBlock.ToString()
+            $functionContent | Should -Match 'reposNeverSynced'
         }
     }
 }
