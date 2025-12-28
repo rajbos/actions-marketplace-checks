@@ -65,25 +65,70 @@ Write-Message -message "## Delta Analysis" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Get action names from marketplace data
+# Normalize to forked repo name format (owner_repo) for consistent comparison
 $marketplaceActionNames = @{}
 foreach ($action in $actions) {
-    if ($action.name) {
-        $marketplaceActionNames[$action.name] = $true
+    $normalizedName = $null
+    
+    # Try forkedRepoName first (already in owner_repo format)
+    if ($action.forkedRepoName -and $action.forkedRepoName -ne "") {
+        $normalizedName = $action.forkedRepoName.ToLower()
+    }
+    # Try name field (might be in owner/repo or owner_repo format)
+    elseif ($action.name -and $action.name -ne "") {
+        # Convert owner/repo to owner_repo if needed
+        if ($action.name -match '/') {
+            $normalizedName = $action.name.Replace('/', '_').ToLower()
+        }
+        else {
+            $normalizedName = $action.name.ToLower()
+        }
+    }
+    # Fallback: derive from repoUrl
+    elseif ($action.repoUrl -and $action.repoUrl -ne "") {
+        ($owner, $repo) = SplitUrl -url $action.repoUrl
+        if ($owner -and $repo) {
+            $normalizedName = "${owner}_${repo}".ToLower()
+        }
+    }
+    
+    if ($normalizedName) {
+        $marketplaceActionNames[$normalizedName] = $true
     }
 }
 
-# Get action names from status
+# Get action names from status (already in owner_repo format)
 $trackedActionNames = @{}
 foreach ($fork in $existingForks) {
     if ($fork.name) {
-        $trackedActionNames[$fork.name] = $true
+        $trackedActionNames[$fork.name.ToLower()] = $true
     }
 }
 
 # Find actions in marketplace but not tracked
 $actionsNotTracked = @()
 foreach ($action in $actions) {
-    if ($action.name -and -not $trackedActionNames.ContainsKey($action.name)) {
+    $normalizedName = $null
+    
+    if ($action.forkedRepoName -and $action.forkedRepoName -ne "") {
+        $normalizedName = $action.forkedRepoName.ToLower()
+    }
+    elseif ($action.name -and $action.name -ne "") {
+        if ($action.name -match '/') {
+            $normalizedName = $action.name.Replace('/', '_').ToLower()
+        }
+        else {
+            $normalizedName = $action.name.ToLower()
+        }
+    }
+    elseif ($action.repoUrl -and $action.repoUrl -ne "") {
+        ($owner, $repo) = SplitUrl -url $action.repoUrl
+        if ($owner -and $repo) {
+            $normalizedName = "${owner}_${repo}".ToLower()
+        }
+    }
+    
+    if ($normalizedName -and -not $trackedActionNames.ContainsKey($normalizedName)) {
         $actionsNotTracked += $action
     }
 }
@@ -91,8 +136,11 @@ foreach ($action in $actions) {
 # Find actions tracked but not in marketplace anymore
 $actionsNoLongerInMarketplace = @()
 foreach ($fork in $existingForks) {
-    if ($fork.name -and -not $marketplaceActionNames.ContainsKey($fork.name)) {
-        $actionsNoLongerInMarketplace += $fork
+    if ($fork.name) {
+        $normalizedName = $fork.name.ToLower()
+        if (-not $marketplaceActionNames.ContainsKey($normalizedName)) {
+            $actionsNoLongerInMarketplace += $fork
+        }
     }
 }
 
