@@ -3175,10 +3175,18 @@ function ShowOverallDatasetStatistics {
     $totalRepos = $existingForks.Count
     
     # Count repos with mirrorFound = true (valid mirrors)
-    $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
+    # Wrap in @() to ensure it's always an array (PowerShell returns single items as scalars)
+    $reposWithMirrors = @($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
     
-    # Count repos synced in the last 7 days
-    $reposSyncedLast7Days = ($existingForks | Where-Object { 
+    # Count repos without mirrors
+    $reposWithoutMirrors = $totalRepos - $reposWithMirrors
+    
+    # Count repos synced in the last 7 days (only from repos with mirrors)
+    # Wrap in @() to ensure it's always an array
+    $reposSyncedLast7Days = @($existingForks | Where-Object { 
+        if ($_.mirrorFound -ne $true) {
+            return $false
+        }
         if ($_.lastSynced) {
             try {
                 $syncDate = [DateTime]::Parse($_.lastSynced)
@@ -3191,7 +3199,7 @@ function ShowOverallDatasetStatistics {
         return $false
     }).Count
     
-    # Calculate percentages
+    # Calculate percentages for repos with mirrors
     if ($reposWithMirrors -gt 0) {
         $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
         $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
@@ -3200,12 +3208,25 @@ function ShowOverallDatasetStatistics {
         $percentRemaining = 0
     }
     
+    # Calculate percentages of total dataset
+    $percentWithMirrors = [math]::Round(($reposWithMirrors / $totalRepos) * 100, 2)
+    $percentWithoutMirrors = [math]::Round(($reposWithoutMirrors / $totalRepos) * 100, 2)
+    
     $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
     
-    Write-Message -message "**Total Repositories in Dataset:** $totalRepos" -logToSummary $true
-    Write-Message -message "**Repositories with Valid Mirrors:** $reposWithMirrors" -logToSummary $true
+    # Display overall repository breakdown
+    Write-Message -message "#### Repository Status Breakdown" -logToSummary $true
+    Write-Message -message "| Category | Count | Percentage |" -logToSummary $true
+    Write-Message -message "|----------|------:|-----------:|" -logToSummary $true
+    Write-Message -message "| **Total Repositories in Dataset** | **$totalRepos** | **100%** |" -logToSummary $true
+    Write-Message -message "| └─ Repositories with Valid Mirrors | $reposWithMirrors | ${percentWithMirrors}% |" -logToSummary $true
+    Write-Message -message "| └─ Repositories without Mirrors | $reposWithoutMirrors | ${percentWithoutMirrors}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "#### Last 7 Days Activity" -logToSummary $true
+    Write-Message -message "_Note: Repositories without mirrors cannot be synced. This may be because the upstream repository no longer exists, the mirror was never created, or the mirror was deleted._" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "#### Last 7 Days Sync Activity (Valid Mirrors Only)" -logToSummary $true
+    Write-Message -message "_The following statistics are for the **$reposWithMirrors repositories with valid mirrors** only:_" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
     Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
     Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
