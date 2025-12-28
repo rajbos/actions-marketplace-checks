@@ -7,6 +7,10 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+# Constants
+$MaxDisplayReposToCleanup = 15  # Maximum number of repos to display in "to cleanup" list
+$MaxDisplayReposCleaned = 10    # Maximum number of repos to display in "cleaned" and "invalid" lists
+
 function Test-RepoExists {
     Param (
         $repoOwner,
@@ -382,16 +386,17 @@ if ($categories.invalidEntries -gt 0) {
 }
 Write-Message -message "" -logToSummary $true
 
-# Show first 10 invalid entries if any
+# Show first N invalid entries if any
 if ($invalidEntries.Count -gt 0) {
+    $displayInvalidCount = [Math]::Min($MaxDisplayReposCleaned, $invalidEntries.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Invalid Entries Removed (showing first 10 of $($invalidEntries.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Invalid Entries Removed (showing first $displayInvalidCount of $($invalidEntries.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Name | Owner | Reason | Link |" -logToSummary $true
     Write-Message -message "|---:|------|-------|--------|------|" -logToSummary $true
     $index = 1
-    foreach ($entry in ($invalidEntries | Select-Object -First 10)) {
+    foreach ($entry in ($invalidEntries | Select-Object -First $MaxDisplayReposCleaned)) {
         $name = if ([string]::IsNullOrEmpty($entry.name)) { "(empty)" } else { $entry.name }
         $owner = if ([string]::IsNullOrEmpty($entry.owner)) { "(empty)" } else { $entry.owner }
         $reason = ""
@@ -424,14 +429,15 @@ if ($invalidEntries.Count -gt 0) {
 }
 
 if ($reposToCleanup.Count -gt 0) {
+    $displayToCleanupCount = [Math]::Min($MaxDisplayReposToCleanup, $reposToCleanup.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos to Clean Up (showing first 15 of $($reposToCleanup.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos to Clean Up (showing first $displayToCleanupCount of $($reposToCleanup.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
     $index = 1
-    foreach ($repo in ($reposToCleanup | Select-Object -First 15)) {
+    foreach ($repo in ($reposToCleanup | Select-Object -First $MaxDisplayReposToCleanup)) {
         $repoLink = "https://github.com/$owner/$($repo.name)"
         $repoCell = "[$($repo.name)]($repoLink)"
         $upstreamCell = "n/a"
@@ -468,15 +474,15 @@ else {
 
 # Add cleaned repos summary
 if ($cleanedRepos.Count -gt 0) {
-    $displayCount = [Math]::Min(10, $cleanedRepos.Count)
+    $displayCleanedCount = [Math]::Min($MaxDisplayReposCleaned, $cleanedRepos.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos Cleaned Up (showing first $displayCount of $($cleanedRepos.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos Cleaned Up (showing first $displayCleanedCount of $($cleanedRepos.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
     $index = 1
-    foreach ($repo in ($cleanedRepos | Select-Object -First 10)) {
+    foreach ($repo in ($cleanedRepos | Select-Object -First $MaxDisplayReposCleaned)) {
         $repoLink = "https://github.com/$owner/$($repo.name)"
         $repoCell = "[$($repo.name)]($repoLink)"
         $upstreamCell = "n/a"

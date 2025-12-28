@@ -3,12 +3,16 @@ Import-Module Pester
 BeforeAll {
     # Test to verify the display count logic
     
+    # Match the constant from the production code
+    $MaxDisplayReposCleaned = 10
+    
     function Test-DisplayCountLogic {
         Param (
-            $actualCount
+            $actualCount,
+            $maxDisplay = $MaxDisplayReposCleaned
         )
         
-        $displayCount = [Math]::Min(10, $actualCount)
+        $displayCount = [Math]::Min($maxDisplay, $actualCount)
         return $displayCount
     }
 }
