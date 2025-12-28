@@ -154,8 +154,8 @@ Describe "Skipped Repos Preservation - Bug Fix" {
         $result.skippedUpstreamAvailable | Should -Be 1
         $result.skippedMirrorExists | Should -Be 0
         
-        # Assert - validCombined should have 3 repos (0 valid that aren't cleanup + 1 skipped + 2 to cleanup)
-        # NOT 2 repos (which would be the bug)
+        # Assert - validCombined should have 3 repos (1 skipped + 2 to cleanup)
+        # Without the fix, we'd only have 2 repos (skipped repo would be lost)
         $result.validCombined.Count | Should -Be 3
         
         # Verify the skipped repo is in validCombined
@@ -261,8 +261,8 @@ Describe "Skipped Repos Preservation - Bug Fix" {
         $totalSkipped = $result.skippedUpstreamAvailable + $result.skippedMirrorExists
         $totalSkipped | Should -Be 3
         
-        # validCombined should have 5 repos (0 valid + 3 skipped + 2 to cleanup)
-        # If the bug existed, we'd lose the 3 skipped repos
+        # validCombined should have 5 repos (3 skipped + 2 to cleanup)
+        # Without the fix, we'd only have 2 repos (the 3 skipped repos would be lost)
         $result.validCombined.Count | Should -Be 5
         
         # Verify all skipped repos are present with their full properties
