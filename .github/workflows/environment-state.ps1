@@ -278,7 +278,6 @@ if ($access_token_destination -ne "") {
     
     # Get rate limit info but don't log to summary to save space
     $url = "rate_limit"
-    . "$PSScriptRoot/library.ps1"
     $response = ApiCall -method GET -url $url -access_token $access_token_destination
     
     if ($null -ne $response) {
@@ -291,7 +290,7 @@ if ($access_token_destination -ne "") {
             $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
         } else {
             $hours = [math]::Floor($timeUntilReset.TotalHours)
-            $minutes = [math]::Floor($timeUntilReset.Minutes)
+            $minutes = [math]::Floor($timeUntilReset.TotalMinutes % 60)
             if ($minutes -eq 0) {
                 $resetDisplay = "$hours hours"
             } else {
