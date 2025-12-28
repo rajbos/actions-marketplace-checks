@@ -68,7 +68,7 @@ function Format-RepoInfoSummaryTable {
         $started = $metrics[$key].Started
         $ended = $metrics[$key].Ended
         $delta = $ended - $started
-        $deltaStr = if ($delta -ge 0) { "+$delta" } else { "$delta" }
+        $deltaStr = if ($delta -ge 0) { "+$delta" } else { $delta }
         $table += "| $key | $started | $ended | $deltaStr |`n"
     }
     
