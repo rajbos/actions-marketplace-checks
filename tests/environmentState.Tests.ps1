@@ -28,6 +28,8 @@ BeforeAll {
             tags = @("v1.0.0")
             releases = @("v1.0.0")
             repoInfo = @{ size = 100 }
+            repoUrl = "https://github.com/original/action1"
+            forkedRepoUrl = "https://github.com/actions-marketplace-validations/action1"
         },
         @{ 
             name = "action2"
@@ -38,6 +40,8 @@ BeforeAll {
             tags = @()
             releases = @()
             repoInfo = @{ size = 200 }
+            repoUrl = "https://github.com/original/action2"
+            forkedRepoUrl = "https://github.com/actions-marketplace-validations/action2"
         },
         @{ 
             name = "action3"
@@ -48,6 +52,7 @@ BeforeAll {
             tags = $null
             releases = $null
             repoInfo = $null
+            repoUrl = "https://github.com/original/action3"
         },
         @{ 
             name = "action5"
@@ -58,6 +63,20 @@ BeforeAll {
             tags = @("v2.0.0")
             releases = @("v2.0.0")
             repoInfo = @{ size = 150 }
+            repoUrl = "https://github.com/original/action5"
+            forkedRepoUrl = "https://github.com/actions-marketplace-validations/action5"
+        },
+        @{ 
+            name = "action6"
+            mirrorFound = $true
+            forkFound = $true
+            lastSynced = $null
+            actionType = "Node"
+            tags = @()
+            releases = @()
+            repoInfo = @{ size = 50 }
+            repoUrl = "https://github.com/original/action6"
+            forkedRepoUrl = "https://github.com/actions-marketplace-validations/action6"
         }
     )
 }
@@ -119,7 +138,8 @@ Describe "Environment State - Delta Analysis" {
         }
         
         # Act & Assert
-        $actionsNoLongerInMarketplace.Count | Should -Be 1
+        # action5 and action6 are tracked but not in marketplace
+        $actionsNoLongerInMarketplace.Count | Should -Be 2
         $actionsNoLongerInMarketplace[0].name | Should -Be "action5"
     }
 }
@@ -133,7 +153,8 @@ Describe "Environment State - Mirror Status" {
         $reposWithMirrors = ($trackedForks | Where-Object { $_.mirrorFound -eq $true }).Count
         
         # Assert
-        $reposWithMirrors | Should -Be 3
+        # action1, action2, action5, and action6 have mirrors
+        $reposWithMirrors | Should -Be 4
     }
     
     It "Should correctly count repos without mirrors" {
@@ -155,7 +176,8 @@ Describe "Environment State - Mirror Status" {
         $reposWithForks = ($trackedForks | Where-Object { $_.forkFound -eq $true }).Count
         
         # Assert
-        $reposWithForks | Should -Be 4
+        # All 5 test repos have forks
+        $reposWithForks | Should -Be 5
     }
 }
 
@@ -186,12 +208,14 @@ Describe "Environment State - Sync Activity" {
         # Arrange
         $trackedForks = $script:sampleForks
         
-        # Act
+        # Act - Only count repos WITH mirrors that have never been synced
         $reposNeverSynced = @($trackedForks | Where-Object { 
-            $null -eq $_.lastSynced -or $_.lastSynced -eq ""
+            $_.mirrorFound -eq $true -and ($null -eq $_.lastSynced -or $_.lastSynced -eq "")
         }).Count
         
         # Assert
+        # From sample data: action3 has mirrorFound=false with no lastSynced (not counted)
+        # action6 has mirrorFound=true with no lastSynced (counted)
         $reposNeverSynced | Should -Be 1
     }
     
@@ -217,7 +241,8 @@ Describe "Environment State - Sync Activity" {
         $reposNeedingUpdate = $reposWithMirrors - $reposSyncedLast7Days
         
         # Assert
-        $reposNeedingUpdate | Should -Be 1
+        # 4 repos with mirrors - 2 synced in last 7 days = 2 needing update
+        $reposNeedingUpdate | Should -Be 2
     }
 }
 
@@ -258,7 +283,8 @@ Describe "Environment State - Repo Info Status" {
         }).Count
         
         # Assert
-        $reposWithRepoInfo | Should -Be 3
+        # action1, action2, action5, and action6 have repoInfo
+        $reposWithRepoInfo | Should -Be 4
     }
     
     It "Should correctly count repos with valid action type" {
@@ -271,7 +297,8 @@ Describe "Environment State - Repo Info Status" {
         }).Count
         
         # Assert
-        $reposWithActionType | Should -Be 3
+        # action1 (Node), action2 (Docker), action5 (Composite), action6 (Node) have valid types
+        $reposWithActionType | Should -Be 4
     }
 }
 
@@ -292,7 +319,8 @@ Describe "Environment State - Action Type Breakdown" {
         }
         
         # Assert
-        $actionTypeCount["Node"] | Should -Be 1
+        # action1 and action6 are Node
+        $actionTypeCount["Node"] | Should -Be 2
         $actionTypeCount["Docker"] | Should -Be 1
         $actionTypeCount["Composite"] | Should -Be 1
         $actionTypeCount["No file found"] | Should -Be 1
@@ -314,7 +342,8 @@ Describe "Environment State - Health Metrics" {
         }
         
         # Assert
-        $coveragePercentage | Should -Be 100.00
+        # 5 tracked / 4 in marketplace = 125%
+        $coveragePercentage | Should -Be 125.00
     }
     
     It "Should correctly calculate freshness percentage" {
@@ -343,7 +372,8 @@ Describe "Environment State - Health Metrics" {
         }
         
         # Assert
-        $freshnessPercentage | Should -Be 66.67
+        # 2 synced in last 7 days / 4 with mirrors = 50%
+        $freshnessPercentage | Should -Be 50.00
     }
     
     It "Should correctly calculate completion percentage" {
@@ -363,6 +393,7 @@ Describe "Environment State - Health Metrics" {
         }
         
         # Assert
-        $completionPercentage | Should -Be 75.00
+        # 4 with valid action type / 5 total = 80%
+        $completionPercentage | Should -Be 80.00
     }
 }

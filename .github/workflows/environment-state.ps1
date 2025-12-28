@@ -213,14 +213,15 @@ $reposSyncedLast30Days = ($existingForks | Where-Object {
     return $false
 }).Count
 
+# Only count repos WITH mirrors that have never been synced
 $reposNeverSynced = ($existingForks | Where-Object {
-    -not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq ""
+    $_.mirrorFound -eq $true -and (-not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq "")
 }).Count
 
 # Calculate percentages based on repos with mirrors
 $percentLast7Days = if ($reposWithMirrors -gt 0) { [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2) } else { 0 }
 $percentLast30Days = if ($reposWithMirrors -gt 0) { [math]::Round(($reposSyncedLast30Days / $reposWithMirrors) * 100, 2) } else { 0 }
-$percentNeverSynced = if ($totalTrackedActions -gt 0) { [math]::Round(($reposNeverSynced / $totalTrackedActions) * 100, 2) } else { 0 }
+$percentNeverSynced = if ($reposWithMirrors -gt 0) { [math]::Round(($reposNeverSynced / $reposWithMirrors) * 100, 2) } else { 0 }
 
 Write-Message -message "| Time Window | Count | % of Mirrors |" -logToSummary $true
 Write-Message -message "|-------------|------:|-------------:|" -logToSummary $true
@@ -228,6 +229,40 @@ Write-Message -message "| 🟢 Synced in Last 7 Days | $reposSyncedLast7Days | $
 Write-Message -message "| 🟡 Synced in Last 30 Days | $reposSyncedLast30Days | ${percentLast30Days}% |" -logToSummary $true
 Write-Message -message "| ⚪ Never Synced | $reposNeverSynced | ${percentNeverSynced}% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
+
+# Show sample of never-synced repos with clickable links
+if ($reposNeverSynced -gt 0) {
+    Write-Message -message "### Sample Never-Synced Repos" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "Sample of repos with mirrors that have never been synced (up to 10):" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    # Get repos that have mirrors but no lastSynced date
+    $neverSyncedRepos = $existingForks | Where-Object {
+        $_.mirrorFound -eq $true -and (-not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq "")
+    } | Select-Object -First 10
+    
+    Write-Message -message "| Repo Name | Upstream | Mirror |" -logToSummary $true
+    Write-Message -message "|-----------|----------|--------|" -logToSummary $true
+    
+    foreach ($repo in $neverSyncedRepos) {
+        $repoName = $repo.name
+        $upstreamUrl = if ($repo.repoUrl) { 
+            "[$($repo.repoUrl)]($($repo.repoUrl))" 
+        } else { 
+            "N/A" 
+        }
+        $mirrorUrl = if ($repo.forkedRepoUrl) { 
+            "[$($repo.forkedRepoUrl)]($($repo.forkedRepoUrl))" 
+        } else { 
+            "https://github.com/actions-marketplace-validations/$repoName" 
+        }
+        
+        Write-Message -message "| $repoName | $upstreamUrl | [$mirrorUrl]($mirrorUrl) |" -logToSummary $true
+    }
+    
+    Write-Message -message "" -logToSummary $true
+}
 
 # Repos that need updates (have mirrors but not synced in last 7 days)
 $reposNeedingUpdate = $reposWithMirrors - $reposSyncedLast7Days
