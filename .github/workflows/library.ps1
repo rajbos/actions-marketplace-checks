@@ -2563,7 +2563,8 @@ function Select-ForksToProcess {
     $filteredCoolOff = 0
     
     # First pass: count each filter reason and collect eligible forks
-    $eligibleForks = @()
+    # Use ArrayList for better performance with large datasets
+    $eligibleForks = [System.Collections.ArrayList]::new()
     foreach ($fork in $existingForks) {
         # Must have a mirror
         if ($fork.mirrorFound -ne $true) {
@@ -2593,7 +2594,7 @@ function Select-ForksToProcess {
         }
         
         # This fork passed all filters
-        $eligibleForks += $fork
+        [void]$eligibleForks.Add($fork)
     }
     
     # Display filtering statistics
@@ -2678,9 +2679,6 @@ function Select-ForksToProcess {
         return $priorityScore
     } -Descending
     
-    # Select the top N repos (highest priority scores)
-    # Note: We can only select from eligible forks, so if there are fewer eligible than requested,
-    # we'll select all eligible forks
     $actualSelectCount = [Math]::Min($numberOfRepos, $sortedForks.Count)
     $selectedForks = $sortedForks | Select-Object -First $actualSelectCount
     
