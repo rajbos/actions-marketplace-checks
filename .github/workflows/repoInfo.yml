@@ -209,13 +209,18 @@ jobs:
               $mergeCount = 0
               foreach ($updatedFork in $updatedStatus) {
                   if ($statusByName.ContainsKey($updatedFork.name)) {
-                      # Update existing entry
+                      # Update existing entry - copy all properties from updated fork
                       $existing = $statusByName[$updatedFork.name]
-                      $updatedFork.PSObject.Properties | ForEach-Object {
-                          $propName = $_.Name
-                          $propValue = $_.Value
-                          if (Get-Member -InputObject $existing -Name $propName -MemberType Properties) {
-                              $existing.$propName = $propValue
+                      
+                      # Use PSObject.Properties for efficient property access
+                      foreach ($prop in $updatedFork.PSObject.Properties) {
+                          $propName = $prop.Name
+                          $propValue = $prop.Value
+                          
+                          # Check if property exists using PSObject.Properties
+                          $existingProp = $existing.PSObject.Properties[$propName]
+                          if ($existingProp) {
+                              $existingProp.Value = $propValue
                           } else {
                               $existing | Add-Member -Name $propName -Value $propValue -MemberType NoteProperty -Force
                           }
@@ -238,7 +243,7 @@ jobs:
               Write-Message -message "No updated status.json found from processing job" -logToSummary $true
           }
 
-          # Merge failedForks if present
+          # Update failedForks if present
           $updatedFailedForksFile = "updated-data/failedForks.json"
           if (Test-Path $updatedFailedForksFile) {
               try {
@@ -246,19 +251,7 @@ jobs:
                   $updatedFailedContent = $updatedFailedContent -replace '^\uFEFF', ''
                   $updatedFailedForks = $updatedFailedContent | ConvertFrom-Json
                   
-                  # Load current failedForks
-                  $currentFailedForks = @()
-                  if (Test-Path "failedForks.json") {
-                      try {
-                          $currentFailedContent = Get-Content "failedForks.json" -Raw
-                          $currentFailedContent = $currentFailedContent -replace '^\uFEFF', ''
-                          $currentFailedForks = $currentFailedContent | ConvertFrom-Json
-                      } catch {
-                          Write-Warning "Failed to parse current failedForks.json: $($_.Exception.Message)"
-                      }
-                  }
-                  
-                  # Simple merge - just use the updated one as it's a complete replacement
+                  # Use the updated failedForks - it's based on the complete status processed by repoInfo.ps1
                   Write-Message -message "Using updated failedForks.json with [$($updatedFailedForks.Count)] entries" -logToSummary $true
                   SaveStatus -failedForks $updatedFailedForks
               } catch {
