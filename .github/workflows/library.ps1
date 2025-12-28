@@ -3158,9 +3158,21 @@ function ShowOverallDatasetStatistics {
         return $false
     }).Count
     
-    # Count repos with valid mirrors but no lastSynced timestamp
+    # Count repos with valid mirrors but no lastSynced timestamp or unparseable timestamp
     $reposNeverSynced = ($existingForks | Where-Object { 
-        $_.mirrorFound -eq $true -and [string]::IsNullOrEmpty($_.lastSynced)
+        if ($_.mirrorFound -eq $true) {
+            if ([string]::IsNullOrEmpty($_.lastSynced)) {
+                return $true
+            }
+            # Also count repos where lastSynced exists but cannot be parsed
+            try {
+                [DateTime]::Parse($_.lastSynced) | Out-Null
+                return $false
+            } catch {
+                return $true
+            }
+        }
+        return $false
     }).Count
     
     # Calculate percentages
