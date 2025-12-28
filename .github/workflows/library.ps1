@@ -2562,36 +2562,38 @@ function Select-ForksToProcess {
     $filteredUpstreamUnavailable = 0
     $filteredCoolOff = 0
     
-    # Filter forks that are eligible for processing
-    $eligibleForks = $existingForks | Where-Object {
+    # First pass: count each filter reason and collect eligible forks
+    $eligibleForks = @()
+    foreach ($fork in $existingForks) {
         # Must have a mirror
-        if ($_.mirrorFound -ne $true) {
+        if ($fork.mirrorFound -ne $true) {
             $filteredNoMirror++
-            return $false
+            continue
         }
         
         # Skip if upstream is marked as unavailable
-        if ($_.upstreamAvailable -eq $false) {
+        if ($fork.upstreamAvailable -eq $false) {
             $filteredUpstreamUnavailable++
-            return $false
+            continue
         }
         
         # Check cool-off period for failed syncs
-        if ($_.lastSyncError -and $_.lastSyncAttempt) {
+        if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttempt = [DateTime]::Parse($_.lastSyncAttempt)
+                $lastAttempt = [DateTime]::Parse($fork.lastSyncAttempt)
                 if ($lastAttempt -gt $coolOffThreshold) {
                     # Still in cool-off period
                     $filteredCoolOff++
-                    return $false
+                    continue
                 }
             } catch {
                 # If we can't parse the date, include it to be safe (safer to retry than skip)
-                Write-Debug "Failed to parse lastSyncAttempt for [$($_.name)]: $($_.lastSyncAttempt)"
+                Write-Debug "Failed to parse lastSyncAttempt for [$($fork.name)]: $($fork.lastSyncAttempt)"
             }
         }
         
-        return $true
+        # This fork passed all filters
+        $eligibleForks += $fork
     }
     
     # Display filtering statistics
