@@ -257,13 +257,20 @@ function ShowOverallDatasetStatistics {
         return $false
     }).Count
     
+    # Count repos with valid mirrors but no lastSynced timestamp
+    $reposNeverSynced = ($existingForks | Where-Object { 
+        $_.mirrorFound -eq $true -and [string]::IsNullOrEmpty($_.lastSynced)
+    }).Count
+    
     # Calculate percentages
     if ($reposWithMirrors -gt 0) {
         $percentChecked = [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
         $percentRemaining = [math]::Round((($reposWithMirrors - $reposSyncedLast7Days) / $reposWithMirrors) * 100, 2)
+        $percentNeverSynced = [math]::Round(($reposNeverSynced / $reposWithMirrors) * 100, 2)
     } else {
         $percentChecked = 0
         $percentRemaining = 0
+        $percentNeverSynced = 0
     }
     
     $reposNotChecked = $reposWithMirrors - $reposSyncedLast7Days
@@ -276,6 +283,7 @@ function ShowOverallDatasetStatistics {
     Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
     Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
     Write-Message -message "| ⏳ Repos Not Checked Yet | $reposNotChecked | ${percentRemaining}% |" -logToSummary $true
+    Write-Message -message "| 🆕 Repos Never Checked | $reposNeverSynced | ${percentNeverSynced}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
 
