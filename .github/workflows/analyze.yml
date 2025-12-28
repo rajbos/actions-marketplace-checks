@@ -636,7 +636,7 @@ jobs:
           Write-Message -message "### Final Rate Limit Check" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
-          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}" -waitForRateLimit $false
 
       - name: Upload status.json to blob storage
         if: always()

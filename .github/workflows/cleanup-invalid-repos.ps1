@@ -540,7 +540,7 @@ Write-Message -message "" -logToSummary $true
 
 if ($access_token) {
     try {
-        GetRateLimitInfo -access_token $access_token
+        GetRateLimitInfo -access_token $access_token -waitForRateLimit $false
     }
     catch {
         Write-Host "Warning: Could not get rate limit info: $($_.Exception.Message)"
