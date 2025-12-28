@@ -245,7 +245,7 @@ foreach ($fork in $existingForks) {
 
 Write-Message -message "| Action Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
-# Show only top 10 action types to keep summary size manageable
+# Show only top 10 action types to keep summary size manageable (was causing 1983KB summary with thousands of types)
 $topTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] } | Select-Object -First 10
 foreach ($type in $topTypes) {
     $count = $actionTypeCount[$type]
