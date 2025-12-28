@@ -2563,8 +2563,8 @@ function Select-ForksToProcess {
     $filteredCoolOff = 0
     
     # First pass: count each filter reason and collect eligible forks
-    # Use ArrayList for better performance with large datasets
-    $eligibleForks = [System.Collections.ArrayList]::new()
+    # Use generic List for better performance and type safety with large datasets
+    $eligibleForks = [System.Collections.Generic.List[PSObject]]::new()
     foreach ($fork in $existingForks) {
         # Must have a mirror
         if ($fork.mirrorFound -ne $true) {
