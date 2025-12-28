@@ -1,0 +1,95 @@
+# Document the current state of the environment
+# Shows delta between marketplace and tracked actions, sync status, and health metrics
+
+name: Environment State Documentation
+
+on:
+  push:
+    branches:
+    paths:
+      - .github/workflows/environment-state.yml
+      - .github/workflows/environment-state.ps1
+      - .github/workflows/library.ps1
+
+  schedule:
+    # Run daily at 10:00 AM UTC
+    - cron: '0 10 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  document-environment:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download actions.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-ActionsJsonFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN -localFilePath "actions.json"
+          if (-not $result) {
+            Write-Error "Failed to download actions.json from blob storage"
+            exit 1
+          }
+          
+          Write-Host "Actions.json downloaded successfully"
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+          
+          Write-Host "Status.json downloaded successfully"
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations
+
+      - name: Generate Environment State Documentation
+        shell: pwsh
+        run: |
+          # Clean BOM if present before parsing JSON
+          $actionsContent = Get-Content actions.json -Raw
+          $actionsContent = $actionsContent -replace '^\uFEFF', ''
+          try {
+              $actions = $actionsContent | ConvertFrom-Json
+          } catch {
+              Write-Host "ERROR: Failed to parse actions.json: $($_.Exception.Message)"
+              Write-Host "First 10 lines of actions.json:"
+              Get-Content actions.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+              exit 1
+          }
+          
+          $statusContent = Get-Content status.json -Raw
+          $statusContent = $statusContent -replace '^\uFEFF', ''
+          try {
+              $existingForks = $statusContent | ConvertFrom-Json
+          } catch {
+              Write-Host "ERROR: Failed to parse status.json: $($_.Exception.Message)"
+              Write-Host "First 10 lines of status.json:"
+              Get-Content status.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+              exit 1
+          }
+          
+          Write-Host "Found [$($actions.Length)] actions in marketplace data"
+          Write-Host "Found [$($existingForks.Length)] tracked actions in status file"
+          Write-Host ""
+          
+          $token = "${{ steps.get_workflow_token.outputs.token }}"
+          ./.github/workflows/environment-state.ps1 -actions $actions -existingForks $existingForks -access_token_destination $token
