@@ -55,6 +55,26 @@ function ReportErrorDetails {
     }
 }
 
+# Helper function to format repository information summary as a table
+function Format-RepoInfoSummaryTable {
+    Param (
+        [hashtable] $metrics
+    )
+    
+    $table = "| Metric | Started | Ended | Delta |`n"
+    $table += "| --- | --- | --- | --- |`n"
+    
+    foreach ($key in $metrics.Keys | Sort-Object) {
+        $started = $metrics[$key].Started
+        $ended = $metrics[$key].Ended
+        $delta = $ended - $started
+        $deltaStr = if ($delta -ge 0) { "+$delta" } else { "$delta" }
+        $table += "| $key | $started | $ended | $deltaStr |`n"
+    }
+    
+    return $table
+}
+
 
 function GetRepoInfo {
     Param (
@@ -669,9 +689,13 @@ function GetMoreInfo {
     # get repo information
     $i = $existingForks.Length
     $max = $existingForks.Length + ($numberOfReposToDo * 1)
-    $hasRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo})
-    Write-Host "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded"
-    "Loading repository information, starting with [$($hasRepoInfo.Length)] already loaded" >> $env:GITHUB_STEP_SUMMARY
+    
+    # Track starting counts for metrics
+    $startingRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo}).Length
+    $startingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
+    $startingReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo}).Length
+    
+    Write-Host "Loading repository information, starting with [$startingRepoInfo] already loaded"
     $memberAdded = 0
     $memberUpdate = 0
     $dockerBaseImageInfoAdded = 0
@@ -887,16 +911,29 @@ function GetMoreInfo {
     }
 
     Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
-    $hasRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo})
-    Write-Message -message "Loaded repository information, ended with [$($hasRepoInfo.Length)] already loaded" -logToSummary $true
-
-    $hasTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo})
-    Write-Message -message "Loaded tag information, ended with [$($hasTagInfo.Length)] already loaded" -logToSummary $true
-
-    $hasReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo})
-    Write-Message -message "Loaded release information, ended with [$($hasReleaseInfo.Length)] already loaded" -logToSummary $true
-
-    Write-Message -message "Docker base image information added for [$dockerBaseImageInfoAdded] actions"  -logToSummary $true
+    
+    # Calculate ending counts
+    $endingRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo}).Length
+    $endingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
+    $endingReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo}).Length
+    
+    # Create metrics table
+    $metrics = @{
+        "Repository Information" = @{ Started = $startingRepoInfo; Ended = $endingRepoInfo }
+        "Tag Information" = @{ Started = $startingTagInfo; Ended = $endingTagInfo }
+        "Release Information" = @{ Started = $startingReleaseInfo; Ended = $endingReleaseInfo }
+    }
+    
+    # Output as table to step summary
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "## Repository Information Summary" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    $table = Format-RepoInfoSummaryTable -metrics $metrics
+    Write-Message -message $table -logToSummary $true
+    
+    if ($dockerBaseImageInfoAdded -gt 0) {
+        Write-Message -message "Docker base image information added for [$dockerBaseImageInfoAdded] actions" -logToSummary $true
+    }
 
     Write-Host "Starting the cleanup with [$($existingForks.Count)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
     foreach ($action in $originalRepoDoesNotExists) {
