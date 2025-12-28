@@ -128,6 +128,8 @@ function GetReposToCleanup {
         if ($upstreamStillExists -and $mirrorMissing) {
             $countSkippedDueToUpstreamAvailable++
             Write-Debug "Skipping cleanup for [$($repo.name)] because upstream exists and mirror is missing, mirror should be created in another script/run"
+            # Add to valid status so repo is preserved in status file
+            $validStatus.Add($repo) | Out-Null
             continue
         }
         
@@ -137,6 +139,8 @@ function GetReposToCleanup {
         if ($repo.mirrorFound -eq $true -and $upstreamStillExists) {
             $countSkippedDueToMirrorExists++
             Write-Debug "Skipping cleanup for [$($repo.name)] because mirror exists and upstream still exists"
+            # Add to valid status so repo is preserved in status file
+            $validStatus.Add($repo) | Out-Null
             continue
         }
         
