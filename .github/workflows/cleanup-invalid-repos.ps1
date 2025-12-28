@@ -212,7 +212,7 @@ function GetReposToCleanup {
         $validCombined = @()
         $validCombined += $validStatus
         # Include cleanup candidates so they still exist for deletion process; they will be removed later if dryRun is false
-        $validCombined += $reposToCleanup | ForEach-Object { $_ }
+        $validCombined += $reposToCleanup
         $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         if ($env:BLOB_SAS_TOKEN) {
             try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
@@ -224,7 +224,7 @@ function GetReposToCleanup {
         $validCombined = @()
         $validCombined += $validStatus
         # Include cleanup candidates so they still exist for deletion process
-        $validCombined += $reposToCleanup | ForEach-Object { $_ }
+        $validCombined += $reposToCleanup
         $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         if ($env:BLOB_SAS_TOKEN) {
             try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
