@@ -70,9 +70,14 @@ function Get-NormalizedActionName {
     
     $normalizedName = $null
     
-    # Try forkedRepoName first (already in owner_repo format)
+    # Try forkedRepoName first (should be in owner_repo format, but check to be safe)
     if ($action.forkedRepoName -and $action.forkedRepoName -ne "") {
-        $normalizedName = $action.forkedRepoName.ToLower()
+        if ($action.forkedRepoName -match '/') {
+            $normalizedName = $action.forkedRepoName.Replace('/', '_').ToLower()
+        }
+        else {
+            $normalizedName = $action.forkedRepoName.ToLower()
+        }
     }
     # Try name field (might be in owner/repo or owner_repo format)
     elseif ($action.name -and $action.name -ne "") {
