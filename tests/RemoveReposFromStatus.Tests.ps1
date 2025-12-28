@@ -11,7 +11,7 @@ BeforeAll {
         Write-Host "Removing [$($repos.Count)] repos from status file"
         
         if (-not (Test-Path $statusFile)) {
-            Write-Error "Status file not found at [$statusFile]"
+            Write-Warning "Status file not found at [$statusFile]"
             return 0
         }
         
@@ -77,8 +77,8 @@ Describe "RemoveReposFromStatus" {
             @{ name = "repo1" }
         )
         
-        # Act - suppress error output
-        $removedCount = RemoveReposFromStatus -repos $reposToRemove -statusFile $nonExistentFile -ErrorAction SilentlyContinue
+        # Act
+        $removedCount = RemoveReposFromStatus -repos $reposToRemove -statusFile $nonExistentFile
         
         # Assert
         $removedCount | Should -Be 0

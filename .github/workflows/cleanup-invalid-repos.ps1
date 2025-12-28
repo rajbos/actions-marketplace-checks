@@ -7,6 +7,10 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+# Constants
+$MaxDisplayReposToCleanup = 15  # Maximum number of repos to display in "to cleanup" list
+$MaxDisplayReposCleaned = 10    # Maximum number of repos to display in "cleaned" and "invalid" lists
+
 function Test-RepoExists {
     Param (
         $repoOwner,
@@ -61,6 +65,7 @@ function GetReposToCleanup {
     $reposToCleanup = New-Object System.Collections.ArrayList
     $validStatus = New-Object System.Collections.ArrayList
     $invalidEntries = New-Object System.Collections.ArrayList
+    $ownerFixed = $false  # Track if any owners were fixed
     
     # Tracking distinct, non-overlapping categories for clearer reporting
     $countUpstreamMissingOnly = 0  # Upstream missing but not empty
@@ -73,26 +78,37 @@ function GetReposToCleanup {
         # Detect invalid entries (owner null/empty or name '_' or empty)
         $isInvalid = ($null -eq $repo) -or ([string]::IsNullOrEmpty($repo.name)) -or ($repo.name -eq "_")
         
-        # Special handling for null/empty owner - check if repo actually exists
+        # Special handling for null/empty owner - extract from repo name (format: owner_repo)
         if (-not $isInvalid -and [string]::IsNullOrEmpty($repo.owner)) {
-            # If we have an access token, verify if the repo exists before marking as invalid
-            if ($access_token -and -not [string]::IsNullOrEmpty($repo.name)) {
-                Write-Host "Validating repo with null/empty owner: [$($repo.name)]"
-                $repoExists = Test-RepoExists -repoOwner $mirrorOwner -repoName $repo.name -access_token $access_token
-                if ($repoExists) {
-                    Write-Host "  Repo exists in GitHub, fixing owner to [$mirrorOwner]"
-                    # Fix the owner field
-                    $repo.owner = $mirrorOwner
-                    $isInvalid = $false
-                }
-                else {
-                    Write-Host "  Repo does not exist in GitHub, marking as invalid"
-                    $isInvalid = $true
-                }
+            # Extract owner from repo name using the pattern owner_repo
+            if ($repo.name -match '^([^_]+)_') {
+                $extractedOwner = $matches[1]
+                Write-Host "Fixing repo with null/empty owner: [$($repo.name)] -> owner: [$extractedOwner]"
+                $repo.owner = $extractedOwner
+                $ownerFixed = $true
+                $isInvalid = $false
             }
             else {
-                # No access token or no name, mark as invalid
-                $isInvalid = $true
+                # If we can't extract owner from name, verify if repo exists in mirror org
+                if ($access_token -and -not [string]::IsNullOrEmpty($repo.name)) {
+                    Write-Host "Validating repo with null/empty owner (no underscore pattern): [$($repo.name)]"
+                    $repoExists = Test-RepoExists -repoOwner $mirrorOwner -repoName $repo.name -access_token $access_token
+                    if ($repoExists) {
+                        Write-Host "  Repo exists in GitHub, fixing owner to [$mirrorOwner]"
+                        # Fix the owner field
+                        $repo.owner = $mirrorOwner
+                        $ownerFixed = $true
+                        $isInvalid = $false
+                    }
+                    else {
+                        Write-Host "  Repo does not exist in GitHub, marking as invalid"
+                        $isInvalid = $true
+                    }
+                }
+                else {
+                    # No access token or no name, mark as invalid
+                    $isInvalid = $true
+                }
             }
         }
         
@@ -196,7 +212,19 @@ function GetReposToCleanup {
         $validCombined = @()
         $validCombined += $validStatus
         # Include cleanup candidates so they still exist for deletion process; they will be removed later if dryRun is false
-        $validCombined += $reposToCleanup | ForEach-Object { $_ }
+        $validCombined += $reposToCleanup
+        $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
+        if ($env:BLOB_SAS_TOKEN) {
+            try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
+        }
+    }
+    elseif ($ownerFixed) {
+        Write-Host "    - Fixed owner field for repos with null/empty owner"
+        # Save status file with fixed owners
+        $validCombined = @()
+        $validCombined += $validStatus
+        # Include cleanup candidates so they still exist for deletion process
+        $validCombined += $reposToCleanup
         $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         if ($env:BLOB_SAS_TOKEN) {
             try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
@@ -287,7 +315,7 @@ function RemoveReposFromStatus {
     Write-Host "Removing [$($repos.Count)] repos from status file"
     
     if (-not (Test-Path $statusFile)) {
-        Write-Error "Status file not found at [$statusFile]"
+        Write-Warning "Status file not found at [$statusFile]"
         return 0
     }
     
@@ -382,16 +410,17 @@ if ($categories.invalidEntries -gt 0) {
 }
 Write-Message -message "" -logToSummary $true
 
-# Show first 10 invalid entries if any
+# Show first N invalid entries if any
 if ($invalidEntries.Count -gt 0) {
+    $displayInvalidCount = [Math]::Min($MaxDisplayReposCleaned, $invalidEntries.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Invalid Entries Removed (showing first 10 of $($invalidEntries.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Invalid Entries Removed (showing first $displayInvalidCount of $($invalidEntries.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Name | Owner | Reason | Link |" -logToSummary $true
     Write-Message -message "|---:|------|-------|--------|------|" -logToSummary $true
     $index = 1
-    foreach ($entry in ($invalidEntries | Select-Object -First 10)) {
+    foreach ($entry in ($invalidEntries | Select-Object -First $MaxDisplayReposCleaned)) {
         $name = if ([string]::IsNullOrEmpty($entry.name)) { "(empty)" } else { $entry.name }
         $owner = if ([string]::IsNullOrEmpty($entry.owner)) { "(empty)" } else { $entry.owner }
         $reason = ""
@@ -424,14 +453,15 @@ if ($invalidEntries.Count -gt 0) {
 }
 
 if ($reposToCleanup.Count -gt 0) {
+    $displayToCleanupCount = [Math]::Min($MaxDisplayReposToCleanup, $reposToCleanup.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos to Clean Up (showing first 15 of $($reposToCleanup.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos to Clean Up (showing first $displayToCleanupCount of $($reposToCleanup.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
     $index = 1
-    foreach ($repo in ($reposToCleanup | Select-Object -First 15)) {
+    foreach ($repo in ($reposToCleanup | Select-Object -First $MaxDisplayReposToCleanup)) {
         $repoLink = "https://github.com/$owner/$($repo.name)"
         $repoCell = "[$($repo.name)]($repoLink)"
         $upstreamCell = "n/a"
@@ -458,9 +488,8 @@ if ($reposToCleanup.Count -gt 0) {
     
     if (-not $dryRun) {
         # Update status file to remove deleted repos
-        # Only remove up to numberOfReposToDo from status
-        $reposRemoved = $reposToCleanup | Select-Object -First $numberOfReposToDo
-        $totalRemovedFromStatus = RemoveReposFromStatus -repos $reposRemoved -statusFile $statusFile
+        # Use the actual cleaned repos (not the original list)
+        $totalRemovedFromStatus = RemoveReposFromStatus -repos $cleanedRepos -statusFile $statusFile
     }
 }
 else {
@@ -469,14 +498,15 @@ else {
 
 # Add cleaned repos summary
 if ($cleanedRepos.Count -gt 0) {
+    $displayCleanedCount = [Math]::Min($MaxDisplayReposCleaned, $cleanedRepos.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos Cleaned Up (showing first 10 of $($cleanedRepos.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos Cleaned Up (showing first $displayCleanedCount of $($cleanedRepos.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
     $index = 1
-    foreach ($repo in ($cleanedRepos | Select-Object -First 10)) {
+    foreach ($repo in ($cleanedRepos | Select-Object -First $MaxDisplayReposCleaned)) {
         $repoLink = "https://github.com/$owner/$($repo.name)"
         $repoCell = "[$($repo.name)]($repoLink)"
         $upstreamCell = "n/a"
