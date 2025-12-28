@@ -253,7 +253,7 @@ if ($reposNeverSynced -gt 0) {
             "N/A" 
         }
         $mirrorUrl = if ($repo.forkedRepoUrl) { 
-            "[$($repo.forkedRepoUrl)]($($repo.forkedRepoUrl))" 
+            $repo.forkedRepoUrl
         } else { 
             "https://github.com/actions-marketplace-validations/$repoName" 
         }
