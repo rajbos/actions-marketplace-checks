@@ -63,6 +63,7 @@ function GetReposToCleanup {
     Write-Host "Loaded [$($status.Count)] repos from status file"
     
     $reposToCleanup = New-Object System.Collections.ArrayList
+    $reposToCleanupFullObjects = New-Object System.Collections.ArrayList  # Keep full objects for status file saving
     $validStatus = New-Object System.Collections.ArrayList
     $invalidEntries = New-Object System.Collections.ArrayList
     $ownerFixed = $false  # Track if any owners were fixed
@@ -177,13 +178,16 @@ function GetReposToCleanup {
                 }
             }
 
+            # Add simplified info for reporting/display
             $reposToCleanup.Add(@{
                 name = $repo.name
                 owner = $repo.owner
                 reason = $reason
                 upstreamFullName = $upstreamFullName
             }) | Out-Null
-            # Do not add to valid list; will be removed separately via RemoveReposFromStatus
+            
+            # Keep full original repo object for status file saving
+            $reposToCleanupFullObjects.Add($repo) | Out-Null
         }
         else {
             # Keep valid and not-to-clean entries
@@ -211,8 +215,8 @@ function GetReposToCleanup {
         # Overwrite status file once with valid entries + entries to be cleaned (so they remain until deletion completes)
         $validCombined = @()
         $validCombined += $validStatus
-        # Include cleanup candidates so they still exist for deletion process; they will be removed later if dryRun is false
-        $validCombined += $reposToCleanup
+        # Include cleanup candidates (FULL objects, not simplified) so they still exist for deletion process
+        $validCombined += $reposToCleanupFullObjects
         $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         if ($env:BLOB_SAS_TOKEN) {
             try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
@@ -223,8 +227,8 @@ function GetReposToCleanup {
         # Save status file with fixed owners
         $validCombined = @()
         $validCombined += $validStatus
-        # Include cleanup candidates so they still exist for deletion process
-        $validCombined += $reposToCleanup
+        # Include cleanup candidates (FULL objects, not simplified) so they still exist for deletion process
+        $validCombined += $reposToCleanupFullObjects
         $validCombined | ConvertTo-Json -Depth 10 | Out-File -FilePath $statusFile -Encoding UTF8
         if ($env:BLOB_SAS_TOKEN) {
             try { Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN } catch { }
