@@ -27,10 +27,10 @@
 Param (
     [Parameter(Mandatory=$true)]
     $actions,
-    
+
     [Parameter(Mandatory=$true)]
     $existingForks,
-    
+
     [Parameter(Mandatory=$false)]
     [string] $access_token_destination = ""
 )
@@ -152,7 +152,7 @@ $sevenDaysAgo = (Get-Date).AddDays(-7)
 $thirtyDaysAgo = (Get-Date).AddDays(-30)
 
 # Count repos synced in different time windows
-$reposSyncedLast7Days = ($existingForks | Where-Object { 
+$reposSyncedLast7Days = ($existingForks | Where-Object {
     if ($_.lastSynced) {
         try {
             $syncDate = [DateTime]::Parse($_.lastSynced)
@@ -164,7 +164,7 @@ $reposSyncedLast7Days = ($existingForks | Where-Object {
     return $false
 }).Count
 
-$reposSyncedLast30Days = ($existingForks | Where-Object { 
+$reposSyncedLast30Days = ($existingForks | Where-Object {
     if ($_.lastSynced) {
         try {
             $syncDate = [DateTime]::Parse($_.lastSynced)
@@ -176,7 +176,7 @@ $reposSyncedLast30Days = ($existingForks | Where-Object {
     return $false
 }).Count
 
-$reposNeverSynced = ($existingForks | Where-Object { 
+$reposNeverSynced = ($existingForks | Where-Object {
     -not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq ""
 }).Count
 
@@ -208,20 +208,20 @@ Write-Message -message "## Repo Info Collection Status" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Count repos with various info collected
-$reposWithTags = ($existingForks | Where-Object { 
-    $_.tags -and $_.tags.Count -gt 0 
+$reposWithTags = ($existingForks | Where-Object {
+    $_.tags -and $_.tags.Count -gt 0
 }).Count
 
-$reposWithReleases = ($existingForks | Where-Object { 
-    $_.releases -and $_.releases.Count -gt 0 
+$reposWithReleases = ($existingForks | Where-Object {
+    $_.releases -and $_.releases.Count -gt 0
 }).Count
 
-$reposWithRepoInfo = ($existingForks | Where-Object { 
-    $_.repoInfo -ne $null 
+$reposWithRepoInfo = ($existingForks | Where-Object {
+    $_.repoInfo -ne $null
 }).Count
 
-$reposWithActionType = ($existingForks | Where-Object { 
-    $_.actionType -and $_.actionType -ne "" -and $_.actionType -ne "No file found" 
+$reposWithActionType = ($existingForks | Where-Object {
+    $_.actionType -and $_.actionType -ne "" -and $_.actionType -ne "No file found"
 }).Count
 
 Write-Message -message "| Info Type | Count | Percentage |" -logToSummary $true
@@ -263,9 +263,9 @@ Write-Message -message "" -logToSummary $true
 if ($access_token_destination -ne "") {
     Write-Message -message "## Rate Limit Status" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    
+
     GetRateLimitInfo -access_token $access_token_destination -access_token_destination $access_token_destination
-    
+
     Write-Message -message "" -logToSummary $true
 }
 
@@ -276,24 +276,24 @@ Write-Message -message "## Health Metrics" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Calculate coverage percentage
-$coveragePercentage = if ($totalActionsInMarketplace -gt 0) { 
-    [math]::Round(($totalTrackedActions / $totalActionsInMarketplace) * 100, 2) 
-} else { 
-    0 
+$coveragePercentage = if ($totalActionsInMarketplace -gt 0) {
+    [math]::Round(($totalTrackedActions / $totalActionsInMarketplace) * 100, 2)
+} else {
+    0
 }
 
 # Calculate freshness percentage (repos synced in last 7 days)
-$freshnessPercentage = if ($reposWithMirrors -gt 0) { 
-    [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2) 
-} else { 
-    0 
+$freshnessPercentage = if ($reposWithMirrors -gt 0) {
+    [math]::Round(($reposSyncedLast7Days / $reposWithMirrors) * 100, 2)
+} else {
+    0
 }
 
 # Calculate completion percentage (repos with action type identified)
-$completionPercentage = if ($totalTrackedActions -gt 0) { 
-    [math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2) 
-} else { 
-    0 
+$completionPercentage = if ($totalTrackedActions -gt 0) {
+    [math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2)
+} else {
+    0
 }
 
 Write-Message -message "| Metric | Value | Status |" -logToSummary $true
