@@ -473,14 +473,20 @@ function ApiCall {
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
                 if ($rateLimitReset.TotalSeconds -gt 1200) {
-                    Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
-                    $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
-                    Write-Message -message $message -logToSummary $true
-                    Write-Warning $message
-                    # Set global flag to indicate rate limit exceeded
-                    $global:RateLimitExceeded = $true
-                    # Return null to indicate we should stop processing
-                    return $null
+                    # Only show messages and halt execution if we're configured to wait for rate limits
+                    if ($waitForRateLimit) {
+                        Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                        $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
+                        Write-Message -message $message -logToSummary $true
+                        Write-Warning $message
+                        # Set global flag to indicate rate limit exceeded
+                        $global:RateLimitExceeded = $true
+                        # Return null to indicate we should stop processing
+                        return $null
+                    }
+                    # When not waiting for rate limits, just return the response we already have
+                    # Don't show error messages or set the flag since we're intentionally not halting
+                    return $response
                 }
                 Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Warning"
                 Write-Host ""
@@ -795,13 +801,17 @@ function GetRateLimitInfo {
 
     # Check if rate limit was exceeded (returns null)
     if ($null -eq $response) {
-        if (Test-RateLimitExceeded) {
+        # Only show the "skipped" message if we were actually trying to wait for rate limits
+        # When waitForRateLimit=false, we're intentionally not halting, so don't confuse users
+        if ($waitForRateLimit -and (Test-RateLimitExceeded)) {
             Write-Message -message "⚠️ Rate limit check skipped - rate limit exceeded (20+ minute wait)" -logToSummary $true
             return
-        } else {
+        } elseif ($waitForRateLimit) {
             Write-Warning "Failed to get rate limit info - API call returned null"
             return
         }
+        # When waitForRateLimit=false and we hit rate limit, silently skip the check
+        return
     }
 
     # Format rate limit info as a table using the helper function
