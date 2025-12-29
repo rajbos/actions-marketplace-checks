@@ -107,3 +107,16 @@ Test files should:
 - **Do not modify existing code unnecessarily** - only touch lines that are directly related to the feature or fix being implemented
 - **Do not fix formatting, whitespace, or style issues** in existing code unless they are directly related to the changes being made
 - **Make minimal, surgical changes** - the goal is to make the smallest possible change that solves the problem
+
+## Testing PowerShell Changes
+
+**ALWAYS run Pester tests when making changes to PowerShell scripts:**
+
+```powershell
+Invoke-Pester -Output Normal
+```
+
+- Run tests before committing any changes to PowerShell scripts (`.ps1` files)
+- The tests are located in the `tests/` directory
+- Tests must pass before the changes can be merged
+- Use `Invoke-Pester -Output Normal` to show only failing tests for easier debugging
