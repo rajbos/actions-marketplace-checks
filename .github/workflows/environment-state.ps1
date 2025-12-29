@@ -38,6 +38,32 @@ Param (
 # Import library functions
 . "$PSScriptRoot/library.ps1"
 
+# Helper function to extract the actual actionType value from both string and object formats
+function Get-ActionTypeValue {
+    param(
+        [Parameter(Mandatory=$false)]
+        $data
+    )
+    
+    if (-not $data) {
+        return "Unknown"
+    }
+    
+    # Check if data is a hash table or PSCustomObject with nested actionType property
+    if ($data -is [hashtable] -or $data -is [PSCustomObject]) {
+        # Extract the nested actionType property
+        if ($data.actionType) {
+            return $data.actionType
+        } elseif ($data.PSObject.Properties["actionType"]) {
+            return $data.PSObject.Properties["actionType"].Value
+        }
+        return "Unknown"
+    }
+    
+    # It's already a string
+    return $data
+}
+
 Write-Message -message "# Environment State Documentation" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "_Report generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')_" -logToSummary $true
@@ -254,7 +280,9 @@ $reposWithRepoInfo = ($existingForks | Where-Object {
 }).Count
 
 $reposWithActionType = ($existingForks | Where-Object {
-    $_.actionType -and $_.actionType -ne "" -and $_.actionType -ne "No file found"
+    $type = Get-ActionTypeValue -data $_.actionType
+    # Consider it valid if it's not empty, "Unknown", or "No file found"
+    return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
 }).Count
 
 Write-Message -message "| Info Type | Count | Percentage |" -logToSummary $true
@@ -273,7 +301,8 @@ Write-Message -message "" -logToSummary $true
 
 $actionTypeCount = @{}
 foreach ($fork in $existingForks) {
-    $type = if ($fork.actionType) { $fork.actionType } else { "Unknown" }
+    $type = Get-ActionTypeValue -data $fork.actionType
+    
     if ($actionTypeCount.ContainsKey($type)) {
         $actionTypeCount[$type]++
     } else {
@@ -283,24 +312,19 @@ foreach ($fork in $existingForks) {
 
 Write-Message -message "| Action Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
-# Show only top 10 action types to keep summary size manageable (was causing 1983KB summary with thousands of types)
-$topTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] } | Select-Object -First 10
-foreach ($type in $topTypes) {
+# Sort by count descending and display all types (reuse for console output below)
+$sortedTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] }
+foreach ($type in $sortedTypes) {
     $count = $actionTypeCount[$type]
     $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
     Write-Message -message "| $type | $count | ${percentage}% |" -logToSummary $true
 }
-# If there are more types, show a summary line
-$remainingTypes = $actionTypeCount.Keys.Count - $topTypes.Count
-if ($remainingTypes -gt 0) {
-    Write-Message -message "| _(${remainingTypes} other types)_ | ... | ... |" -logToSummary $true
-}
 Write-Message -message "" -logToSummary $true
 
-# Output full breakdown to console for reference
+# Output full breakdown to console for reference (reuses sorted types from above)
 Write-Host ""
 Write-Host "Full Action Type Breakdown (console only):"
-foreach ($type in ($actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] })) {
+foreach ($type in $sortedTypes) {
     $count = $actionTypeCount[$type]
     $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
     Write-Host "  $type : $count (${percentage}%)"
