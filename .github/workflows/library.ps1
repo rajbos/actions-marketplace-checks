@@ -23,6 +23,146 @@ $script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
 
 <#
     .SYNOPSIS
+    Converts a date value to a DateTime object, handling multiple input formats.
+
+    .DESCRIPTION
+    This function normalizes date values from various formats into DateTime objects.
+    It handles:
+    - DateTime objects (returned as-is)
+    - ISO 8601 strings (e.g., "2022-11-04T20:15:45Z")
+    - Culture-specific date strings (e.g., "11/04/2022 20:15:45")
+    - null/empty values (returned as $null)
+
+    .PARAMETER dateValue
+    The date value to convert. Can be a DateTime object, string, or $null.
+
+    .EXAMPLE
+    ConvertTo-NormalizedDateTime -dateValue "2022-11-04T20:15:45Z"
+
+    .EXAMPLE
+    ConvertTo-NormalizedDateTime -dateValue "11/04/2022 20:15:45"
+#>
+function ConvertTo-NormalizedDateTime {
+    Param (
+        $dateValue
+    )
+
+    # Return null for null or empty values
+    if ($null -eq $dateValue -or $dateValue -eq "") {
+        return $null
+    }
+
+    # If already a DateTime, return as-is
+    if ($dateValue -is [DateTime]) {
+        return $dateValue
+    }
+
+    # If it's a string, try to parse it
+    if ($dateValue -is [string]) {
+        try {
+            # Try parsing with ParseExact for common formats first (faster)
+            # ISO 8601 format
+            $formats = @(
+                "yyyy-MM-ddTHH:mm:ssZ",
+                "yyyy-MM-ddTHH:mm:ss.fffffffK",
+                "yyyy-MM-ddTHH:mm:ss.ffffffK",
+                "yyyy-MM-ddTHH:mm:ss.fffffK",
+                "yyyy-MM-ddTHH:mm:ss.ffffK",
+                "yyyy-MM-ddTHH:mm:ss.fffK",
+                "yyyy-MM-ddTHH:mm:ss.ffK",
+                "yyyy-MM-ddTHH:mm:ss.fK",
+                "yyyy-MM-ddTHH:mm:ssK",
+                "MM/dd/yyyy HH:mm:ss",
+                "M/d/yyyy HH:mm:ss",
+                "dd/MM/yyyy HH:mm:ss",
+                "d/M/yyyy HH:mm:ss"
+            )
+            
+            foreach ($format in $formats) {
+                try {
+                    $result = [DateTime]::ParseExact($dateValue, $format, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None)
+                    return $result
+                }
+                catch {
+                    # Try next format
+                }
+            }
+            
+            # If ParseExact fails, fall back to Parse which is more flexible
+            return [DateTime]::Parse($dateValue, [System.Globalization.CultureInfo]::InvariantCulture)
+        }
+        catch {
+            Write-Warning "Failed to parse date value: [$dateValue]. Error: $($_.Exception.Message)"
+            return $null
+        }
+    }
+
+    # Unknown type
+    Write-Warning "Unexpected date value type: $($dateValue.GetType().FullName)"
+    return $null
+}
+
+<#
+    .SYNOPSIS
+    Normalizes date fields in action objects loaded from JSON.
+
+    .DESCRIPTION
+    Ensures that date fields in action objects are DateTime objects,
+    regardless of how they were serialized in the JSON file.
+    This handles the case where dates may be in different string formats.
+
+    .PARAMETER actions
+    Array of action objects to normalize.
+
+    .EXAMPLE
+    $actions = ConvertFrom-Json (Get-Content status.json)
+    $actions = Normalize-ActionDates -actions $actions
+#>
+function Normalize-ActionDates {
+    Param (
+        [Parameter(Mandatory=$false)]
+        $actions
+    )
+
+    if ($null -eq $actions) {
+        return $null
+    }
+
+    foreach ($action in $actions) {
+        if ($null -eq $action) {
+            continue
+        }
+
+        # Normalize repoInfo dates
+        if ($action.repoInfo) {
+            if ($null -ne $action.repoInfo.updated_at) {
+                $normalized = ConvertTo-NormalizedDateTime -dateValue $action.repoInfo.updated_at
+                $action.repoInfo.updated_at = $normalized
+            }
+            if ($null -ne $action.repoInfo.latest_release_published_at) {
+                $normalized = ConvertTo-NormalizedDateTime -dateValue $action.repoInfo.latest_release_published_at
+                $action.repoInfo.latest_release_published_at = $normalized
+            }
+        }
+
+        # Normalize mirrorLastUpdated
+        if ($null -ne $action.mirrorLastUpdated) {
+            $normalized = ConvertTo-NormalizedDateTime -dateValue $action.mirrorLastUpdated
+            $action.mirrorLastUpdated = $normalized
+        }
+
+        # Normalize dependents.dependentsLastUpdated
+        if ($action.dependents -and ($null -ne $action.dependents.dependentsLastUpdated)) {
+            $normalized = ConvertTo-NormalizedDateTime -dateValue $action.dependents.dependentsLastUpdated
+            $action.dependents.dependentsLastUpdated = $normalized
+        }
+    }
+
+    return , $actions
+}
+
+<#
+    .SYNOPSIS
     Downloads actions.json from Azure Blob Storage.
 
     .DESCRIPTION
@@ -1508,6 +1648,11 @@ function GetForkedActionRepos {
     if (Test-Path $statusFile) {
         Write-Host "Using existing status file"
         $status = Get-Content $statusFile | ConvertFrom-Json
+        
+        # Normalize date fields to ensure consistent DateTime objects
+        Write-Host "Normalizing date fields in status data..."
+        $status = Normalize-ActionDates -actions $status
+        
         if (Test-Path $failedStatusFile) {
             $failedForks = Get-Content $failedStatusFile | ConvertFrom-Json
             if ($null -eq $failedForks) {
