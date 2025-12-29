@@ -335,6 +335,20 @@ Describe "Status JSON Schema Validation" {
             $result.Warnings.Count | Should -Be 0
         }
         
+        It "Should accept int64 for ossfScore (from JSON parsing)" {
+            # Simulate what happens when JSON is parsed with ConvertFrom-Json
+            # Integer values in JSON become Int64 in PowerShell
+            $json = '{"owner":"test-owner","name":"test_repo","ossfScore":5}'
+            $action = $json | ConvertFrom-Json
+            
+            # Verify it's actually Int64
+            $action.ossfScore.GetType().Name | Should -Be "Int64"
+            
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings.Count | Should -Be 0
+        }
+        
         It "Should accept decimal for ossfScore" {
             $action = @{
                 owner = "test-owner"
