@@ -5,7 +5,7 @@ on:
     paths:
     - .github/workflows/*.ps1
     - .github/tests/*.ps1
-    - .github/workflows/peter-test.yml
+    - .github/workflows/pester-tests.yml
 
 defaults:
   run:
