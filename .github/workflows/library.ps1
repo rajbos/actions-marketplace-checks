@@ -697,18 +697,54 @@ function ApiCall {
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
             $rateLimitReset = $_.Exception.Response.Headers["X-RateLimit-Reset"]
-            $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
-            if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 10) {
-                # convert rateLimitReset from epoch to ms
+            $rateLimitRemaining = $_.Exception.Response.Headers["X-RateLimit-Remaining"]
+            
+            # Calculate wait time if reset time is available
+            $waitSeconds = 0
+            $oUNIXDate = $null
+            if ($rateLimitReset -and $rateLimitReset[0]) {
                 $rateLimitResetInt = [int]$rateLimitReset[0]
-                $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
-                $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
-                if ($rateLimitReset.TotalMilliseconds -gt 0) {
-                    Write-Host "Rate limit is low or hit, waiting for [$($rateLimitReset.TotalSeconds)] seconds before continuing"
-                    Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+                $oUNIXDate = (Get-Date 01.01.1970) + ([System.TimeSpan]::fromseconds($rateLimitResetInt))
+                $timeUntilReset = $oUNIXDate - [DateTime]::UtcNow
+                if ($timeUntilReset.TotalMilliseconds -gt 0) {
+                    $waitSeconds = $timeUntilReset.TotalSeconds
                 }
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+            
+            # Check if wait time exceeds 20 minutes (1200 seconds)
+            if ($waitSeconds -gt 1200) {
+                # Only show messages and halt execution if we're configured to wait for rate limits
+                if ($waitForRateLimit) {
+                    $remaining = if ($rateLimitRemaining -and $rateLimitRemaining[0]) { $rateLimitRemaining[0] } else { 0 }
+                    if ($null -ne $oUNIXDate) {
+                        Format-RateLimitErrorTable -remaining $remaining -used 0 -waitSeconds $waitSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                    }
+                    $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
+                    Write-Message -message $message -logToSummary $true
+                    Write-Warning $message
+                    # Set global flag to indicate rate limit exceeded
+                    $global:RateLimitExceeded = $true
+                    # Return null to indicate we should stop processing
+                    return $null
+                }
+                # When not waiting for rate limits, just return null without showing error messages
+                # Don't set the global flag since we're intentionally not halting the workflow
+                return $null
+            }
+            
+            # For shorter wait times, only wait if requested
+            if ($waitForRateLimit -and $waitSeconds -gt 0) {
+                Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
+                Start-Sleep -Milliseconds ($waitSeconds * 1000)
+            }
+            
+            # Only retry if we're configured to wait for rate limits
+            if ($waitForRateLimit) {
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+            }
+            
+            # When not waiting, return null
+            return $null
         }
 
         if ($null -ne $expected)
