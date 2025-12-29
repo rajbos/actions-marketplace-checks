@@ -61,8 +61,16 @@ function ConvertTo-NormalizedDateTime {
     if ($dateValue -is [string]) {
         try {
             # Try parsing with ParseExact for common formats first (faster)
-            # ISO 8601 format
+            # Note: MM/dd/yyyy is tried before dd/MM/yyyy to match US format convention
+            # which is the format PowerShell's DateTime.ToString() uses by default.
+            # This means ambiguous dates like "01/02/2022" will be interpreted as
+            # January 2nd (US format) rather than February 1st (European format).
+            # This is acceptable because:
+            # 1. The data comes from PowerShell's own serialization which uses US format
+            # 2. ISO 8601 formats are always tried first (unambiguous)
+            # 3. The fallback Parse() uses InvariantCulture which also prefers US format
             $formats = @(
+                # ISO 8601 formats (unambiguous, preferred)
                 "yyyy-MM-ddTHH:mm:ssZ",
                 "yyyy-MM-ddTHH:mm:ss.fffffffK",
                 "yyyy-MM-ddTHH:mm:ss.ffffffK",
@@ -72,10 +80,11 @@ function ConvertTo-NormalizedDateTime {
                 "yyyy-MM-ddTHH:mm:ss.ffK",
                 "yyyy-MM-ddTHH:mm:ss.fK",
                 "yyyy-MM-ddTHH:mm:ssK",
-                "MM/dd/yyyy HH:mm:ss",
-                "M/d/yyyy HH:mm:ss",
-                "dd/MM/yyyy HH:mm:ss",
-                "d/M/yyyy HH:mm:ss"
+                # Culture-specific formats (from PowerShell's DateTime display)
+                "MM/dd/yyyy HH:mm:ss",  # US format (e.g., "11/04/2022 20:15:45")
+                "M/d/yyyy HH:mm:ss",    # US format without leading zeros
+                "dd/MM/yyyy HH:mm:ss",  # European format (rarely used in this codebase)
+                "d/M/yyyy HH:mm:ss"     # European format without leading zeros
             )
             
             foreach ($format in $formats) {
