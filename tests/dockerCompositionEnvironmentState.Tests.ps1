@@ -167,15 +167,20 @@ Describe "Environment State - Docker Composition Section" {
         
         # Act
         $dockerActionsTotal = 0
+        $dockerWithCompositionInfo = 0
         
         foreach ($fork in $existingForks) {
             if ($fork.actionType -and $fork.actionType.actionType -eq "Docker") {
                 $dockerActionsTotal++
+                
+                if ($fork.actionType.actionDockerType) {
+                    $dockerWithCompositionInfo++
+                }
             }
         }
         
         $percentWithInfo = if ($dockerActionsTotal -gt 0) {
-            [math]::Round(($dockerActionsTotal / $dockerActionsTotal) * 100, 2)
+            [math]::Round(($dockerWithCompositionInfo / $dockerActionsTotal) * 100, 2)
         } else {
             0
         }

@@ -362,7 +362,12 @@ Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
 Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
 Write-Message -message "| 🐳 **Total Docker Actions** | **$dockerActionsTotal** | **100%** |" -logToSummary $true
 Write-Message -message "| ✅ With Composition Info | $dockerWithCompositionInfo | ${percentWithInfo}% |" -logToSummary $true
-Write-Message -message "| ❓ Missing Composition Info | $($dockerActionsTotal - $dockerWithCompositionInfo) | $([math]::Round((($dockerActionsTotal - $dockerWithCompositionInfo) / [math]::Max($dockerActionsTotal, 1)) * 100, 2))% |" -logToSummary $true
+
+# Calculate missing info percentage with better readability
+$missingCompositionInfo = $dockerActionsTotal - $dockerWithCompositionInfo
+$divisor = [math]::Max($dockerActionsTotal, 1)
+$percentMissing = [math]::Round(($missingCompositionInfo / $divisor) * 100, 2)
+Write-Message -message "| ❓ Missing Composition Info | $missingCompositionInfo | ${percentMissing}% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 if ($dockerWithCompositionInfo -gt 0) {
