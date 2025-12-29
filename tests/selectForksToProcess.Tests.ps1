@@ -38,8 +38,8 @@ Describe "Select-ForksToProcess" {
     Context "Prioritization by last sync time" {
         It "Should prioritize forks that have never been synced" {
             $forks = @(
-                [PSCustomObject]@{ name = "fork1"; mirrorFound = $true; lastSynced = "2025-12-15T10:00:00Z" }
                 [PSCustomObject]@{ name = "fork2"; mirrorFound = $true; lastSynced = $null }
+                [PSCustomObject]@{ name = "fork1"; mirrorFound = $true; lastSynced = "2025-12-15T10:00:00Z" }
                 [PSCustomObject]@{ name = "fork3"; mirrorFound = $true; lastSynced = "2025-12-15T12:00:00Z" }
             )
             
@@ -51,9 +51,9 @@ Describe "Select-ForksToProcess" {
         
         It "Should prioritize forks with older lastSynced dates when no recent failures" {
             $forks = @(
-                [PSCustomObject]@{ name = "fork1"; mirrorFound = $true; lastSynced = "2025-12-15T12:00:00Z" }
                 [PSCustomObject]@{ name = "fork2"; mirrorFound = $true; lastSynced = "2025-12-15T10:00:00Z" }
                 [PSCustomObject]@{ name = "fork3"; mirrorFound = $true; lastSynced = "2025-12-15T11:00:00Z" }
+                [PSCustomObject]@{ name = "fork1"; mirrorFound = $true; lastSynced = "2025-12-15T12:00:00Z" }
             )
             
             $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
@@ -71,13 +71,6 @@ Describe "Select-ForksToProcess" {
             # Fork3: Recent successful sync (lower priority due to recency)
             $forks = @(
                 [PSCustomObject]@{ 
-                    name = "fork1"
-                    mirrorFound = $true
-                    lastSynced = $null
-                    lastSyncError = "Error"
-                    lastSyncAttempt = $now.AddHours(-25).ToString("yyyy-MM-ddTHH:mm:ssZ")  # Past cool-off but recent
-                }
-                [PSCustomObject]@{ 
                     name = "fork2"
                     mirrorFound = $true
                     lastSynced = $now.AddDays(-5).ToString("yyyy-MM-ddTHH:mm:ssZ")  # 5 days old
@@ -86,6 +79,13 @@ Describe "Select-ForksToProcess" {
                     name = "fork3"
                     mirrorFound = $true
                     lastSynced = $now.AddHours(-2).ToString("yyyy-MM-ddTHH:mm:ssZ")  # Recent
+                }
+                [PSCustomObject]@{ 
+                    name = "fork1"
+                    mirrorFound = $true
+                    lastSynced = $null
+                    lastSyncError = "Error"
+                    lastSyncAttempt = $now.AddHours(-25).ToString("yyyy-MM-ddTHH:mm:ssZ")  # Past cool-off but recent
                 }
             )
             

@@ -2626,66 +2626,28 @@ function Select-ForksToProcess {
     Write-Message -message "| **Eligible forks after filtering** | **$($eligibleForks.Count)** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    # Sort by priority: never-synced first, then by time since last sync (oldest first)
-    # For stable sorting, we use a tuple approach where:
-    # - First sort key: 0 for never-synced, 1 for synced (so never-synced comes first)
-    # - Second sort key: timestamp for synced repos (older = smaller value = comes first)
-    # Then apply failure penalties after initial sorting
+    # Sort: never-synced forks first (by name), then synced forks by oldest lastSynced (then by name)
     $sortedForks = $eligibleForks | Sort-Object -Property @(
-        # Primary sort: Never-synced repos first (0 comes before 1)
-        @{
-            Expression = {
-                if ($_.lastSynced) { 1 } else { 0 }
-            }
-            Ascending = $true
-        }
-        # Secondary sort: Among synced repos, oldest first (ascending timestamp)
-        @{
-            Expression = {
-                if ($_.lastSynced) {
-                    try {
-                        $lastSyncDate = [DateTime]::Parse($_.lastSynced)
-                        return $lastSyncDate.Ticks
-                    } catch {
-                        return [int64]::MaxValue  # Unparseable dates go to end
-                    }
-                } else {
-                    return 0  # Never-synced don't matter for this sort key
+        # Primary: Never-synced first (0), then synced (1)
+        @{ Expression = { if ($_.lastSynced) { 1 } else { 0 } }; Ascending = $true },
+        # Secondary: For never-synced, use name for stable order; for synced, use lastSynced
+        @{ Expression = {
+            if ($_.lastSynced) {
+                try {
+                    return [DateTime]::Parse($_.lastSynced).Ticks
+                } catch {
+                    return [int64]::MaxValue
                 }
+            } else {
+                # Use name as a tiebreaker for never-synced
+                return [int64]::MinValue
             }
-            Ascending = $true
-        }
+        }; Ascending = $true },
+        # Tertiary: Always use name as final tiebreaker
+        @{ Expression = { $_.name }; Ascending = $true }
     )
 
-    # Sort by priority score (higher score = higher priority)
-    # Priority considers:
-    # 1. Time since last successful sync (older = higher priority)
-    # 2. Recent failures (penalty reduces priority to prevent monopolizing the queue)
-    $sortedForks = $sortedForks | Sort-Object -Property {
-        $lastSyncDate = $null
-        
-        # Base priority: days since last successful sync
-        # Never-synced repos get high baseline priority to prioritize them over typical rotation cycles
-        # They can still be deprioritized below old syncs if they have recent failures
-        if ($_.lastSynced) {
-            try {
-                $lastSyncDate = [DateTime]::Parse($_.lastSynced)
-                return ($now - $lastSyncDate).TotalDays
-            } catch {
-                # If date parsing fails, treat as never synced
-                $lastSyncDate = $null
-                return 20.0
-            }
-        } else {
-            # Never synced - give high priority (20 days equivalent)
-            # This is higher than typical rotation cycles (7-14 days), ensuring priority
-            # But penalties can still drop them below old syncs if they fail repeatedly
-            $lastSyncDate = $null
-            return 20.0
-        }
-    }
-    
-    # Apply failure penalty deprioritization as a second pass
+    # Apply failure penalty deprioritization while preserving the priority order above
     # This allows us to move recently-failed repos to the end while preserving
     # the never-synced vs synced hierarchy
     $forksWithPenalty = [System.Collections.Generic.List[PSObject]]::new()
