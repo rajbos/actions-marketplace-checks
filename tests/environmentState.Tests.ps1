@@ -12,25 +12,25 @@ BeforeAll {
     
     # Helper function to extract the actual actionType value from both string and object formats
     function Get-ActionTypeValue {
-        param($actionType)
+        param($data)
         
-        if (-not $actionType) {
+        if (-not $data) {
             return "Unknown"
         }
         
-        # Check if actionType is a hash table or PSCustomObject with nested actionType property
-        if ($actionType -is [hashtable] -or $actionType -is [PSCustomObject]) {
+        # Check if data is a hash table or PSCustomObject with nested actionType property
+        if ($data -is [hashtable] -or $data -is [PSCustomObject]) {
             # Extract the nested actionType property
-            if ($actionType.actionType) {
-                return $actionType.actionType
-            } elseif ($actionType.PSObject.Properties["actionType"]) {
-                return $actionType.PSObject.Properties["actionType"].Value
+            if ($data.actionType) {
+                return $data.actionType
+            } elseif ($data.PSObject.Properties["actionType"]) {
+                return $data.PSObject.Properties["actionType"].Value
             }
             return "Unknown"
         }
         
         # It's already a string
-        return $actionType
+        return $data
     }
     
     # Create sample test data
@@ -306,7 +306,7 @@ Describe "Environment State - Action Type Breakdown" {
         # Act
         $actionTypeCount = @{}
         foreach ($fork in $trackedForks) {
-            $type = Get-ActionTypeValue -actionType $fork.actionType
+            $type = Get-ActionTypeValue -data $fork.actionType
             
             if ($actionTypeCount.ContainsKey($type)) {
                 $actionTypeCount[$type]++
@@ -358,7 +358,7 @@ Describe "Environment State - Action Type Breakdown" {
         # Act
         $actionTypeCount = @{}
         foreach ($fork in $forksWithHashTables) {
-            $type = Get-ActionTypeValue -actionType $fork.actionType
+            $type = Get-ActionTypeValue -data $fork.actionType
             
             if ($actionTypeCount.ContainsKey($type)) {
                 $actionTypeCount[$type]++
@@ -385,7 +385,7 @@ Describe "Environment State - Action Type Breakdown" {
         # Act
         $actionTypeCount = @{}
         foreach ($fork in $mixedForks) {
-            $type = Get-ActionTypeValue -actionType $fork.actionType
+            $type = Get-ActionTypeValue -data $fork.actionType
             
             if ($actionTypeCount.ContainsKey($type)) {
                 $actionTypeCount[$type]++
@@ -454,7 +454,7 @@ Describe "Environment State - Health Metrics" {
         $totalTrackedActions = $trackedForks.Count
         
         $reposWithActionType = ($trackedForks | Where-Object {
-            $type = Get-ActionTypeValue -actionType $_.actionType
+            $type = Get-ActionTypeValue -data $_.actionType
             # Consider it valid if it's not empty, "Unknown", or "No file found"
             return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
         }).Count
@@ -497,7 +497,7 @@ Describe "Environment State - Health Metrics" {
         
         # Act
         $reposWithActionType = ($forksWithHashTables | Where-Object {
-            $type = Get-ActionTypeValue -actionType $_.actionType
+            $type = Get-ActionTypeValue -data $_.actionType
             # Consider it valid if it's not empty, "Unknown", or "No file found"
             return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
         }).Count
