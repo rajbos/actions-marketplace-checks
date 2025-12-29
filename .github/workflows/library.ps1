@@ -2655,13 +2655,13 @@ function Select-ForksToProcess {
             }
             Ascending = $true
         }
-    }
+    )
+
     # Sort by priority score (higher score = higher priority)
     # Priority considers:
     # 1. Time since last successful sync (older = higher priority)
     # 2. Recent failures (penalty reduces priority to prevent monopolizing the queue)
     $sortedForks = $sortedForks | Sort-Object -Property {
-        $priorityScore = 0
         $lastSyncDate = $null
         
         # Base priority: days since last successful sync
@@ -2670,21 +2670,20 @@ function Select-ForksToProcess {
         if ($_.lastSynced) {
             try {
                 $lastSyncDate = [DateTime]::Parse($_.lastSynced)
-                $daysSinceSync = ($now - $lastSyncDate).TotalDays
-                $priorityScore = $daysSinceSync
+                return ($now - $lastSyncDate).TotalDays
             } catch {
                 # If date parsing fails, treat as never synced
-                $priorityScore = 20.0
                 $lastSyncDate = $null
+                return 20.0
             }
         } else {
             # Never synced - give high priority (20 days equivalent)
             # This is higher than typical rotation cycles (7-14 days), ensuring priority
             # But penalties can still drop them below old syncs if they fail repeatedly
-            $priorityScore = 20.0
             $lastSyncDate = $null
+            return 20.0
         }
-    )
+    }
     
     # Apply failure penalty deprioritization as a second pass
     # This allows us to move recently-failed repos to the end while preserving
