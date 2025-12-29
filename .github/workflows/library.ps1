@@ -701,6 +701,7 @@ function ApiCall {
             
             # Calculate wait time if reset time is available
             $waitSeconds = 0
+            $oUNIXDate = $null
             if ($rateLimitReset -and $rateLimitReset[0]) {
                 $rateLimitResetInt = [int]$rateLimitReset[0]
                 $oUNIXDate = (Get-Date 01.01.1970) + ([System.TimeSpan]::fromseconds($rateLimitResetInt))
@@ -715,7 +716,9 @@ function ApiCall {
                 # Only show messages and halt execution if we're configured to wait for rate limits
                 if ($waitForRateLimit) {
                     $remaining = if ($rateLimitRemaining -and $rateLimitRemaining[0]) { $rateLimitRemaining[0] } else { 0 }
-                    Format-RateLimitErrorTable -remaining $remaining -used 0 -waitSeconds $waitSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                    if ($null -ne $oUNIXDate) {
+                        Format-RateLimitErrorTable -remaining $remaining -used 0 -waitSeconds $waitSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                    }
                     $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
                     Write-Message -message $message -logToSummary $true
                     Write-Warning $message
