@@ -292,21 +292,33 @@ function Test-StatusJsonSchema {
         Write-Message -message "_Note: Only showing warnings from first $sampleSize objects to avoid overwhelming output._" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         
-        # Group warnings by type (pattern) - normalize by removing object indices and names
+        # Group warnings by type (pattern) - normalize by removing object indices, names, and specific values
         $warningGroups = $allWarnings | Group-Object { 
-            $normalized = $_ -replace 'Object \d+( \([^)]+\))?:', 'Object:'
-            $normalized
+            # Remove "Object N (name):" prefix
+            $normalized = $_ -replace 'Object \d+( \([^)]+\))?:\s*', ''
+            
+            # Normalize specific patterns to group similar warnings
+            # Remove specific dates/times (e.g., "10/27/2022 13:14:18" -> "date/time value")
+            $normalized = $normalized -replace '\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}', '<date>'
+            # Remove specific dates (e.g., "2023-05-01T16:10:08Z" -> "date value")
+            $normalized = $normalized -replace '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', '<date>'
+            # Remove specific numeric values in "found: X (type: Y)" patterns
+            $normalized = $normalized -replace 'found: \d+(\.\d+)? \(type: \w+\)', 'found: <value> (type: <type>)'
+            # Remove specific type names
+            $normalized = $normalized -replace '\(type: \w+\)', '(type: <type>)'
+            
+            return $normalized
         } | Sort-Object Count -Descending
         
         foreach ($group in $warningGroups | Select-Object -First 10) {
-            # Extract the warning type description (after the normalized object reference)
-            $typeDescription = $group.Name -replace '^Object:\s*', ''
+            # Extract the warning type description
+            $typeDescription = $group.Name
             $count = $group.Count
             
             Write-Message -message "### [$count x] $typeDescription" -logToSummary $true
             Write-Message -message "" -logToSummary $true
             
-            # Show first 3 actual examples with object names
+            # Show first 3 actual examples with object names (original format)
             $examples = $group.Group | Select-Object -First 3
             foreach ($example in $examples) {
                 Write-Message -message "- $example" -logToSummary $true
