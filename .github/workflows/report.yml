@@ -48,6 +48,13 @@ jobs:
                $jsonContent = Get-Content status.json -Raw
                $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
                $actions = $jsonContent | ConvertFrom-Json
+               
+               # Load library functions for date normalization
+               . ./.github/workflows/library.ps1
+               
+               # Normalize date fields to ensure consistent DateTime objects
+               Write-Host "Normalizing date fields in status data..."
+               $actions = Normalize-ActionDates -actions $actions
            } catch {
                Write-Host "=== STATUS.JSON PARSE ERROR ==="
                Write-Host "JSON parsing failed: $($_.Exception.Message)"
