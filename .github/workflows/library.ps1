@@ -2654,6 +2654,8 @@ function Select-ForksToProcess {
                 }
             }
             Ascending = $true
+        }
+    }
     # Sort by priority score (higher score = higher priority)
     # Priority considers:
     # 1. Time since last successful sync (older = higher priority)
