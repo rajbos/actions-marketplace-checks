@@ -40,7 +40,10 @@ Param (
 
 # Helper function to extract the actual actionType value from both string and object formats
 function Get-ActionTypeValue {
-    param($data)
+    param(
+        [Parameter(Mandatory=$false)]
+        $data
+    )
     
     if (-not $data) {
         return "Unknown"
