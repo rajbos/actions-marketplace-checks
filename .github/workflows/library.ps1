@@ -2635,9 +2635,8 @@ function Select-ForksToProcess {
         $lastSyncDate = $null
         
         # Base priority: days since last successful sync
-        # Never-synced repos get high baseline priority (equivalent to 14 days old)
-        # This ensures they're checked before repos synced 0-14 days ago, but can still be
-        # deprioritized if they have recent failures (penalty can reduce priority below 0)
+        # Never-synced repos get high baseline priority to prioritize them over typical rotation cycles
+        # They can still be deprioritized below old syncs if they have recent failures
         if ($_.lastSynced) {
             try {
                 $lastSyncDate = [DateTime]::Parse($_.lastSynced)
@@ -2645,13 +2644,14 @@ function Select-ForksToProcess {
                 $priorityScore = $daysSinceSync
             } catch {
                 # If date parsing fails, treat as never synced
-                $priorityScore = 14.0
+                $priorityScore = 20.0
                 $lastSyncDate = $null
             }
         } else {
-            # Never synced - give high priority (14 days equivalent)
-            # This is higher than the typical rotation cycle but can be penalized
-            $priorityScore = 14.0
+            # Never synced - give high priority (20 days equivalent)
+            # This is higher than typical rotation cycles (7-14 days), ensuring priority
+            # But penalties can still drop them below old syncs if they fail repeatedly
+            $priorityScore = 20.0
             $lastSyncDate = $null
         }
         
