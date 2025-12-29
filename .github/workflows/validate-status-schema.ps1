@@ -315,19 +315,21 @@ function Test-StatusJsonSchema {
 # Main execution
 Write-Host "Starting status.json schema validation..."
 
-# Download status.json if not already present
-if (-not (Test-Path $statusFilePath)) {
-    if ([string]::IsNullOrEmpty($sasToken)) {
-        Write-Error "status.json not found and no SAS token provided for download"
-        exit 1
-    }
-    
+# Check if status file exists first
+if (Test-Path $statusFilePath) {
+    Write-Host "Using existing status.json at: $statusFilePath"
+}
+elseif (-not [string]::IsNullOrEmpty($sasToken)) {
     Write-Host "Downloading status.json from blob storage..."
     $result = Get-StatusFromBlobStorage -sasToken $sasToken
     if (-not $result) {
         Write-Error "Failed to download status.json from blob storage"
         exit 1
     }
+}
+else {
+    Write-Error "status.json not found at '$statusFilePath' and no SAS token provided for download"
+    exit 1
 }
 
 # Validate file exists and is not empty
@@ -356,9 +358,9 @@ try {
         exit 1
     }
     
+    # Ensure it's always an array (handle both array and single object)
     if ($statusData -isnot [array]) {
-        Write-Error "status.json should contain an array, found: $($statusData.GetType().Name)"
-        exit 1
+        $statusData = @($statusData)
     }
     
     Write-Host "Successfully parsed status.json with $($statusData.Count) objects"
