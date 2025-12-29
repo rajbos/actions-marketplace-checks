@@ -16,7 +16,6 @@ on:
     paths:
       - .github/workflows/validate-status-schema.yml
       - .github/workflows/validate-status-schema.ps1
-      - .github/workflows/library.ps1
 
   push:
     branches:
