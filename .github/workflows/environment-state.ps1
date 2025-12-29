@@ -317,6 +317,9 @@ $dockerActionsTotal = 0
 $dockerWithCompositionInfo = 0
 $dockerLocalDockerfile = 0
 $dockerRemoteImage = 0
+$dockerLocalWithCustomCode = 0
+$dockerLocalWithoutCustomCode = 0
+$dockerLocalWithCustomCodeInfo = 0
 
 foreach ($fork in $existingForks) {
     # Check if this is a Docker action
@@ -329,6 +332,17 @@ foreach ($fork in $existingForks) {
             
             if ($fork.actionType.actionDockerType -eq "Dockerfile") {
                 $dockerLocalDockerfile++
+                
+                # Check if we have custom code information
+                if ($null -ne $fork.actionType.dockerfileHasCustomCode) {
+                    $dockerLocalWithCustomCodeInfo++
+                    if ($fork.actionType.dockerfileHasCustomCode -eq $true) {
+                        $dockerLocalWithCustomCode++
+                    }
+                    else {
+                        $dockerLocalWithoutCustomCode++
+                    }
+                }
             }
             elseif ($fork.actionType.actionDockerType -eq "Image") {
                 $dockerRemoteImage++
@@ -380,6 +394,37 @@ if ($dockerWithCompositionInfo -gt 0) {
     Write-Message -message "| 📦 Local Dockerfile | $dockerLocalDockerfile | ${percentLocalDockerfile}% |" -logToSummary $true
     Write-Message -message "| 🌐 Remote Image | $dockerRemoteImage | ${percentRemoteImage}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+    
+    # Show custom code analysis for local Dockerfiles
+    if ($dockerLocalDockerfile -gt 0) {
+        Write-Message -message "#### Local Dockerfile Analysis" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        
+        $percentWithCodeInfo = if ($dockerLocalDockerfile -gt 0) {
+            [math]::Round(($dockerLocalWithCustomCodeInfo / $dockerLocalDockerfile) * 100, 2)
+        } else {
+            0
+        }
+        
+        Write-Message -message "| Analysis Status | Count | Percentage |" -logToSummary $true
+        Write-Message -message "|----------------|------:|-----------:|" -logToSummary $true
+        Write-Message -message "| 📊 Analyzed for Custom Code | $dockerLocalWithCustomCodeInfo | ${percentWithCodeInfo}% |" -logToSummary $true
+        Write-Message -message "| ⏳ Not Yet Analyzed | $($dockerLocalDockerfile - $dockerLocalWithCustomCodeInfo) | $([math]::Round((($dockerLocalDockerfile - $dockerLocalWithCustomCodeInfo) / [math]::Max($dockerLocalDockerfile, 1)) * 100, 2))% |" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        
+        if ($dockerLocalWithCustomCodeInfo -gt 0) {
+            $percentWithCode = [math]::Round(($dockerLocalWithCustomCode / $dockerLocalWithCustomCodeInfo) * 100, 2)
+            $percentWithoutCode = [math]::Round(($dockerLocalWithoutCustomCode / $dockerLocalWithCustomCodeInfo) * 100, 2)
+            
+            Write-Message -message "**Of the $dockerLocalWithCustomCodeInfo analyzed local Dockerfiles:**" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "| Type | Count | Percentage |" -logToSummary $true
+            Write-Message -message "|------|------:|-----------:|" -logToSummary $true
+            Write-Message -message "| 🔧 With Custom Code (COPY/ADD) | $dockerLocalWithCustomCode | ${percentWithCode}% |" -logToSummary $true
+            Write-Message -message "| 📦 Base Image Only | $dockerLocalWithoutCustomCode | ${percentWithoutCode}% |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+        }
+    }
 }
 
 # ============================================================================
