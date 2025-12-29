@@ -76,7 +76,7 @@ class StatusJsonSchema {
     
     # OpenSSF Scorecard (optional)
     [object] $ossf  # Can be boolean or null
-    [object] $ossfScore  # Can be number or null
+    [object] $ossfScore  # Can be int, int64, double, decimal, or null
     [object] $ossfDateLastUpdate  # Can be string (date) or null
     
     # Dependents information (optional)
@@ -208,7 +208,7 @@ function Test-ActionSchema {
     
     # Validate numeric fields
     if ($null -ne $action.ossfScore) {
-        if ($action.ossfScore -isnot [int] -and $action.ossfScore -isnot [double] -and $action.ossfScore -isnot [decimal]) {
+        if ($action.ossfScore -isnot [int] -and $action.ossfScore -isnot [int64] -and $action.ossfScore -isnot [double] -and $action.ossfScore -isnot [decimal]) {
             $warnings += "Object ${index} ($($action.name)): ossfScore should be numeric, found: $($action.ossfScore) (type: $($action.ossfScore.GetType().Name))"
         }
     }
