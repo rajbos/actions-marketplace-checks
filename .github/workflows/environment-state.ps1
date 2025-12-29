@@ -242,11 +242,11 @@ Write-Message -message "" -logToSummary $true
 
 # Count repos with various info collected
 $reposWithTags = ($existingForks | Where-Object {
-    $_.tags -and $_.tags.Count -gt 0
+    $_.tagInfo -and $_.tagInfo.Count -gt 0
 }).Count
 
 $reposWithReleases = ($existingForks | Where-Object {
-    $_.releases -and $_.releases.Count -gt 0
+    $_.releaseInfo -and $_.releaseInfo.Count -gt 0
 }).Count
 
 $reposWithRepoInfo = ($existingForks | Where-Object {
