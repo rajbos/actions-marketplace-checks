@@ -55,6 +55,32 @@ This repository includes several automated workflows:
 - **[Update Mirrors](.github/workflows/update-forks.yml)**: Automatically syncs all mirrored repositories with their upstream sources (runs every 15 minutes)
 - **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status (runs daily)
 - **[Environment State Documentation](.github/workflows/environment-state.yml)**: Documents the current state of the environment including coverage, freshness, and health metrics (runs daily at 10 AM UTC)
+- **[Validate Status JSON Schema](.github/workflows/validate-status-schema.yml)**: Validates the schema of status.json to detect changes in data structure (runs every Friday at 9 AM UTC)
+
+### Status JSON Schema Validation
+
+The Validate Status JSON Schema workflow ensures the structure of `status.json` remains consistent and alerts maintainers when schema changes are detected. This workflow:
+
+1. **Downloads status.json** from Azure Blob Storage
+2. **Validates each object** against the expected schema defined in the validation script
+3. **Reports warnings** for minor inconsistencies (e.g., missing optional fields)
+4. **Fails the workflow** if critical schema violations are detected (e.g., wrong data types)
+
+The workflow runs automatically every Friday and can also be triggered manually for testing. If the workflow fails, it indicates that the data structure has changed and dependent scripts may need to be updated.
+
+#### Running the Validation
+
+To run the validation manually:
+
+1. Go to the Actions tab in the repository
+2. Select "Validate Status JSON Schema" workflow
+3. Click "Run workflow"
+
+Tests for the validation functionality are located in `tests/validateStatusSchema.Tests.ps1` and can be run using Pester:
+
+```powershell
+Invoke-Pester -Path ./tests/validateStatusSchema.Tests.ps1
+```
 
 ### Mirror Sync Behavior
 
