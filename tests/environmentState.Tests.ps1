@@ -475,8 +475,23 @@ Describe "Environment State - Health Metrics" {
         $trackedForks = $script:sampleForks
         $totalTrackedActions = $trackedForks.Count
         
-        $reposWithActionType = ($trackedForks | Where-Object { 
-            $_.actionType -and $_.actionType -ne "" -and $_.actionType -ne "No file found" 
+        $reposWithActionType = ($trackedForks | Where-Object {
+            if (-not $_.actionType) { return $false }
+            
+            # Extract the actual actionType value to check if it's valid
+            $type = "Unknown"
+            if ($_.actionType -is [hashtable] -or $_.actionType -is [PSCustomObject]) {
+                if ($_.actionType.actionType) {
+                    $type = $_.actionType.actionType
+                } elseif ($_.actionType.PSObject.Properties["actionType"]) {
+                    $type = $_.actionType.PSObject.Properties["actionType"].Value
+                }
+            } else {
+                $type = $_.actionType
+            }
+            
+            # Consider it valid if it's not empty, "Unknown", or "No file found"
+            return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
         }).Count
         
         # Act
@@ -488,5 +503,54 @@ Describe "Environment State - Health Metrics" {
         
         # Assert
         $completionPercentage | Should -Be 75.00
+    }
+    
+    It "Should correctly identify valid action types in hash table format" {
+        # Arrange - Create forks with hash table actionType values
+        $forksWithHashTables = @(
+            @{ 
+                name = "valid-docker"
+                actionType = @{ actionType = "Docker"; fileFound = "action.yml" }
+            },
+            @{ 
+                name = "valid-node"
+                actionType = @{ actionType = "Node"; nodeVersion = "20" }
+            },
+            @{ 
+                name = "invalid-no-file"
+                actionType = @{ actionType = "No file found"; fileFound = "No file found" }
+            },
+            @{ 
+                name = "valid-composite"
+                actionType = "Composite"  # String format
+            },
+            @{ 
+                name = "no-actiontype"
+                actionType = $null
+            }
+        )
+        
+        # Act
+        $reposWithActionType = ($forksWithHashTables | Where-Object {
+            if (-not $_.actionType) { return $false }
+            
+            # Extract the actual actionType value to check if it's valid
+            $type = "Unknown"
+            if ($_.actionType -is [hashtable] -or $_.actionType -is [PSCustomObject]) {
+                if ($_.actionType.actionType) {
+                    $type = $_.actionType.actionType
+                } elseif ($_.actionType.PSObject.Properties["actionType"]) {
+                    $type = $_.actionType.PSObject.Properties["actionType"].Value
+                }
+            } else {
+                $type = $_.actionType
+            }
+            
+            # Consider it valid if it's not empty, "Unknown", or "No file found"
+            return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
+        }).Count
+        
+        # Assert - Should count only Docker, Node, and Composite (not "No file found" or null)
+        $reposWithActionType | Should -Be 3
     }
 }

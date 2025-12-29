@@ -254,7 +254,22 @@ $reposWithRepoInfo = ($existingForks | Where-Object {
 }).Count
 
 $reposWithActionType = ($existingForks | Where-Object {
-    $_.actionType -and $_.actionType -ne "" -and $_.actionType -ne "No file found"
+    if (-not $_.actionType) { return $false }
+    
+    # Extract the actual actionType value to check if it's valid
+    $type = "Unknown"
+    if ($_.actionType -is [hashtable] -or $_.actionType -is [PSCustomObject]) {
+        if ($_.actionType.actionType) {
+            $type = $_.actionType.actionType
+        } elseif ($_.actionType.PSObject.Properties["actionType"]) {
+            $type = $_.actionType.PSObject.Properties["actionType"].Value
+        }
+    } else {
+        $type = $_.actionType
+    }
+    
+    # Consider it valid if it's not empty, "Unknown", or "No file found"
+    return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
 }).Count
 
 Write-Message -message "| Info Type | Count | Percentage |" -logToSummary $true
