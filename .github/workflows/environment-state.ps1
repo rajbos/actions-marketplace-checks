@@ -315,8 +315,9 @@ if ($access_token_destination -ne "") {
     Write-Host ""
     
     # Get rate limit info but don't log to summary to save space
+    # Use waitForRateLimit = $false since this is optional info and shouldn't block the report
     $url = "rate_limit"
-    $response = ApiCall -method GET -url $url -access_token $access_token_destination
+    $response = ApiCall -method GET -url $url -access_token $access_token_destination -waitForRateLimit $false
     
     if ($null -ne $response) {
         $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($response.rate.reset).UtcDateTime
