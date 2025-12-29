@@ -168,15 +168,11 @@ Write-Message -message "" -logToSummary $true
 
 $reposWithMirrors = ($existingForks | Where-Object { $_.mirrorFound -eq $true }).Count
 $reposWithoutMirrors = ($existingForks | Where-Object { $_.mirrorFound -ne $true }).Count
-$reposWithForks = ($existingForks | Where-Object { $_.forkFound -eq $true }).Count
-$reposWithoutForks = ($existingForks | Where-Object { $_.forkFound -ne $true }).Count
 
 Write-Message -message "| Mirror Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
 Write-Message -message "| ✅ Has Valid Mirror | $reposWithMirrors | $([math]::Round(($reposWithMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| ❌ No Mirror | $reposWithoutMirrors | $([math]::Round(($reposWithoutMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🔄 Has Fork | $reposWithForks | $([math]::Round(($reposWithForks / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| ⚠️ No Fork | $reposWithoutForks | $([math]::Round(($reposWithoutForks / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -246,11 +242,11 @@ Write-Message -message "" -logToSummary $true
 
 # Count repos with various info collected
 $reposWithTags = ($existingForks | Where-Object {
-    $_.tags -and $_.tags.Count -gt 0
+    $_.tagInfo -and $_.tagInfo.Count -gt 0
 }).Count
 
 $reposWithReleases = ($existingForks | Where-Object {
-    $_.releases -and $_.releases.Count -gt 0
+    $_.releaseInfo -and $_.releaseInfo.Count -gt 0
 }).Count
 
 $reposWithRepoInfo = ($existingForks | Where-Object {
