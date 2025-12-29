@@ -307,6 +307,77 @@ foreach ($type in ($actionTypeCount.Keys | Sort-Object -Descending { $actionType
 }
 
 # ============================================================================
+# 6.1. DOCKER COMPOSITION STATUS
+# ============================================================================
+Write-Message -message "## Docker Composition Status" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+# Count Docker actions and their composition types
+$dockerActionsTotal = 0
+$dockerWithCompositionInfo = 0
+$dockerLocalDockerfile = 0
+$dockerRemoteImage = 0
+
+foreach ($fork in $existingForks) {
+    # Check if this is a Docker action
+    if ($fork.actionType -and $fork.actionType.actionType -eq "Docker") {
+        $dockerActionsTotal++
+        
+        # Check if we have composition info (actionDockerType field)
+        if ($fork.actionType.actionDockerType) {
+            $dockerWithCompositionInfo++
+            
+            if ($fork.actionType.actionDockerType -eq "Dockerfile") {
+                $dockerLocalDockerfile++
+            }
+            elseif ($fork.actionType.actionDockerType -eq "Image") {
+                $dockerRemoteImage++
+            }
+        }
+    }
+}
+
+# Calculate percentages
+$percentWithInfo = if ($dockerActionsTotal -gt 0) {
+    [math]::Round(($dockerWithCompositionInfo / $dockerActionsTotal) * 100, 2)
+} else {
+    0
+}
+
+$percentLocalDockerfile = if ($dockerWithCompositionInfo -gt 0) {
+    [math]::Round(($dockerLocalDockerfile / $dockerWithCompositionInfo) * 100, 2)
+} else {
+    0
+}
+
+$percentRemoteImage = if ($dockerWithCompositionInfo -gt 0) {
+    [math]::Round(($dockerRemoteImage / $dockerWithCompositionInfo) * 100, 2)
+} else {
+    0
+}
+
+Write-Message -message "Discovery status for Docker-based actions:" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
+Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
+Write-Message -message "| 🐳 **Total Docker Actions** | **$dockerActionsTotal** | **100%** |" -logToSummary $true
+Write-Message -message "| ✅ With Composition Info | $dockerWithCompositionInfo | ${percentWithInfo}% |" -logToSummary $true
+Write-Message -message "| ❓ Missing Composition Info | $($dockerActionsTotal - $dockerWithCompositionInfo) | $([math]::Round((($dockerActionsTotal - $dockerWithCompositionInfo) / [math]::Max($dockerActionsTotal, 1)) * 100, 2))% |" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+if ($dockerWithCompositionInfo -gt 0) {
+    Write-Message -message "### Docker Composition Breakdown" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "For actions where we have composition information:" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Composition Type | Count | Percentage |" -logToSummary $true
+    Write-Message -message "|-----------------|------:|-----------:|" -logToSummary $true
+    Write-Message -message "| 📦 Local Dockerfile | $dockerLocalDockerfile | ${percentLocalDockerfile}% |" -logToSummary $true
+    Write-Message -message "| 🌐 Remote Image | $dockerRemoteImage | ${percentRemoteImage}% |" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+}
+
+# ============================================================================
 # 7. RATE LIMIT STATUS (if token provided) - console only
 # ============================================================================
 if ($access_token_destination -ne "") {
