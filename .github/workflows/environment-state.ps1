@@ -273,7 +273,23 @@ Write-Message -message "" -logToSummary $true
 
 $actionTypeCount = @{}
 foreach ($fork in $existingForks) {
-    $type = if ($fork.actionType) { $fork.actionType } else { "Unknown" }
+    # Extract the actual actionType value, handling both string and object formats
+    $type = "Unknown"
+    if ($fork.actionType) {
+        # Check if actionType is a hash table or PSCustomObject with nested actionType property
+        if ($fork.actionType -is [hashtable] -or $fork.actionType -is [PSCustomObject]) {
+            # Extract the nested actionType property
+            if ($fork.actionType.actionType) {
+                $type = $fork.actionType.actionType
+            } elseif ($fork.actionType.PSObject.Properties["actionType"]) {
+                $type = $fork.actionType.PSObject.Properties["actionType"].Value
+            }
+        } else {
+            # It's already a string
+            $type = $fork.actionType
+        }
+    }
+    
     if ($actionTypeCount.ContainsKey($type)) {
         $actionTypeCount[$type]++
     } else {
@@ -283,17 +299,12 @@ foreach ($fork in $existingForks) {
 
 Write-Message -message "| Action Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
-# Show only top 10 action types to keep summary size manageable (was causing 1983KB summary with thousands of types)
-$topTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] } | Select-Object -First 10
-foreach ($type in $topTypes) {
+# Sort by count descending and display all types
+$sortedTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] }
+foreach ($type in $sortedTypes) {
     $count = $actionTypeCount[$type]
     $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
     Write-Message -message "| $type | $count | ${percentage}% |" -logToSummary $true
-}
-# If there are more types, show a summary line
-$remainingTypes = $actionTypeCount.Keys.Count - $topTypes.Count
-if ($remainingTypes -gt 0) {
-    Write-Message -message "| _(${remainingTypes} other types)_ | ... | ... |" -logToSummary $true
 }
 Write-Message -message "" -logToSummary $true
 

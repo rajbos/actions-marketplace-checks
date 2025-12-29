@@ -276,14 +276,30 @@ Describe "Environment State - Repo Info Status" {
 }
 
 Describe "Environment State - Action Type Breakdown" {
-    It "Should correctly count action types" {
+    It "Should correctly count action types with string format" {
         # Arrange
         $trackedForks = $script:sampleForks
         
         # Act
         $actionTypeCount = @{}
         foreach ($fork in $trackedForks) {
-            $type = if ($fork.actionType) { $fork.actionType } else { "Unknown" }
+            # Extract the actual actionType value, handling both string and object formats
+            $type = "Unknown"
+            if ($fork.actionType) {
+                # Check if actionType is a hash table or PSCustomObject with nested actionType property
+                if ($fork.actionType -is [hashtable] -or $fork.actionType -is [PSCustomObject]) {
+                    # Extract the nested actionType property
+                    if ($fork.actionType.actionType) {
+                        $type = $fork.actionType.actionType
+                    } elseif ($fork.actionType.PSObject.Properties["actionType"]) {
+                        $type = $fork.actionType.PSObject.Properties["actionType"].Value
+                    }
+                } else {
+                    # It's already a string
+                    $type = $fork.actionType
+                }
+            }
+            
             if ($actionTypeCount.ContainsKey($type)) {
                 $actionTypeCount[$type]++
             } else {
@@ -297,6 +313,114 @@ Describe "Environment State - Action Type Breakdown" {
         $actionTypeCount["Composite"] | Should -Be 1
         $actionTypeCount["No file found"] | Should -Be 1
         $actionTypeCount.Count | Should -Be 4
+    }
+    
+    It "Should correctly extract actionType from hash table format" {
+        # Arrange
+        $forksWithHashTables = @(
+            @{ 
+                name = "action1"
+                actionType = @{
+                    actionType = "Docker"
+                    fileFound = "action.yml"
+                    nodeVersion = "16"
+                    actionDockerType = "Dockerfile"
+                    dockerBaseImage = "ubuntu:latest"
+                }
+            },
+            @{ 
+                name = "action2"
+                actionType = @{
+                    actionType = "Node"
+                    fileFound = "action.yml"
+                    nodeVersion = "20"
+                }
+            },
+            @{ 
+                name = "action3"
+                actionType = @{
+                    actionType = "Docker"
+                    fileFound = "action.yml"
+                    actionDockerType = "Dockerfile"
+                    dockerBaseImage = "alpine:latest"
+                }
+            }
+        )
+        
+        # Act
+        $actionTypeCount = @{}
+        foreach ($fork in $forksWithHashTables) {
+            # Extract the actual actionType value, handling both string and object formats
+            $type = "Unknown"
+            if ($fork.actionType) {
+                # Check if actionType is a hash table or PSCustomObject with nested actionType property
+                if ($fork.actionType -is [hashtable] -or $fork.actionType -is [PSCustomObject]) {
+                    # Extract the nested actionType property
+                    if ($fork.actionType.actionType) {
+                        $type = $fork.actionType.actionType
+                    } elseif ($fork.actionType.PSObject.Properties["actionType"]) {
+                        $type = $fork.actionType.PSObject.Properties["actionType"].Value
+                    }
+                } else {
+                    # It's already a string
+                    $type = $fork.actionType
+                }
+            }
+            
+            if ($actionTypeCount.ContainsKey($type)) {
+                $actionTypeCount[$type]++
+            } else {
+                $actionTypeCount[$type] = 1
+            }
+        }
+        
+        # Assert
+        $actionTypeCount["Node"] | Should -Be 1
+        $actionTypeCount["Docker"] | Should -Be 2
+        $actionTypeCount.Count | Should -Be 2
+    }
+    
+    It "Should handle mixed string and hash table formats" {
+        # Arrange
+        $mixedForks = @(
+            @{ name = "action1"; actionType = "Composite" },
+            @{ name = "action2"; actionType = @{ actionType = "Node"; nodeVersion = "20" } },
+            @{ name = "action3"; actionType = "Composite" },
+            @{ name = "action4"; actionType = @{ actionType = "Docker"; dockerBaseImage = "ubuntu" } }
+        )
+        
+        # Act
+        $actionTypeCount = @{}
+        foreach ($fork in $mixedForks) {
+            # Extract the actual actionType value, handling both string and object formats
+            $type = "Unknown"
+            if ($fork.actionType) {
+                # Check if actionType is a hash table or PSCustomObject with nested actionType property
+                if ($fork.actionType -is [hashtable] -or $fork.actionType -is [PSCustomObject]) {
+                    # Extract the nested actionType property
+                    if ($fork.actionType.actionType) {
+                        $type = $fork.actionType.actionType
+                    } elseif ($fork.actionType.PSObject.Properties["actionType"]) {
+                        $type = $fork.actionType.PSObject.Properties["actionType"].Value
+                    }
+                } else {
+                    # It's already a string
+                    $type = $fork.actionType
+                }
+            }
+            
+            if ($actionTypeCount.ContainsKey($type)) {
+                $actionTypeCount[$type]++
+            } else {
+                $actionTypeCount[$type] = 1
+            }
+        }
+        
+        # Assert
+        $actionTypeCount["Composite"] | Should -Be 2
+        $actionTypeCount["Node"] | Should -Be 1
+        $actionTypeCount["Docker"] | Should -Be 1
+        $actionTypeCount.Count | Should -Be 3
     }
 }
 
