@@ -145,8 +145,11 @@ function Test-ActionSchema {
             # Check for expected nested fields
             $repoInfoProps = $action.repoInfo.PSObject.Properties.Name
             # Common fields: disabled, archived, updated_at, latest_release_published_at
-            if ($null -ne $action.repoInfo.updated_at -and $action.repoInfo.updated_at -notmatch '^\d{4}-\d{2}-\d{2}T') {
-                $warnings += "Object ${index} ($($action.name)): repoInfo.updated_at has unexpected format: $($action.repoInfo.updated_at)"
+            if ($null -ne $action.repoInfo.updated_at) {
+                # Validate ISO 8601 date format (basic check for YYYY-MM-DD pattern)
+                if ($action.repoInfo.updated_at -notmatch '^\d{4}-\d{2}-\d{2}') {
+                    $warnings += "Object ${index} ($($action.name)): repoInfo.updated_at has unexpected format: $($action.repoInfo.updated_at)"
+                }
             }
         }
         else {
@@ -244,8 +247,8 @@ function Test-StatusJsonSchema {
     
     $totalWarnings = 0
     $totalErrors = 0
-    $allWarnings = @()
-    $allErrors = @()
+    $allWarnings = [System.Collections.ArrayList]@()
+    $allErrors = [System.Collections.ArrayList]@()
     
     # Sample validation on first 100 objects for detailed reporting
     $sampleSize = [Math]::Min(100, $statusData.Count)
@@ -257,13 +260,17 @@ function Test-StatusJsonSchema {
         
         if (-not $result.Valid) {
             $totalErrors += $result.Errors.Count
-            $allErrors += $result.Errors
+            foreach ($error in $result.Errors) {
+                [void]$allErrors.Add($error)
+            }
         }
         
         if ($result.Warnings.Count -gt 0) {
             $totalWarnings += $result.Warnings.Count
             if ($i -lt $sampleSize) {
-                $allWarnings += $result.Warnings
+                foreach ($warning in $result.Warnings) {
+                    [void]$allWarnings.Add($warning)
+                }
             }
         }
     }
@@ -280,7 +287,9 @@ function Test-StatusJsonSchema {
     
     # Report detailed warnings (sample only to avoid overwhelming output)
     if ($allWarnings.Count -gt 0) {
-        Write-Message -message "## Warnings (First $sampleSize objects)" -logToSummary $true
+        Write-Message -message "## Warnings (Sample from first $sampleSize objects)" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "_Note: Only showing warnings from first $sampleSize objects to avoid overwhelming output._" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         $uniqueWarningPatterns = $allWarnings | Group-Object { $_ -replace 'Object \d+:', 'Object N:' } | Sort-Object Count -Descending
         foreach ($pattern in $uniqueWarningPatterns | Select-Object -First 10) {
