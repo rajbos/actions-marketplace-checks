@@ -2626,50 +2626,51 @@ function Select-ForksToProcess {
     Write-Message -message "| **Eligible forks after filtering** | **$($eligibleForks.Count)** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    # Sort by priority score (higher score = higher priority)
-    # Priority considers:
-    # 1. Time since last successful sync (older = higher priority)
-    # 2. Recent failures (penalty reduces priority to prevent monopolizing the queue)
-    $sortedForks = $eligibleForks | Sort-Object -Property {
-        $priorityScore = 0
-        $lastSyncDate = $null
-        
-        # Base priority: days since last successful sync
-        # Never-synced repos get high baseline priority to prioritize them over typical rotation cycles
-        # They can still be deprioritized below old syncs if they have recent failures
-        if ($_.lastSynced) {
-            try {
-                $lastSyncDate = [DateTime]::Parse($_.lastSynced)
-                $daysSinceSync = ($now - $lastSyncDate).TotalDays
-                $priorityScore = $daysSinceSync
-            } catch {
-                # If date parsing fails, treat as never synced
-                $priorityScore = 20.0
-                $lastSyncDate = $null
+    # Sort: never-synced forks first (by name), then synced forks by oldest lastSynced (then by name)
+    $sortedForks = $eligibleForks | Sort-Object -Property @(
+        # Primary: Never-synced first (0), then synced (1)
+        @{ Expression = { if ($_.lastSynced) { 1 } else { 0 } }; Ascending = $true },
+        # Secondary: For never-synced, use name for stable order; for synced, use lastSynced
+        @{ Expression = {
+            if ($_.lastSynced) {
+                try {
+                    return [DateTime]::Parse($_.lastSynced).Ticks
+                } catch {
+                    return [int64]::MaxValue
+                }
+            } else {
+                # Use name as a tiebreaker for never-synced
+                return [int64]::MinValue
             }
-        } else {
-            # Never synced - give high priority (20 days equivalent)
-            # This is higher than typical rotation cycles (7-14 days), ensuring priority
-            # But penalties can still drop them below old syncs if they fail repeatedly
-            $priorityScore = 20.0
-            $lastSyncDate = $null
-        }
+        }; Ascending = $true },
+        # Tertiary: Always use name as final tiebreaker
+        @{ Expression = { $_.name }; Ascending = $true }
+    )
+
+    # Apply failure penalty deprioritization while preserving the priority order above
+    # This allows us to move recently-failed repos to the end while preserving
+    # the never-synced vs synced hierarchy
+    $forksWithPenalty = [System.Collections.Generic.List[PSObject]]::new()
+    $forksNoPenalty = [System.Collections.Generic.List[PSObject]]::new()
+    
+    foreach ($fork in $sortedForks) {
+        $hasPenalty = $false
         
-        # Penalty: if repo had a recent failure, subtract penalty to deprioritize
-        # This prevents failing repos from monopolizing the queue
-        if ($_.lastSyncError -and $_.lastSyncAttempt) {
+        # Check if this fork has a recent failure that should deprioritize it
+        if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttemptDate = [DateTime]::Parse($_.lastSyncAttempt)
+                $lastAttemptDate = [DateTime]::Parse($fork.lastSyncAttempt)
                 $hoursSinceAttempt = ($now - $lastAttemptDate).TotalHours
                 
-                # Determine if this is a repeated failure:
-                # - If last attempt is more recent than last success, the repo failed after its last success
-                # - If never successfully synced, any attempt is a repeated failure
+                # Determine if this is a repeated failure
                 $isRepeatedFailure = $false
-                if ($null -ne $lastSyncDate) {
-                    # Reuse the already-parsed lastSyncDate from above
-                    # If last attempt is more recent than last success, it's a repeated failure
-                    if ($lastAttemptDate -gt $lastSyncDate) {
+                if ($fork.lastSynced) {
+                    try {
+                        $lastSyncDate = [DateTime]::Parse($fork.lastSynced)
+                        if ($lastAttemptDate -gt $lastSyncDate) {
+                            $isRepeatedFailure = $true
+                        }
+                    } catch {
                         $isRepeatedFailure = $true
                     }
                 } else {
@@ -2677,23 +2678,24 @@ function Select-ForksToProcess {
                     $isRepeatedFailure = $true
                 }
                 
-                if ($isRepeatedFailure -and $hoursSinceAttempt -lt 168) {  # Within last 7 days
-                    # Subtract penalty that decreases over time (fresher failures = larger penalty)
-                    # Penalty is large enough to push failing repos below all successfully synced repos
-                    # - Fresh failures (just past cool-off): penalty = 28 days
-                    # - 7-day-old failures: penalty = 0 days (no longer penalized)
-                    # - Failures older than 7 days: no penalty applied
-                    $penalty = 28.0 * (1.0 - ($hoursSinceAttempt / 168.0))
-                    $priorityScore -= $penalty
+                # Apply penalty if it's a repeated failure within the last 7 days
+                if ($isRepeatedFailure -and $hoursSinceAttempt -lt 168) {
+                    $hasPenalty = $true
                 }
             } catch {
-                # If date parsing fails, no penalty
-                Write-Debug "Failed to parse lastSyncAttempt for penalty calculation: $($_.lastSyncAttempt)"
+                Write-Debug "Failed to parse lastSyncAttempt for penalty calculation: $($fork.lastSyncAttempt)"
             }
         }
         
-        return $priorityScore
-    } -Descending
+        if ($hasPenalty) {
+            [void]$forksWithPenalty.Add($fork)
+        } else {
+            [void]$forksNoPenalty.Add($fork)
+        }
+    }
+    
+    # Final sorted list: forks without penalty first, then forks with penalty
+    $sortedForks = $forksNoPenalty + $forksWithPenalty
     
     $actualSelectCount = [Math]::Min($numberOfRepos, $sortedForks.Count)
     $selectedForks = $sortedForks | Select-Object -First $actualSelectCount

@@ -1,0 +1,97 @@
+# Validate status.json schema
+# Runs on a schedule every Friday to ensure the JSON structure matches expectations
+# Alerts if schema has changed so updates can be made to dependent scripts
+
+name: Validate Status JSON Schema
+
+on:
+  workflow_dispatch:
+    inputs:
+      statusFileUrl:
+        description: 'Optional: Custom status.json URL to validate (for testing)'
+        required: false
+        type: string
+
+  pull_request:
+    paths:
+      - .github/workflows/validate-status-schema.yml
+      - .github/workflows/validate-status-schema.ps1
+
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/validate-status-schema.yml
+      - .github/workflows/validate-status-schema.ps1
+
+  schedule:
+    # Run every Friday at 9:00 AM UTC
+    - cron: '0 9 * * 5'
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  validate-schema:
+    name: Validate status.json Schema
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          Write-Host "Downloading status.json from blob storage..."
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+          
+          # Verify file was downloaded
+          if (-not (Test-Path "status.json")) {
+            Write-Error "status.json not found after download"
+            exit 1
+          }
+          
+          $fileSize = (Get-Item "status.json").Length
+          Write-Host "Downloaded status.json: $fileSize bytes"
+          
+          if ($fileSize -le 5) {
+            Write-Error "status.json is too small ($fileSize bytes)"
+            exit 1
+          }
+
+      - name: Validate status.json schema
+        shell: pwsh
+        run: |
+          # Run validation script
+          ./.github/workflows/validate-status-schema.ps1 -statusFilePath "status.json"
+
+      - name: Report validation results
+        if: always()
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "---" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## Workflow Information" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "- **Workflow**: Validate Status JSON Schema" -logToSummary $true
+          Write-Message -message "- **Trigger**: ${{ github.event_name }}" -logToSummary $true
+          Write-Message -message "- **Run ID**: ${{ github.run_id }}" -logToSummary $true
+          Write-Message -message "- **Date**: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "This workflow validates that status.json matches the expected schema." -logToSummary $true
+          Write-Message -message "If this workflow fails, it indicates the schema has changed and scripts may need updates." -logToSummary $true
