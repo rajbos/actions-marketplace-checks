@@ -291,14 +291,38 @@ function Test-StatusJsonSchema {
         Write-Message -message "" -logToSummary $true
         Write-Message -message "_Note: Only showing warnings from first $sampleSize objects to avoid overwhelming output._" -logToSummary $true
         Write-Message -message "" -logToSummary $true
-        $uniqueWarningPatterns = $allWarnings | Group-Object { $_ -replace 'Object \d+:', 'Object N:' } | Sort-Object Count -Descending
-        foreach ($pattern in $uniqueWarningPatterns | Select-Object -First 10) {
-            Write-Message -message "- [$($pattern.Count)x] $($pattern.Name)" -logToSummary $true
+        
+        # Group warnings by type (pattern) - normalize by removing object indices and names
+        $warningGroups = $allWarnings | Group-Object { 
+            $normalized = $_ -replace 'Object \d+( \([^)]+\))?:', 'Object:'
+            $normalized
+        } | Sort-Object Count -Descending
+        
+        foreach ($group in $warningGroups | Select-Object -First 10) {
+            # Extract the warning type description (after the normalized object reference)
+            $typeDescription = $group.Name -replace '^Object:\s*', ''
+            $count = $group.Count
+            
+            Write-Message -message "### [$count x] $typeDescription" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            
+            # Show first 3 actual examples with object names
+            $examples = $group.Group | Select-Object -First 3
+            foreach ($example in $examples) {
+                Write-Message -message "- $example" -logToSummary $true
+            }
+            
+            if ($group.Count -gt 3) {
+                Write-Message -message "- ... and $($group.Count - 3) more" -logToSummary $true
+            }
+            
+            Write-Message -message "" -logToSummary $true
         }
-        if ($uniqueWarningPatterns.Count -gt 10) {
-            Write-Message -message "- ... and $($uniqueWarningPatterns.Count - 10) more warning patterns" -logToSummary $true
+        
+        if ($warningGroups.Count -gt 10) {
+            Write-Message -message "_... and $($warningGroups.Count - 10) more warning types_" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
         }
-        Write-Message -message "" -logToSummary $true
     }
     
     # Report all errors (these are critical)
