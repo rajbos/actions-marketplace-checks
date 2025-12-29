@@ -25,8 +25,8 @@ BeforeAll {
             forkFound = $true
             lastSynced = (Get-Date).AddDays(-3).ToString("yyyy-MM-ddTHH:mm:ssZ")
             actionType = "Node"
-            tags = @("v1.0.0")
-            releases = @("v1.0.0")
+            tagInfo = @("v1.0.0")
+            releaseInfo = @("v1.0.0")
             repoInfo = @{ size = 100 }
         },
         @{ 
@@ -35,8 +35,8 @@ BeforeAll {
             forkFound = $true
             lastSynced = (Get-Date).AddDays(-10).ToString("yyyy-MM-ddTHH:mm:ssZ")
             actionType = "Docker"
-            tags = @()
-            releases = @()
+            tagInfo = @()
+            releaseInfo = @()
             repoInfo = @{ size = 200 }
         },
         @{ 
@@ -45,8 +45,8 @@ BeforeAll {
             forkFound = $true
             lastSynced = $null
             actionType = "No file found"
-            tags = $null
-            releases = $null
+            tagInfo = $null
+            releaseInfo = $null
             repoInfo = $null
         },
         @{ 
@@ -55,8 +55,8 @@ BeforeAll {
             forkFound = $true
             lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ")
             actionType = "Composite"
-            tags = @("v2.0.0")
-            releases = @("v2.0.0")
+            tagInfo = @("v2.0.0")
+            releaseInfo = @("v2.0.0")
             repoInfo = @{ size = 150 }
         }
     )
@@ -228,7 +228,7 @@ Describe "Environment State - Repo Info Status" {
         
         # Act
         $reposWithTags = ($trackedForks | Where-Object { 
-            $_.tags -and $_.tags.Count -gt 0 
+            $_.tagInfo -and $_.tagInfo.Count -gt 0 
         }).Count
         
         # Assert
@@ -241,7 +241,7 @@ Describe "Environment State - Repo Info Status" {
         
         # Act
         $reposWithReleases = ($trackedForks | Where-Object { 
-            $_.releases -and $_.releases.Count -gt 0 
+            $_.releaseInfo -and $_.releaseInfo.Count -gt 0 
         }).Count
         
         # Assert
