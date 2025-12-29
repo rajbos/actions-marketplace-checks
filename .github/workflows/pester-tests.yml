@@ -33,4 +33,4 @@ jobs:
           Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
       
       - name: Run Pester Tests
-        run: Invoke-Pester -Output Detailed
+        run: Invoke-Pester -Output Normal
