@@ -464,7 +464,7 @@ if ($access_token_destination -ne "") {
     $url = "rate_limit"
     $response = ApiCall -method GET -url $url -access_token $access_token_destination -waitForRateLimit $false
     
-    if ($null -ne $response) {
+    if ($null -ne $response -and $null -ne $response.rate) {
         $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($response.rate.reset).UtcDateTime
         $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
         
@@ -486,6 +486,9 @@ if ($access_token_destination -ne "") {
         Write-Host "  Used: $($response.rate.used)"
         Write-Host "  Remaining: $($response.rate.remaining)"
         Write-Host "  Resets in: $resetDisplay"
+    }
+    elseif ($null -eq $response) {
+        Write-Host "  (Rate limit information unavailable - API rate limit may be exceeded)"
     }
     
     Write-Host ""
