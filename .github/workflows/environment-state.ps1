@@ -38,6 +38,29 @@ Param (
 # Import library functions
 . "$PSScriptRoot/library.ps1"
 
+# Helper function to extract the actual actionType value from both string and object formats
+function Get-ActionTypeValue {
+    param($actionType)
+    
+    if (-not $actionType) {
+        return "Unknown"
+    }
+    
+    # Check if actionType is a hash table or PSCustomObject with nested actionType property
+    if ($actionType -is [hashtable] -or $actionType -is [PSCustomObject]) {
+        # Extract the nested actionType property
+        if ($actionType.actionType) {
+            return $actionType.actionType
+        } elseif ($actionType.PSObject.Properties["actionType"]) {
+            return $actionType.PSObject.Properties["actionType"].Value
+        }
+        return "Unknown"
+    }
+    
+    # It's already a string
+    return $actionType
+}
+
 Write-Message -message "# Environment State Documentation" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "_Report generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')_" -logToSummary $true
@@ -254,20 +277,7 @@ $reposWithRepoInfo = ($existingForks | Where-Object {
 }).Count
 
 $reposWithActionType = ($existingForks | Where-Object {
-    if (-not $_.actionType) { return $false }
-    
-    # Extract the actual actionType value to check if it's valid
-    $type = "Unknown"
-    if ($_.actionType -is [hashtable] -or $_.actionType -is [PSCustomObject]) {
-        if ($_.actionType.actionType) {
-            $type = $_.actionType.actionType
-        } elseif ($_.actionType.PSObject.Properties["actionType"]) {
-            $type = $_.actionType.PSObject.Properties["actionType"].Value
-        }
-    } else {
-        $type = $_.actionType
-    }
-    
+    $type = Get-ActionTypeValue -actionType $_.actionType
     # Consider it valid if it's not empty, "Unknown", or "No file found"
     return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
 }).Count
@@ -288,22 +298,7 @@ Write-Message -message "" -logToSummary $true
 
 $actionTypeCount = @{}
 foreach ($fork in $existingForks) {
-    # Extract the actual actionType value, handling both string and object formats
-    $type = "Unknown"
-    if ($fork.actionType) {
-        # Check if actionType is a hash table or PSCustomObject with nested actionType property
-        if ($fork.actionType -is [hashtable] -or $fork.actionType -is [PSCustomObject]) {
-            # Extract the nested actionType property
-            if ($fork.actionType.actionType) {
-                $type = $fork.actionType.actionType
-            } elseif ($fork.actionType.PSObject.Properties["actionType"]) {
-                $type = $fork.actionType.PSObject.Properties["actionType"].Value
-            }
-        } else {
-            # It's already a string
-            $type = $fork.actionType
-        }
-    }
+    $type = Get-ActionTypeValue -actionType $fork.actionType
     
     if ($actionTypeCount.ContainsKey($type)) {
         $actionTypeCount[$type]++
