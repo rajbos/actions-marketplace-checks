@@ -10,6 +10,32 @@ BeforeAll {
         Write-Host $message
     }
     
+    # Helper function to extract the actual actionType value from both string and object formats
+    function Get-ActionTypeValue {
+        param(
+            [Parameter(Mandatory=$false)]
+            $data
+        )
+        
+        if (-not $data) {
+            return "Unknown"
+        }
+        
+        # Check if data is a hash table or PSCustomObject with nested actionType property
+        if ($data -is [hashtable] -or $data -is [PSCustomObject]) {
+            # Extract the nested actionType property
+            if ($data.actionType) {
+                return $data.actionType
+            } elseif ($data.PSObject.Properties["actionType"]) {
+                return $data.PSObject.Properties["actionType"].Value
+            }
+            return "Unknown"
+        }
+        
+        # It's already a string
+        return $data
+    }
+    
     # Create sample test data
     $script:sampleActions = @(
         @{ name = "action1"; repoUrl = "https://github.com/owner1/repo1" },
@@ -276,14 +302,15 @@ Describe "Environment State - Repo Info Status" {
 }
 
 Describe "Environment State - Action Type Breakdown" {
-    It "Should correctly count action types" {
+    It "Should correctly count action types with string format" {
         # Arrange
         $trackedForks = $script:sampleForks
         
         # Act
         $actionTypeCount = @{}
         foreach ($fork in $trackedForks) {
-            $type = if ($fork.actionType) { $fork.actionType } else { "Unknown" }
+            $type = Get-ActionTypeValue -data $fork.actionType
+            
             if ($actionTypeCount.ContainsKey($type)) {
                 $actionTypeCount[$type]++
             } else {
@@ -297,6 +324,84 @@ Describe "Environment State - Action Type Breakdown" {
         $actionTypeCount["Composite"] | Should -Be 1
         $actionTypeCount["No file found"] | Should -Be 1
         $actionTypeCount.Count | Should -Be 4
+    }
+    
+    It "Should correctly extract actionType from hash table format" {
+        # Arrange
+        $forksWithHashTables = @(
+            @{ 
+                name = "action1"
+                actionType = @{
+                    actionType = "Docker"
+                    fileFound = "action.yml"
+                    nodeVersion = "16"
+                    actionDockerType = "Dockerfile"
+                    dockerBaseImage = "ubuntu:latest"
+                }
+            },
+            @{ 
+                name = "action2"
+                actionType = @{
+                    actionType = "Node"
+                    fileFound = "action.yml"
+                    nodeVersion = "20"
+                }
+            },
+            @{ 
+                name = "action3"
+                actionType = @{
+                    actionType = "Docker"
+                    fileFound = "action.yml"
+                    actionDockerType = "Dockerfile"
+                    dockerBaseImage = "alpine:latest"
+                }
+            }
+        )
+        
+        # Act
+        $actionTypeCount = @{}
+        foreach ($fork in $forksWithHashTables) {
+            $type = Get-ActionTypeValue -data $fork.actionType
+            
+            if ($actionTypeCount.ContainsKey($type)) {
+                $actionTypeCount[$type]++
+            } else {
+                $actionTypeCount[$type] = 1
+            }
+        }
+        
+        # Assert
+        $actionTypeCount["Node"] | Should -Be 1
+        $actionTypeCount["Docker"] | Should -Be 2
+        $actionTypeCount.Count | Should -Be 2
+    }
+    
+    It "Should handle mixed string and hash table formats" {
+        # Arrange
+        $mixedForks = @(
+            @{ name = "action1"; actionType = "Composite" },
+            @{ name = "action2"; actionType = @{ actionType = "Node"; nodeVersion = "20" } },
+            @{ name = "action3"; actionType = "Composite" },
+            @{ name = "action4"; actionType = @{ actionType = "Docker"; dockerBaseImage = "ubuntu" } }
+        )
+        
+        # Act
+        $actionTypeCount = @{}
+        foreach ($fork in $mixedForks) {
+            $type = Get-ActionTypeValue -data $fork.actionType
+            
+            if ($actionTypeCount.ContainsKey($type)) {
+                $actionTypeCount[$type]++
+            } else {
+                $actionTypeCount[$type] = 1
+            }
+        }
+        
+        # Assert
+        $actionTypeCount["Composite"] | Should -Be 2
+        $actionTypeCount["Node"] | Should -Be 1
+        $actionTypeCount["Docker"] | Should -Be 1
+        $actionTypeCount.Count | Should -Be 3
     }
 }
 
@@ -351,8 +456,10 @@ Describe "Environment State - Health Metrics" {
         $trackedForks = $script:sampleForks
         $totalTrackedActions = $trackedForks.Count
         
-        $reposWithActionType = ($trackedForks | Where-Object { 
-            $_.actionType -and $_.actionType -ne "" -and $_.actionType -ne "No file found" 
+        $reposWithActionType = ($trackedForks | Where-Object {
+            $type = Get-ActionTypeValue -data $_.actionType
+            # Consider it valid if it's not empty, "Unknown", or "No file found"
+            return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
         }).Count
         
         # Act
@@ -364,5 +471,41 @@ Describe "Environment State - Health Metrics" {
         
         # Assert
         $completionPercentage | Should -Be 75.00
+    }
+    
+    It "Should correctly identify valid action types in hash table format" {
+        # Arrange - Create forks with hash table actionType values
+        $forksWithHashTables = @(
+            @{ 
+                name = "valid-docker"
+                actionType = @{ actionType = "Docker"; fileFound = "action.yml" }
+            },
+            @{ 
+                name = "valid-node"
+                actionType = @{ actionType = "Node"; nodeVersion = "20" }
+            },
+            @{ 
+                name = "invalid-no-file"
+                actionType = @{ actionType = "No file found"; fileFound = "No file found" }
+            },
+            @{ 
+                name = "valid-composite"
+                actionType = "Composite"  # String format
+            },
+            @{ 
+                name = "no-actiontype"
+                actionType = $null
+            }
+        )
+        
+        # Act
+        $reposWithActionType = ($forksWithHashTables | Where-Object {
+            $type = Get-ActionTypeValue -data $_.actionType
+            # Consider it valid if it's not empty, "Unknown", or "No file found"
+            return ($type -and $type -ne "" -and $type -ne "Unknown" -and $type -ne "No file found")
+        }).Count
+        
+        # Assert - Should count only Docker, Node, and Composite (not "No file found" or null)
+        $reposWithActionType | Should -Be 3
     }
 }
