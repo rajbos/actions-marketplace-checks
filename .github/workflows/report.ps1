@@ -445,12 +445,19 @@ function ReportInsightsInMarkdown {
         
         # Add sub-breakdown for local Dockerfiles if we have custom code information
         if ($localDockerFile -gt 0 -and ($localDockerfileWithCustomCode -gt 0 -or $localDockerfileWithoutCustomCode -gt 0)) {
-            $totalWithInfo = $localDockerfileWithCustomCode + $localDockerfileWithoutCustomCode
-            if ($totalWithInfo -gt 0) {
-                $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$totalWithInfo * 100 , 1)
-                $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$totalWithInfo * 100 , 1)
-                LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
-                LogMessage "  B-->E[$localDockerfileWithoutCustomCode Base image only - $withoutCodePercentage%]"
+            # Calculate the unknown count (actions still being scanned)
+            $localDockerfileUnknown = $localDockerFile - ($localDockerfileWithCustomCode + $localDockerfileWithoutCustomCode)
+            
+            # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for D and E to use the number from B")
+            $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$localDockerFile * 100 , 1)
+            $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$localDockerFile * 100 , 1)
+            LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
+            LogMessage "  B-->E[$localDockerfileWithoutCustomCode Base image only - $withoutCodePercentage%]"
+            
+            # Add unknown category if there are actions without custom code information
+            if ($localDockerfileUnknown -gt 0) {
+                $unknownPercentage = [math]::Round($localDockerfileUnknown/$localDockerFile * 100 , 1)
+                LogMessage "  B-->F[$localDockerfileUnknown Unknown - $unknownPercentage%]"
             }
         }
     } else {
