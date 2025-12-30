@@ -612,7 +612,74 @@ function GetDockerBaseImageNameFromContent {
     return $dockerBaseImage
 }
 
+function Test-DockerfileHasCustomCode {
+    <#
+    .SYNOPSIS
+        Analyzes Dockerfile content to determine if it contains custom code.
+    
+    .DESCRIPTION
+        Checks if the Dockerfile contains COPY or ADD instructions that add files from the repository.
+        Returns $true if custom code is being added to the image, $false otherwise.
+        
+        A Dockerfile is considered to have custom code if it contains:
+        - COPY instructions (except for copying from other build stages)
+        - ADD instructions (except for URLs)
+    
+    .PARAMETER dockerFileContent
+        The content of the Dockerfile as a string
+    
+    .OUTPUTS
+        Boolean indicating whether the Dockerfile contains custom code
+    #>
+    param (
+        [string]$dockerFileContent
+    )
+    
+    if ($null -eq $dockerFileContent -or "" -eq $dockerFileContent) {
+        return $false
+    }
+    
+    # Split into lines and normalize
+    $lines = $dockerFileContent.Split("`n") | ForEach-Object { $_.Trim().TrimEnd("`r") }
+    
+    # Look for COPY or ADD instructions
+    foreach ($line in $lines) {
+        # Skip comments and empty lines
+        if ($line -match '^\s*#' -or $line -match '^\s*$') {
+            continue
+        }
+        
+        # Check for COPY instruction (but not COPY --from=stage which is multi-stage build)
+        if ($line -match '^COPY\s+(?!--from=)') {
+            Write-Debug "Found COPY instruction indicating custom code: $line"
+            return $true
+        }
+        
+        # Check for ADD instruction (but not ADD with URLs which pulls external resources)
+        if ($line -match '^ADD\s+(?!https?://)') {
+            Write-Debug "Found ADD instruction indicating custom code: $line"
+            return $true
+        }
+    }
+    
+    return $false
+}
+
 function GetRepoDockerBaseImage {
+    <#
+    .SYNOPSIS
+        Gets Docker base image and analyzes if Dockerfile contains custom code.
+    
+    .DESCRIPTION
+        Downloads and analyzes the Dockerfile to extract:
+        1. The base image from the FROM instruction
+        2. Whether the Dockerfile contains COPY/ADD instructions (custom code)
+    
+    .OUTPUTS
+        Returns a hashtable with:
+        - dockerBaseImage: The base image name
+        - hasCustomCode: Boolean indicating if Dockerfile has COPY/ADD instructions
+    #>
     Param (
         [string] $owner,
         [string] $repo,
@@ -620,7 +687,11 @@ function GetRepoDockerBaseImage {
         $access_token
     )
 
-    $dockerBaseImage = ""
+    $result = @{
+        dockerBaseImage = ""
+        hasCustomCode = $false
+    }
+    
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
         $repoUrl = "https://github.com/$owner/$repo"
@@ -631,7 +702,8 @@ function GetRepoDockerBaseImage {
             $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
             if ($hasValidDownloadUrl) {
                 $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
-                $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                $result.dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                $result.hasCustomCode = Test-DockerfileHasCustomCode -dockerFileContent $dockerFileContent
             }
             else {
                 Write-Host "Error: No download_url found for Dockerfile in [$owner/$repo]"
@@ -648,7 +720,8 @@ function GetRepoDockerBaseImage {
                 $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
                 if ($hasValidDownloadUrl) {
                     $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
-                    $dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                    $result.dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
+                    $result.hasCustomCode = Test-DockerfileHasCustomCode -dockerFileContent $dockerFileContent
                 }
                 else {
                     Write-Host "Error: No download_url found for dockerfile in [$owner/$repo]"
@@ -663,7 +736,7 @@ function GetRepoDockerBaseImage {
         Write-Host "Cant load docker base image for action type [$($actionType.actionType)] with [$($actionType.actionDockerType)] in [$owner/$repo]"
     }
 
-    return $dockerBaseImage
+    return $result
 }
 
 function EnableSecretScanning {
@@ -878,23 +951,36 @@ function GetMoreInfo {
             }
 
             if ($action.actionType.actionType -eq "Docker") {
-                $hasField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
-                if (!$hasField -or (($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image")) {
-                    Write-Host "$i/$max - Checking Docker base image information for [$($owner)/$($repo)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
+                $hasBaseImageField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
+                $hasCustomCodeField = Get-Member -inputobject $action.actionType -name "dockerfileHasCustomCode" -Membertype Properties
+                
+                # Check if we need to get or update Docker info
+                $needsDockerInfo = (!$hasBaseImageField -or ($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image") -or !$hasCustomCodeField
+                
+                if ($needsDockerInfo) {
+                    Write-Host "$i/$max - Checking Docker information for [$($owner)/$($repo)]. hasBaseImageField: [$hasBaseImageField], hasCustomCodeField: [$hasCustomCodeField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
                     try {
                         # search for the docker file in the fork organization, since the original repo might already have seen updates
-                        $dockerBaseImage = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -access_token $access_token
-                        if ($dockerBaseImage -ne "") {
-                            if (!$hasField) {
-                                Write-Host "Adding Docker base image information object with image:[$dockerBaseImage] for [$($action.owner)/$($action.name))]"
-
-                                $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerBaseImage -MemberType NoteProperty
+                        $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -access_token $access_token
+                        
+                        if ($dockerInfo.dockerBaseImage -ne "") {
+                            if (!$hasBaseImageField) {
+                                Write-Host "Adding Docker base image information with image:[$($dockerInfo.dockerBaseImage)], hasCustomCode:[$($dockerInfo.hasCustomCode)] for [$($action.owner)/$($action.name))]"
+                                $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerInfo.dockerBaseImage -MemberType NoteProperty
                                 $i++ | Out-Null
                                 $dockerBaseImageInfoAdded++ | Out-Null
                             }
                             else {
-                                Write-Host "Updating Docker base image information object with image:[$dockerBaseImage] for [$($owner)/$($repo))]"
-                                $action.actionType.dockerBaseImage = $dockerBaseImage
+                                Write-Host "Updating Docker base image information with image:[$($dockerInfo.dockerBaseImage)] for [$($owner)/$($repo))]"
+                                $action.actionType.dockerBaseImage = $dockerInfo.dockerBaseImage
+                            }
+                            
+                            # Add or update hasCustomCode field
+                            if (!$hasCustomCodeField) {
+                                $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $dockerInfo.hasCustomCode -MemberType NoteProperty
+                            }
+                            else {
+                                $action.actionType.dockerfileHasCustomCode = $dockerInfo.hasCustomCode
                             }
                         }
                     }

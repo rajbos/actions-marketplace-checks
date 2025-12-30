@@ -29,6 +29,8 @@ $global:nodeBasedActions = 0
 $global:dockerBasedActions = 0
 $global:localDockerFile = 0
 $global:remoteDockerfile = 0
+$global:localDockerfileWithCustomCode = 0
+$global:localDockerfileWithoutCustomCode = 0
 $global:actionYmlFile = 0
 $global:actionYamlFile = 0
 $global:actionDockerFile = 0
@@ -104,6 +106,16 @@ function AnalyzeActionInformation {
                 $global:dockerBasedActions++
                 if ($action.actionType.actionDockerType -eq "Dockerfile") {
                     $global:localDockerFile++
+                    
+                    # Track whether Dockerfile has custom code
+                    if ($null -ne $action.actionType.dockerfileHasCustomCode) {
+                        if ($action.actionType.dockerfileHasCustomCode -eq $true) {
+                            $global:localDockerfileWithCustomCode++
+                        }
+                        else {
+                            $global:localDockerfileWithoutCustomCode++
+                        }
+                    }
                 }
                 elseif ($action.actionType.actionDockerType -eq "Image") {
                     $global:remoteDockerfile++
@@ -425,6 +437,17 @@ function ReportInsightsInMarkdown {
         $remoteDockerPercentage = [math]::Round($remoteDockerfile/$dockerBasedActions * 100 , 1)
         LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile - $localDockerPercentage%]"
         LogMessage "  A-->C[$remoteDockerfile Remote image - $remoteDockerPercentage%]"
+        
+        # Add sub-breakdown for local Dockerfiles if we have custom code information
+        if ($localDockerFile -gt 0 -and ($localDockerfileWithCustomCode -gt 0 -or $localDockerfileWithoutCustomCode -gt 0)) {
+            $totalWithInfo = $localDockerfileWithCustomCode + $localDockerfileWithoutCustomCode
+            if ($totalWithInfo -gt 0) {
+                $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$totalWithInfo * 100 , 1)
+                $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$totalWithInfo * 100 , 1)
+                LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
+                LogMessage "  B-->E[$localDockerfileWithoutCustomCode Base image only - $withoutCodePercentage%]"
+            }
+        }
     } else {
         LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile]"
         LogMessage "  A-->C[$remoteDockerfile Remote image]"
