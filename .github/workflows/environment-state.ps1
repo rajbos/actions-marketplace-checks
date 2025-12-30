@@ -610,12 +610,12 @@ Write-Message -message "" -logToSummary $true
 # ============================================================================
 Write-Message -message "## Summary" -logToSummary $true
 Write-Message -message "" -logToSummary $true
-Write-Message -message "- **$(DisplayIntWithDots $totalActionsInMarketplace)** actions in the marketplace" -logToSummary $true
-Write-Message -message "- **$(DisplayIntWithDots $totalTrackedActions)** actions tracked in our system" -logToSummary $true
-Write-Message -message "- **$(DisplayIntWithDots $reposWithMirrors)** valid mirrors maintained" -logToSummary $true
-Write-Message -message "- **$(DisplayIntWithDots $reposSyncedLast7Days)** repos synced in the last 7 days" -logToSummary $true
-Write-Message -message "- **$(DisplayIntWithDots $reposNeedingUpdate)** repos need updates (not synced in last 7 days)" -logToSummary $true
-Write-Message -message "- **$(DisplayIntWithDots $($actionsNotTracked.Count))** new actions to track" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots($totalActionsInMarketplace))** actions in the marketplace" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots($totalTrackedActions))** actions tracked in our system" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots($reposWithMirrors))** valid mirrors maintained" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots($reposSyncedLast7Days))** repos synced in the last 7 days" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots($reposNeedingUpdate))** repos need updates (not synced in last 7 days)" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots($($actionsNotTracked.Count)))** new actions to track" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 Write-Host ""
