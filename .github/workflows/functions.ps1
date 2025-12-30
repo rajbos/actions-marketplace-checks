@@ -35,11 +35,11 @@ function RunForActions {
     Write-Host "Running for [$($actions.Count)] actions"
     # filter actions list to only the ones with a repoUrl
     $actions = $actions | Where-Object { $null -ne $_.repoUrl -and $_.repoUrl -ne "" }
-    Write-Message "Found [$($actions.Count)] actions with a repoUrl" -logToSummary $true
+    Write-Message "Found [$(DisplayIntWithDots $actions.Count)] actions with a repoUrl" -logToSummary $true
     # do the work
     ($newlyForkedRepos, $existingForks, $failedForks) = ForkActionRepos -actions $actions -existingForks $existingForks -failedForks $failedForks
     SaveStatus -failedForks $failedForks
-    Write-Message -message "Forked [$($newlyForkedRepos)] new repos in [$($existingForks.Count)] repos" -logToSummary $true
+    Write-Message -message "Forked [$(DisplayIntWithDots $newlyForkedRepos)] new repos in [$(DisplayIntWithDots $existingForks.Count)] repos" -logToSummary $true
     SaveStatus -existingForks $existingForks
 
     return $existingForks
@@ -68,7 +68,7 @@ function ForkActionRepos {
         $actionsToProcess = $actions
     }
 
-    Write-Message -message "Found [$($actionsToProcess.Count)] actions still to process for forking" -logToSummary $true
+    Write-Message -message "Found [$(DisplayIntWithDots $actionsToProcess.Count)] actions still to process for forking" -logToSummary $true
 
     # get existing forks with owner/repo values instead of full urls
     # declar variables outside of the loop to make it faster

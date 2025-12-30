@@ -60,7 +60,7 @@ jobs:
                   
                   Write-Message -message "## Node.js Versions in Tools Cache" -logToSummary $true
                   Write-Message -message "" -logToSummary $true
-                  Write-Message -message "Found **$($nodeVersions.Count)** Node.js versions installed in the runner's tools cache:" -logToSummary $true
+                  Write-Message -message "Found **$(DisplayIntWithDots $nodeVersions.Count)** Node.js versions installed in the runner's tools cache:" -logToSummary $true
                   Write-Message -message "" -logToSummary $true
                   Write-Message -message "| Version | Path |" -logToSummary $true
                   Write-Message -message "|---------|------|" -logToSummary $true
@@ -77,7 +77,7 @@ jobs:
                   Write-Message -message "## Summary" -logToSummary $true
                   Write-Message -message "" -logToSummary $true
                   Write-Message -message "- **Default version**: $defaultVersion" -logToSummary $true
-                  Write-Message -message "- **Total versions available**: $($nodeVersions.Count)" -logToSummary $true
+                  Write-Message -message "- **Total versions available**: $(DisplayIntWithDots $nodeVersions.Count)" -logToSummary $true
                   Write-Message -message "- **Version range**: $($nodeVersions[0]) to $($nodeVersions[-1])" -logToSummary $true
               }
               else {
@@ -109,7 +109,7 @@ jobs:
               
               Write-Message -message "## Node.js Versions Available via setup-node Action" -logToSummary $true
               Write-Message -message "" -logToSummary $true
-              Write-Message -message "The setup-node action can install **$($availableVersions.Count)** total versions (including pre-releases)." -logToSummary $true
+              Write-Message -message "The setup-node action can install **$(DisplayIntWithDots $availableVersions.Count)** total versions (including pre-releases)." -logToSummary $true
               Write-Message -message "" -logToSummary $true
               Write-Message -message "**Latest stable version per major release:**" -logToSummary $true
               Write-Message -message "" -logToSummary $true

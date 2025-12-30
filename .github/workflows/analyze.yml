@@ -291,7 +291,7 @@ jobs:
           }
 
           $actionNames = Get-Content $chunkFile | ConvertFrom-Json
-          Write-Message -message "Loaded [$($actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
+          Write-Message -message "Loaded [$(DisplayIntWithDots $actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
           # Process the chunk
@@ -386,13 +386,13 @@ jobs:
           $partialFiles = Get-ChildItem -Path "partial-functions" -Filter "status-partial-functions-*.json" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
           
           if ($partialFiles) {
-              Write-Message -message "Found [$($partialFiles.Count)] partial forking status files to merge" -logToSummary $true
+              Write-Message -message "Found [$(DisplayIntWithDots $partialFiles.Count)] partial forking status files to merge" -logToSummary $true
               
               # Merge all partial updates
               $mergedStatus = Merge-PartialStatusUpdates -currentStatus $currentStatus -partialStatusFiles $partialFiles
               
               # Save merged status
-              Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+              Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
               SaveStatus -existingForks $mergedStatus
           } else {
               Write-Message -message "No partial forking updates found to merge" -logToSummary $true
@@ -446,7 +446,7 @@ jobs:
           }
 
           $actionNames = Get-Content $chunkFile | ConvertFrom-Json
-          Write-Message -message "Loaded [$($actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
+          Write-Message -message "Loaded [$(DisplayIntWithDots $actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
           # Process the chunk
@@ -543,20 +543,20 @@ jobs:
               exit 1
           }
 
-          Write-Message -message "Loaded current status with [$($currentStatus.Count)] forks" -logToSummary $true
+          Write-Message -message "Loaded current status with [$(DisplayIntWithDots $currentStatus.Count)] forks" -logToSummary $true
 
           # Find all partial status files
           $partialFiles = Get-ChildItem -Path "partial-updates" -Filter "status-partial-*.json" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
           
           if ($partialFiles) {
-              Write-Message -message "Found [$($partialFiles.Count)] partial status files to merge" -logToSummary $true
+              Write-Message -message "Found [$(DisplayIntWithDots $partialFiles.Count)] partial status files to merge" -logToSummary $true
               Write-Message -message "" -logToSummary $true
 
               # Merge all partial updates
               $mergedStatus = Merge-PartialStatusUpdates -currentStatus $currentStatus -partialStatusFiles $partialFiles
 
               # Save merged status
-              Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+              Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
               SaveStatus -existingForks $mergedStatus
           } else {
               Write-Message -message "No partial status files found to merge" -logToSummary $true
@@ -567,7 +567,7 @@ jobs:
           
           if ($failedForksFiles) {
               Write-Message -message "" -logToSummary $true
-              Write-Message -message "Found [$($failedForksFiles.Count)] partial failed forks files to merge" -logToSummary $true
+              Write-Message -message "Found [$(DisplayIntWithDots $failedForksFiles.Count)] partial failed forks files to merge" -logToSummary $true
               
               # Load current failed forks
               $allFailedForks = @()
@@ -598,7 +598,7 @@ jobs:
               
               # Remove duplicates and save
               $uniqueFailedForks = $allFailedForks | Sort-Object -Property name -Unique
-              Write-Message -message "Merged failed forks: [$($uniqueFailedForks.Count)] unique entries" -logToSummary $true
+              Write-Message -message "Merged failed forks: [$(DisplayIntWithDots $uniqueFailedForks.Count)] unique entries" -logToSummary $true
               SaveStatus -failedForks $uniqueFailedForks
           }
 

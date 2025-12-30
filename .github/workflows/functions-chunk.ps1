@@ -86,7 +86,7 @@ function ProcessForkingChunk {
     }
     
     # show hashtable count, origin stats, and a sample of keys for quick verification
-    Write-Message -message "Total actions available for processing: [$($actionsByName.Count)]" -logToSummary $true
+    Write-Message -message "Total actions available for processing: [$(DisplayIntWithDots $actionsByName.Count)]" -logToSummary $true
     Write-Host "Key origin stats: name=$($keyStats.fromName), forkedRepoName=$($keyStats.fromForkedRepoName), repoUrl-derived=$($keyStats.fromRepoUrl), invalidRepoUrl=$($keyStats.invalidRepoUrl)"
     $sampleKeys = ($actionsByName.Keys | Select-Object -First 5) -join ', '
     if ($sampleKeys) { Write-Host "Sample keys: $sampleKeys" }

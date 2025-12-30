@@ -15,7 +15,7 @@ function UpdateForkedRepos {
         [int] $numberOfReposToDo
     )
 
-    Write-Message -message "Running mirror sync for [$($existingForks.Count)] mirrors" -logToSummary $true
+    Write-Message -message "Running mirror sync for [$(DisplayIntWithDots $existingForks.Count)] mirrors" -logToSummary $true
     
     $i = 0
     $max = $numberOfReposToDo

@@ -15,7 +15,7 @@ function RunForAllForkedActions {
         [int] $numberOfReposToDo
     )
 
-    Write-Message -message "Running for [$($existingForks.Count)] forks"  -logToSummary $true
+    Write-Message -message "Running for [$(DisplayIntWithDots $existingForks.Count)] forks"  -logToSummary $true
     
     $existingForks = EnableDependabotForForkedActions -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
     return $existingForks
@@ -52,7 +52,7 @@ function EnableDependabotForForkedActions {
         }
     }
 
-    Write-Message -message "Enabled Dependabot on [$($dependabotEnabled)] repos" -logToSummary $true
+    Write-Message -message "Enabled Dependabot on [$(DisplayIntWithDots $dependabotEnabled)] repos" -logToSummary $true
     return $existingForks
 }
 

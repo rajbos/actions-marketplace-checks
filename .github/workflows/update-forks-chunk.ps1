@@ -18,7 +18,7 @@ function UpdateForkedReposChunk {
     )
 
     Write-Message -message "# Chunk [$chunkId] - Mirror Sync" -logToSummary $true
-    Write-Message -message "Processing [$($forkNamesToProcess.Count)] mirrors in this chunk" -logToSummary $true
+    Write-Message -message "Processing [$(DisplayIntWithDots $forkNamesToProcess.Count)] mirrors in this chunk" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Create a hashtable for fast lookup
@@ -38,7 +38,7 @@ function UpdateForkedReposChunk {
         }
     }
     
-    Write-Message -message "Found [$($forksToProcess.Count)] forks to process" -logToSummary $true
+    Write-Message -message "Found [$(DisplayIntWithDots $forksToProcess.Count)] forks to process" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     $i = 0
@@ -56,7 +56,7 @@ function UpdateForkedReposChunk {
         if (Test-RateLimitExceeded) {
             Write-Warning "Rate limit exceeded with long reset time, stopping chunk processing"
             Write-Message -message "⚠️ Rate limit exceeded - stopping chunk [$chunkId] processing early" -logToSummary $true
-            Write-Message -message "Processed [$i] out of [$($forksToProcess.Count)] forks before hitting rate limit" -logToSummary $true
+            Write-Message -message "Processed [$(DisplayIntWithDots $i)] out of [$(DisplayIntWithDots $forksToProcess.Count)] forks before hitting rate limit" -logToSummary $true
             break
         }
 
@@ -223,7 +223,7 @@ function UpdateForkedReposChunk {
     }
 }
 
-Write-Message -message "Starting chunk [$chunkId] with [$($forkNames.Count)] forks to process" -logToSummary $true
+Write-Message -message "Starting chunk [$chunkId] with [$(DisplayIntWithDots $forkNames.Count)] forks to process" -logToSummary $true
 
 GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 

@@ -1193,7 +1193,7 @@ function SaveStatus {
 
         # get number of forks that have repo information
         $existingForksWithRepoInfo = $existingForks | Where-Object { $_.repoInfo -And ($null -ne $_.repoInfo.updated_at) }
-        Write-Message -message "Found [$($existingForksWithRepoInfo.Count) out of $($existingForks.Count)] repos that have repo information" -logToSummary $true
+        Write-Message -message "Found [$(DisplayIntWithDots $existingForksWithRepoInfo.Count) out of $(DisplayIntWithDots $existingForks.Count)] repos that have repo information" -logToSummary $true
     }
 
     if ($null -ne $failedForks -and $failedForks.Count -gt 0) {
@@ -1467,9 +1467,9 @@ function GetDependabotAlerts {
         $i++ | Out-Null
     }
 
-    Write-Message -message "Skipped [$($skipping)] repos as they were checked less than 72 hours ago" -logToSummary $true
-    Write-Message -message "Found [$($vulnerableRepos)] new repos with a total of [$($highAlerts)] repos with high alerts" -logToSummary $true
-    Write-Message -message "Found [$($vulnerableRepos)] new repos with a total of [$($criticalAlerts)] repos with critical alerts" -logToSummary $true
+    Write-Message -message "Skipped [$(DisplayIntWithDots $skipping)] repos as they were checked less than 72 hours ago" -logToSummary $true
+    Write-Message -message "Found [$(DisplayIntWithDots $vulnerableRepos)] new repos with a total of [$(DisplayIntWithDots $highAlerts)] repos with high alerts" -logToSummary $true
+    Write-Message -message "Found [$(DisplayIntWithDots $vulnerableRepos)] new repos with a total of [$(DisplayIntWithDots $criticalAlerts)] repos with critical alerts" -logToSummary $true
 
     return $existingForks
 }
@@ -1636,7 +1636,7 @@ function GetFoundSecretCount {
         }
 
         Write-Message "" -logToSummary $true
-        Write-Message "Found [$($totalAlerts)] alerts for the organization in [$($alertsResult.Length)] repositories" -logToSummary $true
+        Write-Message "Found [$(DisplayIntWithDots $totalAlerts)] alerts for the organization in [$(DisplayIntWithDots $alertsResult.Length)] repositories" -logToSummary $true
         Write-Message "</details>" -logToSummary $true
         Write-Message "" -logToSummary $true
 
@@ -2715,7 +2715,7 @@ function Split-ActionsIntoChunks {
         [bool] $filterToUnprocessed = $false
     )
     
-    Write-Message -message "Splitting actions into [$numberOfChunks] chunks for parallel processing" -logToSummary $true
+    Write-Message -message "Splitting actions into [$(DisplayIntWithDots $numberOfChunks)] chunks for parallel processing" -logToSummary $true
     
     $actionsToProcess = $actions
     
@@ -2731,11 +2731,11 @@ function Split-ActionsIntoChunks {
         return @{}
     }
     
-    Write-Message -message "Found [$($actionsToProcess.Count)] actions to process out of [$($actions.Count)] total" -logToSummary $true
+    Write-Message -message "Found [$(DisplayIntWithDots $actionsToProcess.Count)] actions to process out of [$(DisplayIntWithDots $actions.Count)] total" -logToSummary $true
     
     # Calculate chunk size (round up to ensure all items are included)
     $chunkSize = [Math]::Ceiling($actionsToProcess.Count / $numberOfChunks)
-    Write-Message -message "Each chunk will process up to [$chunkSize] actions" -logToSummary $true
+    Write-Message -message "Each chunk will process up to [$(DisplayIntWithDots $chunkSize)] actions" -logToSummary $true
     
     # Split into chunks
     $chunks = @{}
@@ -2784,7 +2784,7 @@ function Split-ActionsIntoChunks {
             }
             
             $chunks[$i] = $chunkActions
-            Write-Message -message "Chunk [$i]: [$($chunkActions.Count)] actions (indices $startIndex-$endIndex)" -logToSummary $true
+            Write-Message -message "Chunk [$i]: [$(DisplayIntWithDots $chunkActions.Count)] actions (indices $startIndex-$endIndex)" -logToSummary $true
         }
     }
     
@@ -2802,7 +2802,7 @@ function Split-ActionsIntoChunks {
         Write-Message -message "ℹ️ No work to be done - no actions to process" -logToSummary $true
     }
     else {
-        Write-Message -message "✓ Successfully distributed [$totalActionsInChunks] actions across [$($chunks.Keys.Count)] chunks" -logToSummary $true
+        Write-Message -message "✓ Successfully distributed [$(DisplayIntWithDots $totalActionsInChunks)] actions across [$(DisplayIntWithDots $chunks.Keys.Count)] chunks" -logToSummary $true
     }
     
     return $chunks
@@ -2841,8 +2841,8 @@ function Select-ForksToProcess {
     $now = Get-Date
     $coolOffThreshold = $now.AddHours(-$coolOffHoursForFailedSync)
     
-    Write-Message -message "Selecting up to [$numberOfRepos] forks to process" -logToSummary $true
-    Write-Message -message "Cool-off period for failed syncs: [$coolOffHoursForFailedSync] hours" -logToSummary $true
+    Write-Message -message "Selecting up to [$(DisplayIntWithDots $numberOfRepos)] forks to process" -logToSummary $true
+    Write-Message -message "Cool-off period for failed syncs: [$(DisplayIntWithDots $coolOffHoursForFailedSync)] hours" -logToSummary $true
     
     # Track filtering statistics
     $totalForks = $existingForks.Count
@@ -2891,11 +2891,11 @@ function Select-ForksToProcess {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Filter Reason | Count |" -logToSummary $true
     Write-Message -message "|--------------|------:|" -logToSummary $true
-    Write-Message -message "| Total forks in dataset | $totalForks |" -logToSummary $true
-    Write-Message -message "| Filtered: No mirror found | $filteredNoMirror |" -logToSummary $true
-    Write-Message -message "| Filtered: Upstream unavailable | $filteredUpstreamUnavailable |" -logToSummary $true
-    Write-Message -message "| Filtered: In cool-off period (failed < ${coolOffHoursForFailedSync}h ago) | $filteredCoolOff |" -logToSummary $true
-    Write-Message -message "| **Eligible forks after filtering** | **$($eligibleForks.Count)** |" -logToSummary $true
+    Write-Message -message "| Total forks in dataset | $(DisplayIntWithDots $totalForks) |" -logToSummary $true
+    Write-Message -message "| Filtered: No mirror found | $(DisplayIntWithDots $filteredNoMirror) |" -logToSummary $true
+    Write-Message -message "| Filtered: Upstream unavailable | $(DisplayIntWithDots $filteredUpstreamUnavailable) |" -logToSummary $true
+    Write-Message -message "| Filtered: In cool-off period (failed < ${coolOffHoursForFailedSync}h ago) | $(DisplayIntWithDots $filteredCoolOff) |" -logToSummary $true
+    Write-Message -message "| **Eligible forks after filtering** | **$(DisplayIntWithDots $eligibleForks.Count)** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Sort: never-synced forks first (by name), then synced forks by oldest lastSynced (then by name)
@@ -2989,16 +2989,16 @@ function Select-ForksToProcess {
     
     Write-Message -message "### Fork Selection Summary" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "- **Requested:** [$numberOfRepos] forks" -logToSummary $true
-    Write-Message -message "- **Selected:** [$($selectedForks.Count)] forks for processing" -logToSummary $true
+    Write-Message -message "- **Requested:** [$(DisplayIntWithDots $numberOfRepos)] forks" -logToSummary $true
+    Write-Message -message "- **Selected:** [$(DisplayIntWithDots $selectedForks.Count)] forks for processing" -logToSummary $true
     
     if ($selectedForks.Count -lt $numberOfRepos) {
         $shortage = $numberOfRepos - $selectedForks.Count
-        Write-Message -message "- ⚠️ **Note:** Only [$($selectedForks.Count)] eligible forks available ([$shortage] fewer than requested)" -logToSummary $true
+        Write-Message -message "- ⚠️ **Note:** Only [$(DisplayIntWithDots $selectedForks.Count)] eligible forks available ([$(DisplayIntWithDots $shortage)] fewer than requested)" -logToSummary $true
         Write-Message -message "  - To process more repos, wait for cool-off period to expire or resolve upstream issues" -logToSummary $true
     }
     
-    Write-Message -message "- Eligible forks with recent failures: [$reposWithRecentFailures] (deprioritized by smart sorting)" -logToSummary $true
+    Write-Message -message "- Eligible forks with recent failures: [$(DisplayIntWithDots $reposWithRecentFailures)] (deprioritized by smart sorting)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     return $selectedForks
@@ -3010,7 +3010,7 @@ function Split-ForksIntoChunks {
         [int] $numberOfChunks = 4
     )
     
-    Write-Message -message "Splitting forks into [$numberOfChunks] chunks for parallel processing" -logToSummary $true
+    Write-Message -message "Splitting forks into [$(DisplayIntWithDots $numberOfChunks)] chunks for parallel processing" -logToSummary $true
     
     # Filter to only forks that should be processed (mirrorFound = true)
     $forksToProcess = $existingForks | Where-Object { $_.mirrorFound -eq $true }
@@ -3020,11 +3020,11 @@ function Split-ForksIntoChunks {
         return @{}
     }
     
-    Write-Message -message "Found [$($forksToProcess.Count)] forks to process out of [$($existingForks.Count)] total" -logToSummary $true
+    Write-Message -message "Found [$(DisplayIntWithDots $forksToProcess.Count)] forks to process out of [$(DisplayIntWithDots $existingForks.Count)] total" -logToSummary $true
     
     # Calculate chunk size (round up to ensure all items are included)
     $chunkSize = [Math]::Ceiling($forksToProcess.Count / $numberOfChunks)
-    Write-Message -message "Each chunk will process up to [$chunkSize] forks" -logToSummary $true
+    Write-Message -message "Each chunk will process up to [$(DisplayIntWithDots $chunkSize)] forks" -logToSummary $true
     
     # Split into chunks
     $chunks = @{}
@@ -3040,7 +3040,7 @@ function Split-ForksIntoChunks {
             }
             
             $chunks[$i] = $chunkForks
-            Write-Message -message "Chunk [$i]: [$($chunkForks.Count)] forks (indices $startIndex-$endIndex)" -logToSummary $true
+            Write-Message -message "Chunk [$i]: [$(DisplayIntWithDots $chunkForks.Count)] forks (indices $startIndex-$endIndex)" -logToSummary $true
         }
     }
     
@@ -3083,7 +3083,7 @@ function Save-PartialStatusUpdate {
         return $true
     }
     
-    Write-Message -message "Saving [$($processedForks.Count)] processed forks for chunk [$chunkId]" -logToSummary $true
+    Write-Message -message "Saving [$(DisplayIntWithDots $processedForks.Count)] processed forks for chunk [$chunkId]" -logToSummary $true
     
     # Convert to JSON and save
     $json = ConvertTo-Json -InputObject $processedForks -Depth 10
@@ -3270,17 +3270,17 @@ function Show-ConsolidatedChunkSummary {
     }
     
     # Display consolidated summary
-    Write-Message -message "Aggregated results from [$($chunkSummaryFiles.Count)] chunks:" -logToSummary $true
+    Write-Message -message "Aggregated results from [$(DisplayIntWithDots $chunkSummaryFiles.Count)] chunks:" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Status | Count |" -logToSummary $true
     Write-Message -message "|--------|------:|" -logToSummary $true
-    Write-Message -message "| ✅ Synced | $totalSynced |" -logToSummary $true
-    Write-Message -message "| ✓ Up to Date | $totalUpToDate |" -logToSummary $true
-    Write-Message -message "| ⚠️ Conflicts | $totalConflicts |" -logToSummary $true
-    Write-Message -message "| ❌ Upstream Not Found | $totalUpstreamNotFound |" -logToSummary $true
-    Write-Message -message "| ❌ Failed | $totalFailed |" -logToSummary $true
-    Write-Message -message "| ⏭️ Skipped | $totalSkipped |" -logToSummary $true
-    Write-Message -message "| **Total Processed** | **$totalProcessed** |" -logToSummary $true
+    Write-Message -message "| ✅ Synced | $(DisplayIntWithDots $totalSynced) |" -logToSummary $true
+    Write-Message -message "| ✓ Up to Date | $(DisplayIntWithDots $totalUpToDate) |" -logToSummary $true
+    Write-Message -message "| ⚠️ Conflicts | $(DisplayIntWithDots $totalConflicts) |" -logToSummary $true
+    Write-Message -message "| ❌ Upstream Not Found | $(DisplayIntWithDots $totalUpstreamNotFound) |" -logToSummary $true
+    Write-Message -message "| ❌ Failed | $(DisplayIntWithDots $totalFailed) |" -logToSummary $true
+    Write-Message -message "| ⏭️ Skipped | $(DisplayIntWithDots $totalSkipped) |" -logToSummary $true
+    Write-Message -message "| **Total Processed** | **$(DisplayIntWithDots $totalProcessed)** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Display failure breakdown if there are failures
@@ -3302,7 +3302,7 @@ function Show-ConsolidatedChunkSummary {
     if ($allFailedRepos.Count -gt 0) {
         Write-Message -message "## Failed Repositories" -logToSummary $true
         Write-Message -message "" -logToSummary $true
-        Write-Message -message "Total failed repositories: **$($allFailedRepos.Count)**" -logToSummary $true
+        Write-Message -message "Total failed repositories: **$(DisplayIntWithDots $allFailedRepos.Count)**" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         Write-Message -message "<details>" -logToSummary $true
         Write-Message -message "<summary>Click to view first 10 failed repositories</summary>" -logToSummary $true
@@ -3367,7 +3367,7 @@ function Merge-PartialStatusUpdates {
         [string[]] $partialStatusFiles
     )
     
-    Write-Message -message "Merging partial status updates from [$($partialStatusFiles.Count)] chunks" -logToSummary $true
+    Write-Message -message "Merging partial status updates from [$(DisplayIntWithDots $partialStatusFiles.Count)] chunks" -logToSummary $true
     
     # Create a hashtable for fast lookup by name
     $statusByName = @{}
@@ -3426,7 +3426,7 @@ function Merge-PartialStatusUpdates {
         }
     }
     
-    Write-Message -message "✓ Merged [$totalUpdates] fork updates from [$($partialStatusFiles.Count)] chunks into main status" -logToSummary $true
+    Write-Message -message "✓ Merged [$(DisplayIntWithDots $totalUpdates)] fork updates from [$(DisplayIntWithDots $partialStatusFiles.Count)] chunks into main status" -logToSummary $true
     
     # Convert hashtable back to array
     return $statusByName.Values
@@ -3527,19 +3527,19 @@ function ShowOverallDatasetStatistics {
     Write-Message -message "#### Repository Status Breakdown" -logToSummary $true
     Write-Message -message "| Category | Count | Percentage |" -logToSummary $true
     Write-Message -message "|----------|------:|-----------:|" -logToSummary $true
-    Write-Message -message "| **Total Repositories in Dataset** | **$totalRepos** | **100%** |" -logToSummary $true
-    Write-Message -message "| └─ Repositories with Valid Mirrors | $reposWithMirrors | ${percentWithMirrors}% |" -logToSummary $true
-    Write-Message -message "| └─ Repositories without Mirrors | $reposWithoutMirrors | ${percentWithoutMirrors}% |" -logToSummary $true
+    Write-Message -message "| **Total Repositories in Dataset** | **$(DisplayIntWithDots $totalRepos)** | **100%** |" -logToSummary $true
+    Write-Message -message "| └─ Repositories with Valid Mirrors | $(DisplayIntWithDots $reposWithMirrors) | ${percentWithMirrors}% |" -logToSummary $true
+    Write-Message -message "| └─ Repositories without Mirrors | $(DisplayIntWithDots $reposWithoutMirrors) | ${percentWithoutMirrors}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "_Note: Repositories without mirrors cannot be synced. This may be because the upstream repository no longer exists, the mirror was never created, or the mirror was deleted._" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "#### Last 7 Days Sync Activity (Valid Mirrors Only)" -logToSummary $true
-    Write-Message -message "_The following statistics are for the **$reposWithMirrors repositories with valid mirrors** only:_" -logToSummary $true
+    Write-Message -message "_The following statistics are for the **$(DisplayIntWithDots $reposWithMirrors) repositories with valid mirrors** only:_" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
     Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
-    Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $reposSyncedLast7Days | ${percentChecked}% |" -logToSummary $true
-    Write-Message -message "| ⏳ Repos Not Checked Yet | $reposNotChecked | ${percentRemaining}% |" -logToSummary $true
-    Write-Message -message "| 🆕 Repos Never Checked | $reposNeverSynced | ${percentNeverSynced}% |" -logToSummary $true
+    Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $(DisplayIntWithDots $reposSyncedLast7Days) | ${percentChecked}% |" -logToSummary $true
+    Write-Message -message "| ⏳ Repos Not Checked Yet | $(DisplayIntWithDots $reposNotChecked) | ${percentRemaining}% |" -logToSummary $true
+    Write-Message -message "| 🆕 Repos Never Checked | $(DisplayIntWithDots $reposNeverSynced) | ${percentNeverSynced}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
