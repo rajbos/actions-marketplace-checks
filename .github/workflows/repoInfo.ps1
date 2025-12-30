@@ -75,6 +75,97 @@ function Format-RepoInfoSummaryTable {
     return $table
 }
 
+# Helper function to calculate priority score for a repo
+function Get-RepoPriorityScore {
+    Param (
+        $action
+    )
+    
+    $score = 0
+    
+    # Critical missing fields (highest priority)
+    $hasOwner = Get-Member -inputobject $action -name "owner" -Membertype Properties
+    if (!$hasOwner) {
+        $score += 100
+    }
+    
+    $hasMirrorFound = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
+    if (!$hasMirrorFound -or !$action.mirrorFound) {
+        $score += 90
+    }
+    
+    $hasActionType = Get-Member -inputobject $action -name "actionType" -Membertype Properties
+    if (!$hasActionType -or ($null -eq $action.actionType.actionType)) {
+        $score += 80
+    }
+    
+    # Important fields (medium priority)
+    $hasRepoInfo = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+    if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
+        $score += 50
+    }
+    
+    $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
+    if (!$hasRepoSize) {
+        $score += 40
+    }
+    
+    $hasDependents = Get-Member -inputobject $action -name "dependents" -Membertype Properties
+    if (!$hasDependents) {
+        $score += 30
+    }
+    
+    # Stale data checks (lower priority)
+    if ($hasDependents -and $action.dependents.dependentsLastUpdated) {
+        $daysSinceLastUpdate = ((Get-Date) - $action.dependents.dependentsLastUpdated).Days
+        if ($daysSinceLastUpdate -gt 7) {
+            $score += 20
+        }
+    }
+    
+    $hasFundingInfo = Get-Member -inputobject $action -name "fundingInfo" -Membertype Properties
+    if ($hasFundingInfo -and $action.fundingInfo.lastChecked) {
+        $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
+        if ($daysSinceLastCheck -gt 30) {
+            $score += 10
+        }
+    }
+    
+    return $score
+}
+
+# Helper function to filter and prioritize repos that need processing
+function Get-PrioritizedReposToProcess {
+    Param (
+        $existingForks,
+        $numberOfReposToDo
+    )
+    
+    Write-Host "Prioritizing repos for processing..."
+    
+    # Calculate priority scores for all repos
+    $scoredRepos = @()
+    foreach ($action in $existingForks) {
+        $score = Get-RepoPriorityScore -action $action
+        if ($score -gt 0) {
+            $scoredRepos += @{
+                Action = $action
+                Score = $score
+            }
+        }
+    }
+    
+    Write-Host "Found [$($scoredRepos.Count)] repos that need processing out of [$($existingForks.Count)] total"
+    
+    # Sort by score (highest first) and take top N
+    $prioritizedRepos = $scoredRepos | Sort-Object -Property Score -Descending | Select-Object -First $numberOfReposToDo
+    
+    Write-Host "Prioritized top [$($prioritizedRepos.Count)] repos for processing"
+    
+    # Return just the actions
+    return $prioritizedRepos | ForEach-Object { $_.Action }
+}
+
 # Helper function to format error summary as a table with clickable links
 function Format-ErrorSummaryTable {
     Param (
@@ -1290,6 +1381,12 @@ function GetMoreInfo {
     # Output as table to step summary
     $table = Format-RepoInfoSummaryTable -metrics $metrics
     
+    # Calculate total delta
+    $totalDelta = 0
+    foreach ($key in $metrics.Keys) {
+        $totalDelta += ($metrics[$key].Ended - $metrics[$key].Started)
+    }
+    
     # Add processing summary at the top
     $processingSummary = "## Processing Summary`n`n"
     $processingSummary += "| Metric | Count |`n"
@@ -1299,6 +1396,13 @@ function GetMoreInfo {
     $processingSummary += "| Repos skipped | $skipped |`n"
     $processingSummary += "| Limit (numberOfReposToDo) | $numberOfReposToDo |`n"
     $processingSummary += "`n"
+    
+    # Add explanation if no deltas occurred
+    if ($totalDelta -eq 0) {
+        $processingSummary += "> **Note**: No changes were made (0 total delta). This means all examined repos already had up-to-date information. "
+        $processingSummary += "The workflow still examined $examined repos sequentially to check if updates were needed. "
+        $processingSummary += "Future optimization: implement prioritization to process repos missing critical fields first.`n`n"
+    }
     
     $summaryOutput = $processingSummary + "`n## Repository Information Summary`n`n$table"
     if ($dockerBaseImageInfoAdded -gt 0) {
