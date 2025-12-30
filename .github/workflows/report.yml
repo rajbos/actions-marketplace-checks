@@ -4,7 +4,6 @@ name: Generate report
 on:
 
   push:
-    branches:
     paths:
       - .github/workflows/report.yml
       - .github/workflows/report.ps1
