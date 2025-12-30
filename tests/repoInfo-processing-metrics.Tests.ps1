@@ -117,31 +117,31 @@ Describe "Processing Metrics Tracking Logic" {
         $totalRepos = 23050
         $numberOfReposToDo = 500
         $reposExamined = 0
-        $reposProcessed = 0
+        $reposWithUpdates = 0
         
         # Act - Simulate processing 500 repos
         for ($i = 0; $i -lt $numberOfReposToDo; $i++) {
             $reposExamined++
-            # Simulate some processing
+            # Simulate some repos having updates (every 10th repo)
             if ($i % 10 -eq 0) {
-                $reposProcessed++
+                $reposWithUpdates++
             }
         }
         
         # Assert
         $reposExamined | Should -Be 500
-        $reposProcessed | Should -Be 50
+        $reposWithUpdates | Should -Be 50
     }
     
     It "Should differentiate between examined and actually updated repos" {
         # Arrange - The key issue from the problem statement:
         # 8 minutes, 0 deltas means repos were examined but not updated
         $reposExamined = 500
-        $reposActuallyUpdated = 0  # 0 deltas
+        $reposWithUpdates = 0  # 0 deltas
         
         # Assert - This is the scenario we're trying to make visible
-        $reposExamined | Should -BeGreaterThan $reposActuallyUpdated
-        $reposActuallyUpdated | Should -Be 0
+        $reposExamined | Should -BeGreaterThan $reposWithUpdates
+        $reposWithUpdates | Should -Be 0
         
         # The new metrics should show:
         # - Repos examined: 500 (helps understand why it took 8 minutes)

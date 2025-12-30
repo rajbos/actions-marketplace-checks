@@ -705,7 +705,7 @@ function GetInfo {
     # Initialize tracking for summary
     $script:processMetrics = @{
         TotalReposExamined = 0
-        ReposProcessed = 0
+        ReposWithUpdates = 0
         ReposSkipped = 0
     }
 
@@ -714,6 +714,7 @@ function GetInfo {
     $max = $existingForks.Count + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
         $script:processMetrics.TotalReposExamined++
+        $repoHadUpdates = $false
 
         # Check if we are nearing the 50-minute mark
         $timeSpan = (Get-Date) - $startTime
@@ -759,6 +760,7 @@ function GetInfo {
                 # owner is known, so this fork exists
                 $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
         }
 
@@ -772,6 +774,7 @@ function GetInfo {
                 # add the new field
                 $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
         }
         else {
@@ -836,6 +839,7 @@ function GetInfo {
                     }
                     $action | Add-Member -Name dependents -Value $dependents -MemberType NoteProperty
                     $i++ | Out-Null
+                    $repoHadUpdates = $true
                 }
             }
         }
@@ -851,6 +855,7 @@ function GetInfo {
                     $action.dependents.dependents = $dependentsNumber
                     $action.dependents.dependentsLastUpdated = Get-Date
                     $i++ | Out-Null
+                    $repoHadUpdates = $true
                 }
             }
         }
@@ -873,6 +878,7 @@ function GetInfo {
 
                 $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
             else {
                 $action.actionType.actionType = $actionTypeResult
@@ -885,6 +891,7 @@ function GetInfo {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
 
         }
@@ -899,6 +906,7 @@ function GetInfo {
                 if ($null -ne $fundingInfo) {
                     $action | Add-Member -Name fundingInfo -Value $fundingInfo -MemberType NoteProperty
                     $i++ | Out-Null
+                    $repoHadUpdates = $true
                 }
             }
         }
@@ -916,22 +924,28 @@ function GetInfo {
                         if ($null -ne $fundingInfo) {
                             $action.fundingInfo = $fundingInfo
                             $i++ | Out-Null
+                            $repoHadUpdates = $true
                         }
                     }
                 }
             }
         }
+        
+        # Track if this repo had any updates
+        if ($repoHadUpdates) {
+            $script:processMetrics.ReposWithUpdates++
+        }
     }
 
     # Output processing summary
-    $processed = $script:processMetrics.ReposProcessed
+    $withUpdates = $script:processMetrics.ReposWithUpdates
     $examined = $script:processMetrics.TotalReposExamined
     $skipped = $script:processMetrics.ReposSkipped
     
     Write-Host ""
     Write-Host "GetInfo Processing Summary:"
     Write-Host "  Total repos examined: $examined"
-    Write-Host "  Repos processed (updated): $processed"
+    Write-Host "  Repos with updates: $withUpdates"
     Write-Host "  Repos skipped: $skipped"
     Write-Host ""
 
@@ -1120,7 +1134,7 @@ function GetMoreInfo {
     # Initialize tracking for GetMoreInfo
     $script:moreInfoMetrics = @{
         TotalReposExamined = 0
-        ReposProcessed = 0
+        ReposWithUpdates = 0
         ReposSkipped = 0
     }
     
