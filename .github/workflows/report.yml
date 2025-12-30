@@ -68,7 +68,7 @@ jobs:
            }
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            $token="${{ steps.get_workflow_token.outputs.token }}"  # this one expires after an hour
-           $token="${{ secrets.ACCESS_TOKEN }}"                    # using this to prevent issues in the current run, as it takes 1h 42mins atm
+           
            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination $token
 
       - name: Upload secretScanningAlerts.json to blob storage
