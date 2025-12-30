@@ -171,6 +171,103 @@ function GetRepoReleases {
     return $response
 }
 
+function GetFundingInfo {
+    Param (
+        $owner,
+        $repo,
+        $access_token,
+        $startTime
+    )
+
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return $null
+    }
+
+    # Check for FUNDING.yml in .github folder (as per GitHub documentation)
+    $fundingFileContent = $null
+    $fundingFileLocation = "/repos/$owner/$repo/contents/.github/FUNDING.yml"
+
+    try {
+        Write-Debug "Checking for FUNDING.yml at [$fundingFileLocation]"
+        $response = ApiCall -method GET -url $fundingFileLocation -hideFailedCall $true -access_token $access_token
+        
+        if ($response -and $response.download_url) {
+            Write-Message "Found FUNDING.yml for [$owner/$repo] at [$fundingFileLocation]"
+            # Download the file content
+            $fundingFileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
+        }
+    }
+    catch {
+        Write-Debug "No FUNDING.yml found at [$fundingFileLocation]"
+    }
+
+    if ($null -eq $fundingFileContent) {
+        Write-Debug "No FUNDING.yml found for [$owner/$repo]"
+        return $null
+    }
+
+    # Parse the FUNDING.yml content to count platforms
+    # FUNDING.yml can have platforms like: github, patreon, open_collective, ko_fi, etc.
+    # Each line typically has format: platform: username or platform: [user1, user2]
+    
+    try {
+        $platformCount = 0
+        $platforms = @()
+        
+        # Split content by lines and process each line
+        $lines = $fundingFileContent -split "`n"
+        foreach ($line in $lines) {
+            $line = $line.Trim()
+            
+            # Skip comments and empty lines
+            if ($line -match "^#" -or $line -eq "") {
+                continue
+            }
+            
+            # Match lines like "github: username" or "patreon: username"
+            if ($line -match "^([a-z_]+):\s*(.+)$") {
+                $platform = $matches[1].Trim()
+                $value = $matches[2].Trim()
+                
+                # Skip if value is empty or just whitespace
+                if ($value -ne "" -and $value -ne "[]" -and $value -ne "null") {
+                    $platformCount++
+                    $platforms += $platform
+                    Write-Debug "Found funding platform: [$platform] with value: [$value]"
+                }
+            }
+        }
+        
+        Write-Message "Parsed FUNDING.yml for [$owner/$repo]: $platformCount platforms found"
+        
+        return @{
+            hasFunding = $true
+            platformCount = $platformCount
+            platforms = $platforms
+            fileLocation = $fundingFileLocation
+            lastChecked = Get-Date
+        }
+    }
+    catch {
+        Write-Host "Error parsing FUNDING.yml for [$owner/$repo]: $($_.Exception.Message)"
+        return @{
+            hasFunding = $true
+            platformCount = 0
+            platforms = @()
+            fileLocation = $fundingFileLocation
+            lastChecked = Get-Date
+            parseError = $true
+        }
+    }
+}
+
 function GetActionType {
     Param (
         $owner,
@@ -583,6 +680,39 @@ function GetInfo {
                 $i++ | Out-Null
             }
 
+        }
+
+        # store funding information
+        $hasFundingField = Get-Member -inputobject $action -name "fundingInfo" -Membertype Properties
+        if (!$hasFundingField) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            if ($repo -ne "" -and $owner -ne "") {
+                Write-Debug "Checking funding information for [$($owner)/$($repo)]"
+                $fundingInfo = GetFundingInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                if ($null -ne $fundingInfo) {
+                    $action | Add-Member -Name fundingInfo -Value $fundingInfo -MemberType NoteProperty
+                    $i++ | Out-Null
+                }
+            }
+        }
+        else {
+            # check if the last check was more than 30 days ago
+            $lastChecked = $action.fundingInfo.lastChecked
+            if ($null -ne $lastChecked) {
+                $daysSinceLastCheck = (Get-Date) - $lastChecked
+                if ($daysSinceLastCheck.Days -gt 30) {
+                    # update the funding info
+                    ($owner, $repo) = GetOrgActionInfo($action.name)
+                    if ($repo -ne "" -and $owner -ne "") {
+                        Write-Debug "Re-checking funding information for [$($owner)/$($repo)]"
+                        $fundingInfo = GetFundingInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                        if ($null -ne $fundingInfo) {
+                            $action.fundingInfo = $fundingInfo
+                            $i++ | Out-Null
+                        }
+                    }
+                }
+            }
         }
     }
 
