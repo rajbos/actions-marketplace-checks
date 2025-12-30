@@ -576,7 +576,12 @@ function GetOSSFInfo {
 
         $total++
     }
-    LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total."
+    
+    $percentage = 0
+    if ($total -gt 0) {
+        $percentage = [math]::Round(($ossfInfoCount / $total) * 100, 2)
+    }   
+    LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total which is [$($percentage)%]."
 }
 
 function GetMostUsedActionsList {
