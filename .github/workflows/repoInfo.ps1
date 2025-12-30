@@ -611,10 +611,18 @@ function GetInfo {
         OtherErrors = @()
     }
 
+    # Initialize tracking for summary
+    $script:processMetrics = @{
+        TotalReposExamined = 0
+        ReposProcessed = 0
+        ReposSkipped = 0
+    }
+
     # get information from the action files
     $i = $existingForks.Count
     $max = $existingForks.Count + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
+        $script:processMetrics.TotalReposExamined++
 
         # Check if we are nearing the 50-minute mark
         $timeSpan = (Get-Date) - $startTime
@@ -637,6 +645,7 @@ function GetInfo {
             $hasField = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
             if ($hasField -and !$action.mirrorFound) {
                 # skip this one to prevent us from keeping checking on erroneous repos
+                $script:processMetrics.ReposSkipped++
                 continue
             }
             # load owner from repo info out of the fork
@@ -823,6 +832,18 @@ function GetInfo {
         }
     }
 
+    # Output processing summary
+    $processed = $script:processMetrics.ReposProcessed
+    $examined = $script:processMetrics.TotalReposExamined
+    $skipped = $script:processMetrics.ReposSkipped
+    
+    Write-Host ""
+    Write-Host "GetInfo Processing Summary:"
+    Write-Host "  Total repos examined: $examined"
+    Write-Host "  Repos processed (updated): $processed"
+    Write-Host "  Repos skipped: $skipped"
+    Write-Host ""
+
     return $existingForks
 }
 
@@ -1005,6 +1026,13 @@ function GetMoreInfo {
     $startingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
     $startingReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo}).Length
     
+    # Initialize tracking for GetMoreInfo
+    $script:moreInfoMetrics = @{
+        TotalReposExamined = 0
+        ReposProcessed = 0
+        ReposSkipped = 0
+    }
+    
     Write-Host "Loading repository information, starting with [$startingRepoInfo] already loaded"
     $memberAdded = 0
     $memberUpdate = 0
@@ -1015,6 +1043,7 @@ function GetMoreInfo {
     $startTime = Get-Date
     try {
         foreach ($action in $existingForks) {
+            $script:moreInfoMetrics.TotalReposExamined++
 
             # Check if we are nearing the 50-minute mark
             $timeSpan = (Get-Date) - $startTime
@@ -1031,6 +1060,7 @@ function GetMoreInfo {
 
             if (!$action.upstreamFound) {
                 Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
+                $script:moreInfoMetrics.ReposSkipped++
                 continue
             }
 
@@ -1235,6 +1265,16 @@ function GetMoreInfo {
 
     Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
     
+    # Output GetMoreInfo processing summary
+    $examined = $script:moreInfoMetrics.TotalReposExamined
+    $skipped = $script:moreInfoMetrics.ReposSkipped
+    
+    Write-Host ""
+    Write-Host "GetMoreInfo Processing Summary:"
+    Write-Host "  Total repos examined: $examined"
+    Write-Host "  Repos skipped: $skipped"
+    Write-Host ""
+    
     # Calculate ending counts
     $endingRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo}).Length
     $endingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
@@ -1249,7 +1289,18 @@ function GetMoreInfo {
     
     # Output as table to step summary
     $table = Format-RepoInfoSummaryTable -metrics $metrics
-    $summaryOutput = "`n## Repository Information Summary`n`n$table"
+    
+    # Add processing summary at the top
+    $processingSummary = "## Processing Summary`n`n"
+    $processingSummary += "| Metric | Count |`n"
+    $processingSummary += "| --- | --- |`n"
+    $processingSummary += "| Total repos in status file | $($existingForks.Count) |`n"
+    $processingSummary += "| Repos examined | $examined |`n"
+    $processingSummary += "| Repos skipped | $skipped |`n"
+    $processingSummary += "| Limit (numberOfReposToDo) | $numberOfReposToDo |`n"
+    $processingSummary += "`n"
+    
+    $summaryOutput = $processingSummary + "`n## Repository Information Summary`n`n$table"
     if ($dockerBaseImageInfoAdded -gt 0) {
         $summaryOutput += "`nDocker base image information added for [$dockerBaseImageInfoAdded] actions"
     }
