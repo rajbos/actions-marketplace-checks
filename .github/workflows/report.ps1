@@ -358,22 +358,22 @@ function ReportInsightsInMarkdown {
         $dockerPercentage = [math]::Round($dockerBasedActions/$totalActions * 100 , 1)
         $compositePercentage = [math]::Round($compositeAction/$totalActions * 100 , 1)
         $otherPercentage = [math]::Round($unknownActionType/$totalActions * 100 , 1)
-        LogMessage "  A[$totalActions Actions]-->B[$nodeBasedActions Node based - $nodePercentage%]"
-        LogMessage "  A-->C[$dockerBasedActions Docker based - $dockerPercentage%]"
-        LogMessage "  A-->D[$compositeAction Composite actions - $compositePercentage%]"
+        LogMessage "  A[$(DisplayIntWithDots($totalActions)) Actions]-->B[$(DisplayIntWithDots($nodeBasedActions)) Node based - $nodePercentage%]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($dockerBasedActions)) Docker based - $dockerPercentage%]"
+        LogMessage "  A-->D[$(DisplayIntWithDots($compositeAction)) Composite actions - $compositePercentage%]"
         LogMessage "  A-->E[$unknownActionType Other - $otherPercentage%]"
     } else {
-        LogMessage "  A[$totalActions Actions]-->B[$nodeBasedActions Node based]"
-        LogMessage "  A-->C[$dockerBasedActions Docker based]"
-        LogMessage "  A-->D[$compositeAction Composite actions]"
-        LogMessage "  A-->E[$unknownActionType Other]"
+        LogMessage "  A[$(DisplayIntWithDots($totalActions)) Actions]-->B[$(DisplayIntWithDots($nodeBasedActions)) Node based]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($dockerBasedActions)) Docker based]"
+        LogMessage "  A-->D[$(DisplayIntWithDots($compositeAction)) Composite actions]"
+        LogMessage "  A-->E[$(DisplayIntWithDots($unknownActionType)) Other]"
     }
     LogMessage "``````"
     LogMessage ""
     LogMessage "### Node-based actions composition"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    LogMessage "  A[$nodeBasedActions Node based actions]"
+    LogMessage "  A[$(DisplayIntWithDots($nodeBasedActions)) Node based actions]"
     
     if ($nodeBasedActions -gt 0) {
         # Separate node versions into two groups: works on default runners (20+) and needs setup-node (<20)
@@ -398,8 +398,8 @@ function ReportInsightsInMarkdown {
         $needsSetupNodePercentage = [math]::Round($needsSetupNode/$nodeBasedActions * 100 , 1)
         
         # Output the two main groups
-        LogMessage "  A-->B[$worksOnDefaultRunners Works on default runners - $worksOnDefaultPercentage%]"
-        LogMessage "  A-->C[$needsSetupNode Needs setup-node - $needsSetupNodePercentage%]"
+        LogMessage "  A-->B[$(DisplayIntWithDots($worksOnDefaultRunners)) Works on default runners - $worksOnDefaultPercentage%]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($needsSetupNode)) Needs setup-node - $needsSetupNodePercentage%]"
         
         # Break down the "works on default runners" group by version (only if there are any)
         if ($worksOnDefaultRunners -gt 0) {
@@ -408,7 +408,7 @@ function ReportInsightsInMarkdown {
                 $count = $worksOnDefaultRunnersVersions[$versionKey]
                 $percentage = [math]::Round($count/$worksOnDefaultRunners * 100 , 1)
                 # Start from 'D' (ASCII 68) since A, B, C are already used
-                LogMessage "  B-->$([char]([int][char]'D' + $currentLetter))[$count Node $versionKey - $percentage%]"
+                LogMessage "  B-->$([char]([int][char]'D' + $currentLetter))[$(DisplayIntWithDots($count)) Node $versionKey - $percentage%]"
                 $currentLetter++
             }
         }
@@ -422,7 +422,7 @@ function ReportInsightsInMarkdown {
                 $count = $needsSetupNodeVersions[$versionKey]
                 $percentage = [math]::Round($count/$needsSetupNode * 100 , 1)
                 # Continue from where "works on default runners" left off
-                LogMessage "  C-->$([char]([int][char]'D' + $startingOffset + $currentLetter))[$count Node $versionKey - $percentage%]"
+                LogMessage "  C-->$([char]([int][char]'D' + $startingOffset + $currentLetter))[$(DisplayIntWithDots($count)) Node $versionKey - $percentage%]"
                 $currentLetter++
             }
         }
@@ -435,8 +435,8 @@ function ReportInsightsInMarkdown {
     if ($dockerBasedActions -gt 0) {
         $localDockerPercentage = [math]::Round($localDockerFile/$dockerBasedActions * 100 , 1)
         $remoteDockerPercentage = [math]::Round($remoteDockerfile/$dockerBasedActions * 100 , 1)
-        LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile - $localDockerPercentage%]"
-        LogMessage "  A-->C[$remoteDockerfile Remote image - $remoteDockerPercentage%]"
+        LogMessage "  A[$(DisplayIntWithDots($dockerBasedActions)) Docker based actions]-->B[$localDockerFile Local Dockerfile - $localDockerPercentage%]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($remoteDockerfile)) Remote image - $remoteDockerPercentage%]"
         
         # Add sub-breakdown for local Dockerfiles if we have custom code information
         if ($localDockerFile -gt 0 -and ($localDockerfileWithCustomCode -gt 0 -or $localDockerfileWithoutCustomCode -gt 0)) {
@@ -449,8 +449,8 @@ function ReportInsightsInMarkdown {
             }
         }
     } else {
-        LogMessage "  A[$dockerBasedActions Docker based actions]-->B[$localDockerFile Local Dockerfile]"
-        LogMessage "  A-->C[$remoteDockerfile Remote image]"
+        LogMessage "  A[$(DisplayIntWithDots($dockerBasedActions)) Docker based actions]-->B[$(DisplayIntWithDots($localDockerFile)) Local Dockerfile]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($remoteDockerfile)) Remote image]"
     }
     LogMessage "``````"
     LogMessage ""
@@ -480,7 +480,7 @@ function ReportInsightsInMarkdown {
     LogMessage "## Docker based actions, most used base images: "
     # calculate unique items in dockerBaseImages
     $dockerBaseImagesUnique = $dockerBaseImages | Sort-Object | Get-Unique
-    LogMessage "Found $($global:dockerBaseImages.Length) base images with $($dockerBaseImagesUnique.Length) uniques. The top 10 are listed below."
+    LogMessage "Found $(DisplayIntWithDots($global:dockerBaseImages.Length)) base images with $(DisplayIntWithDots($dockerBaseImagesUnique.Length)) uniques. The top 10 are listed below."
     # summarize the string list dockerBaseImages to count each item
     $dockerBaseImagesGrouped = $global:dockerBaseImages | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
     $dockerBaseImagesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
@@ -491,11 +491,11 @@ function ReportInsightsInMarkdown {
     LogMessage "## Node based actions, used Node versions: "
     # calculate unique items in nodeVersions
     $nodeVersionsUnique = $global:nodeVersions | Sort-Object | Get-Unique
-    LogMessage "Found $($global:nodeVersions.Length) Node based actions with $($nodeVersionsUnique.Length) unique Node versions."
+    LogMessage "Found $(DisplayIntWithDots($global:nodeVersions.Length)) Node based actions with $(DisplayIntWithDots($nodeVersionsUnique.Length)) unique Node versions."
     # summarize the string list nodeVersions to count each item
     $nodeVersionsGrouped = $global:nodeVersions | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
     $nodeVersionsGrouped | ForEach-Object {
-        LogMessage "- Node $($_.Name): $($_.Count)"
+        LogMessage "- Node $($_.Name): $(DisplayIntWithDots($_.Count))"
     }
     LogMessage ""
 }
@@ -513,17 +513,17 @@ function ReportAgeInsights {
     LogMessage "|---|---:|---:|"
     $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
     LogMessage "|Oldest repository             |$($timeSpan.Days) days old||"
-    LogMessage "|Updated last month             | $global:updatedLastMonth|$([math]::Round($global:updatedLastMonth   /$global:repoInfo * 100 , 1))%|"
-    LogMessage "|Updated within last 3 months   | $global:updatedLastQuarter|$([math]::Round($global:updatedLastQuarter /$global:repoInfo * 100 , 1))%|"
-    LogMessage "|Updated within last 3-6 months | $global:updatedLast6Months|$([math]::Round($global:updatedLast6Months /$global:repoInfo * 100 , 1))%|"
-    LogMessage "|Updated within last 6-12 months| $global:updatedLast12Months|$([math]::Round($global:updatedLast12Months/$global:repoInfo * 100 , 1))%|"
-    LogMessage "|Updated more than 12 months ago| $global:moreThen12Months|$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated last month             | $(DisplayIntWithDots($global:updatedLastMonth))|$([math]::Round($global:updatedLastMonth   /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated within last 3 months   | $(DisplayIntWithDots($global:updatedLastQuarter))|$([math]::Round($global:updatedLastQuarter /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated within last 3-6 months | $(DisplayIntWithDots($global:updatedLast6Months))|$([math]::Round($global:updatedLast6Months /$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated within last 6-12 months| $(DisplayIntWithDots($global:updatedLast12Months))|$([math]::Round($global:updatedLast12Months/$global:repoInfo * 100 , 1))%|"
+    LogMessage "|Updated more than 12 months ago| $(DisplayIntWithDots($global:moreThen12Months))|$([math]::Round($global:moreThen12Months   /$global:repoInfo * 100 , 1))%|"
     LogMessage ""
     LogMessage "### Additional information:"
     LogMessage "|Description    | Info|"
     LogMessage "|---            | --- |"
-    LogMessage "|Average age| $([math]::Round($global:sumDaysOld / $global:repoInfo, 1)) days|"
-    LogMessage "|Archived repos| $global:archived|"
+    LogMessage "|Average age| $(DisplayIntWithDots([math]::Round($global:sumDaysOld / $global:repoInfo, 1))) days|"
+    LogMessage "|Archived repos| $(DisplayIntWithDots($global:archived))|"
 
     $statusVerified = $global:Verified
     $actionCount = $actions.Count
@@ -532,13 +532,13 @@ function ReportAgeInsights {
     LogMessage "### Verified publisher:"
     LogMessage "|Description    | Info|"
     LogMessage "|---            | --- |"
-    LogMessage "|Total actions  |$actionCount|"
+    LogMessage "|Total actions  |$(DisplayIntWithDots($actionCount))|"
 
     $percentage = $statusVerified / $actionCount * 100
-    LogMessage "|Verified       |$statusVerified ($([math]::Round($percentage, 1))%)|"
+    LogMessage "|Verified       |$(DisplayIntWithDots($statusVerified)) ($([math]::Round($percentage, 1))%)|"
 
     $percentage = $notVerifiedCount / $actionCount * 100
-    LogMessage "|Not verified   |$notVerifiedCount ($([math]::Round($percentage, 1))%)|"
+    LogMessage "|Not verified   |$(DisplayIntWithDots($notVerifiedCount)) ($([math]::Round($percentage, 1))%)|"
 
     if ($global:countRepoSize -gt 0) {
         LogMessage ""
@@ -546,16 +546,16 @@ function ReportAgeInsights {
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
         LogMessage "|Description    | Info|"
         LogMessage "|---            | ---:|"
-        LogMessage "|Total (with repo info) | $($global:repoInfo)"
-        LogMessage "|Repos with size info   | $($global:countRepoSize)|"
+        LogMessage "|Total (with repo info) | $(DisplayIntWithDots($global:repoInfo))"
+        LogMessage "|Repos with size info   | $(DisplayIntWithDots($global:countRepoSize))|"
         # percentage of actions that have repo size info
         $sizeCoveragePct = 0
         if ($actions.Count -gt 0) {
             $sizeCoveragePct = [math]::Round(($global:countRepoSize / $actions.Count) * 100, 2)
         }
-        LogMessage "|Coverage (of all actions) | $sizeCoveragePct%|"
-        LogMessage "|Sum reposizes  | $([math]::Round($global:sumRepoSize / 1024, 0)) GiB|"
-        LogMessage "|Repos > 100MiB | $($global:countRepoSizeBiggerThen100Mb)|"
+        LogMessage "|Coverage (of all actions) | $(DisplayIntWithDots($sizeCoveragePct))%|"
+        LogMessage "|Sum reposizes  | $(DisplayIntWithDots([math]::Round($global:sumRepoSize / 1024, 0))) GiB|"
+        LogMessage "|Repos > 100MiB | $(DisplayIntWithDots($global:countRepoSizeBiggerThen100Mb))|"
         LogMessage "|Average size   | $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) MiB|"
         LogMessage "|Largest size   | $([math]::Round( $global:maxRepoSize / 1024, 2)) MiB|"
     }
@@ -576,7 +576,12 @@ function GetOSSFInfo {
 
         $total++
     }
-    LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total."
+
+    $percentage = 0
+    if ($total -gt 0) {
+        $percentage = [math]::Round(($ossfInfoCount / $total) * 100, 2)
+    }   
+    LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total which is [$($percentage)%]."
 }
 
 function GetMostUsedActionsList {
@@ -605,7 +610,8 @@ function GetMostUsedActionsList {
     foreach ($item in $top10All)
     {
         $splitted = $item.name.Split("_")
-        LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
+        $displayValue = ConvertCommasToDots -numberString $item.dependents?.dependents
+        LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue |"
     }
     
     LogMessage ""
@@ -630,7 +636,8 @@ function GetMostUsedActionsList {
         if ($item.repoInfo -and $item.repoInfo.updated_at) {
             $lastUpdated = $item.repoInfo.updated_at.ToString("yyyy-MM-dd")
         }
-        LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) | $lastUpdated |"
+        $displayValue = ConvertCommasToDots -numberString $item.dependents?.dependents
+        LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue | $lastUpdated |"
     }
 }
 

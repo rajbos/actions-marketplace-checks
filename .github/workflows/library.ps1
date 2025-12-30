@@ -1515,6 +1515,22 @@ function Test-AccessTokens {
     }
 }
 
+function ConvertCommasToDots {
+    Param (
+        $numberString
+    )
+
+    return $numberString -replace ",", "."
+}
+
+function DisplayIntWithDots {
+    Param (
+        [int] $number
+    )
+
+    return $number.ToString("N0", [System.Globalization.CultureInfo]::InvariantCulture)
+}
+
 function GetFoundSecretCount {
     Param (
         [Parameter(Mandatory=$true)]
