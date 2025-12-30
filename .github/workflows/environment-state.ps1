@@ -80,8 +80,8 @@ $totalTrackedActions = $existingForks.Count
 
 Write-Message -message "| Dataset | Count |" -logToSummary $true
 Write-Message -message "|---------|------:|" -logToSummary $true
-Write-Message -message "| **Actions in Marketplace** (actions.json) | $totalActionsInMarketplace |" -logToSummary $true
-Write-Message -message "| **Tracked Actions** (status.json) | $totalTrackedActions |" -logToSummary $true
+Write-Message -message "| **Actions in Marketplace** (actions.json) | $(DisplayIntWithDots $totalActionsInMarketplace) |" -logToSummary $true
+Write-Message -message "| **Tracked Actions** (status.json) | $(DisplayIntWithDots $totalTrackedActions) |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -168,9 +168,9 @@ $actionsInBoth = $totalTrackedActions - $actionsNoLongerInMarketplace.Count
 
 Write-Message -message "| Status | Count | Percentage |" -logToSummary $true
 Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
-Write-Message -message "| ✅ Actions in Both Datasets | $actionsInBoth | $([math]::Round(($actionsInBoth / $totalActionsInMarketplace) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🆕 Not Yet Tracked | $($actionsNotTracked.Count) | $([math]::Round(($actionsNotTracked.Count / $totalActionsInMarketplace) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🗑️ Tracked but No Longer in Marketplace | $($actionsNoLongerInMarketplace.Count) | $([math]::Round(($actionsNoLongerInMarketplace.Count / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| ✅ Actions in Both Datasets | $(DisplayIntWithDots $actionsInBoth) | $([math]::Round(($actionsInBoth / $totalActionsInMarketplace) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 🆕 Not Yet Tracked | $(DisplayIntWithDots $($actionsNotTracked.Count)) | $([math]::Round(($actionsNotTracked.Count / $totalActionsInMarketplace) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 🗑️ Tracked but No Longer in Marketplace | $(DisplayIntWithDots $($actionsNoLongerInMarketplace.Count)) | $([math]::Round(($actionsNoLongerInMarketplace.Count / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Show sample of untracked actions (console only, not in summary to save space)
@@ -197,8 +197,8 @@ $reposWithoutMirrors = ($existingForks | Where-Object { $_.mirrorFound -ne $true
 
 Write-Message -message "| Mirror Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
-Write-Message -message "| ✅ Has Valid Mirror | $reposWithMirrors | $([math]::Round(($reposWithMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| ❌ No Mirror | $reposWithoutMirrors | $([math]::Round(($reposWithoutMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| ✅ Has Valid Mirror | $(DisplayIntWithDots $reposWithMirrors) | $([math]::Round(($reposWithMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| ❌ No Mirror | $(DisplayIntWithDots $reposWithoutMirrors) | $([math]::Round(($reposWithoutMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -246,9 +246,9 @@ $percentNeverSynced = if ($totalTrackedActions -gt 0) { [math]::Round(($reposNev
 
 Write-Message -message "| Time Window | Count | % of Mirrors |" -logToSummary $true
 Write-Message -message "|-------------|------:|-------------:|" -logToSummary $true
-Write-Message -message "| 🟢 Synced in Last 7 Days | $reposSyncedLast7Days | ${percentLast7Days}% |" -logToSummary $true
-Write-Message -message "| 🟡 Synced in Last 30 Days | $reposSyncedLast30Days | ${percentLast30Days}% |" -logToSummary $true
-Write-Message -message "| ⚪ Never Synced | $reposNeverSynced | ${percentNeverSynced}% |" -logToSummary $true
+Write-Message -message "| 🟢 Synced in Last 7 Days | $(DisplayIntWithDots $reposSyncedLast7Days) | ${percentLast7Days}% |" -logToSummary $true
+Write-Message -message "| 🟡 Synced in Last 30 Days | $(DisplayIntWithDots $reposSyncedLast30Days) | ${percentLast30Days}% |" -logToSummary $true
+Write-Message -message "| ⚪ Never Synced | $(DisplayIntWithDots $reposNeverSynced) | ${percentNeverSynced}% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Repos that need updates (have mirrors but not synced in last 7 days)
@@ -257,7 +257,7 @@ $percentNeedingUpdate = if ($reposWithMirrors -gt 0) { [math]::Round(($reposNeed
 
 Write-Message -message "### Repos Needing Updates" -logToSummary $true
 Write-Message -message "" -logToSummary $true
-Write-Message -message "**$reposNeedingUpdate** repos with mirrors have not been synced in the last 7 days (${percentNeedingUpdate}% of mirrored repos)" -logToSummary $true
+Write-Message -message "**$(DisplayIntWithDots $reposNeedingUpdate)** repos with mirrors have not been synced in the last 7 days (${percentNeedingUpdate}% of mirrored repos)" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -287,10 +287,10 @@ $reposWithActionType = ($existingForks | Where-Object {
 
 Write-Message -message "| Info Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-----------|------:|-----------:|" -logToSummary $true
-Write-Message -message "| 📦 Has Tags | $reposWithTags | $([math]::Round(($reposWithTags / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🎯 Has Releases | $reposWithReleases | $([math]::Round(($reposWithReleases / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| ℹ️ Has Repo Info | $reposWithRepoInfo | $([math]::Round(($reposWithRepoInfo / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🎭 Has Valid Action Type | $reposWithActionType | $([math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 📦 Has Tags | $(DisplayIntWithDots $reposWithTags) | $([math]::Round(($reposWithTags / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 🎯 Has Releases | $(DisplayIntWithDots $reposWithReleases) | $([math]::Round(($reposWithReleases / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| ℹ️ Has Repo Info | $(DisplayIntWithDots $reposWithRepoInfo) | $([math]::Round(($reposWithRepoInfo / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 🎭 Has Valid Action Type | $(DisplayIntWithDots $reposWithActionType) | $([math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Count repos with funding info
@@ -298,7 +298,7 @@ $reposWithFunding = ($existingForks | Where-Object {
     $_.fundingInfo -and $_.fundingInfo.hasFunding -eq $true
 }).Count
 
-Write-Message -message "| 💰 Has Funding Info | $reposWithFunding | $([math]::Round(($reposWithFunding / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 💰 Has Funding Info | $(DisplayIntWithDots $reposWithFunding) | $([math]::Round(($reposWithFunding / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -323,7 +323,7 @@ Write-Message -message "|-------------|------:|-----------:|" -logToSummary $tru
 # Sort by count descending and display all types (reuse for console output below)
 $sortedTypes = $actionTypeCount.Keys | Sort-Object -Descending { $actionTypeCount[$_] }
 foreach ($type in $sortedTypes) {
-    $count = $actionTypeCount[$type]
+    $count = DisplayIntWithDots($actionTypeCount[$type])
     $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
     Write-Message -message "| $type | $count | ${percentage}% |" -logToSummary $true
 }
@@ -406,14 +406,14 @@ Write-Message -message "Discovery status for Docker-based actions:" -logToSummar
 Write-Message -message "" -logToSummary $true
 Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
 Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
-Write-Message -message "| 🐳 **Total Docker Actions** | **$dockerActionsTotal** | **100%** |" -logToSummary $true
-Write-Message -message "| ✅ With Composition Info | $dockerWithCompositionInfo | ${percentWithInfo}% |" -logToSummary $true
+Write-Message -message "| 🐳 **Total Docker Actions** | **$(DisplayIntWithDots $dockerActionsTotal)** | **100%** |" -logToSummary $true
+Write-Message -message "| ✅ With Composition Info | $(DisplayIntWithDots $dockerWithCompositionInfo) | ${percentWithInfo}% |" -logToSummary $true
 
 # Calculate missing info percentage with better readability
 $missingCompositionInfo = $dockerActionsTotal - $dockerWithCompositionInfo
 $divisor = [math]::Max($dockerActionsTotal, 1)
 $percentMissing = [math]::Round(($missingCompositionInfo / $divisor) * 100, 2)
-Write-Message -message "| ❓ Missing Composition Info | $missingCompositionInfo | ${percentMissing}% |" -logToSummary $true
+Write-Message -message "| ❓ Missing Composition Info | $(DisplayIntWithDots $missingCompositionInfo) | ${percentMissing}% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 if ($dockerWithCompositionInfo -gt 0) {
@@ -423,8 +423,8 @@ if ($dockerWithCompositionInfo -gt 0) {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Composition Type | Count | Percentage |" -logToSummary $true
     Write-Message -message "|-----------------|------:|-----------:|" -logToSummary $true
-    Write-Message -message "| 📦 Local Dockerfile | $dockerLocalDockerfile | ${percentLocalDockerfile}% |" -logToSummary $true
-    Write-Message -message "| 🌐 Remote Image | $dockerRemoteImage | ${percentRemoteImage}% |" -logToSummary $true
+    Write-Message -message "| 📦 Local Dockerfile | $(DisplayIntWithDots $dockerLocalDockerfile) | ${percentLocalDockerfile}% |" -logToSummary $true
+    Write-Message -message "| 🌐 Remote Image | $(DisplayIntWithDots $dockerRemoteImage) | ${percentRemoteImage}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Show custom code analysis for local Dockerfiles
@@ -440,8 +440,8 @@ if ($dockerWithCompositionInfo -gt 0) {
         
         Write-Message -message "| Analysis Status | Count | Percentage |" -logToSummary $true
         Write-Message -message "|----------------|------:|-----------:|" -logToSummary $true
-        Write-Message -message "| 📊 Analyzed for Custom Code | $dockerLocalWithCustomCodeInfo | ${percentWithCodeInfo}% |" -logToSummary $true
-        Write-Message -message "| ⏳ Not Yet Analyzed | $($dockerLocalDockerfile - $dockerLocalWithCustomCodeInfo) | $([math]::Round((($dockerLocalDockerfile - $dockerLocalWithCustomCodeInfo) / [math]::Max($dockerLocalDockerfile, 1)) * 100, 2))% |" -logToSummary $true
+        Write-Message -message "| 📊 Analyzed for Custom Code | $(DisplayIntWithDots $dockerLocalWithCustomCodeInfo) | ${percentWithCodeInfo}% |" -logToSummary $true
+        Write-Message -message "| ⏳ Not Yet Analyzed | $(DisplayIntWithDots ($dockerLocalDockerfile - $dockerLocalWithCustomCodeInfo)) | $([math]::Round((($dockerLocalDockerfile - $dockerLocalWithCustomCodeInfo) / [math]::Max($dockerLocalDockerfile, 1)) * 100, 2))% |" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         
         if ($dockerLocalWithCustomCodeInfo -gt 0) {
@@ -452,8 +452,8 @@ if ($dockerWithCompositionInfo -gt 0) {
             Write-Message -message "" -logToSummary $true
             Write-Message -message "| Type | Count | Percentage |" -logToSummary $true
             Write-Message -message "|------|------:|-----------:|" -logToSummary $true
-            Write-Message -message "| 🔧 With Custom Code (COPY/ADD) | $dockerLocalWithCustomCode | ${percentWithCode}% |" -logToSummary $true
-            Write-Message -message "| 📦 Base Image Only | $dockerLocalWithoutCustomCode | ${percentWithoutCode}% |" -logToSummary $true
+            Write-Message -message "| 🔧 With Custom Code (COPY/ADD) | $(DisplayIntWithDots $dockerLocalWithCustomCode) | ${percentWithCode}% |" -logToSummary $true
+            Write-Message -message "| 📦 Base Image Only | $(DisplayIntWithDots $dockerLocalWithoutCustomCode) | ${percentWithoutCode}% |" -logToSummary $true
             Write-Message -message "" -logToSummary $true
         }
     }
@@ -502,8 +502,8 @@ $averagePlatformsPerRepo = if ($reposWithFundingInfo -gt 0) {
 
 Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
 Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
-Write-Message -message "| 💰 Actions with FUNDING.yml | $reposWithFundingInfo | ${percentWithFunding}% |" -logToSummary $true
-Write-Message -message "| 📊 Total Funding Platforms | $totalPlatforms | - |" -logToSummary $true
+Write-Message -message "| 💰 Actions with FUNDING.yml | $(DisplayIntWithDots $reposWithFundingInfo) | ${percentWithFunding}% |" -logToSummary $true
+Write-Message -message "| 📊 Total Funding Platforms | $(DisplayIntWithDots $totalPlatforms) | - |" -logToSummary $true
 Write-Message -message "| 📈 Avg Platforms per Funded Action | $averagePlatformsPerRepo | - |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
@@ -516,7 +516,7 @@ if ($platformCounts.Count -gt 0) {
     
     $sortedPlatforms = $platformCounts.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 10
     foreach ($platform in $sortedPlatforms) {
-        Write-Message -message "| $($platform.Key) | $($platform.Value) |" -logToSummary $true
+        Write-Message -message "| $($platform.Key) | $(DisplayIntWithDots $($platform.Value)) |" -logToSummary $true
     }
     Write-Message -message "" -logToSummary $true
 }
@@ -610,12 +610,12 @@ Write-Message -message "" -logToSummary $true
 # ============================================================================
 Write-Message -message "## Summary" -logToSummary $true
 Write-Message -message "" -logToSummary $true
-Write-Message -message "- **$totalActionsInMarketplace** actions in the marketplace" -logToSummary $true
-Write-Message -message "- **$totalTrackedActions** actions tracked in our system" -logToSummary $true
-Write-Message -message "- **$reposWithMirrors** valid mirrors maintained" -logToSummary $true
-Write-Message -message "- **$reposSyncedLast7Days** repos synced in the last 7 days" -logToSummary $true
-Write-Message -message "- **$reposNeedingUpdate** repos need updates (not synced in last 7 days)" -logToSummary $true
-Write-Message -message "- **$($actionsNotTracked.Count)** new actions to track" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots $totalActionsInMarketplace)** actions in the marketplace" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots $totalTrackedActions)** actions tracked in our system" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots $reposWithMirrors)** valid mirrors maintained" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots $reposSyncedLast7Days)** repos synced in the last 7 days" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots $reposNeedingUpdate)** repos need updates (not synced in last 7 days)" -logToSummary $true
+Write-Message -message "- **$(DisplayIntWithDots $($actionsNotTracked.Count))** new actions to track" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 Write-Host ""
