@@ -75,6 +75,113 @@ function Format-RepoInfoSummaryTable {
     return $table
 }
 
+# Helper function to format error summary as a table with clickable links
+function Format-ErrorSummaryTable {
+    Param (
+        [hashtable] $errorCounts,
+        [hashtable] $errorDetails,
+        [string] $forkOrg = "actions-marketplace-validations",
+        [int] $limit = 10
+    )
+    
+    # Calculate total errors
+    $totalErrors = 0
+    foreach ($key in $errorCounts.Keys) {
+        $totalErrors += $errorCounts[$key]
+    }
+    
+    # Build summary counts table
+    $summaryTable = "| Error Type | Count |`n"
+    $summaryTable += "| --- | --- |`n"
+    $summaryTable += "| Upstream Repo 404 Errors | $($errorCounts.UpstreamRepo404) |`n"
+    $summaryTable += "| Fork Repo 404 Errors | $($errorCounts.ForkRepo404) |`n"
+    $summaryTable += "| Action File 404 Errors | $($errorCounts.ActionFile404) |`n"
+    $summaryTable += "| Other Errors | $($errorCounts.OtherErrors) |`n"
+    $summaryTable += "| **Total Errors** | **$totalErrors** |`n"
+    
+    # Build details section with clickable links
+    $detailsSection = ""
+    
+    # Upstream Repo 404 Details
+    if ($errorDetails.UpstreamRepo404.Count -gt 0) {
+        $detailsSection += "`n### Upstream Repo 404 Details (first $limit):`n`n"
+        $detailsSection += "| Repository | Mirror Link | Original Link |`n"
+        $detailsSection += "| --- | --- | --- |`n"
+        
+        $errorDetails.UpstreamRepo404 | Select-Object -First $limit | ForEach-Object {
+            $repoPath = $_
+            $mirrorName = $repoPath -replace '/', '_'
+            $mirrorUrl = "https://github.com/$forkOrg/$mirrorName"
+            $originalUrl = "https://github.com/$repoPath"
+            $detailsSection += "| $repoPath | [Mirror]($mirrorUrl) | [Original]($originalUrl) |`n"
+        }
+        
+        if ($errorDetails.UpstreamRepo404.Count -gt $limit) {
+            $detailsSection += "`n... and $($errorDetails.UpstreamRepo404.Count - $limit) more`n"
+        }
+    }
+    
+    # Fork Repo 404 Details
+    if ($errorDetails.ForkRepo404.Count -gt 0) {
+        $detailsSection += "`n### Fork Repo 404 Details (first $limit):`n`n"
+        $detailsSection += "| Repository | Mirror Link | Original Link |`n"
+        $detailsSection += "| --- | --- | --- |`n"
+        
+        $errorDetails.ForkRepo404 | Select-Object -First $limit | ForEach-Object {
+            $repoPath = $_
+            $mirrorUrl = "https://github.com/$repoPath"
+            # Extract original repo from mirror name (format: org_repo)
+            $parts = $repoPath -split '/'
+            if ($parts.Length -eq 2) {
+                $mirrorName = $parts[1]
+                $originalParts = $mirrorName -split '_', 2
+                if ($originalParts.Length -eq 2) {
+                    $originalUrl = "https://github.com/$($originalParts[0])/$($originalParts[1])"
+                    $detailsSection += "| $repoPath | [Mirror]($mirrorUrl) | [Original]($originalUrl) |`n"
+                } else {
+                    $detailsSection += "| $repoPath | [Mirror]($mirrorUrl) | N/A |`n"
+                }
+            } else {
+                $detailsSection += "| $repoPath | [Mirror]($mirrorUrl) | N/A |`n"
+            }
+        }
+        
+        if ($errorDetails.ForkRepo404.Count -gt $limit) {
+            $detailsSection += "`n... and $($errorDetails.ForkRepo404.Count - $limit) more`n"
+        }
+    }
+    
+    # Action File 404 Details
+    if ($errorDetails.ActionFile404.Count -gt 0) {
+        $detailsSection += "`n### Action File 404 Details (first $limit):`n`n"
+        $errorDetails.ActionFile404 | Select-Object -First $limit | ForEach-Object {
+            $detailsSection += "  - $_`n"
+        }
+        
+        if ($errorDetails.ActionFile404.Count -gt $limit) {
+            $detailsSection += "`n... and $($errorDetails.ActionFile404.Count - $limit) more`n"
+        }
+    }
+    
+    # Other Error Details
+    if ($errorDetails.OtherErrors.Count -gt 0) {
+        $detailsSection += "`n### Other Error Details (first 5):`n`n"
+        $errorDetails.OtherErrors | Select-Object -First 5 | ForEach-Object {
+            $detailsSection += "  - $_`n"
+        }
+        
+        if ($errorDetails.OtherErrors.Count -gt 5) {
+            $detailsSection += "`n... and $($errorDetails.OtherErrors.Count - 5) more`n"
+        }
+    }
+    
+    return @{
+        SummaryTable = $summaryTable
+        DetailsSection = $detailsSection
+        TotalErrors = $totalErrors
+    }
+}
+
 
 function GetRepoInfo {
     Param (
@@ -1192,6 +1299,19 @@ function GetMoreInfo {
     ReportErrorDetails -errorType "Action File 404" -errorDetails $script:errorDetails.ActionFile404 -limit 10
     ReportErrorDetails -errorType "Other Error" -errorDetails $script:errorDetails.OtherErrors -limit 5
     Write-Host ""
+    
+    # Add error summary to step summary with clickable links
+    if ($totalErrors -gt 0) {
+        $errorSummary = Format-ErrorSummaryTable -errorCounts $script:errorCounts -errorDetails $script:errorDetails -forkOrg $forkOrg -limit 10
+        
+        $stepSummaryOutput = "`n## Error Summary`n`n"
+        $stepSummaryOutput += $errorSummary.SummaryTable
+        $stepSummaryOutput += "`n<details>`n<summary>View Error Details</summary>`n"
+        $stepSummaryOutput += $errorSummary.DetailsSection
+        $stepSummaryOutput += "`n</details>`n"
+        
+        Write-Message -message $stepSummaryOutput -logToSummary $true
+    }
 
     #return ($actions, $existingForks) ? where does this $actions come from?
     return ($null, $existingForks)

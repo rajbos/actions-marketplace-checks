@@ -172,6 +172,8 @@ Write-Message -message "| ✅ Actions in Both Datasets | $(DisplayIntWithDots $a
 Write-Message -message "| 🆕 Not Yet Tracked | $(DisplayIntWithDots $($actionsNotTracked.Count)) | $([math]::Round(($actionsNotTracked.Count / $totalActionsInMarketplace) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| 🗑️ Tracked but No Longer in Marketplace | $(DisplayIntWithDots $($actionsNoLongerInMarketplace.Count)) | $([math]::Round(($actionsNoLongerInMarketplace.Count / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 # Show sample of untracked actions (console only, not in summary to save space)
 if ($actionsNotTracked.Count -gt 0) {
@@ -199,6 +201,8 @@ Write-Message -message "| Mirror Type | Count | Percentage |" -logToSummary $tru
 Write-Message -message "|-------------|------:|-----------:|" -logToSummary $true
 Write-Message -message "| ✅ Has Valid Mirror | $(DisplayIntWithDots $reposWithMirrors) | $([math]::Round(($reposWithMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| ❌ No Mirror | $(DisplayIntWithDots $reposWithoutMirrors) | $([math]::Round(($reposWithoutMirrors / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -259,6 +263,8 @@ Write-Message -message "### Repos Needing Updates" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "**$(DisplayIntWithDots $reposNeedingUpdate)** repos with mirrors have not been synced in the last 7 days (${percentNeedingUpdate}% of mirrored repos)" -logToSummary $true
 Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Update Mirrors]($(Get-WorkflowUrl 'update-forks.yml'))*" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 # ============================================================================
 # 5. REPO INFO STATUS
@@ -291,7 +297,6 @@ Write-Message -message "| 📦 Has Tags | $(DisplayIntWithDots $reposWithTags) |
 Write-Message -message "| 🎯 Has Releases | $(DisplayIntWithDots $reposWithReleases) | $([math]::Round(($reposWithReleases / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| ℹ️ Has Repo Info | $(DisplayIntWithDots $reposWithRepoInfo) | $([math]::Round(($reposWithRepoInfo / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| 🎭 Has Valid Action Type | $(DisplayIntWithDots $reposWithActionType) | $([math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "" -logToSummary $true
 
 # Count repos with funding info
 $reposWithFunding = ($existingForks | Where-Object {
@@ -299,6 +304,8 @@ $reposWithFunding = ($existingForks | Where-Object {
 }).Count
 
 Write-Message -message "| 💰 Has Funding Info | $(DisplayIntWithDots $reposWithFunding) | $([math]::Round(($reposWithFunding / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
@@ -337,6 +344,9 @@ foreach ($type in $sortedTypes) {
     $percentage = [math]::Round(($count / $totalTrackedActions) * 100, 2)
     Write-Host "  $type : $count (${percentage}%)"
 }
+Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 # ============================================================================
 # 6.1. DOCKER COMPOSITION STATUS
@@ -458,6 +468,9 @@ if ($dockerWithCompositionInfo -gt 0) {
         }
     }
 }
+Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 # ============================================================================
 # 6.2. FUNDING INFORMATION STATUS
@@ -507,19 +520,9 @@ Write-Message -message "| 📊 Total Funding Platforms | $(DisplayIntWithDots $t
 Write-Message -message "| 📈 Avg Platforms per Funded Action | $averagePlatformsPerRepo | - |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
-# Show platform breakdown if we have funding data
-if ($platformCounts.Count -gt 0) {
-    Write-Message -message "### Most Common Funding Platforms" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Platform | Count |" -logToSummary $true
-    Write-Message -message "|----------|------:|" -logToSummary $true
-    
-    $sortedPlatforms = $platformCounts.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 10
-    foreach ($platform in $sortedPlatforms) {
-        Write-Message -message "| $($platform.Key) | $(DisplayIntWithDots $($platform.Value)) |" -logToSummary $true
-    }
-    Write-Message -message "" -logToSummary $true
-}
+Write-Message -message "" -logToSummary $true
+Write-Message -message "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 # ============================================================================
 # 7. RATE LIMIT STATUS (if token provided) - console only
@@ -592,7 +595,7 @@ $completionPercentage = if ($totalTrackedActions -gt 0) {
 }
 
 Write-Message -message "| Metric | Value | Status |" -logToSummary $true
-Write-Message -message "|--------|------:|:------:|" -logToSummary $true
+Write-Message -message "|--------|------:|:-------|" -logToSummary $true
 
 $coverageStatus = if ($coveragePercentage -ge 90) { "🟢 Excellent" } elseif ($coveragePercentage -ge 75) { "🟡 Good" } else { "🔴 Needs Attention" }
 Write-Message -message "| **Coverage** (Tracked vs Marketplace) | ${coveragePercentage}% | $coverageStatus |" -logToSummary $true

@@ -23,6 +23,54 @@ $script:secretScanningAlertsBlobFileName = "secretScanningAlerts.json"
 
 <#
     .SYNOPSIS
+    Generates a GitHub Actions workflow URL for the repository.
+
+    .DESCRIPTION
+    Creates a standardized URL to a GitHub Actions workflow page.
+    Uses GitHub Actions environment variables when available, with fallback to defaults.
+    
+    Environment Variables Used:
+    - GITHUB_SERVER_URL: The base URL of the GitHub server (default: https://github.com)
+    - GITHUB_REPOSITORY: The owner/repo name (default: rajbos/actions-marketplace-checks)
+
+    .PARAMETER workflowFileName
+    The workflow YAML filename (e.g., "analyze.yml", "repoInfo.yml")
+
+    .EXAMPLE
+    Get-WorkflowUrl -workflowFileName "analyze.yml"
+    # Returns: https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml
+    # In GitHub Actions environment with GITHUB_REPOSITORY set
+
+    .EXAMPLE
+    $env:GITHUB_REPOSITORY = "myorg/myrepo"
+    Get-WorkflowUrl "report.yml"
+    # Returns: https://github.com/myorg/myrepo/actions/workflows/report.yml
+#>
+function Get-WorkflowUrl {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string]$workflowFileName
+    )
+    
+    # Get server URL from environment or use default
+    $serverUrl = if ($env:GITHUB_SERVER_URL) {
+        $env:GITHUB_SERVER_URL
+    } else {
+        "https://github.com"
+    }
+    
+    # Get repository from environment or use default
+    $repository = if ($env:GITHUB_REPOSITORY) {
+        $env:GITHUB_REPOSITORY
+    } else {
+        "rajbos/actions-marketplace-checks"
+    }
+    
+    return "$serverUrl/$repository/actions/workflows/$workflowFileName"
+}
+
+<#
+    .SYNOPSIS
     Converts a date value to a DateTime object, handling multiple input formats.
 
     .DESCRIPTION
@@ -644,7 +692,14 @@ function ApiCall {
                     Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
                 }
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+            # prevent hitting max interval too fast
+            if ($backOff -gt 2000) {
+                $backOff = 5000
+            }
+            else {
+                $backOff = $backOff * 2
+            }
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit
         }
 
         if ($null -ne $expected) {
@@ -688,6 +743,10 @@ function ApiCall {
             }
             else {
                 $backOff = $backOff*2
+                # prevent hitting max interval too fast
+                if ($backOff -gt 2000) {
+                    $backOff = 5000
+                }
             }
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
@@ -740,7 +799,14 @@ function ApiCall {
             
             # Only retry if we're configured to wait for rate limits
             if ($waitForRateLimit) {
-                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+                # prevent hitting max interval too fast
+                if ($backOff -gt 2000) {
+                    $backOff = 5000
+                }
+                else {
+                    $backOff = $backOff * 2
+                }
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit
             }
             
             # When not waiting, return null

@@ -248,6 +248,9 @@ function GetTagReleaseInfo {
     Write-Host "Total actions: $($actions.Count) with $tagInfo tags and $releaseInfo release information"
     Write-Host "Repos with tag info but no releases: $tagButNoRelease"
     Write-Host "Repos with mismatches between tag and release count: $countMismatch"
+    
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
 }
 
 function LogMessage {
@@ -281,7 +284,7 @@ function VulnerabilityCalculations {
     Write-Host "Summary: "
     LogMessage "## Potentially vulnerable Repos: $($repoInformation.vulnerableRepos) out of $($repoInformation.reposAnalyzed) analyzed repos [Total: $($actions.Count)]"
 
-    LogMessage "| Type                  | Count           | GitHub Count |"
+    LogMessage "| Type                  | Count           :| GitHub Count |"
     LogMessage "|---|---|---|"
     LogMessage "| Total high alerts     | $($repoInformation.highAlerts)     | $($github_RepoInformation.highAlerts) |"
     LogMessage "| Total critical alerts | $($repoInformation.criticalAlerts) | $($github_RepoInformation.criticalAlerts) |"
@@ -295,6 +298,8 @@ function VulnerabilityCalculations {
     LogMessage "|---|---|"
     LogMessage "| High alerts per vulnerable repo         | $([math]::Round($averageHighAlerts, 1))|"
     LogMessage "| Critical alerts per vulnerable repo     | $([math]::Round($averageCriticalAlerts, 1))|"
+    LogMessage ""
+    LogMessage "*To improve this coverage, run these workflows: [Analyze]($(Get-WorkflowUrl 'analyze.yml')) (forks repos) and [Enable Dependabot]($(Get-WorkflowUrl 'dependabot-updates.yml')) (enables Dependabot)*"
 }
 
 function ReportVulnChartInMarkdown {
@@ -440,12 +445,19 @@ function ReportInsightsInMarkdown {
         
         # Add sub-breakdown for local Dockerfiles if we have custom code information
         if ($localDockerFile -gt 0 -and ($localDockerfileWithCustomCode -gt 0 -or $localDockerfileWithoutCustomCode -gt 0)) {
-            $totalWithInfo = $localDockerfileWithCustomCode + $localDockerfileWithoutCustomCode
-            if ($totalWithInfo -gt 0) {
-                $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$totalWithInfo * 100 , 1)
-                $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$totalWithInfo * 100 , 1)
-                LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
-                LogMessage "  B-->E[$localDockerfileWithoutCustomCode Base image only - $withoutCodePercentage%]"
+            # Calculate the unknown count (actions still being scanned)
+            $localDockerfileUnknown = $localDockerFile - ($localDockerfileWithCustomCode + $localDockerfileWithoutCustomCode)
+            
+            # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for D and E to use the number from B")
+            $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$localDockerFile * 100 , 1)
+            $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$localDockerFile * 100 , 1)
+            LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
+            LogMessage "  B-->E[$localDockerfileWithoutCustomCode Base image only - $withoutCodePercentage%]"
+            
+            # Add unknown category if there are actions without custom code information
+            if ($localDockerfileUnknown -gt 0) {
+                $unknownPercentage = [math]::Round($localDockerfileUnknown/$localDockerFile * 100 , 1)
+                LogMessage "  B-->F[$localDockerfileUnknown Unknown - $unknownPercentage%]"
             }
         }
     } else {
@@ -498,6 +510,7 @@ function ReportInsightsInMarkdown {
         LogMessage "- Node $($_.Name): $(DisplayIntWithDots($_.Count))"
     }
     LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*"
 }
 
 function ReportAgeInsights {
@@ -559,6 +572,8 @@ function ReportAgeInsights {
         LogMessage "|Average size   | $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) MiB|"
         LogMessage "|Largest size   | $([math]::Round( $global:maxRepoSize / 1024, 2)) MiB|"
     }
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
 }
 
 function ReportFundingInsights {
@@ -645,6 +660,8 @@ function ReportFundingInsights {
             LogMessage ""
         }
     }
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*"
 }
 
 function GetOSSFInfo {
@@ -668,6 +685,8 @@ function GetOSSFInfo {
         $percentage = [math]::Round(($ossfInfoCount / $total) * 100, 2)
     }   
     LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total which is [$($percentage)%]."
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get actions that use the OSS Scan action]($(Get-WorkflowUrl 'ossf-scan.yml'))*"
 }
 
 function GetMostUsedActionsList {
@@ -725,6 +744,8 @@ function GetMostUsedActionsList {
         $displayValue = ConvertCommasToDots -numberString $item.dependents?.dependents
         LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue | $lastUpdated |"
     }
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
 }
 
 # call the report functions

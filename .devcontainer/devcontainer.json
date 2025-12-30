@@ -7,7 +7,7 @@
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers/features/azure-cli:1": {},
-		"ghcr.io/devcontainers-contrib/features/powershell:1": {},
+		"ghcr.io/devcontainers-extra/features/powershell:1": {}
 	},
 	"customizations": {
 		"vscode": {
@@ -25,7 +25,7 @@
             	"files.trimTrailingWhitespace": true
             }
 		}
-	},
+	}
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
