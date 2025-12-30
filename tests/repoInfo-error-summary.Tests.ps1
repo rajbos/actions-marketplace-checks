@@ -53,8 +53,8 @@ BeforeAll {
         # Fork Repo 404 Details
         if ($errorDetails.ForkRepo404.Count -gt 0) {
             $detailsSection += "`n### Fork Repo 404 Details (first $limit):`n`n"
-            $detailsSection += "| Repository | Mirror Link |`n"
-            $detailsSection += "| --- | --- |`n"
+            $detailsSection += "| Repository | Mirror Link | Original Link |`n"
+            $detailsSection += "| --- | --- | --- |`n"
             
             $errorDetails.ForkRepo404 | Select-Object -First $limit | ForEach-Object {
                 $repoPath = $_
