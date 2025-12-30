@@ -248,6 +248,9 @@ function GetTagReleaseInfo {
     Write-Host "Total actions: $($actions.Count) with $tagInfo tags and $releaseInfo release information"
     Write-Host "Repos with tag info but no releases: $tagButNoRelease"
     Write-Host "Repos with mismatches between tag and release count: $countMismatch"
+    
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml)*"
 }
 
 function LogMessage {
@@ -295,6 +298,8 @@ function VulnerabilityCalculations {
     LogMessage "|---|---|"
     LogMessage "| High alerts per vulnerable repo         | $([math]::Round($averageHighAlerts, 1))|"
     LogMessage "| Critical alerts per vulnerable repo     | $([math]::Round($averageCriticalAlerts, 1))|"
+    LogMessage ""
+    LogMessage "*To improve this coverage, run these workflows: [Analyze](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml) (forks repos) and [Enable Dependabot](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/dependabot-updates.yml) (enables Dependabot)*"
 }
 
 function ReportVulnChartInMarkdown {
@@ -498,6 +503,7 @@ function ReportInsightsInMarkdown {
         LogMessage "- Node $($_.Name): $(DisplayIntWithDots($_.Count))"
     }
     LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Analyze](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml)*"
 }
 
 function ReportAgeInsights {
@@ -559,6 +565,8 @@ function ReportAgeInsights {
         LogMessage "|Average size   | $([math]::Round(($global:sumRepoSize / 1024) / $global:countRepoSize, 2)) MiB|"
         LogMessage "|Largest size   | $([math]::Round( $global:maxRepoSize / 1024, 2)) MiB|"
     }
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml)*"
 }
 
 function ReportFundingInsights {
@@ -645,6 +653,8 @@ function ReportFundingInsights {
             LogMessage ""
         }
     }
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Analyze](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml)*"
 }
 
 function GetOSSFInfo {
@@ -668,6 +678,8 @@ function GetOSSFInfo {
         $percentage = [math]::Round(($ossfInfoCount / $total) * 100, 2)
     }   
     LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total which is [$($percentage)%]."
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get actions that use the OSS Scan action](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/ossf-scan.yml)*"
 }
 
 function GetMostUsedActionsList {
@@ -725,6 +737,8 @@ function GetMostUsedActionsList {
         $displayValue = ConvertCommasToDots -numberString $item.dependents?.dependents
         LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue | $lastUpdated |"
     }
+    LogMessage ""
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml)*"
 }
 
 # call the report functions
