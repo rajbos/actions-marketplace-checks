@@ -561,6 +561,92 @@ function ReportAgeInsights {
     }
 }
 
+function ReportFundingInsights {
+    LogMessage "## Funding Information"
+    LogMessage "Analysis of repositories that have FUNDING.yml files configured."
+    LogMessage ""
+    
+    # Count actions with funding info
+    $actionsWithFunding = 0
+    $totalPlatforms = 0
+    $platformCounts = @{}
+    
+    foreach ($action in $actions) {
+        if ($action.fundingInfo -and $action.fundingInfo.hasFunding -eq $true) {
+            $actionsWithFunding++
+            $totalPlatforms += $action.fundingInfo.platformCount
+            
+            # Count each platform type
+            if ($action.fundingInfo.platforms) {
+                foreach ($platform in $action.fundingInfo.platforms) {
+                    if ($platformCounts.ContainsKey($platform)) {
+                        $platformCounts[$platform]++
+                    } else {
+                        $platformCounts[$platform] = 1
+                    }
+                }
+            }
+        }
+    }
+    
+    $totalActions = $actions.Count
+    
+    if ($totalActions -eq 0) {
+        LogMessage "No actions to analyze for funding information."
+        LogMessage ""
+        return
+    }
+    
+    $percentWithFunding = [math]::Round(($actionsWithFunding / $totalActions) * 100, 1)
+    $percentWithoutFunding = 100 - $percentWithFunding
+    
+    LogMessage "### Funding Overview"
+    LogMessage "``````mermaid"
+    LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#4CAF50', 'pie2':'#686362' }}}%%"
+    LogMessage "pie title Actions with Funding Information"
+    LogMessage "    ""With FUNDING.yml: $actionsWithFunding"" : $actionsWithFunding"
+    LogMessage "    ""Without FUNDING.yml: $($totalActions - $actionsWithFunding)"" : $($totalActions - $actionsWithFunding)"
+    LogMessage "``````"
+    LogMessage ""
+    
+    LogMessage "|Description|Count|Percentage|"
+    LogMessage "|---|---:|---:|"
+    LogMessage "|Total actions|$totalActions||"
+    LogMessage "|Actions with FUNDING.yml|$actionsWithFunding|$percentWithFunding%|"
+    LogMessage "|Actions without FUNDING.yml|$($totalActions - $actionsWithFunding)|$percentWithoutFunding%|"
+    
+    if ($actionsWithFunding -gt 0) {
+        $avgPlatforms = [math]::Round(($totalPlatforms / $actionsWithFunding), 2)
+        LogMessage "|Total funding platforms configured|$totalPlatforms||"
+        LogMessage "|Average platforms per funded action|$avgPlatforms||"
+        LogMessage ""
+        
+        if ($platformCounts.Count -gt 0) {
+            LogMessage "### Most Common Funding Platforms"
+            LogMessage "``````mermaid"
+            LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000' }}}%%"
+            LogMessage "pie title Funding Platform Distribution"
+            
+            # Sort platforms by count and take top 10
+            $sortedPlatforms = $platformCounts.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 10
+            foreach ($platform in $sortedPlatforms) {
+                $platformLabel = $platform.Key
+                $platformCount = $platform.Value
+                LogMessage "    ""$platformLabel : $platformCount"" : $platformCount"
+            }
+            LogMessage "``````"
+            LogMessage ""
+            
+            LogMessage "|Platform|Count|"
+            LogMessage "|---|---:|"
+            foreach ($platform in $sortedPlatforms) {
+                LogMessage "|$($platform.Key)|$($platform.Value)|"
+            }
+            LogMessage ""
+        }
+    }
+}
+
 function GetOSSFInfo {
     $ossfInfoCount = 0
     $total = 0
@@ -637,6 +723,9 @@ function GetMostUsedActionsList {
 # call the report functions
 $repoInformation = AnalyzeActionInformation -actions $actions
 ReportAgeInsights
+LogMessage ""
+
+ReportFundingInsights
 LogMessage ""
 
 ReportInsightsInMarkdown -repoInformation $repoInformation

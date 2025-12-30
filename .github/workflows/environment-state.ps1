@@ -293,6 +293,14 @@ Write-Message -message "| ℹ️ Has Repo Info | $reposWithRepoInfo | $([math]::
 Write-Message -message "| 🎭 Has Valid Action Type | $reposWithActionType | $([math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
+# Count repos with funding info
+$reposWithFunding = ($existingForks | Where-Object {
+    $_.fundingInfo -and $_.fundingInfo.hasFunding -eq $true
+}).Count
+
+Write-Message -message "| 💰 Has Funding Info | $reposWithFunding | $([math]::Round(($reposWithFunding / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
 # ============================================================================
 # 6. ACTION TYPE BREAKDOWN
 # ============================================================================
@@ -449,6 +457,68 @@ if ($dockerWithCompositionInfo -gt 0) {
             Write-Message -message "" -logToSummary $true
         }
     }
+}
+
+# ============================================================================
+# 6.2. FUNDING INFORMATION STATUS
+# ============================================================================
+Write-Message -message "## Funding Information Status" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+# Count repos with funding information
+$reposWithFundingInfo = 0
+$totalPlatforms = 0
+$platformCounts = @{}
+
+foreach ($fork in $existingForks) {
+    if ($fork.fundingInfo -and $fork.fundingInfo.hasFunding -eq $true) {
+        $reposWithFundingInfo++
+        $totalPlatforms += $fork.fundingInfo.platformCount
+        
+        # Count each platform type
+        if ($fork.fundingInfo.platforms) {
+            foreach ($platform in $fork.fundingInfo.platforms) {
+                if ($platformCounts.ContainsKey($platform)) {
+                    $platformCounts[$platform]++
+                } else {
+                    $platformCounts[$platform] = 1
+                }
+            }
+        }
+    }
+}
+
+$percentWithFunding = if ($totalTrackedActions -gt 0) {
+    [math]::Round(($reposWithFundingInfo / $totalTrackedActions) * 100, 2)
+} else {
+    0
+}
+
+$averagePlatformsPerRepo = if ($reposWithFundingInfo -gt 0) {
+    [math]::Round(($totalPlatforms / $reposWithFundingInfo), 2)
+} else {
+    0
+}
+
+Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
+Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
+Write-Message -message "| 💰 Actions with FUNDING.yml | $reposWithFundingInfo | ${percentWithFunding}% |" -logToSummary $true
+Write-Message -message "| 📊 Total Funding Platforms | $totalPlatforms | - |" -logToSummary $true
+Write-Message -message "| 📈 Avg Platforms per Funded Action | $averagePlatformsPerRepo | - |" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+# Show platform breakdown if we have funding data
+if ($platformCounts.Count -gt 0) {
+    Write-Message -message "### Most Common Funding Platforms" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Platform | Count |" -logToSummary $true
+    Write-Message -message "|----------|------:|" -logToSummary $true
+    
+    $sortedPlatforms = $platformCounts.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 10
+    foreach ($platform in $sortedPlatforms) {
+        Write-Message -message "| $($platform.Key) | $($platform.Value) |" -logToSummary $true
+    }
+    Write-Message -message "" -logToSummary $true
 }
 
 # ============================================================================
