@@ -11,6 +11,7 @@ Information being loaded (see the [report workflow](.github/workflows/report.yml
 |Declaration of the Action|action.yml, action.yaml, Dockerfile|
 |Docker image setup|Dockerfile in repo or remote image url (e.g. Docker hub, GitHub Container Registry, etc.|
 |Security alerts|Fork the Action and enabling Dependabot (works only for Node actions), then read back the security alerts|
+|Funding information|Checks for FUNDING.yml file in repo root or .github folder, parses it to count funding platforms|
 
 ## Cleanup of Invalid Repos
 
