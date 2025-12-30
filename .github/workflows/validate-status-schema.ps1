@@ -242,7 +242,7 @@ function Test-StatusJsonSchema {
     
     Write-Message -message "# Status.json Schema Validation" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "Validating [$($statusData.Count)] objects in status.json..." -logToSummary $true
+    Write-Message -message "Validating [$(DisplayIntWithDots $statusData.Count)] objects in status.json..." -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     $totalWarnings = 0
@@ -280,9 +280,9 @@ function Test-StatusJsonSchema {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Metric | Count |" -logToSummary $true
     Write-Message -message "|--------|-------|" -logToSummary $true
-    Write-Message -message "| Total Objects | $($statusData.Count) |" -logToSummary $true
-    Write-Message -message "| Validation Errors | $totalErrors |" -logToSummary $true
-    Write-Message -message "| Validation Warnings | $totalWarnings |" -logToSummary $true
+    Write-Message -message "| Total Objects | $(DisplayIntWithDots $statusData.Count) |" -logToSummary $true
+    Write-Message -message "| Validation Errors | $(DisplayIntWithDots $totalErrors) |" -logToSummary $true
+    Write-Message -message "| Validation Warnings | $(DisplayIntWithDots $totalWarnings) |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Report detailed warnings (sample only to avoid overwhelming output)
@@ -325,14 +325,14 @@ function Test-StatusJsonSchema {
             }
             
             if ($group.Count -gt 3) {
-                Write-Message -message "- ... and $($group.Count - 3) more" -logToSummary $true
+                Write-Message -message "- ... and $(DisplayIntWithDots ($group.Count - 3)) more" -logToSummary $true
             }
             
             Write-Message -message "" -logToSummary $true
         }
         
         if ($warningGroups.Count -gt 10) {
-            Write-Message -message "_... and $($warningGroups.Count - 10) more warning types_" -logToSummary $true
+            Write-Message -message "_... and $(DisplayIntWithDots ($warningGroups.Count - 10)) more warning types_" -logToSummary $true
             Write-Message -message "" -logToSummary $true
         }
     }

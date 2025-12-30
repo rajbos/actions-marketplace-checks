@@ -404,17 +404,17 @@ Write-Message -message "### Repository Status Breakdown" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "| Category | Count | Description |" -logToSummary $true
 Write-Message -message "|----------|------:|-------------|" -logToSummary $true
-Write-Message -message "| **Eligible for Cleanup** | **$($categories.totalEligible)** | **Total repos that can be cleaned up** |" -logToSummary $true
-Write-Message -message "| → Upstream missing (has content) | $($categories.upstreamMissingOnly) | Upstream repo deleted, our mirror has content |" -logToSummary $true
-Write-Message -message "| → Both upstream missing & empty | $($categories.bothUpstreamMissingAndEmpty) | Upstream deleted and mirror is empty |" -logToSummary $true
+Write-Message -message "| **Eligible for Cleanup** | **$(DisplayIntWithDots $categories.totalEligible)** | **Total repos that can be cleaned up** |" -logToSummary $true
+Write-Message -message "| → Upstream missing (has content) | $(DisplayIntWithDots $categories.upstreamMissingOnly) | Upstream repo deleted, our mirror has content |" -logToSummary $true
+Write-Message -message "| → Both upstream missing & empty | $(DisplayIntWithDots $categories.bothUpstreamMissingAndEmpty) | Upstream deleted and mirror is empty |" -logToSummary $true
 Write-Message -message "| | | |" -logToSummary $true
 $totalSkipped = $categories.skippedUpstreamAvailable + $categories.skippedMirrorExists
-Write-Message -message "| **Not Eligible for Cleanup** | **$totalSkipped** | **Skipped - will be processed by other workflows** |" -logToSummary $true
-Write-Message -message "| → Mirror missing (upstream exists) | $($categories.skippedUpstreamAvailable) | Upstream available, mirror will be created |" -logToSummary $true
-Write-Message -message "| → Mirror and upstream both exist | $($categories.skippedMirrorExists) | Mirror and upstream exist, will be synced |" -logToSummary $true
+Write-Message -message "| **Not Eligible for Cleanup** | **$(DisplayIntWithDots $totalSkipped)** | **Skipped - will be processed by other workflows** |" -logToSummary $true
+Write-Message -message "| → Mirror missing (upstream exists) | $(DisplayIntWithDots $categories.skippedUpstreamAvailable) | Upstream available, mirror will be created |" -logToSummary $true
+Write-Message -message "| → Mirror and upstream both exist | $(DisplayIntWithDots $categories.skippedMirrorExists) | Mirror and upstream exist, will be synced |" -logToSummary $true
 if ($categories.invalidEntries -gt 0) {
     $afterCount = $categories.originalStatusCount - $categories.invalidEntries
-    Write-Message -message "| → Invalid entries | $($categories.invalidEntries) | $($categories.originalStatusCount) → $afterCount actions (removed $($categories.invalidEntries)) |" -logToSummary $true
+    Write-Message -message "| → Invalid entries | $(DisplayIntWithDots $categories.invalidEntries) | $(DisplayIntWithDots $categories.originalStatusCount) → $(DisplayIntWithDots $afterCount) actions (removed $(DisplayIntWithDots $categories.invalidEntries)) |" -logToSummary $true
 }
 Write-Message -message "" -logToSummary $true
 
@@ -423,7 +423,7 @@ if ($invalidEntries.Count -gt 0) {
     $displayInvalidCount = [Math]::Min($MaxDisplayReposCleaned, $invalidEntries.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Invalid Entries Removed (showing first $displayInvalidCount of $($invalidEntries.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Invalid Entries Removed (showing first $(DisplayIntWithDots $displayInvalidCount) of $(DisplayIntWithDots $invalidEntries.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Name | Owner | Reason | Link |" -logToSummary $true
     Write-Message -message "|---:|------|-------|--------|------|" -logToSummary $true
@@ -464,7 +464,7 @@ if ($reposToCleanup.Count -gt 0) {
     $displayToCleanupCount = [Math]::Min($MaxDisplayReposToCleanup, $reposToCleanup.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos to Clean Up (showing first $displayToCleanupCount of $($reposToCleanup.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos to Clean Up (showing first $(DisplayIntWithDots $displayToCleanupCount) of $(DisplayIntWithDots $reposToCleanup.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
@@ -509,7 +509,7 @@ if ($cleanedRepos.Count -gt 0) {
     $displayCleanedCount = [Math]::Min($MaxDisplayReposCleaned, $cleanedRepos.Count)
     Write-Message -message "" -logToSummary $true
     Write-Message -message "<details>" -logToSummary $true
-    Write-Message -message "<summary>Repos Cleaned Up (showing first $displayCleanedCount of $($cleanedRepos.Count))</summary>" -logToSummary $true
+    Write-Message -message "<summary>Repos Cleaned Up (showing first $(DisplayIntWithDots $displayCleanedCount) of $(DisplayIntWithDots $cleanedRepos.Count))</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| # | Our repo | Upstream | Reason |" -logToSummary $true
     Write-Message -message "|---:|---------|----------|--------|" -logToSummary $true
@@ -532,9 +532,9 @@ if ($cleanedRepos.Count -gt 0) {
 
 # Add total cleaned to step summary
 Write-Message -message "" -logToSummary $true
-Write-Message -message "**Total repos cleaned: $totalCleaned**" -logToSummary $true
+Write-Message -message "**Total repos cleaned: $(DisplayIntWithDots $totalCleaned)**" -logToSummary $true
 if (-not $dryRun -and $totalRemovedFromStatus -gt 0) {
-    Write-Message -message "**Total actions removed from status file: $totalRemovedFromStatus**" -logToSummary $true
+    Write-Message -message "**Total actions removed from status file: $(DisplayIntWithDots $totalRemovedFromStatus)**" -logToSummary $true
 }
 Write-Message -message "" -logToSummary $true
 
