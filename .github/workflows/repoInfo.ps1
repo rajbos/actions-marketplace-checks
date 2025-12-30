@@ -75,6 +75,97 @@ function Format-RepoInfoSummaryTable {
     return $table
 }
 
+# Helper function to calculate priority score for a repo
+function Get-RepoPriorityScore {
+    Param (
+        $action
+    )
+    
+    $score = 0
+    
+    # Critical missing fields (highest priority)
+    $hasOwner = Get-Member -inputobject $action -name "owner" -Membertype Properties
+    if (!$hasOwner) {
+        $score += 100
+    }
+    
+    $hasMirrorFound = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
+    if (!$hasMirrorFound -or !$action.mirrorFound) {
+        $score += 90
+    }
+    
+    $hasActionType = Get-Member -inputobject $action -name "actionType" -Membertype Properties
+    if (!$hasActionType -or ($null -eq $action.actionType.actionType)) {
+        $score += 80
+    }
+    
+    # Important fields (medium priority)
+    $hasRepoInfo = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+    if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
+        $score += 50
+    }
+    
+    $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
+    if (!$hasRepoSize) {
+        $score += 40
+    }
+    
+    $hasDependents = Get-Member -inputobject $action -name "dependents" -Membertype Properties
+    if (!$hasDependents) {
+        $score += 30
+    }
+    
+    # Stale data checks (lower priority)
+    if ($hasDependents -and $action.dependents.dependentsLastUpdated) {
+        $daysSinceLastUpdate = ((Get-Date) - $action.dependents.dependentsLastUpdated).Days
+        if ($daysSinceLastUpdate -gt 7) {
+            $score += 20
+        }
+    }
+    
+    $hasFundingInfo = Get-Member -inputobject $action -name "fundingInfo" -Membertype Properties
+    if ($hasFundingInfo -and $action.fundingInfo.lastChecked) {
+        $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
+        if ($daysSinceLastCheck -gt 30) {
+            $score += 10
+        }
+    }
+    
+    return $score
+}
+
+# Helper function to filter and prioritize repos that need processing
+function Get-PrioritizedReposToProcess {
+    Param (
+        $existingForks,
+        $numberOfReposToDo
+    )
+    
+    Write-Host "Prioritizing repos for processing..."
+    
+    # Calculate priority scores for all repos
+    $scoredRepos = @()
+    foreach ($action in $existingForks) {
+        $score = Get-RepoPriorityScore -action $action
+        if ($score -gt 0) {
+            $scoredRepos += @{
+                Action = $action
+                Score = $score
+            }
+        }
+    }
+    
+    Write-Host "Found [$($scoredRepos.Count)] repos that need processing out of [$($existingForks.Count)] total"
+    
+    # Sort by score (highest first) and take top N
+    $prioritizedRepos = $scoredRepos | Sort-Object -Property Score -Descending | Select-Object -First $numberOfReposToDo
+    
+    Write-Host "Prioritized top [$($prioritizedRepos.Count)] repos for processing"
+    
+    # Return just the actions
+    return $prioritizedRepos | ForEach-Object { $_.Action }
+}
+
 # Helper function to format error summary as a table with clickable links
 function Format-ErrorSummaryTable {
     Param (
@@ -611,10 +702,20 @@ function GetInfo {
         OtherErrors = @()
     }
 
+    # Initialize tracking for summary
+    $script:processMetrics = @{
+        TotalReposExamined = 0
+        ReposWithUpdates = 0
+        ReposSkipped = 0
+    }
+
     # get information from the action files
     $i = $existingForks.Count
     $max = $existingForks.Count + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
+        $script:processMetrics.TotalReposExamined++
+        # Reset flag for each repo to track if this specific repo gets updates
+        $repoHadUpdates = $false
 
         # Check if we are nearing the 50-minute mark
         $timeSpan = (Get-Date) - $startTime
@@ -637,6 +738,7 @@ function GetInfo {
             $hasField = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
             if ($hasField -and !$action.mirrorFound) {
                 # skip this one to prevent us from keeping checking on erroneous repos
+                $script:processMetrics.ReposSkipped++
                 continue
             }
             # load owner from repo info out of the fork
@@ -659,6 +761,7 @@ function GetInfo {
                 # owner is known, so this fork exists
                 $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
         }
 
@@ -672,6 +775,7 @@ function GetInfo {
                 # add the new field
                 $action | Add-Member -Name mirrorLastUpdated -Value $response.updated_at -MemberType NoteProperty
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
         }
         else {
@@ -736,6 +840,7 @@ function GetInfo {
                     }
                     $action | Add-Member -Name dependents -Value $dependents -MemberType NoteProperty
                     $i++ | Out-Null
+                    $repoHadUpdates = $true
                 }
             }
         }
@@ -751,6 +856,7 @@ function GetInfo {
                     $action.dependents.dependents = $dependentsNumber
                     $action.dependents.dependentsLastUpdated = Get-Date
                     $i++ | Out-Null
+                    $repoHadUpdates = $true
                 }
             }
         }
@@ -773,6 +879,7 @@ function GetInfo {
 
                 $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
             else {
                 $action.actionType.actionType = $actionTypeResult
@@ -785,6 +892,7 @@ function GetInfo {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
                 $i++ | Out-Null
+                $repoHadUpdates = $true
             }
 
         }
@@ -799,6 +907,7 @@ function GetInfo {
                 if ($null -ne $fundingInfo) {
                     $action | Add-Member -Name fundingInfo -Value $fundingInfo -MemberType NoteProperty
                     $i++ | Out-Null
+                    $repoHadUpdates = $true
                 }
             }
         }
@@ -816,12 +925,30 @@ function GetInfo {
                         if ($null -ne $fundingInfo) {
                             $action.fundingInfo = $fundingInfo
                             $i++ | Out-Null
+                            $repoHadUpdates = $true
                         }
                     }
                 }
             }
         }
+        
+        # Track if this repo had any updates
+        if ($repoHadUpdates) {
+            $script:processMetrics.ReposWithUpdates++
+        }
     }
+
+    # Output processing summary
+    $withUpdates = $script:processMetrics.ReposWithUpdates
+    $examined = $script:processMetrics.TotalReposExamined
+    $skipped = $script:processMetrics.ReposSkipped
+    
+    Write-Host ""
+    Write-Host "GetInfo Processing Summary:"
+    Write-Host "  Total repos examined: $examined"
+    Write-Host "  Repos with updates: $withUpdates"
+    Write-Host "  Repos skipped: $skipped"
+    Write-Host ""
 
     return $existingForks
 }
@@ -1005,6 +1132,14 @@ function GetMoreInfo {
     $startingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
     $startingReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo}).Length
     
+    # Initialize tracking for GetMoreInfo
+    # Note: GetMoreInfo uses memberAdded/memberUpdate variables to track changes
+    # so ReposWithUpdates is not needed here - those variables serve the same purpose
+    $script:moreInfoMetrics = @{
+        TotalReposExamined = 0
+        ReposSkipped = 0
+    }
+    
     Write-Host "Loading repository information, starting with [$startingRepoInfo] already loaded"
     $memberAdded = 0
     $memberUpdate = 0
@@ -1015,6 +1150,7 @@ function GetMoreInfo {
     $startTime = Get-Date
     try {
         foreach ($action in $existingForks) {
+            $script:moreInfoMetrics.TotalReposExamined++
 
             # Check if we are nearing the 50-minute mark
             $timeSpan = (Get-Date) - $startTime
@@ -1031,6 +1167,7 @@ function GetMoreInfo {
 
             if (!$action.upstreamFound) {
                 Write-Debug "Skipping this repo, since the fork was not found: [$($action.owner)/$($action.name)]"
+                $script:moreInfoMetrics.ReposSkipped++
                 continue
             }
 
@@ -1235,6 +1372,16 @@ function GetMoreInfo {
 
     Write-Host "memberAdded : $memberAdded, memberUpdate: $memberUpdate"
     
+    # Output GetMoreInfo processing summary
+    $examined = $script:moreInfoMetrics.TotalReposExamined
+    $skipped = $script:moreInfoMetrics.ReposSkipped
+    
+    Write-Host ""
+    Write-Host "GetMoreInfo Processing Summary:"
+    Write-Host "  Total repos examined: $examined"
+    Write-Host "  Repos skipped: $skipped"
+    Write-Host ""
+    
     # Calculate ending counts
     $endingRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo}).Length
     $endingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
@@ -1249,7 +1396,31 @@ function GetMoreInfo {
     
     # Output as table to step summary
     $table = Format-RepoInfoSummaryTable -metrics $metrics
-    $summaryOutput = "`n## Repository Information Summary`n`n$table"
+    
+    # Calculate total delta
+    $totalDelta = 0
+    foreach ($key in $metrics.Keys) {
+        $totalDelta += ($metrics[$key].Ended - $metrics[$key].Started)
+    }
+    
+    # Add processing summary at the top
+    $processingSummary = "## Processing Summary`n`n"
+    $processingSummary += "| Metric | Count |`n"
+    $processingSummary += "| --- | --- |`n"
+    $processingSummary += "| Total repos in status file | $($existingForks.Count) |`n"
+    $processingSummary += "| Repos examined | $examined |`n"
+    $processingSummary += "| Repos skipped | $skipped |`n"
+    $processingSummary += "| Limit (numberOfReposToDo) | $numberOfReposToDo |`n"
+    $processingSummary += "`n"
+    
+    # Add explanation if no deltas occurred
+    if ($totalDelta -eq 0) {
+        $processingSummary += "> **Note**: No changes were made (0 total delta). This means all examined repos already had up-to-date information. "
+        $processingSummary += "The workflow still examined $examined repos sequentially to check if updates were needed. "
+        $processingSummary += "Future optimization: implement prioritization to process repos missing critical fields first.`n`n"
+    }
+    
+    $summaryOutput = $processingSummary + "`n## Repository Information Summary`n`n$table"
     if ($dockerBaseImageInfoAdded -gt 0) {
         $summaryOutput += "`nDocker base image information added for [$dockerBaseImageInfoAdded] actions"
     }
