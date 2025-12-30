@@ -692,7 +692,14 @@ function ApiCall {
                     Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
                 }
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+            # prevent hitting max interval too fast
+            if ($backOff -gt 2000) {
+                $backOff = 5000
+            }
+            else {
+                $backOff = $backOff * 2
+            }
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit
         }
 
         if ($null -ne $expected) {
@@ -792,7 +799,14 @@ function ApiCall {
             
             # Only retry if we're configured to wait for rate limits
             if ($waitForRateLimit) {
-                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+                # prevent hitting max interval too fast
+                if ($backOff -gt 2000) {
+                    $backOff = 5000
+                }
+                else {
+                    $backOff = $backOff * 2
+                }
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit
             }
             
             # When not waiting, return null
