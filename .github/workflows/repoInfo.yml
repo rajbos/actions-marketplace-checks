@@ -184,7 +184,7 @@ jobs:
               exit 1
           }
 
-          Write-Message -message "Loaded current status from blob storage with [$($currentStatus.Count)] forks" -logToSummary $true
+          Write-Message -message "Loaded current status from blob storage with [$(DisplayIntWithDots $currentStatus.Count)] forks" -logToSummary $true
 
           # Load updated status from processing job
           $updatedStatusFile = "updated-data/status.json"
@@ -193,7 +193,7 @@ jobs:
                   $updatedContent = Get-Content $updatedStatusFile -Raw
                   $updatedContent = $updatedContent -replace '^\uFEFF', ''
                   $updatedStatus = $updatedContent | ConvertFrom-Json
-                  Write-Message -message "Loaded updated status from processing job with [$($updatedStatus.Count)] forks" -logToSummary $true
+                  Write-Message -message "Loaded updated status from processing job with [$(DisplayIntWithDots $updatedStatus.Count)] forks" -logToSummary $true
               } catch {
                   Write-Error "Failed to parse updated status.json: $($_.Exception.Message)"
                   exit 1
@@ -233,11 +233,11 @@ jobs:
                   }
               }
 
-              Write-Message -message "Merged [$mergeCount] fork updates into current status" -logToSummary $true
+              Write-Message -message "Merged [$(DisplayIntWithDots $mergeCount)] fork updates into current status" -logToSummary $true
 
               # Convert back to array and save
               $mergedStatus = $statusByName.Values
-              Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+              Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
               SaveStatus -existingForks $mergedStatus
           } else {
               Write-Message -message "No updated status.json found from processing job" -logToSummary $true
@@ -252,7 +252,7 @@ jobs:
                   $updatedFailedForks = $updatedFailedContent | ConvertFrom-Json
                   
                   # Use the updated failedForks - it's based on the complete status processed by repoInfo.ps1
-                  Write-Message -message "Using updated failedForks.json with [$($updatedFailedForks.Count)] entries" -logToSummary $true
+                  Write-Message -message "Using updated failedForks.json with [$(DisplayIntWithDots $updatedFailedForks.Count)] entries" -logToSummary $true
                   SaveStatus -failedForks $updatedFailedForks
               } catch {
                   Write-Warning "Failed to process updated failedForks.json: $($_.Exception.Message)"

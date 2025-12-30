@@ -113,7 +113,7 @@ jobs:
           "chunks=$($matrixIds.Count)" >> $env:GITHUB_OUTPUT
 
           Write-Message -message "" -logToSummary $true
-          Write-Message -message "✓ Work distribution complete. Starting [$($matrixIds.Count)] parallel jobs." -logToSummary $true
+          Write-Message -message "✓ Work distribution complete. Starting [$(DisplayIntWithDots $matrixIds.Count)] parallel jobs." -logToSummary $true
 
       - name: Upload chunk files
         uses: actions/upload-artifact@v4
@@ -189,7 +189,7 @@ jobs:
           }
 
           $forkNames = Get-Content $chunkFile | ConvertFrom-Json
-          Write-Message -message "Loaded [$($forkNames.Count)] forks to process from [$chunkFile]" -logToSummary $true
+          Write-Message -message "Loaded [$(DisplayIntWithDots $forkNames.Count)] forks to process from [$chunkFile]" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
           # Process the chunk
@@ -309,18 +309,18 @@ jobs:
               exit 1
           }
 
-          Write-Message -message "Loaded current status with [$($currentStatus.Count)] forks" -logToSummary $true
+          Write-Message -message "Loaded current status with [$(DisplayIntWithDots $currentStatus.Count)] forks" -logToSummary $true
 
           # Find all partial status files
           $partialFiles = Get-ChildItem -Path "partial-updates" -Filter "status-partial-*.json" | Select-Object -ExpandProperty FullName
-          Write-Message -message "Found [$($partialFiles.Count)] partial status files to merge" -logToSummary $true
+          Write-Message -message "Found [$(DisplayIntWithDots $partialFiles.Count)] partial status files to merge" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
           # Merge all partial updates
           $mergedStatus = Merge-PartialStatusUpdates -currentStatus $currentStatus -partialStatusFiles $partialFiles
 
           # Save merged status
-          Write-Message -message "Saving merged status with [$($mergedStatus.Count)] forks" -logToSummary $true
+          Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
           SaveStatus -existingForks $mergedStatus
 
           Write-Message -message "" -logToSummary $true
