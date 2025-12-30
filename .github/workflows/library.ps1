@@ -736,6 +736,10 @@ function ApiCall {
             }
             else {
                 $backOff = $backOff*2
+                # prevent hitting max interval too fast
+                if ($backOff -gt 2000) {
+                    $backOff = 5000
+                }
             }
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
