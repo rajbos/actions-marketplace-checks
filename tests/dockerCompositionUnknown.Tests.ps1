@@ -1,7 +1,7 @@
 Import-Module Pester
 
 BeforeAll {
-    # Mock Write-Message function
+    # Define Write-Message function for tests
     function Write-Message {
         Param (
             [string] $message,

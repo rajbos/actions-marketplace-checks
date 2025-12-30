@@ -443,7 +443,7 @@ function ReportInsightsInMarkdown {
             # Calculate the unknown count (actions still being scanned)
             $localDockerfileUnknown = $localDockerFile - ($localDockerfileWithCustomCode + $localDockerfileWithoutCustomCode)
             
-            # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for C and D to use the number from B")
+            # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for D and E to use the number from B")
             $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$localDockerFile * 100 , 1)
             $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$localDockerFile * 100 , 1)
             LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
