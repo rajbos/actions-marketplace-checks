@@ -250,7 +250,7 @@ function GetTagReleaseInfo {
     Write-Host "Repos with mismatches between tag and release count: $countMismatch"
     
     LogMessage ""
-    LogMessage "*To improve this coverage, run this workflow: [Get repo info](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml)*"
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
 }
 
 function LogMessage {
@@ -284,7 +284,7 @@ function VulnerabilityCalculations {
     Write-Host "Summary: "
     LogMessage "## Potentially vulnerable Repos: $($repoInformation.vulnerableRepos) out of $($repoInformation.reposAnalyzed) analyzed repos [Total: $($actions.Count)]"
 
-    LogMessage "| Type                  | Count           | GitHub Count |"
+    LogMessage "| Type                  | Count           :| GitHub Count |"
     LogMessage "|---|---|---|"
     LogMessage "| Total high alerts     | $($repoInformation.highAlerts)     | $($github_RepoInformation.highAlerts) |"
     LogMessage "| Total critical alerts | $($repoInformation.criticalAlerts) | $($github_RepoInformation.criticalAlerts) |"
@@ -299,7 +299,7 @@ function VulnerabilityCalculations {
     LogMessage "| High alerts per vulnerable repo         | $([math]::Round($averageHighAlerts, 1))|"
     LogMessage "| Critical alerts per vulnerable repo     | $([math]::Round($averageCriticalAlerts, 1))|"
     LogMessage ""
-    LogMessage "*To improve this coverage, run these workflows: [Analyze](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml) (forks repos) and [Enable Dependabot](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/dependabot-updates.yml) (enables Dependabot)*"
+    LogMessage "*To improve this coverage, run these workflows: [Analyze]($(Get-WorkflowUrl 'analyze.yml')) (forks repos) and [Enable Dependabot]($(Get-WorkflowUrl 'dependabot-updates.yml')) (enables Dependabot)*"
 }
 
 function ReportVulnChartInMarkdown {
@@ -503,7 +503,7 @@ function ReportInsightsInMarkdown {
         LogMessage "- Node $($_.Name): $(DisplayIntWithDots($_.Count))"
     }
     LogMessage ""
-    LogMessage "*To improve this coverage, run this workflow: [Analyze](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml)*"
+    LogMessage "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*"
 }
 
 function ReportAgeInsights {
@@ -566,7 +566,7 @@ function ReportAgeInsights {
         LogMessage "|Largest size   | $([math]::Round( $global:maxRepoSize / 1024, 2)) MiB|"
     }
     LogMessage ""
-    LogMessage "*To improve this coverage, run this workflow: [Get repo info](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml)*"
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
 }
 
 function ReportFundingInsights {
@@ -654,7 +654,7 @@ function ReportFundingInsights {
         }
     }
     LogMessage ""
-    LogMessage "*To improve this coverage, run this workflow: [Analyze](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/analyze.yml)*"
+    LogMessage "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*"
 }
 
 function GetOSSFInfo {
@@ -679,7 +679,7 @@ function GetOSSFInfo {
     }   
     LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total which is [$($percentage)%]."
     LogMessage ""
-    LogMessage "*To improve this coverage, run this workflow: [Get actions that use the OSS Scan action](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/ossf-scan.yml)*"
+    LogMessage "*To improve this coverage, run this workflow: [Get actions that use the OSS Scan action]($(Get-WorkflowUrl 'ossf-scan.yml'))*"
 }
 
 function GetMostUsedActionsList {
@@ -738,7 +738,7 @@ function GetMostUsedActionsList {
         LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue | $lastUpdated |"
     }
     LogMessage ""
-    LogMessage "*To improve this coverage, run this workflow: [Get repo info](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml)*"
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
 }
 
 # call the report functions
