@@ -190,32 +190,22 @@ function GetFundingInfo {
         return $null
     }
 
-    # Try to find FUNDING.yml in .github folder first, then in root
-    $fundingLocations = @(
-        "/repos/$owner/$repo/contents/.github/FUNDING.yml",
-        "/repos/$owner/$repo/contents/FUNDING.yml"
-    )
-
+    # Check for FUNDING.yml in .github folder (as per GitHub documentation)
     $fundingFileContent = $null
-    $fundingFileLocation = $null
+    $fundingFileLocation = "/repos/$owner/$repo/contents/.github/FUNDING.yml"
 
-    foreach ($location in $fundingLocations) {
-        try {
-            Write-Debug "Checking for FUNDING.yml at [$location]"
-            $response = ApiCall -method GET -url $location -hideFailedCall $true -access_token $access_token
-            
-            if ($response -and $response.download_url) {
-                Write-Message "Found FUNDING.yml for [$owner/$repo] at [$location]"
-                $fundingFileLocation = $location
-                # Download the file content
-                $fundingFileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
-                break
-            }
+    try {
+        Write-Debug "Checking for FUNDING.yml at [$fundingFileLocation]"
+        $response = ApiCall -method GET -url $fundingFileLocation -hideFailedCall $true -access_token $access_token
+        
+        if ($response -and $response.download_url) {
+            Write-Message "Found FUNDING.yml for [$owner/$repo] at [$fundingFileLocation]"
+            # Download the file content
+            $fundingFileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
         }
-        catch {
-            Write-Debug "No FUNDING.yml found at [$location]"
-            continue
-        }
+    }
+    catch {
+        Write-Debug "No FUNDING.yml found at [$fundingFileLocation]"
     }
 
     if ($null -eq $fundingFileContent) {
