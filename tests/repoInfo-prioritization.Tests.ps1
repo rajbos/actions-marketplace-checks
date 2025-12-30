@@ -243,28 +243,35 @@ Describe "Get-PrioritizedReposToProcess" {
     
     It "Should return empty array when all repos are up-to-date" {
         # Arrange
-        $repos = @(
-            [PSCustomObject]@{ 
-                name = "complete-repo1"
-                owner = "test"
-                mirrorFound = $true
-                actionType = [PSCustomObject]@{ actionType = "Node" }
-                repoInfo = [PSCustomObject]@{ updated_at = Get-Date }
-                repoSize = 100
-                dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
-                fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+        $completeRepo1 = [PSCustomObject]@{ 
+            name = "complete-repo1"
+            owner = "test"
+            mirrorFound = $true
+            actionType = [PSCustomObject]@{ actionType = "Node" }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date }
+            repoSize = 100
+            dependents = [PSCustomObject]@{ 
+                dependents = 50
+                dependentsLastUpdated = Get-Date 
             }
-            [PSCustomObject]@{ 
-                name = "complete-repo2"
-                owner = "test"
-                mirrorFound = $true
-                actionType = [PSCustomObject]@{ actionType = "Docker" }
-                repoInfo = [PSCustomObject]@{ updated_at = Get-Date }
-                repoSize = 200
-                dependents = [PSCustomObject]@{ dependents = 100; dependentsLastUpdated = Get-Date }
-                fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+        }
+        
+        $completeRepo2 = [PSCustomObject]@{ 
+            name = "complete-repo2"
+            owner = "test"
+            mirrorFound = $true
+            actionType = [PSCustomObject]@{ actionType = "Docker" }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date }
+            repoSize = 200
+            dependents = [PSCustomObject]@{ 
+                dependents = 100
+                dependentsLastUpdated = Get-Date 
             }
-        )
+            fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+        }
+        
+        $repos = @($completeRepo1, $completeRepo2)
         
         # Act
         $prioritized = Get-PrioritizedReposToProcess -existingForks $repos -numberOfReposToDo 10

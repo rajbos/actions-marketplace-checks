@@ -714,6 +714,7 @@ function GetInfo {
     $max = $existingForks.Count + ($numberOfReposToDo * 1)
     foreach ($action in $existingForks) {
         $script:processMetrics.TotalReposExamined++
+        # Reset flag for each repo to track if this specific repo gets updates
         $repoHadUpdates = $false
 
         # Check if we are nearing the 50-minute mark
@@ -1132,9 +1133,10 @@ function GetMoreInfo {
     $startingReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo}).Length
     
     # Initialize tracking for GetMoreInfo
+    # Note: GetMoreInfo uses memberAdded/memberUpdate variables to track changes
+    # so ReposWithUpdates is not needed here - those variables serve the same purpose
     $script:moreInfoMetrics = @{
         TotalReposExamined = 0
-        ReposWithUpdates = 0
         ReposSkipped = 0
     }
     
