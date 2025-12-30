@@ -291,7 +291,6 @@ Write-Message -message "| 📦 Has Tags | $(DisplayIntWithDots $reposWithTags) |
 Write-Message -message "| 🎯 Has Releases | $(DisplayIntWithDots $reposWithReleases) | $([math]::Round(($reposWithReleases / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| ℹ️ Has Repo Info | $(DisplayIntWithDots $reposWithRepoInfo) | $([math]::Round(($reposWithRepoInfo / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| 🎭 Has Valid Action Type | $(DisplayIntWithDots $reposWithActionType) | $([math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "" -logToSummary $true
 
 # Count repos with funding info
 $reposWithFunding = ($existingForks | Where-Object {
