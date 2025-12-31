@@ -649,6 +649,9 @@ function Set-JsonToBlobStorageFolder {
         return $false
     }
 
+    # Normalize folder path (remove leading/trailing slashes)
+    $folderPath = $folderPath.Trim('/')
+
     # Parse SAS token URL
     $baseUrlWithQuery = $sasToken
     $queryStart = $baseUrlWithQuery.IndexOf('?')
@@ -734,6 +737,9 @@ function Get-JsonFromBlobStorageFolder {
     )
 
     Write-Message -message "Downloading $blobFileName from Azure Blob Storage folder '$folderPath'..." -logToSummary $true
+
+    # Normalize folder path (remove leading/trailing slashes)
+    $folderPath = $folderPath.Trim('/')
 
     # Parse SAS token URL
     $baseUrlWithQuery = $sasToken

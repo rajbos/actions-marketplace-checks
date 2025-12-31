@@ -105,7 +105,7 @@ jobs:
   consolidate:
     name: Consolidate organization scans
     needs: [prepare, scan-org]
-    if: always()
+    if: success() || failure()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -128,9 +128,20 @@ jobs:
           # Find all org scan files
           $orgFiles = Get-ChildItem -Path "org-scans" -Filter "*.json" -ErrorAction SilentlyContinue
           
+          # Get expected organizations
+          $expectedOrgs = '${{ needs.prepare.outputs.matrix }}' | ConvertFrom-Json
+          Write-Message -message "Expected organizations: $($expectedOrgs -join ', ')" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
           if (-not $orgFiles -or $orgFiles.Count -eq 0) {
-            Write-Error "No organization scan files found to consolidate"
+            Write-Warning "No organization scan files found to consolidate"
+            Write-Message -message "⚠️ No organization scan files found. Expected $($expectedOrgs.Count) organizations." -logToSummary $true
             exit 1
+          }
+          
+          if ($orgFiles.Count -lt $expectedOrgs.Count) {
+            Write-Warning "Found only $($orgFiles.Count) of $($expectedOrgs.Count) expected organization scans"
+            Write-Message -message "⚠️ Found only $($orgFiles.Count) of $($expectedOrgs.Count) expected organization scans" -logToSummary $true
           }
           
           Write-Message -message "Found $($orgFiles.Count) organization scan files to consolidate" -logToSummary $true
