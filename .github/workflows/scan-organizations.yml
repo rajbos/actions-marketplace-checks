@@ -98,7 +98,7 @@ jobs:
         with:
           organization: ${{ matrix.org }}
           PAT: ${{ steps.get_workflow_token.outputs.token }}
-          skip-repositories: ${{ matrix.skipRepositories }}
+          exclude-repos: ${{ matrix.skipRepositories }}
 
       - name: Save actions to file
         env:
@@ -114,7 +114,7 @@ jobs:
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Organization Scan Results"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
 
-          $summaryLine = "- `" + $orgName + "`: $actionCount actions"
+          $summaryLine = "- `" + $orgName + "`> $actionCount actions"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summaryLine
           Write-Host $summaryLine          
           
