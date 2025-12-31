@@ -68,8 +68,8 @@ function Format-RepoInfoSummaryTable {
         $started = $metrics[$key].Started
         $ended = $metrics[$key].Ended
         $delta = $ended - $started
-        $deltaStr = if ($delta -ge 0) { "+$delta" } else { $delta }
-        $table += "| $key | $started | $ended | $deltaStr |`n"
+        $deltaStr = if ($delta -ge 0) { "+$(DisplayIntWithDots $delta)" } else { DisplayIntWithDots $delta }
+        $table += "| $key | $(DisplayIntWithDots $started) | $(DisplayIntWithDots $ended) | $deltaStr |`n"
     }
     
     return $table
@@ -184,11 +184,11 @@ function Format-ErrorSummaryTable {
     # Build summary counts table
     $summaryTable = "| Error Type | Count |`n"
     $summaryTable += "| --- | --- |`n"
-    $summaryTable += "| Upstream Repo 404 Errors | $($errorCounts.UpstreamRepo404) |`n"
-    $summaryTable += "| Fork Repo 404 Errors | $($errorCounts.ForkRepo404) |`n"
-    $summaryTable += "| Action File 404 Errors | $($errorCounts.ActionFile404) |`n"
-    $summaryTable += "| Other Errors | $($errorCounts.OtherErrors) |`n"
-    $summaryTable += "| **Total Errors** | **$totalErrors** |`n"
+    $summaryTable += "| Upstream Repo 404 Errors | $(DisplayIntWithDots $errorCounts.UpstreamRepo404) |`n"
+    $summaryTable += "| Fork Repo 404 Errors | $(DisplayIntWithDots $errorCounts.ForkRepo404) |`n"
+    $summaryTable += "| Action File 404 Errors | $(DisplayIntWithDots $errorCounts.ActionFile404) |`n"
+    $summaryTable += "| Other Errors | $(DisplayIntWithDots $errorCounts.OtherErrors) |`n"
+    $summaryTable += "| **Total Errors** | **$(DisplayIntWithDots $totalErrors)** |`n"
     
     # Build details section with clickable links
     $detailsSection = ""
@@ -208,7 +208,7 @@ function Format-ErrorSummaryTable {
         }
         
         if ($errorDetails.UpstreamRepo404.Count -gt $limit) {
-            $detailsSection += "`n... and $($errorDetails.UpstreamRepo404.Count - $limit) more`n"
+            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.UpstreamRepo404.Count - $limit)) more`n"
         }
     }
     
@@ -238,7 +238,7 @@ function Format-ErrorSummaryTable {
         }
         
         if ($errorDetails.ForkRepo404.Count -gt $limit) {
-            $detailsSection += "`n... and $($errorDetails.ForkRepo404.Count - $limit) more`n"
+            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.ForkRepo404.Count - $limit)) more`n"
         }
     }
     
@@ -250,7 +250,7 @@ function Format-ErrorSummaryTable {
         }
         
         if ($errorDetails.ActionFile404.Count -gt $limit) {
-            $detailsSection += "`n... and $($errorDetails.ActionFile404.Count - $limit) more`n"
+            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.ActionFile404.Count - $limit)) more`n"
         }
     }
     
@@ -262,7 +262,7 @@ function Format-ErrorSummaryTable {
         }
         
         if ($errorDetails.OtherErrors.Count -gt 5) {
-            $detailsSection += "`n... and $($errorDetails.OtherErrors.Count - 5) more`n"
+            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.OtherErrors.Count - 5)) more`n"
         }
     }
     
@@ -1422,7 +1422,7 @@ function GetMoreInfo {
     
     $summaryOutput = $processingSummary + "`n## Repository Information Summary`n`n$table"
     if ($dockerBaseImageInfoAdded -gt 0) {
-        $summaryOutput += "`nDocker base image information added for [$dockerBaseImageInfoAdded] actions"
+        $summaryOutput += "`nDocker base image information added for [$(DisplayIntWithDots $dockerBaseImageInfoAdded)] actions"
     }
     Write-Message -message $summaryOutput -logToSummary $true
 
