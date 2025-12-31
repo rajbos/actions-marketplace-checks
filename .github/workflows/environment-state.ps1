@@ -172,6 +172,31 @@ Write-Message -message "| ✅ Actions in Both Datasets | $(DisplayIntWithDots $a
 Write-Message -message "| 🆕 Not Yet Tracked | $(DisplayIntWithDots $($actionsNotTracked.Count)) | $([math]::Round(($actionsNotTracked.Count / $totalActionsInMarketplace) * 100, 2))% |" -logToSummary $true
 Write-Message -message "| 🗑️ Tracked but No Longer in Marketplace | $(DisplayIntWithDots $($actionsNoLongerInMarketplace.Count)) | $([math]::Round(($actionsNoLongerInMarketplace.Count / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
+
+# Add collapsible details section with top 10 removed actions
+if ($actionsNoLongerInMarketplace.Count -gt 0) {
+    Write-Message -message "<details>" -logToSummary $true
+    Write-Message -message "<summary>View top 10 removed actions (click to expand)</summary>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    
+    $maxToShow = [Math]::Min(10, $actionsNoLongerInMarketplace.Count)
+    for ($i = 0; $i -lt $maxToShow; $i++) {
+        $action = $actionsNoLongerInMarketplace[$i]
+        # Parse the owner_repo format to get clickable link
+        ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $action.name
+        if ($owner -and $repo) {
+            $repoLink = "https://github.com/$owner/$repo"
+            Write-Message -message "- [$owner/$repo]($repoLink)" -logToSummary $true
+        }
+        else {
+            Write-Message -message "- $($action.name)" -logToSummary $true
+        }
+    }
+    
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "</details>" -logToSummary $true
+}
+Write-Message -message "" -logToSummary $true
 Write-Message -message "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
