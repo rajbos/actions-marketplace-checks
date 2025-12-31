@@ -1029,7 +1029,7 @@ function Format-RateLimitTable {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Limit | Used | Remaining | Resets In |" -logToSummary $true
     Write-Message -message "|------:|-----:|----------:|-----------|" -logToSummary $true
-    Write-Message -message "| $($rateData.limit) | $($rateData.used) | $($rateData.remaining) | $resetDisplay |" -logToSummary $true
+    Write-Message -message "| $(DisplayIntWithDots $rateData.limit) | $(DisplayIntWithDots $rateData.used) | $(DisplayIntWithDots $rateData.remaining) | $resetDisplay |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
 
@@ -1049,7 +1049,7 @@ function Format-RateLimitErrorTable {
     Write-Message -message "" -logToSummary $true
     Write-Message -message "| Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
     Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
-    Write-Message -message "| $remaining | $used | $waitTime | $continueAt |" -logToSummary $true
+    Write-Message -message "| $(DisplayIntWithDots $remaining) | $(DisplayIntWithDots $used) | $waitTime | $continueAt |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
 
@@ -1208,7 +1208,8 @@ function SaveStatus {
 
         # get number of forks that have repo information
         $existingForksWithRepoInfo = $existingForks | Where-Object { $_.repoInfo -And ($null -ne $_.repoInfo.updated_at) }
-        Write-Message -message "Found [$(DisplayIntWithDots $existingForksWithRepoInfo.Count) out of $(DisplayIntWithDots $existingForks.Count)] repos that have repo information" -logToSummary $true
+        $percentage = if ($existingForks.Count -gt 0) { [math]::Round(($existingForksWithRepoInfo.Count / $existingForks.Count) * 100, 2) } else { 0 }
+        Write-Message -message "Found [$(DisplayIntWithDots $existingForksWithRepoInfo.Count) out of $(DisplayIntWithDots $existingForks.Count)] repos that have repo information (${percentage}%)" -logToSummary $true
     }
 
     if ($null -ne $failedForks -and $failedForks.Count -gt 0) {
