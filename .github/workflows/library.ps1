@@ -3323,8 +3323,8 @@ function Show-ConsolidatedChunkSummary {
         Write-Message -message "<details>" -logToSummary $true
         Write-Message -message "<summary>Click to view first 10 failed repositories</summary>" -logToSummary $true
         Write-Message -message "" -logToSummary $true
-        Write-Message -message "| Repository | Error Type | Error Message |" -logToSummary $true
-        Write-Message -message "|------------|------------|---------------|" -logToSummary $true
+        Write-Message -message "| Repository | Upstream | Error Type | Error Message |" -logToSummary $true
+        Write-Message -message "|------------|----------|------------|---------------|" -logToSummary $true
         
         # Take first 10 repos
         $first10Failed = $allFailedRepos | Select-Object -First 10
@@ -3336,12 +3336,19 @@ function Show-ConsolidatedChunkSummary {
             # Create clickable GitHub link using the configured fork organization
             $repoLink = "[$repoName](https://github.com/$forkOrg/$repoName)"
             
+            # Parse the mirror name to extract upstream owner and repo
+            ($upstreamOwner, $upstreamRepo) = GetOrgActionInfo -forkedOwnerRepo $repoName
+            $upstreamLink = "N/A"
+            if (-not [string]::IsNullOrEmpty($upstreamOwner) -and -not [string]::IsNullOrEmpty($upstreamRepo)) {
+                $upstreamLink = "[$upstreamOwner/$upstreamRepo](https://github.com/$upstreamOwner/$upstreamRepo)"
+            }
+            
             # Truncate error message if too long
             if ($errorMessage -and $errorMessage.Length -gt 100) {
                 $errorMessage = $errorMessage.Substring(0, 97) + "..."
             }
             
-            Write-Message -message "| $repoLink | $errorType | $errorMessage |" -logToSummary $true
+            Write-Message -message "| $repoLink | $upstreamLink | $errorType | $errorMessage |" -logToSummary $true
         }
         
         Write-Message -message "" -logToSummary $true
