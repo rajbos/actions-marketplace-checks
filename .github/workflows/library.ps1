@@ -1664,6 +1664,14 @@ function DisplayIntWithDots {
     return $number.ToString("N0", $format)
 }
 
+function Format-Percentage {
+    Param (
+        [double] $value
+    )
+
+    return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.00}", $value)
+}
+
 function GetFoundSecretCount {
     Param (
         [Parameter(Mandatory=$true)]
