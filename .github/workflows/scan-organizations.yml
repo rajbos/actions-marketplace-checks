@@ -31,6 +31,7 @@ jobs:
       contents: read
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      org_repo_config: ${{ steps.set-matrix.outputs.org_repo_config }}
     steps:
       - name: Set matrix
         id: set-matrix
@@ -42,12 +43,34 @@ jobs:
             $orgsString = "${{ env.DEFAULT_ORGS }}"
           }
           
-          # Split into array and create matrix JSON
+          # Split into array and create matrix entries with optional skip lists
           $orgs = $orgsString -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-          $matrixJson = ConvertTo-Json -InputObject $orgs -Compress
-          
-          Write-Host "Organizations to scan: $matrixJson"
+
+          $matrixEntries = foreach ($org in $orgs) {
+            $skipRepositories = @()
+            # set up the skip list for the actions org to prevent a long run with waisted time
+            if ($org -eq 'actions') {
+              $skipRepositories = @(
+                'canvas-lms',
+                'cvelist',
+                'msysgit',
+                'linux'                
+              )
+            }
+
+            [PSCustomObject]@{
+              org = $org
+              skipRepositories = if ($skipRepositories.Count -gt 0) { [string]::Join("`n", $skipRepositories) } else { '' }
+            }
+          }
+
+          $matrixObject = @{ include = $matrixEntries }
+          $matrixJson = $matrixObject | ConvertTo-Json -Compress
+          $repoConfigJson = $matrixEntries | ConvertTo-Json -Compress
+
+          Write-Host "Matrix configuration: $matrixJson"
           "matrix=$matrixJson" >> $env:GITHUB_OUTPUT
+          "org_repo_config=$repoConfigJson" >> $env:GITHUB_OUTPUT
 
   scan-org:
     name: Scan ${{ matrix.org }}
@@ -57,8 +80,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
-      matrix:
-        org: ${{ fromJson(needs.prepare.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -72,23 +94,38 @@ jobs:
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
-        uses: devops-actions/load-available-actions@v2.1.17
+        uses: devops-actions/load-available-actions@v2.2.0
         with:
           organization: ${{ matrix.org }}
           PAT: ${{ steps.get_workflow_token.outputs.token }}
+          skip-repositories: ${{ matrix.skipRepositories }}
 
       - name: Save actions to file
+        env:
+          CURRENT_ORG: ${{ matrix.org }}
+          ACTIONS_FILE_PATH: ${{ steps.load-actions.outputs.actions-file-path }}
         shell: pwsh
         run: |
-          $actions = '${{ steps.load-actions.outputs.actions }}' | ConvertFrom-Json
-          Write-Host "Found $($actions.Count) actions for organization '${{ matrix.org }}'"
+          $orgName = $env:CURRENT_ORG
+          $actions = Get-Content $env:ACTIONS_FILE_PATH | ConvertFrom-Json
+          $actionCount = if ($actions) { $actions.Count } else { 0 }
+          Write-Host "Found $actionCount actions for organization '$orgName'"
+        
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Organization Scan Results"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+
+          $summaryLine = "- `" + $orgName + "`: $actionCount actions"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summaryLine
+          Write-Host $summaryLine          
           
           # Save to file
-          $actions | ConvertTo-Json -Depth 10 -Compress | Out-File -FilePath "${{ matrix.org }}.json" -Encoding UTF8
+          $fileName = "$orgName.json"
+          $actions | ConvertTo-Json -Depth 10 -Compress | Out-File -FilePath $fileName -Encoding UTF8
           
           # Show file size
-          $fileSize = (Get-Item "${{ matrix.org }}.json").Length
-          Write-Host "Created file ${{ matrix.org }}.json ($fileSize bytes)"
+          $fileSize = (Get-Item $fileName).Length
+          Write-Host "Created file [$fileName] ($fileSize bytes)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Created file [$fileName] ($fileSize bytes)"
 
       - name: Upload org actions to blob storage
         shell: pwsh
@@ -144,7 +181,8 @@ jobs:
           $orgFiles = Get-ChildItem -Path "org-scans" -Filter "*.json" -ErrorAction SilentlyContinue
           
           # Get expected organizations
-          $expectedOrgs = '${{ needs.prepare.outputs.matrix }}' | ConvertFrom-Json
+          $orgRepoConfig = '${{ needs.prepare.outputs.org_repo_config }}' | ConvertFrom-Json
+          $expectedOrgs = $orgRepoConfig | ForEach-Object { $_.org }
           Write-Message -message "Expected organizations: $($expectedOrgs -join ', ')" -logToSummary $true
           Write-Message -message "" -logToSummary $true
           
