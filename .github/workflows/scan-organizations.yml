@@ -64,7 +64,7 @@ jobs:
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
-        uses: devops-actions/load-available-actions@v1.0.0
+        uses: devops-actions/load-available-actions@v2.1.17
         with:
           organization: ${{ matrix.org }}
 
