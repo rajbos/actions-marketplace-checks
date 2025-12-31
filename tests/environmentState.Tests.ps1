@@ -165,7 +165,7 @@ Describe "Environment State - Delta Analysis" {
                 $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
                 return $owner, $repo
             }
-            return $null, $null
+            return "", ""
         }
         
         # Act - Generate links for top 10
@@ -174,7 +174,7 @@ Describe "Environment State - Delta Analysis" {
         for ($i = 0; $i -lt $maxToShow; $i++) {
             $action = $removedActions[$i]
             ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $action.name
-            if ($owner -and $repo) {
+            if ($owner -ne "" -and $repo -ne "") {
                 $linksGenerated += "- [$owner/$repo](https://github.com/$owner/$repo)"
             }
         }
@@ -202,7 +202,7 @@ Describe "Environment State - Delta Analysis" {
                 $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
                 return $owner, $repo
             }
-            return $null, $null
+            return "", ""
         }
         
         # Act - Generate links
@@ -211,7 +211,7 @@ Describe "Environment State - Delta Analysis" {
         for ($i = 0; $i -lt $maxToShow; $i++) {
             $action = $removedActions[$i]
             ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $action.name
-            if ($owner -and $repo) {
+            if ($owner -ne "" -and $repo -ne "") {
                 $linksGenerated += "- [$owner/$repo](https://github.com/$owner/$repo)"
             }
         }

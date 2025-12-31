@@ -184,7 +184,7 @@ if ($actionsNoLongerInMarketplace.Count -gt 0) {
         $action = $actionsNoLongerInMarketplace[$i]
         # Parse the owner_repo format to get clickable link
         ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $action.name
-        if ($owner -and $repo) {
+        if ($owner -ne "" -and $repo -ne "") {
             $repoLink = "https://github.com/$owner/$repo"
             Write-Message -message "- [$owner/$repo]($repoLink)" -logToSummary $true
         }
