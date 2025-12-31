@@ -785,12 +785,15 @@ function ApiCall {
         }
 
         if ($messageData.message -eq "was submitted too quickly") {
+            # If we're calling the rate_limit endpoint itself, don't retry - just return null
+            if ($url.Contains("rate_limit")) {
+                Write-Debug "Rate limit endpoint call failed, skipping retry to avoid recursion"
+                return $null
+            }
+            
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
-            # Only call GetRateLimitInfo if we're not already calling the rate_limit endpoint (to avoid infinite recursion)
-            if (-not $url.Contains("rate_limit")) {
-                GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            }
+            GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
         }
         else {
@@ -800,6 +803,12 @@ function ApiCall {
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("You have exceeded a secondary rate limit"))) {
+            # If we're calling the rate_limit endpoint itself, don't retry - just return null
+            if ($url.Contains("rate_limit")) {
+                Write-Debug "Rate limit endpoint call failed with secondary rate limit, skipping retry to avoid recursion"
+                return $null
+            }
+            
             if ($backOff -eq 5) {
                 # start the initial backoff bigger, might give more change to continue faster
                 $backOff = 120
@@ -818,6 +827,12 @@ function ApiCall {
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
+            # If we're calling the rate_limit endpoint itself, don't retry - just return null
+            if ($url.Contains("rate_limit")) {
+                Write-Debug "Rate limit endpoint call failed with API rate limit exceeded, skipping retry to avoid recursion"
+                return $null
+            }
+            
             $rateLimitReset = $_.Exception.Response.Headers["X-RateLimit-Reset"]
             $rateLimitRemaining = $_.Exception.Response.Headers["X-RateLimit-Remaining"]
             
