@@ -318,17 +318,17 @@ $reposWithActionType = ($existingForks | Where-Object {
 
 Write-Message -message "| Info Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-----------|------:|-----------:|" -logToSummary $true
-Write-Message -message "| 📦 Has Tags | $(DisplayIntWithDots $reposWithTags) | $([math]::Round(($reposWithTags / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🎯 Has Releases | $(DisplayIntWithDots $reposWithReleases) | $([math]::Round(($reposWithReleases / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| ℹ️ Has Repo Info | $(DisplayIntWithDots $reposWithRepoInfo) | $([math]::Round(($reposWithRepoInfo / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
-Write-Message -message "| 🎭 Has Valid Action Type | $(DisplayIntWithDots $reposWithActionType) | $([math]::Round(($reposWithActionType / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 📦 Has Tags | $(DisplayIntWithDots $reposWithTags) | $(Format-Percentage (($reposWithTags / $totalTrackedActions) * 100))% |" -logToSummary $true
+Write-Message -message "| 🎯 Has Releases | $(DisplayIntWithDots $reposWithReleases) | $(Format-Percentage (($reposWithReleases / $totalTrackedActions) * 100))% |" -logToSummary $true
+Write-Message -message "| ℹ️ Has Repo Info | $(DisplayIntWithDots $reposWithRepoInfo) | $(Format-Percentage (($reposWithRepoInfo / $totalTrackedActions) * 100))% |" -logToSummary $true
+Write-Message -message "| 🎭 Has Valid Action Type | $(DisplayIntWithDots $reposWithActionType) | $(Format-Percentage (($reposWithActionType / $totalTrackedActions) * 100))% |" -logToSummary $true
 
 # Count repos with funding info
 $reposWithFunding = ($existingForks | Where-Object {
     $_.fundingInfo -and $_.fundingInfo.hasFunding -eq $true
 }).Count
 
-Write-Message -message "| 💰 Has Funding Info | $(DisplayIntWithDots $reposWithFunding) | $([math]::Round(($reposWithFunding / $totalTrackedActions) * 100, 2))% |" -logToSummary $true
+Write-Message -message "| 💰 Has Funding Info | $(DisplayIntWithDots $reposWithFunding) | $(Format-Percentage (($reposWithFunding / $totalTrackedActions) * 100))% |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 Write-Message -message "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*" -logToSummary $true
 Write-Message -message "" -logToSummary $true
