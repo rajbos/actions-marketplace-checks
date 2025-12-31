@@ -3620,6 +3620,45 @@ function ShowOverallDatasetStatistics {
     Write-Message -message "| └─ Repositories with Valid Mirrors | $(DisplayIntWithDots $reposWithMirrors) | ${percentWithMirrors}% |" -logToSummary $true
     Write-Message -message "| └─ Repositories without Mirrors | $(DisplayIntWithDots $reposWithoutMirrors) | ${percentWithoutMirrors}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+    
+    # Add collapsible section with top 10 repositories without mirrors
+    if ($reposWithoutMirrors -gt 0) {
+        # Get repos without mirrors
+        $reposWithoutMirrorsList = @($existingForks | Where-Object { $_.mirrorFound -ne $true })
+        
+        # Take top 10 (or fewer if less than 10)
+        $top10ReposWithoutMirrors = $reposWithoutMirrorsList | Select-Object -First 10
+        
+        Write-Message -message "<details>" -logToSummary $true
+        Write-Message -message "<summary>Top $(if ($reposWithoutMirrorsList.Count -lt 10) { $reposWithoutMirrorsList.Count } else { 10 }) Repositories without Mirrors</summary>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| Mirror | Upstream |" -logToSummary $true
+        Write-Message -message "|--------|----------|" -logToSummary $true
+        
+        foreach ($repo in $top10ReposWithoutMirrors) {
+            $repoName = $repo.name
+            
+            # Create clickable GitHub link for the mirror (using the configured fork organization)
+            $mirrorLink = "[$repoName](https://github.com/$forkOrg/$repoName)"
+            
+            # Parse the mirror name to extract upstream owner and repo
+            # Only parse if the name contains an underscore (proper format: owner_repo)
+            $upstreamLink = "N/A"
+            if ($repoName -match '_') {
+                ($upstreamOwner, $upstreamRepo) = GetOrgActionInfo -forkedOwnerRepo $repoName
+                if (-not [string]::IsNullOrEmpty($upstreamOwner) -and -not [string]::IsNullOrEmpty($upstreamRepo)) {
+                    $upstreamLink = "[$upstreamOwner/$upstreamRepo](https://github.com/$upstreamOwner/$upstreamRepo)"
+                }
+            }
+            
+            Write-Message -message "| $mirrorLink | $upstreamLink |" -logToSummary $true
+        }
+        
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "</details>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+    }
+    
     Write-Message -message "_Note: Repositories without mirrors cannot be synced. This may be because the upstream repository no longer exists, the mirror was never created, or the mirror was deleted._" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "#### Last 7 Days Sync Activity (Valid Mirrors Only)" -logToSummary $true

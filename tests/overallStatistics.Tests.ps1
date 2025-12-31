@@ -199,4 +199,72 @@ Describe 'ShowOverallDatasetStatistics' {
             $message -like "*Repos Not Checked Yet | 1 |*" 
         }
     }
+
+    It 'Should display top 10 repositories without mirrors in collapsible section' {
+        # Arrange - Create test data with repos without mirrors
+        $testForks = @(
+            @{ name = "owner1_repo1"; mirrorFound = $false }
+            @{ name = "owner2_repo2"; mirrorFound = $false }
+            @{ name = "owner3_repo3"; mirrorFound = $false }
+            @{ name = "owner4_repo4"; mirrorFound = $true; lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+        )
+
+        # Act
+        ShowOverallDatasetStatistics -existingForks $testForks
+
+        # Assert - Check that collapsible section is created
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -eq "<details>" 
+        }
+        
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -like "<summary>Top 3 Repositories without Mirrors</summary>" 
+        }
+        
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -eq "</details>" 
+        }
+        
+        # Check that table headers are present
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -eq "| Mirror | Upstream |" 
+        }
+        
+        # Check that at least one repo link is created
+        Should -Invoke Write-Message -ParameterFilter { 
+            $message -like "*owner1_repo1*" -and $message -like "*github.com*" 
+        }
+    }
+
+    It 'Should show top 10 when more than 10 repos without mirrors exist' {
+        # Arrange - Create 15 repos without mirrors
+        $testForks = @()
+        for ($i = 1; $i -le 15; $i++) {
+            $testForks += @{ name = "owner${i}_repo${i}"; mirrorFound = $false }
+        }
+
+        # Act
+        ShowOverallDatasetStatistics -existingForks $testForks
+
+        # Assert - Should say "Top 10" not "Top 15"
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -like "<summary>Top 10 Repositories without Mirrors</summary>" 
+        }
+    }
+
+    It 'Should not show collapsible section when all repos have mirrors' {
+        # Arrange
+        $testForks = @(
+            @{ name = "repo1"; mirrorFound = $true; lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+            @{ name = "repo2"; mirrorFound = $true; lastSynced = (Get-Date).AddDays(-3).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+        )
+
+        # Act
+        ShowOverallDatasetStatistics -existingForks $testForks
+
+        # Assert - Should not have the collapsible section
+        Should -Invoke Write-Message -Times 0 -ParameterFilter { 
+            $message -eq "<details>" 
+        }
+    }
 }
