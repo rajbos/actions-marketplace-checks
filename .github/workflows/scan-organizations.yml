@@ -31,7 +31,6 @@ jobs:
       contents: read
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      token: ${{ steps.get_workflow_token.outputs.token }}
     steps:
       - name: Set matrix
         id: set-matrix
@@ -50,14 +49,6 @@ jobs:
           Write-Host "Organizations to scan: $matrixJson"
           "matrix=$matrixJson" >> $env:GITHUB_OUTPUT
 
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations     
-
   scan-org:
     name: Scan ${{ matrix.org }}
     needs: prepare
@@ -68,17 +59,23 @@ jobs:
       fail-fast: false
       matrix:
         org: ${{ fromJson(needs.prepare.outputs.matrix) }}
-    env:
-      token: ${{ needs.prepare.outputs.token }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations     
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
         uses: devops-actions/load-available-actions@v2.1.17
         with:
           organization: ${{ matrix.org }}
-          PAT: ${{ env.token }}
+          PAT: ${{ steps.get_workflow_token.outputs.token }}
 
       - name: Save actions to file
         shell: pwsh
