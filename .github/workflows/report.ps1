@@ -282,17 +282,17 @@ function VulnerabilityCalculations {
     }
 
     Write-Host "Summary: "
-    LogMessage "## Potentially vulnerable Repos: $($repoInformation.vulnerableRepos) out of $($repoInformation.reposAnalyzed) analyzed repos [Total: $($actions.Count)]"
+    LogMessage "## Potentially vulnerable Repos: $(DisplayIntWithDots($repoInformation.vulnerableRepos)) out of $(DisplayIntWithDots($repoInformation.reposAnalyzed)) analyzed repos [Total: $(DisplayIntWithDots($actions.Count))]"
 
     LogMessage "| Type                  | Count           :| GitHub Count |"
     LogMessage "|---|---|---|"
-    LogMessage "| Total high alerts     | $($repoInformation.highAlerts)     | $($github_RepoInformation.highAlerts) |"
-    LogMessage "| Total critical alerts | $($repoInformation.criticalAlerts) | $($github_RepoInformation.criticalAlerts) |"
+    LogMessage "| Total high alerts     | $(DisplayIntWithDots($repoInformation.highAlerts))     | $(DisplayIntWithDots($github_RepoInformation.highAlerts)) |"
+    LogMessage "| Total critical alerts | $(DisplayIntWithDots($repoInformation.criticalAlerts)) | $(DisplayIntWithDots($github_RepoInformation.criticalAlerts)) |"
     LogMessage ""
     LogMessage "| Maximum number of alerts per repo | Count              |"
     LogMessage "|---|---|"
-    LogMessage "| High alerts                       | $($repoInformation.maxHighAlerts)     |"
-    LogMessage "| Critical alerts                   | $($repoInformation.maxCriticalAlerts) |"
+    LogMessage "| High alerts                       | $(DisplayIntWithDots($repoInformation.maxHighAlerts))     |"
+    LogMessage "| Critical alerts                   | $(DisplayIntWithDots($repoInformation.maxCriticalAlerts)) |"
     LogMessage ""
     LogMessage "| Average number of alerts per vuln. repo | Count              |"
     LogMessage "|---|---|"
@@ -451,13 +451,13 @@ function ReportInsightsInMarkdown {
             # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for D and E to use the number from B")
             $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$localDockerFile * 100 , 1)
             $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$localDockerFile * 100 , 1)
-            LogMessage "  B-->D[$localDockerfileWithCustomCode With custom code - $withCodePercentage%]"
-            LogMessage "  B-->E[$localDockerfileWithoutCustomCode Base image only - $withoutCodePercentage%]"
+            LogMessage "  B-->D[$DisplayIntWithDots($localDockerfileWithCustomCode) With custom code - $withCodePercentage%]"
+            LogMessage "  B-->E[$DisplayIntWithDots($localDockerfileWithoutCustomCode) Base image only - $withoutCodePercentage%]"
             
             # Add unknown category if there are actions without custom code information
             if ($localDockerfileUnknown -gt 0) {
                 $unknownPercentage = [math]::Round($localDockerfileUnknown/$localDockerFile * 100 , 1)
-                LogMessage "  B-->F[$localDockerfileUnknown Unknown - $unknownPercentage%]"
+                LogMessage "  B-->F[$DisplayIntWithDots($localDockerfileUnknown) Unknown - $unknownPercentage%]"
             }
         }
     } else {
@@ -467,25 +467,25 @@ function ReportInsightsInMarkdown {
     LogMessage "``````"
     LogMessage ""
     LogMessage "## Action definition setup"
-    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, dockerfile or Dockerfile. The Dockerfile can also be referened from the action definition file. If that is the case, it will show up as one of those two files in this overview."
+    LogMessage "How is the action defined? The runner can pick it up from these files in the root of the repo: action.yml, action.yaml, dockerfile or Dockerfile. The Dockerfile can also be referenced from the action definition file. If that is the case, it will show up as one of those two files in this overview."
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
     # Calculate total actions with action definition files
     $totalActionsWithDefinition = $global:actionYmlFile + $global:actionYamlFile + $global:actionDockerFile + $global:actiondDockerFile
     if ($totalActionsWithDefinition -gt 0) {
         $ymlPercentage = [math]::Round($global:actionYmlFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A[$totalActionsWithDefinition actions]-->B[$actionYmlFile action.yml - $ymlPercentage%]"
+        LogMessage "  A[$DisplayIntWithDots($totalActionsWithDefinition) actions]-->B[$DisplayIntWithDots($global:actionYmlFile) action.yml - $ymlPercentage%]"
         $yamlPercentage = [math]::Round($global:actionYamlFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->C[$actionYamlFile action.yaml - $yamlPercentage%]"
+        LogMessage "  A-->C[$DisplayIntWithDots($global:actionYamlFile) action.yaml - $yamlPercentage%]"
         $DockerPercentage = [math]::Round($global:actionDockerFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->D[$global:actionDockerFile Dockerfile - $DockerPercentage%]"
+        LogMessage "  A-->D[$DisplayIntWithDots($global:actionDockerFile) Dockerfile - $DockerPercentage%]"
         $dDockerPercentage = [math]::Round($global:actiondDockerFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->E[$global:actiondDockerFile dockerfile - $dDockerPercentage%]"
+        LogMessage "  A-->E[$DisplayIntWithDots($global:actiondDockerFile) dockerfile - $dDockerPercentage%]"
     } else {
-        LogMessage "  A[$totalActionsWithDefinition actions]-->B[$actionYmlFile action.yml]"
-        LogMessage "  A-->C[$actionYamlFile action.yaml]"
-        LogMessage "  A-->D[$global:actionDockerFile Dockerfile]"
-        LogMessage "  A-->E[$global:actiondDockerFile dockerfile]"
+        LogMessage "  A[$DisplayIntWithDots($totalActionsWithDefinition) actions]-->B[$DisplayIntWithDots($global:actionYmlFile) action.yml]"
+        LogMessage "  A-->C[$DisplayIntWithDots($global:actionYamlFile) action.yaml]"
+        LogMessage "  A-->D[$DisplayIntWithDots($global:actionDockerFile) Dockerfile]"
+        LogMessage "  A-->E[$DisplayIntWithDots($global:actiondDockerFile) dockerfile]"
     }
     LogMessage "``````"
     LogMessage ""
@@ -520,12 +520,11 @@ function ReportAgeInsights {
     }
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
-    LogMessage "Total repos analyzed: $($global:repoInfo)"
     LogMessage ""
-    LogMessage "|Analyzed|Total: $($global:repoInfo)|Percentage|"
+    LogMessage "|Analyzed|Total: $(DisplayIntWithDots($global:repoInfo))|Percentage|"
     LogMessage "|---|---:|---:|"
-    $timeSpan = New-TimeSpan –Start $oldestRepo –End (Get-Date)
-    LogMessage "|Oldest repository             |$($timeSpan.Days) days old||"
+    $timeSpan = New-TimeSpan -Start ($oldestRepo) -End (Get-Date)
+    LogMessage "|Oldest repository             |$(DisplayIntWithDots($timeSpan.Days)) days old||"
     LogMessage "|Updated last month             | $(DisplayIntWithDots($global:updatedLastMonth))|$([math]::Round($global:updatedLastMonth   /$global:repoInfo * 100 , 1))%|"
     LogMessage "|Updated within last 3 months   | $(DisplayIntWithDots($global:updatedLastQuarter))|$([math]::Round($global:updatedLastQuarter /$global:repoInfo * 100 , 1))%|"
     LogMessage "|Updated within last 3-6 months | $(DisplayIntWithDots($global:updatedLast6Months))|$([math]::Round($global:updatedLast6Months /$global:repoInfo * 100 , 1))%|"
@@ -684,7 +683,7 @@ function GetOSSFInfo {
     if ($total -gt 0) {
         $percentage = [math]::Round(($ossfInfoCount / $total) * 100, 2)
     }   
-    LogMessage "Found [$ossfInfoCount] actions with OSSF info available for [$ossfChecked] repos out of a [$total] total which is [$($percentage)%]."
+    LogMessage "Found [$DisplayIntWithDots($ossfInfoCount)] actions with OSSF info available for [$DisplayIntWithDots($ossfChecked)] repos out of a [$DisplayIntWithDots($total)] total which is [$($percentage)%]."
     LogMessage ""
     LogMessage "*To improve this coverage, run this workflow: [Get actions that use the OSS Scan action]($(Get-WorkflowUrl 'ossf-scan.yml'))*"
 }

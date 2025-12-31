@@ -90,6 +90,48 @@ function Get-WorkflowUrl {
     .EXAMPLE
     ConvertTo-NormalizedDateTime -dateValue "11/04/2022 20:15:45"
 #>
+<#
+    .SYNOPSIS
+    Converts a file size in bytes to a human-readable format.
+
+    .DESCRIPTION
+    Takes a file size in bytes and converts it to the most appropriate unit
+    (bytes, KB, MB, GB, TB) with 2 decimal places.
+
+    .PARAMETER bytes
+    The file size in bytes to convert.
+
+    .EXAMPLE
+    Format-FileSize -bytes 1024
+    # Returns: "1.00 KB"
+
+    .EXAMPLE
+    Format-FileSize -bytes 29000000
+    # Returns: "27.66 MB"
+#>
+function Format-FileSize {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [long]$bytes
+    )
+
+    if ($bytes -lt 1KB) {
+        return "$bytes bytes"
+    }
+    elseif ($bytes -lt 1MB) {
+        return "{0:N2} KB" -f ($bytes / 1KB)
+    }
+    elseif ($bytes -lt 1GB) {
+        return "{0:N2} MB" -f ($bytes / 1MB)
+    }
+    elseif ($bytes -lt 1TB) {
+        return "{0:N2} GB" -f ($bytes / 1GB)
+    }
+    else {
+        return "{0:N2} TB" -f ($bytes / 1TB)
+    }
+}
+
 function ConvertTo-NormalizedDateTime {
     Param (
         $dateValue
@@ -265,7 +307,8 @@ function Get-ActionsJsonFromBlobStorage {
         
         if (Test-Path $localFilePath) {
             $fileSize = (Get-Item $localFilePath).Length
-            $message = "✓ Successfully downloaded $script:actionsBlobFileName ($fileSize bytes) to [$localFilePath]"
+            $fileSizeFormatted = Format-FileSize -bytes $fileSize
+            $message = "✓ Successfully downloaded $script:actionsBlobFileName ($fileSizeFormatted) to [$localFilePath]"
             Write-Message -message $message -logToSummary $true
             return $true
         }
@@ -349,7 +392,8 @@ function Get-JsonFromBlobStorage {
         
         if (Test-Path $localFilePath) {
             $fileSize = (Get-Item $localFilePath).Length
-            $message = "✓ Successfully downloaded $blobFileName ($fileSize bytes) to [$localFilePath]"
+            $fileSizeFormatted = Format-FileSize -bytes $fileSize
+            $message = "✓ Successfully downloaded $blobFileName ($fileSizeFormatted) to [$localFilePath]"
             Write-Message -message $message -logToSummary $true
             return $true
         }
@@ -472,13 +516,16 @@ function Set-JsonToBlobStorage {
             }
             
             if ($filesMatch) {
-                $message = "✓ No changes detected in $blobFileName (size: $localFileSize bytes). Skipping upload."
+                $fileSizeFormatted = Format-FileSize -bytes $localFileSize
+                $message = "✓ No changes detected in $blobFileName (size: $fileSizeFormatted). Skipping upload."
                 Write-Message -message $message -logToSummary $true
                 Remove-Item -Path $tempCompareFile -Force -ErrorAction SilentlyContinue
                 return $true
             }
             
-            Write-Host "Changes detected in $blobFileName (local: $localFileSize bytes, remote: $remoteFileSize bytes)"
+            $localSizeFormatted = Format-FileSize -bytes $localFileSize
+            $remoteSizeFormatted = Format-FileSize -bytes $remoteFileSize
+            Write-Host "Changes detected in $blobFileName (local: $localSizeFormatted, remote: $remoteSizeFormatted)"
         }
         else {
             Write-Host "$blobFileName does not exist in blob storage yet. Will upload new file."
@@ -497,7 +544,8 @@ function Set-JsonToBlobStorage {
 
     # Upload the file
     try {
-        Write-Host "Uploading $blobFileName ($localFileSize bytes) to Azure Blob Storage..."
+        $fileSizeFormatted = Format-FileSize -bytes $localFileSize
+        Write-Host "Uploading $blobFileName ($fileSizeFormatted) to Azure Blob Storage..."
         
         $headers = @{
             "x-ms-blob-type" = "BlockBlob"
@@ -507,7 +555,7 @@ function Set-JsonToBlobStorage {
         $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $localContent -Headers $headers -UseBasicParsing
         
         if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
-            $message = "✓ Successfully uploaded $blobFileName ($localFileSize bytes) to blob storage"
+            $message = "✓ Successfully uploaded $blobFileName ($fileSizeFormatted) to blob storage"
             Write-Message -message $message -logToSummary $true
             return $true
         }
@@ -1609,8 +1657,11 @@ function DisplayIntWithDots {
     Param (
         [int] $number
     )
+    # enforce the metric notation with dots as thousands separator
 
-    return $number.ToString("N0", [System.Globalization.CultureInfo]::InvariantCulture)
+    $format = [System.Globalization.NumberFormatInfo]::InvariantInfo.Clone()
+    $format.NumberGroupSeparator = "."
+    return $number.ToString("N0", $format)
 }
 
 function GetFoundSecretCount {
