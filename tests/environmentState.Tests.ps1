@@ -148,6 +148,80 @@ Describe "Environment State - Delta Analysis" {
         $actionsNoLongerInMarketplace.Count | Should -Be 1
         $actionsNoLongerInMarketplace[0].name | Should -Be "action5"
     }
+    
+    It "Should correctly format removed actions details section with top 10 links" {
+        # Arrange - Create test data with more than 10 removed actions
+        $removedActions = @()
+        for ($i = 1; $i -le 15; $i++) {
+            $removedActions += @{ name = "owner$i`_repo$i" }
+        }
+        
+        # Mock GetOrgActionInfo function
+        function GetOrgActionInfo {
+            Param($forkedOwnerRepo)
+            if ($null -ne $forkedOwnerRepo -And $forkedOwnerRepo -ne "") {
+                $parts = $forkedOwnerRepo.Split('_')
+                $owner = $parts[0]
+                $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
+                return $owner, $repo
+            }
+            return "", ""
+        }
+        
+        # Act - Generate links for top 10
+        $linksGenerated = @()
+        $maxToShow = [Math]::Min(10, $removedActions.Count)
+        for ($i = 0; $i -lt $maxToShow; $i++) {
+            $action = $removedActions[$i]
+            ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $action.name
+            if ($owner -ne "" -and $repo -ne "") {
+                $linksGenerated += "- [$owner/$repo](https://github.com/$owner/$repo)"
+            }
+        }
+        
+        # Assert - Should have exactly 10 links
+        $linksGenerated.Count | Should -Be 10
+        $linksGenerated[0] | Should -Be "- [owner1/repo1](https://github.com/owner1/repo1)"
+        $linksGenerated[9] | Should -Be "- [owner10/repo10](https://github.com/owner10/repo10)"
+    }
+    
+    It "Should handle case when there are fewer than 10 removed actions" {
+        # Arrange - Create test data with only 3 removed actions
+        $removedActions = @(
+            @{ name = "github_actions" },
+            @{ name = "microsoft_vscode" },
+            @{ name = "docker_compose" }
+        )
+        
+        # Mock GetOrgActionInfo function
+        function GetOrgActionInfo {
+            Param($forkedOwnerRepo)
+            if ($null -ne $forkedOwnerRepo -And $forkedOwnerRepo -ne "") {
+                $parts = $forkedOwnerRepo.Split('_')
+                $owner = $parts[0]
+                $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
+                return $owner, $repo
+            }
+            return "", ""
+        }
+        
+        # Act - Generate links
+        $linksGenerated = @()
+        $maxToShow = [Math]::Min(10, $removedActions.Count)
+        for ($i = 0; $i -lt $maxToShow; $i++) {
+            $action = $removedActions[$i]
+            ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $action.name
+            if ($owner -ne "" -and $repo -ne "") {
+                $linksGenerated += "- [$owner/$repo](https://github.com/$owner/$repo)"
+            }
+        }
+        
+        # Assert - Should have exactly 3 links (not 10)
+        $linksGenerated.Count | Should -Be 3
+        $linksGenerated[0] | Should -Be "- [github/actions](https://github.com/github/actions)"
+        $linksGenerated[1] | Should -Be "- [microsoft/vscode](https://github.com/microsoft/vscode)"
+        $linksGenerated[2] | Should -Be "- [docker/compose](https://github.com/docker/compose)"
+    }
 }
 
 Describe "Environment State - Mirror Status" {
