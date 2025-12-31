@@ -3337,7 +3337,7 @@ function Show-ConsolidatedChunkSummary {
             $repoLink = "[$repoName](https://github.com/$forkOrg/$repoName)"
             
             # Parse the mirror name to extract upstream owner and repo
-            $upstreamOwner, $upstreamRepo = GetOrgActionInfo -forkedOwnerRepo $repoName
+            ($upstreamOwner, $upstreamRepo) = GetOrgActionInfo -forkedOwnerRepo $repoName
             $upstreamLink = "N/A"
             if (-not [string]::IsNullOrEmpty($upstreamOwner) -and -not [string]::IsNullOrEmpty($upstreamRepo)) {
                 $upstreamLink = "[$upstreamOwner/$upstreamRepo](https://github.com/$upstreamOwner/$upstreamRepo)"
