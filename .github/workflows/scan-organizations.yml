@@ -60,7 +60,7 @@ jobs:
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
-        uses: devops-actions/load-available-actions@v1
+        uses: devops-actions/load-available-actions@v1.0.0
         with:
           organization: ${{ matrix.org }}
 
@@ -146,7 +146,10 @@ jobs:
             
             try {
               $jsonContent = Get-Content $file.FullName -Raw
-              $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove BOM
+              # Remove BOM only if present
+              if ($jsonContent -match '^\uFEFF') {
+                $jsonContent = $jsonContent -replace '^\uFEFF', ''
+              }
               $orgActions = $jsonContent | ConvertFrom-Json
               
               if ($orgActions) {
