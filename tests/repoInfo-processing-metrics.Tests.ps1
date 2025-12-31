@@ -1,6 +1,14 @@
 Import-Module Pester
 
 BeforeAll {
+    # Import the DisplayIntWithDots function from library.ps1
+    function DisplayIntWithDots {
+        Param (
+            [int] $number
+        )
+        return $number.ToString("N0", [System.Globalization.CultureInfo]::InvariantCulture)
+    }
+    
     # Test function to simulate the processing metrics tracking
     function Format-ProcessingMetricsSummary {
         Param (
@@ -13,10 +21,10 @@ BeforeAll {
         $summary = "## Processing Summary`n`n"
         $summary += "| Metric | Count |`n"
         $summary += "| --- | --- |`n"
-        $summary += "| Total repos in status file | $totalRepos |`n"
-        $summary += "| Repos examined | $reposExamined |`n"
-        $summary += "| Repos skipped | $reposSkipped |`n"
-        $summary += "| Limit (numberOfReposToDo) | $numberOfReposToDo |`n"
+        $summary += "| Total repos in status file | $(DisplayIntWithDots $totalRepos) |`n"
+        $summary += "| Repos examined | $(DisplayIntWithDots $reposExamined) |`n"
+        $summary += "| Repos skipped | $(DisplayIntWithDots $reposSkipped) |`n"
+        $summary += "| Limit (numberOfReposToDo) | $(DisplayIntWithDots $numberOfReposToDo) |`n"
         
         return $summary
     }
@@ -36,7 +44,7 @@ Describe "RepoInfo Processing Metrics Summary" {
         # Assert
         $summary | Should -Match "## Processing Summary"
         $summary | Should -Match "\| Metric \| Count \|"
-        $summary | Should -Match "\| Total repos in status file \| 23050 \|"
+        $summary | Should -Match "\| Total repos in status file \| 23,050 \|"
         $summary | Should -Match "\| Repos examined \| 500 \|"
         $summary | Should -Match "\| Repos skipped \| 50 \|"
         $summary | Should -Match "\| Limit \(numberOfReposToDo\) \| 500 \|"
@@ -108,6 +116,23 @@ Describe "RepoInfo Processing Metrics Summary" {
         # Check that all data rows are formatted correctly
         $dataRows = $lines | Where-Object { $_ -match "^\| Total repos" -or $_ -match "^\| Repos examined" -or $_ -match "^\| Repos skipped" -or $_ -match "^\| Limit" }
         $dataRows.Count | Should -Be 4
+    }
+    
+    It "Should format large numbers with thousand separators" {
+        # Arrange - Using numbers from the problem statement
+        $totalRepos = 29501
+        $reposExamined = 29501
+        $reposSkipped = 14091
+        $numberOfReposToDo = 500
+        
+        # Act
+        $summary = Format-ProcessingMetricsSummary -totalRepos $totalRepos -reposExamined $reposExamined -reposSkipped $reposSkipped -numberOfReposToDo $numberOfReposToDo
+        
+        # Assert - Numbers should have thousand separators (commas in InvariantCulture)
+        $summary | Should -Match "\| Total repos in status file \| 29,501 \|"
+        $summary | Should -Match "\| Repos examined \| 29,501 \|"
+        $summary | Should -Match "\| Repos skipped \| 14,091 \|"
+        $summary | Should -Match "\| Limit \(numberOfReposToDo\) \| 500 \|"
     }
 }
 

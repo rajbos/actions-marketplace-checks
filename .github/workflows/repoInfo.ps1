@@ -1407,10 +1407,10 @@ function GetMoreInfo {
     $processingSummary = "## Processing Summary`n`n"
     $processingSummary += "| Metric | Count |`n"
     $processingSummary += "| --- | --- |`n"
-    $processingSummary += "| Total repos in status file | $($existingForks.Count) |`n"
-    $processingSummary += "| Repos examined | $examined |`n"
-    $processingSummary += "| Repos skipped | $skipped |`n"
-    $processingSummary += "| Limit (numberOfReposToDo) | $numberOfReposToDo |`n"
+    $processingSummary += "| Total repos in status file | $(DisplayIntWithDots $existingForks.Count) |`n"
+    $processingSummary += "| Repos examined | $(DisplayIntWithDots $examined) |`n"
+    $processingSummary += "| Repos skipped | $(DisplayIntWithDots $skipped) |`n"
+    $processingSummary += "| Limit (numberOfReposToDo) | $(DisplayIntWithDots $numberOfReposToDo) |`n"
     $processingSummary += "`n"
     
     # Add explanation if no deltas occurred
