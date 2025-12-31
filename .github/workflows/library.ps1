@@ -566,8 +566,20 @@ function ApiCall {
         [bool] $returnErrorInfo = $false,
         $access_token = $env:GITHUB_TOKEN,
         [string] $contextInfo = "",
-        [bool] $waitForRateLimit = $true
+        [bool] $waitForRateLimit = $true,
+        [int] $retryCount = 0,
+        [int] $maxRetries = 10
     )
+    
+    # Check if we've exceeded the maximum number of retries
+    if ($retryCount -gt $maxRetries) {
+        $message = "Maximum retry limit ($maxRetries) exceeded for API call to [$url]. Stopping to prevent infinite loop."
+        Write-Message -message $message -logToSummary $true
+        Write-Warning $message
+        # Set global flag to indicate we should stop processing
+        $global:RateLimitExceeded = $true
+        return $null
+    }
     
     # Validate that access token is not null or empty before making API calls
     if ([string]::IsNullOrWhiteSpace($access_token)) {
@@ -653,7 +665,7 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries
                     $response += $nextResult
                 }
             }
@@ -699,7 +711,7 @@ function ApiCall {
             else {
                 $backOff = $backOff * 2
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
         }
 
         if ($null -ne $expected) {
@@ -727,8 +739,11 @@ function ApiCall {
         if ($messageData.message -eq "was submitted too quickly") {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
-            GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit
+            # Only call GetRateLimitInfo if we're not already calling the rate_limit endpoint (to avoid infinite recursion)
+            if (-not $url.Contains("rate_limit")) {
+                GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
+            }
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
         }
         else {
             if (!$hideFailedCall) {
@@ -751,7 +766,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
         }
 
         if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
@@ -806,7 +821,7 @@ function ApiCall {
                 else {
                     $backOff = $backOff * 2
                 }
-                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
             }
             
             # When not waiting, return null
