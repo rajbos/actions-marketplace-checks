@@ -169,14 +169,19 @@ Describe 'ShowOverallDatasetStatistics' {
         # Act
         ShowOverallDatasetStatistics -existingForks $testForks
 
-        # Assert - Check for explanatory note
+        # Assert - Check for explanatory note (updated to match new format)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repositories without mirrors cannot be synced*" 
+            $message -like "*Repositories without mirrors** cannot be synced*" 
         }
         
         # Assert - Check for context about "Valid Mirrors Only"
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
             $message -like "*Last 7 Days Sync Activity (Valid Mirrors Only)*" 
+        }
+        
+        # Assert - Check for link to repoInfo workflow
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -like "*Get repo info workflow*" -and $message -like "*repoInfo.yml*"
         }
     }
 
@@ -265,6 +270,27 @@ Describe 'ShowOverallDatasetStatistics' {
         # Assert - Should not have the collapsible section
         Should -Invoke Write-Message -Times 0 -ParameterFilter { 
             $message -eq "<details>" 
+        }
+    }
+
+    It 'Should show breakdown of repos without mirrors (explicitly no mirror vs not yet checked)' {
+        # Arrange - Create test data with different mirror statuses
+        $testForks = @(
+            @{ name = "repo1"; mirrorFound = $true; lastSynced = (Get-Date).AddDays(-2).ToString("yyyy-MM-ddTHH:mm:ssZ") }
+            @{ name = "repo2"; mirrorFound = $false }  # Explicitly no mirror
+            @{ name = "repo3" }  # Not yet checked (no mirrorFound property)
+        )
+
+        # Act
+        ShowOverallDatasetStatistics -existingForks $testForks
+
+        # Assert - Check for breakdown rows
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -like "*Confirmed No Mirror*" 
+        }
+        
+        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
+            $message -like "*Not Yet Checked*" 
         }
     }
 }

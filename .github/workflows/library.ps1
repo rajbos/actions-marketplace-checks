@@ -3568,6 +3568,16 @@ function ShowOverallDatasetStatistics {
     # Count repos without mirrors
     $reposWithoutMirrors = $totalRepos - $reposWithMirrors
     
+    # Count repos explicitly marked as not having mirrors (mirrorFound = false)
+    $reposExplicitlyNoMirror = @($existingForks | Where-Object { 
+        $null -ne $_.PSObject.Properties["mirrorFound"] -and $_.mirrorFound -eq $false
+    }).Count
+    
+    # Count repos not yet checked (mirrorFound is null or missing)
+    $reposNotYetChecked = @($existingForks | Where-Object { 
+        $null -eq $_.PSObject.Properties["mirrorFound"]
+    }).Count
+    
     # Count repos synced in the last 7 days (only from repos with mirrors)
     # Wrap in @() to ensure it's always an array
     $reposSyncedLast7Days = @($existingForks | Where-Object { 
@@ -3627,6 +3637,15 @@ function ShowOverallDatasetStatistics {
     Write-Message -message "| **Total Repositories in Dataset** | **$(DisplayIntWithDots $totalRepos)** | **100%** |" -logToSummary $true
     Write-Message -message "| └─ Repositories with Valid Mirrors | $(DisplayIntWithDots $reposWithMirrors) | ${percentWithMirrors}% |" -logToSummary $true
     Write-Message -message "| └─ Repositories without Mirrors | $(DisplayIntWithDots $reposWithoutMirrors) | ${percentWithoutMirrors}% |" -logToSummary $true
+    
+    # Add breakdown of repos without mirrors if we have that data
+    if ($reposExplicitlyNoMirror -gt 0 -or $reposNotYetChecked -gt 0) {
+        $percentExplicitlyNo = if ($reposWithoutMirrors -gt 0) { [math]::Round(($reposExplicitlyNoMirror / $reposWithoutMirrors) * 100, 2) } else { 0 }
+        $percentNotChecked = if ($reposWithoutMirrors -gt 0) { [math]::Round(($reposNotYetChecked / $reposWithoutMirrors) * 100, 2) } else { 0 }
+        Write-Message -message "| &nbsp;&nbsp;&nbsp;&nbsp;├─ Confirmed No Mirror | $(DisplayIntWithDots $reposExplicitlyNoMirror) | ${percentExplicitlyNo}% |" -logToSummary $true
+        Write-Message -message "| &nbsp;&nbsp;&nbsp;&nbsp;└─ Not Yet Checked | $(DisplayIntWithDots $reposNotYetChecked) | ${percentNotChecked}% |" -logToSummary $true
+    }
+    
     Write-Message -message "" -logToSummary $true
     
     # Add collapsible section with top 10 repositories without mirrors
@@ -3667,7 +3686,11 @@ function ShowOverallDatasetStatistics {
         Write-Message -message "" -logToSummary $true
     }
     
-    Write-Message -message "_Note: Repositories without mirrors cannot be synced. This may be because the upstream repository no longer exists, the mirror was never created, or the mirror was deleted._" -logToSummary $true
+    Write-Message -message "_Note: **Repositories without mirrors** cannot be synced. This includes:_" -logToSummary $true
+    Write-Message -message "- _**Confirmed No Mirror**: Repositories where the mirror repository was checked and found to not exist (e.g., upstream deleted, mirror never created, or mirror was deleted)_" -logToSummary $true
+    Write-Message -message "- _**Not Yet Checked**: Repositories that haven't been processed by the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml) yet_" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "_💡 To increase the number of repositories with known mirror status, focus on the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml), which processes repositories hourly to check their mirror status._" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "#### Last 7 Days Sync Activity (Valid Mirrors Only)" -logToSummary $true
     Write-Message -message "_The following statistics are for the **$(DisplayIntWithDots $reposWithMirrors) repositories with valid mirrors** only:_" -logToSummary $true
