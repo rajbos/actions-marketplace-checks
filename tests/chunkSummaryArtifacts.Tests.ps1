@@ -282,6 +282,67 @@ Describe "Chunk Summary Artifact Functions" {
             $result.upstreamNotFound | Should -Be 1
             $result.failed | Should -Be 2
         }
+        
+        It "Should display upstream repository links in failed repos table" {
+            # Create a temporary file to act as GITHUB_STEP_SUMMARY
+            $tempSummaryFile = New-TemporaryFile
+            $env:GITHUB_STEP_SUMMARY = $tempSummaryFile.FullName
+            
+            try {
+                # Create chunk summaries with failed repos
+                $failedRepos = @(
+                    @{
+                        name = "actions_checkout"
+                        errorType = "merge_conflict"
+                        errorMessage = "Merge conflict detected"
+                    },
+                    @{
+                        name = "github_issue-metrics"
+                        errorType = "upstream_not_found"
+                        errorMessage = "Upstream not found"
+                    }
+                )
+                
+                $summary = @{
+                    chunkId = 0
+                    synced = 0
+                    upToDate = 0
+                    conflicts = 1
+                    upstreamNotFound = 1
+                    failed = 2
+                    skipped = 0
+                    totalProcessed = 2
+                    failedRepos = $failedRepos
+                }
+                
+                $file = Join-Path $script:testDir "chunk-summary-test.json"
+                $summary | ConvertTo-Json -Depth 5 | Out-File $file -Encoding UTF8
+                
+                # Consolidate - this should write to step summary
+                $result = Show-ConsolidatedChunkSummary -chunkSummaryFiles @($file)
+                
+                # Read the step summary content
+                $stepSummaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
+                
+                # Verify the table has upstream column header
+                $stepSummaryContent | Should -Match "\| Repository \| Upstream \| Error Type \| Error Message \|"
+                
+                # Verify upstream links are present for each failed repo
+                $stepSummaryContent | Should -Match "\[actions/checkout\]\(https://github.com/actions/checkout\)"
+                $stepSummaryContent | Should -Match "\[github/issue-metrics\]\(https://github.com/github/issue-metrics\)"
+                
+                # Verify mirror links are present
+                $stepSummaryContent | Should -Match "\[actions_checkout\]\(https://github.com/actions-marketplace-validations/actions_checkout\)"
+                $stepSummaryContent | Should -Match "\[github_issue-metrics\]\(https://github.com/actions-marketplace-validations/github_issue-metrics\)"
+            }
+            finally {
+                # Cleanup
+                if (Test-Path $tempSummaryFile) {
+                    Remove-Item $tempSummaryFile -Force
+                }
+                $env:GITHUB_STEP_SUMMARY = $null
+            }
+        }
     }
     
     Context "Integration with update-forks-chunk.ps1 pattern" {
