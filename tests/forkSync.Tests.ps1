@@ -20,6 +20,7 @@ Describe "Mirror Sync Tests" {
             $command.Parameters.Keys | Should -Contain "upstreamOwner"
             $command.Parameters.Keys | Should -Contain "upstreamRepo"
             $command.Parameters.Keys | Should -Contain "access_token"
+            $command.Parameters.Keys | Should -Contain "sourceAccessToken"
         }
         
         It "Should return validation error for empty upstream owner" {
@@ -73,6 +74,18 @@ Describe "Mirror Sync Tests" {
         It "Should return false for whitespace-only owner" {
             $result = Test-RepositoryExists -owner "   " -repo "test" -access_token "test_token"
             $result | Should -Be $false
+        }
+
+        It "Should return false when ApiCall reports 404" {
+            Mock ApiCall { return @{ Error = $true; StatusCode = 404; Message = "Not Found" } }
+            $result = Test-RepositoryExists -owner "owner" -repo "missing" -access_token "token"
+            $result | Should -Be $false
+        }
+
+        It "Should return null when ApiCall reports 403" {
+            Mock ApiCall { return @{ Error = $true; StatusCode = 403; Message = "rate limit" } }
+            $result = Test-RepositoryExists -owner "owner" -repo "forbidden" -access_token "token"
+            $result | Should -Be $null
         }
     }
     
@@ -268,6 +281,7 @@ Describe "Mirror Sync Tests" {
             $command.Parameters.Keys | Should -Contain "mirrorOwner"
             $command.Parameters.Keys | Should -Contain "mirrorRepo"
             $command.Parameters.Keys | Should -Contain "access_token"
+            $command.Parameters.Keys | Should -Contain "sourceAccessToken"
         }
         
         It "Should return can_compare false for empty source owner" {

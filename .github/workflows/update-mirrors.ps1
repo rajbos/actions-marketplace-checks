@@ -12,7 +12,10 @@ Param (
 . $PSScriptRoot/library.ps1
 
 $resolvedApiUrl = if ([string]::IsNullOrWhiteSpace($github_api_url)) { "https://api.github.com" } else { $github_api_url }
-$shouldGenerateToken = ([string]::IsNullOrWhiteSpace($access_token) -or [string]::IsNullOrWhiteSpace($access_token_destination))
+
+$sourceAccessToken = $access_token
+$destinationAccessToken = $access_token_destination
+$shouldGenerateToken = ([string]::IsNullOrWhiteSpace($sourceAccessToken) -or [string]::IsNullOrWhiteSpace($destinationAccessToken))
 
 $usableAppIds = @()
 foreach ($id in $application_id) {
@@ -35,9 +38,13 @@ if ($usableAppIds.Count -gt 0 -and $usableAppKeys.Count -gt 0) {
         try {
             $managerToken = Get-AppTokenManagerToken
             if (-not [string]::IsNullOrWhiteSpace($managerToken)) {
-                $access_token = $managerToken
-                $access_token_destination = $managerToken
-                $shouldGenerateToken = $false
+                if ([string]::IsNullOrWhiteSpace($destinationAccessToken)) {
+                    $destinationAccessToken = $managerToken
+                }
+                if ([string]::IsNullOrWhiteSpace($sourceAccessToken)) {
+                    $sourceAccessToken = $managerToken
+                }
+                $shouldGenerateToken = ([string]::IsNullOrWhiteSpace($sourceAccessToken) -or [string]::IsNullOrWhiteSpace($destinationAccessToken))
             }
         }
         catch {
@@ -55,18 +62,21 @@ if ($shouldGenerateToken -and -not [string]::IsNullOrWhiteSpace($selectedAppId) 
         if ([string]::IsNullOrWhiteSpace($generatedToken)) {
             Write-Error "Failed to generate GitHub App installation token."
         } else {
-            if ([string]::IsNullOrWhiteSpace($access_token)) {
-                $access_token = $generatedToken
+            if ([string]::IsNullOrWhiteSpace($sourceAccessToken)) {
+                $sourceAccessToken = $generatedToken
             }
-            if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
-                $access_token_destination = $generatedToken
+            if ([string]::IsNullOrWhiteSpace($destinationAccessToken)) {
+                $destinationAccessToken = $generatedToken
             }
         }
     }
     catch {
-        Write-Error "Error generating GitHub App token for update-forks.ps1: $($_)"
+        Write-Error "Error generating GitHub App token for update-mirrors.ps1: $($_)"
     }
 }
+
+$access_token = $sourceAccessToken
+$access_token_destination = $destinationAccessToken
 
 Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
 
@@ -124,7 +134,7 @@ function UpdateForkedRepos {
 
         Write-Host "$($i+1)/$max Syncing mirror [actions-marketplace-validations/$($existingFork.name)] with upstream [$upstreamOwner/$upstreamRepo]"
         
-        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -sourceAccessToken $access_token
         
         # Normalize result for hashtable or object
         $resultSuccess = if ($result -is [hashtable]) { $result["success"] } else { $result.success }
@@ -204,7 +214,7 @@ function UpdateForkedRepos {
                     # Mark mirrorFound true and retry one sync
                     if ($existingFork -is [hashtable]) { $existingFork["mirrorFound"] = $true } else { $existingFork.mirrorFound = $true }
                     Write-Host "Created mirror [$forkOrg/$($existingFork.name)], retrying sync"
-                    $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+                    $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -sourceAccessToken $access_token
                     # Normalize retry result
                     $retrySuccess = if ($retry -is [hashtable]) { $retry["success"] } else { $retry.success }
                     $retryMessage = if ($retry -is [hashtable]) { $retry["message"] } else { $retry.message }

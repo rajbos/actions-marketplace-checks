@@ -13,7 +13,10 @@ Param (
 . $PSScriptRoot/library.ps1
 
 $resolvedApiUrl = if ([string]::IsNullOrWhiteSpace($github_api_url)) { "https://api.github.com" } else { $github_api_url }
-$shouldGenerateToken = ([string]::IsNullOrWhiteSpace($access_token) -or [string]::IsNullOrWhiteSpace($access_token_destination))
+
+$sourceAccessToken = $access_token
+$destinationAccessToken = $access_token_destination
+$shouldGenerateToken = ([string]::IsNullOrWhiteSpace($sourceAccessToken) -or [string]::IsNullOrWhiteSpace($destinationAccessToken))
 
 $usableAppIds = @()
 foreach ($id in $application_id) {
@@ -36,9 +39,13 @@ if ($usableAppIds.Count -gt 0 -and $usableAppKeys.Count -gt 0) {
         try {
             $managerToken = Get-AppTokenManagerToken
             if (-not [string]::IsNullOrWhiteSpace($managerToken)) {
-                $access_token = $managerToken
-                $access_token_destination = $managerToken
-                $shouldGenerateToken = $false
+                if ([string]::IsNullOrWhiteSpace($destinationAccessToken)) {
+                    $destinationAccessToken = $managerToken
+                }
+                if ([string]::IsNullOrWhiteSpace($sourceAccessToken)) {
+                    $sourceAccessToken = $managerToken
+                }
+                $shouldGenerateToken = ([string]::IsNullOrWhiteSpace($sourceAccessToken) -or [string]::IsNullOrWhiteSpace($destinationAccessToken))
             }
         }
         catch {
@@ -56,18 +63,21 @@ if ($shouldGenerateToken -and -not [string]::IsNullOrWhiteSpace($selectedAppId) 
         if ([string]::IsNullOrWhiteSpace($generatedToken)) {
             Write-Error "Failed to generate GitHub App installation token."
         } else {
-            if ([string]::IsNullOrWhiteSpace($access_token)) {
-                $access_token = $generatedToken
+            if ([string]::IsNullOrWhiteSpace($sourceAccessToken)) {
+                $sourceAccessToken = $generatedToken
             }
-            if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
-                $access_token_destination = $generatedToken
+            if ([string]::IsNullOrWhiteSpace($destinationAccessToken)) {
+                $destinationAccessToken = $generatedToken
             }
         }
     }
     catch {
-        Write-Error "Error generating GitHub App token for update-forks-chunk.ps1: $($_)"
+        Write-Error "Error generating GitHub App token for update-mirrors-chunk.ps1: $($_)"
     }
 }
+
+$access_token = $sourceAccessToken
+$access_token_destination = $destinationAccessToken
 
 Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $forkNames.Count
 
@@ -148,7 +158,7 @@ function UpdateForkedReposChunk {
 
         Write-Host "$($i+1)/$($forksToProcess.Count) Syncing mirror [actions-marketplace-validations/$($existingFork.name)] with upstream [$upstreamOwner/$upstreamRepo]"
         
-        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -sourceAccessToken $access_token
         
         if ($result.success) {
             # Update the sync timestamp for all successfully checked repos

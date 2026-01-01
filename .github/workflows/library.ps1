@@ -2723,7 +2723,8 @@ function Compare-RepositoryCommitHashes {
         [string] $sourceRepo,
         [string] $mirrorOwner,
         [string] $mirrorRepo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        $sourceAccessToken = $null
     )
     
     # Compare the latest commit hashes of source and mirror repositories
@@ -2731,9 +2732,13 @@ function Compare-RepositoryCommitHashes {
     # This allows early exit before expensive git clone/fetch operations
     
     Write-Debug "Comparing commits: source [$sourceOwner/$sourceRepo] vs mirror [$mirrorOwner/$mirrorRepo]"
+
+    if ([string]::IsNullOrWhiteSpace($sourceAccessToken)) {
+        $sourceAccessToken = $access_token
+    }
     
     # Get source repository commit
-    $sourceCommit = Get-RepositoryDefaultBranchCommit -owner $sourceOwner -repo $sourceRepo -access_token $access_token
+    $sourceCommit = Get-RepositoryDefaultBranchCommit -owner $sourceOwner -repo $sourceRepo -access_token $sourceAccessToken
     if (-not $sourceCommit.success) {
         return @{
             in_sync = $false
@@ -2785,17 +2790,32 @@ function Test-RepositoryExists {
     }
     
     $url = "repos/$owner/$repo"
-    try {
-        $result = ApiCall -method GET -url $url -access_token $access_token -hideFailedCall $true
-        if ($null -ne $result -and $result -ne $false) {
-            return $true
+    $apiResult = ApiCall -method GET -url $url -access_token $access_token -hideFailedCall $true -returnErrorInfo $true
+
+    if ($null -eq $apiResult) {
+        Write-Debug "Repository existence check for [$owner/$repo] returned no data"
+        return $null
+    }
+
+    if ($apiResult -is [hashtable] -and $apiResult.Error) {
+        $statusCode = $apiResult.StatusCode
+        $message = $apiResult.Message
+
+        if ($statusCode -eq 404) {
+            Write-Debug "Repository [$owner/$repo] not found (404)"
+            return $false
         }
-        return $false
+
+        if ($statusCode -eq 403) {
+            Write-Warning "Repository existence check for [$owner/$repo] forbidden (403): $message"
+            return $null
+        }
+
+        Write-Warning "Repository existence check for [$owner/$repo] failed with status [$statusCode]: $message"
+        return $null
     }
-    catch {
-        # Repository doesn't exist or isn't accessible
-        return $false
-    }
+
+    return $true
 }
 
 function Invoke-GitCommandWithRetry {
@@ -2887,7 +2907,8 @@ function SyncMirrorWithUpstream {
         $repo,
         $upstreamOwner,
         $upstreamRepo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        $sourceAccessToken = $null
     )
     
     # Sync a mirror repository by pulling from upstream and pushing to mirror
@@ -2913,9 +2934,13 @@ function SyncMirrorWithUpstream {
         }
     }
     
+    if ([string]::IsNullOrWhiteSpace($sourceAccessToken)) {
+        $sourceAccessToken = $access_token
+    }
+    
     # Check if upstream repository exists before attempting sync
-    $upstreamExists = Test-RepositoryExists -owner $upstreamOwner -repo $upstreamRepo -access_token $access_token
-    if (-not $upstreamExists) {
+    $upstreamExists = Test-RepositoryExists -owner $upstreamOwner -repo $upstreamRepo -access_token $sourceAccessToken
+    if ($upstreamExists -eq $false) {
         Write-Debug "Upstream repository [$upstreamOwner/$upstreamRepo] does not exist or is not accessible"
         return @{
             success = $false
@@ -2923,10 +2948,13 @@ function SyncMirrorWithUpstream {
             error_type = "upstream_not_found"
         }
     }
+    elseif ($null -eq $upstreamExists) {
+        Write-Warning "Unable to verify upstream repository [$upstreamOwner/$upstreamRepo]; continuing with sync attempt"
+    }
     
     # Check if mirror repository exists
     $mirrorExists = Test-RepositoryExists -owner $owner -repo $repo -access_token $access_token
-    if (-not $mirrorExists) {
+    if ($mirrorExists -eq $false) {
         Write-Debug "Mirror repository [$owner/$repo] does not exist"
         return @{
             success = $false
@@ -2934,10 +2962,13 @@ function SyncMirrorWithUpstream {
             error_type = "mirror_not_found"
         }
     }
+    elseif ($null -eq $mirrorExists) {
+        Write-Warning "Unable to verify mirror repository [$owner/$repo]; continuing with sync attempt"
+    }
     
     # Early sync detection: Compare commit hashes before cloning
     # This avoids expensive git clone/fetch operations when repos are already in sync
-    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token
+    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token -sourceAccessToken $sourceAccessToken
     
     if ($comparison.can_compare -and $comparison.in_sync) {
         Write-Debug "Mirror [$owner/$repo] is already in sync with upstream (SHA: $($comparison.source_sha))"
@@ -3019,7 +3050,7 @@ function SyncMirrorWithUpstream {
         
         # Add upstream remote with authentication to avoid rate limiting
         Write-Debug "Adding upstream remote with authentication"
-        $upstreamCloneUrl = "https://x:$access_token@github.com/$upstreamOwner/$upstreamRepo.git"
+        $upstreamCloneUrl = "https://x:$sourceAccessToken@github.com/$upstreamOwner/$upstreamRepo.git"
         git remote add upstream $upstreamCloneUrl 2>&1 | Out-Null
         
         # Fetch from upstream with retry logic
@@ -3055,7 +3086,7 @@ function SyncMirrorWithUpstream {
             # Get the upstream repository's default branch
             $upstreamDefaultBranch = $null
             try {
-                $upstreamRepoInfo = ApiCall -method GET -url "repos/$upstreamOwner/$upstreamRepo" -access_token $access_token -hideFailedCall $true
+                $upstreamRepoInfo = ApiCall -method GET -url "repos/$upstreamOwner/$upstreamRepo" -access_token $sourceAccessToken -hideFailedCall $true
                 if ($null -ne $upstreamRepoInfo -and $null -ne $upstreamRepoInfo.default_branch) {
                     $upstreamDefaultBranch = $upstreamRepoInfo.default_branch
                     Write-Debug "Upstream's default branch is: [$upstreamDefaultBranch]"
