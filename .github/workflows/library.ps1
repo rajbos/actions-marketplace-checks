@@ -2,6 +2,9 @@
 # Global flag to track if rate limit was exceeded (20+ minute wait)
 $global:RateLimitExceeded = $false
 
+# Token manager for GitHub App round robin support
+$script:AppTokenManager = $null
+
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
@@ -812,6 +815,22 @@ function ApiCall {
         return $null
     }
     
+    $appTokenManager = Get-AppTokenManager
+    if ($appTokenManager) {
+        if (-not $appTokenManager.TokenLookup) {
+            $appTokenManager.TokenLookup = @{}
+            $script:AppTokenManager = $appTokenManager
+        }
+
+        if ([string]::IsNullOrWhiteSpace($access_token)) {
+            $access_token = Get-AppTokenManagerToken
+        }
+        elseif ($appTokenManager.TokenLookup.ContainsKey($access_token)) {
+            $resolvedIndex = $appTokenManager.TokenLookup[$access_token]
+            $access_token = Get-AppTokenManagerToken -Index $resolvedIndex
+        }
+    }
+
     # Validate that access token is not null or empty before making API calls
     if ([string]::IsNullOrWhiteSpace($access_token)) {
         Write-Error "Missing GitHub access token. API call to [$url] cannot proceed without valid credentials."
@@ -902,20 +921,52 @@ function ApiCall {
             }
         }
 
-        $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
-        $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
-        $rateLimitUsed = $result.Headers["X-Ratelimit-Used"]
-        if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
-            # convert rateLimitReset from epoch to ms
-            $rateLimitResetInt = [int]$rateLimitReset[0]
-            $oUNIXDate=(Get-Date 01.01.1970)+([System.TimeSpan]::fromseconds($rateLimitResetInt))
-            $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
-            if ($rateLimitReset.TotalMilliseconds -gt 0) {
+        $rateLimitRemainingHeader = $result.Headers["X-RateLimit-Remaining"]
+        $rateLimitResetHeader = $result.Headers["X-RateLimit-Reset"]
+        $rateLimitUsedHeader = $result.Headers["X-Ratelimit-Used"]
+
+        $rateLimitRemainingValue = $null
+        if ($rateLimitRemainingHeader -and $rateLimitRemainingHeader.Count -gt 0) {
+            $rateLimitRemainingValue = [int]$rateLimitRemainingHeader[0]
+        }
+
+        $rateLimitResetEpoch = 0
+        if ($rateLimitResetHeader -and $rateLimitResetHeader.Count -gt 0) {
+            $rateLimitResetEpoch = [int64]$rateLimitResetHeader[0]
+        }
+
+        $rateLimitUsedValue = $null
+        if ($rateLimitUsedHeader -and $rateLimitUsedHeader.Count -gt 0) {
+            $rateLimitUsedValue = [int]$rateLimitUsedHeader[0]
+        }
+
+        $tokenRotationResult = $null
+        if ($null -ne $rateLimitRemainingValue) {
+            $tokenRotationResult = Handle-AppTokenRateLimit -token $access_token -remaining $rateLimitRemainingValue -resetEpoch $rateLimitResetEpoch
+            if ($tokenRotationResult) {
+                $access_token = $tokenRotationResult.NewToken
+                if ($tokenRotationResult.Switched) {
+                    Write-Host ""
+                    Write-Host "Switched to alternate GitHub App token due to low rate limit (remaining: $rateLimitRemainingValue)."
+                }
+            }
+        }
+
+        if ($null -ne $rateLimitRemainingValue -and $rateLimitRemainingValue -lt 100 -and -not ($tokenRotationResult -and $tokenRotationResult.Switched)) {
+            $waitSpan = $null
+            $resumeAt = $null
+            if ($rateLimitResetEpoch -gt 0) {
+                $resumeAt = [DateTimeOffset]::FromUnixTimeSeconds($rateLimitResetEpoch).UtcDateTime
+                $waitSpan = $resumeAt - [DateTime]::UtcNow
+            }
+
+            if ($waitSpan -and $waitSpan.TotalMilliseconds -gt 0) {
                 Write-Host ""
-                if ($rateLimitReset.TotalSeconds -gt 1200) {
+                if ($waitSpan.TotalSeconds -gt 1200) {
                     # Only show messages and halt execution if we're configured to wait for rate limits
                     if ($waitForRateLimit) {
-                        Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                        $rateLimitUsedDisplay = if ($null -ne $rateLimitUsedValue) { $rateLimitUsedValue } else { 0 }
+                        Format-RateLimitErrorTable -remaining $rateLimitRemainingValue -used $rateLimitUsedDisplay -waitSeconds $waitSpan.TotalSeconds -continueAt $resumeAt -errorType "Exceeded"
                         $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
                         Write-Message -message $message -logToSummary $true
                         Write-Warning $message
@@ -928,11 +979,12 @@ function ApiCall {
                     # Don't show error messages or set the flag since we're intentionally not halting
                     return $response
                 }
-                Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Warning"
+                $rateLimitUsedDisplay = if ($null -ne $rateLimitUsedValue) { $rateLimitUsedValue } else { 0 }
+                Format-RateLimitErrorTable -remaining $rateLimitRemainingValue -used $rateLimitUsedDisplay -waitSeconds $waitSpan.TotalSeconds -continueAt $resumeAt -errorType "Warning"
                 Write-Host ""
                 # Only wait for rate limit if requested
                 if ($waitForRateLimit) {
-                    Start-Sleep -Milliseconds $rateLimitReset.TotalMilliseconds
+                    Start-Sleep -Milliseconds $waitSpan.TotalMilliseconds
                 }
             }
             # prevent hitting max interval too fast
@@ -974,6 +1026,15 @@ function ApiCall {
                 return $null
             }
             
+            $rotationResult = Handle-AppTokenRateLimit -token $access_token -remaining 0 -resetEpoch 0 -ForceSwitch
+            if ($rotationResult) {
+                $access_token = $rotationResult.NewToken
+                if ($rotationResult.Switched) {
+                    Write-Host ""
+                    Write-Host "Switched to alternate GitHub App token after primary token hit rate limit."
+                }
+            }
+
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
@@ -1004,6 +1065,15 @@ function ApiCall {
                 }
             }
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
+            $secondaryRotation = Handle-AppTokenRateLimit -token $access_token -remaining 0 -resetEpoch 0 -ForceSwitch
+            if ($secondaryRotation) {
+                $access_token = $secondaryRotation.NewToken
+                if ($secondaryRotation.Switched) {
+                    Write-Host ""
+                    Write-Host "Switched to alternate GitHub App token after secondary rate limit exceeded."
+                }
+            }
+
             Start-Sleep -Seconds $backOff
 
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
@@ -1018,6 +1088,17 @@ function ApiCall {
             
             $rateLimitReset = $_.Exception.Response.Headers["X-RateLimit-Reset"]
             $rateLimitRemaining = $_.Exception.Response.Headers["X-RateLimit-Remaining"]
+
+            $remainingValue = if ($rateLimitRemaining -and $rateLimitRemaining[0]) { [int]$rateLimitRemaining[0] } else { 0 }
+            $resetValue = if ($rateLimitReset -and $rateLimitReset[0]) { [int64]$rateLimitReset[0] } else { 0 }
+            $apiRateRotation = Handle-AppTokenRateLimit -token $access_token -remaining $remainingValue -resetEpoch $resetValue -ForceSwitch
+            if ($apiRateRotation) {
+                $access_token = $apiRateRotation.NewToken
+                if ($apiRateRotation.Switched) {
+                    Write-Host ""
+                    Write-Host "Switched to alternate GitHub App token after core rate limit exceeded."
+                }
+            }
             
             # Calculate wait time if reset time is available
             $waitSeconds = 0
@@ -1359,6 +1440,348 @@ function GetRateLimitInfo {
 #>
 function Test-RateLimitExceeded {
     return $global:RateLimitExceeded
+}
+
+function Get-AppTokenManager {
+    return $script:AppTokenManager
+}
+
+function Initialize-AppTokenManager {
+    Param (
+        [string[]] $appIds,
+        [string[]] $privateKeys,
+        [string] $organization,
+        [string] $apiUrl = "https://api.github.com",
+        [int] $rateLimitThreshold = 100
+    )
+
+    $normalizedIds = @()
+    foreach ($id in $appIds) {
+        if (-not [string]::IsNullOrWhiteSpace($id)) {
+            $normalizedIds += $id.Trim()
+        }
+    }
+
+    $normalizedKeys = @()
+    foreach ($key in $privateKeys) {
+        if (-not [string]::IsNullOrWhiteSpace($key)) {
+            $normalizedKeys += $key
+        }
+    }
+
+    $maxCount = [Math]::Max($normalizedIds.Count, $normalizedKeys.Count)
+    $tokenEntries = @()
+    for ($i = 0; $i -lt $maxCount; $i++) {
+        $id = if ($i -lt $normalizedIds.Count) { $normalizedIds[$i] } else { $null }
+        $key = if ($i -lt $normalizedKeys.Count) { $normalizedKeys[$i] } else { $null }
+        if (-not [string]::IsNullOrWhiteSpace($id) -and -not [string]::IsNullOrWhiteSpace($key)) {
+            $tokenEntries += [pscustomobject]@{
+                AppId = $id
+                PrivateKey = $key
+                Token = $null
+                ExpiresAt = [DateTime]::MinValue
+                InstallationId = $null
+                Remaining = $null
+                ResetTime = $null
+                LastFetched = $null
+                TokenHistory = [System.Collections.Generic.HashSet[string]]::new()
+            }
+        }
+    }
+
+    if ($tokenEntries.Count -eq 0) {
+        $script:AppTokenManager = $null
+        return $null
+    }
+
+    $resolvedApiUrl = if ([string]::IsNullOrWhiteSpace($apiUrl)) { "https://api.github.com" } else { $apiUrl.TrimEnd('/') }
+
+    $script:AppTokenManager = [pscustomobject]@{
+        Tokens = $tokenEntries
+        CurrentIndex = 0
+        Threshold = $rateLimitThreshold
+        Organization = $organization
+        ApiUrl = $resolvedApiUrl
+        TokenLookup = @{}
+        LastSwitch = $null
+    }
+
+    # Prime the first token so lookups succeed immediately
+    try {
+        Get-AppTokenManagerToken | Out-Null
+    }
+    catch {
+        Write-Warning "Failed to prime GitHub App token manager: $($_.Exception.Message)"
+    }
+
+    return $script:AppTokenManager
+}
+
+function Get-AppTokenManagerToken {
+    Param (
+        [int] $Index
+    )
+
+    $manager = Get-AppTokenManager
+    if (-not $manager) {
+        return $null
+    }
+
+    $targetIndex = if ($PSBoundParameters.ContainsKey('Index')) { $Index } else { $manager.CurrentIndex }
+
+    if ($targetIndex -lt 0 -or $targetIndex -ge $manager.Tokens.Count) {
+        return $null
+    }
+
+    $entry = $manager.Tokens[$targetIndex]
+    $previousToken = $entry.Token
+    $refreshThreshold = [DateTime]::UtcNow.AddMinutes(1)
+
+    if ([string]::IsNullOrWhiteSpace($entry.Token) -or $entry.ExpiresAt -le $refreshThreshold) {
+        try {
+            $metadata = Get-GitHubAppInstallationToken -AppId $entry.AppId -PrivateKey $entry.PrivateKey -Organization $manager.Organization -ApiUrl $manager.ApiUrl -IncludeMetadata
+            $entry.Token = $metadata.token
+            $entry.ExpiresAt = [DateTimeOffset]::Parse($metadata.expiresAt, [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
+            $entry.InstallationId = $metadata.installationId
+            $entry.LastFetched = [DateTime]::UtcNow
+            $entry.Remaining = $null
+            $entry.ResetTime = $null
+        }
+        catch {
+            Write-Error "Failed to generate GitHub App token for appId [$($entry.AppId)]: $($_.Exception.Message)"
+            throw
+        }
+    }
+
+    if (-not $entry.TokenHistory) {
+        $entry.TokenHistory = [System.Collections.Generic.HashSet[string]]::new()
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($previousToken)) {
+        [void]$entry.TokenHistory.Add($previousToken)
+        $manager.TokenLookup[$previousToken] = $targetIndex
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($entry.Token)) {
+        [void]$entry.TokenHistory.Add($entry.Token)
+        $manager.TokenLookup[$entry.Token] = $targetIndex
+    }
+
+    $manager.Tokens[$targetIndex] = $entry
+    $script:AppTokenManager = $manager
+
+    if ($targetIndex -eq $manager.CurrentIndex -and -not [string]::IsNullOrWhiteSpace($entry.Token)) {
+        $env:GITHUB_TOKEN = $entry.Token
+    }
+
+    return $entry.Token
+}
+
+function Get-AppTokenPair {
+    $manager = Get-AppTokenManager
+    if (-not $manager) {
+        return $null
+    }
+
+    $token = Get-AppTokenManagerToken
+    if ([string]::IsNullOrWhiteSpace($token)) {
+        return $null
+    }
+
+    return @{
+        AccessToken = $token
+        DestinationToken = $token
+        AppId = $manager.Tokens[$manager.CurrentIndex].AppId
+    }
+}
+
+function Get-AppTokenRateSnapshot {
+    Param (
+        [string] $token,
+        [string] $apiUrl = "https://api.github.com"
+    )
+
+    if ([string]::IsNullOrWhiteSpace($token)) {
+        return $null
+    }
+
+    $rateUrl = "$($apiUrl.TrimEnd('/'))/rate_limit"
+    $headers = @{ Authorization = GetBasicAuthenticationHeader -access_token $token }
+
+    try {
+        $response = Invoke-WebRequest -Uri $rateUrl -Headers $headers -Method GET -ErrorAction Stop
+        $data = $response.Content | ConvertFrom-Json
+        $rate = $data.rate
+        $resetTime = [DateTimeOffset]::FromUnixTimeSeconds([int64]$rate.reset).UtcDateTime
+        return [pscustomobject]@{
+            Remaining = [int]$rate.remaining
+            ResetTime = $resetTime
+        }
+    }
+    catch {
+        Write-Warning "Failed to retrieve rate limit snapshot for alternate token: $($_.Exception.Message)"
+        return $null
+    }
+}
+
+function Invoke-AppTokenRotation {
+    Param (
+        [int] $currentIndex,
+        [int] $currentRemaining,
+        [DateTime] $currentReset,
+        [switch] $Force
+    )
+
+    $manager = Get-AppTokenManager
+    if (-not $manager) {
+        return $null
+    }
+
+    if ($manager.Tokens.Count -le 1) {
+        return @{
+            Switched = $false
+            NewToken = Get-AppTokenManagerToken -Index $currentIndex
+            Index = $currentIndex
+        }
+    }
+
+    $threshold = $manager.Threshold
+    $bestCandidate = $null
+
+    for ($offset = 1; $offset -lt $manager.Tokens.Count; $offset++) {
+        $candidateIndex = ($currentIndex + $offset) % $manager.Tokens.Count
+        $candidateToken = Get-AppTokenManagerToken -Index $candidateIndex
+        if ([string]::IsNullOrWhiteSpace($candidateToken)) {
+            continue
+        }
+
+        $snapshot = Get-AppTokenRateSnapshot -token $candidateToken -apiUrl $manager.ApiUrl
+        if (-not $snapshot) {
+            continue
+        }
+
+        $candidateEntry = $manager.Tokens[$candidateIndex]
+        $candidateEntry.Remaining = $snapshot.Remaining
+        $candidateEntry.ResetTime = $snapshot.ResetTime
+        $manager.Tokens[$candidateIndex] = $candidateEntry
+        $script:AppTokenManager = $manager
+
+        $shouldUse = $false
+        if ($snapshot.Remaining -ge $threshold) {
+            $shouldUse = $true
+        }
+        elseif ($snapshot.Remaining -lt $threshold -and $currentReset -ne $null -and $snapshot.ResetTime -lt $currentReset) {
+            $shouldUse = $true
+        }
+        elseif ($Force -and $snapshot.Remaining -gt $currentRemaining) {
+            $shouldUse = $true
+        }
+
+        if ($shouldUse) {
+            $manager.CurrentIndex = $candidateIndex
+            $script:AppTokenManager = $manager
+            $env:GITHUB_TOKEN = $candidateToken
+            $global:RateLimitExceeded = $false
+            return @{
+                Switched = $true
+                NewToken = $candidateToken
+                Index = $candidateIndex
+            }
+        }
+
+        if (-not $bestCandidate -or $snapshot.Remaining -gt $bestCandidate.Remaining) {
+            $bestCandidate = @{
+                Index = $candidateIndex
+                Remaining = $snapshot.Remaining
+                ResetTime = $snapshot.ResetTime
+                Token = $candidateToken
+            }
+        }
+    }
+
+    if ($Force -and $bestCandidate -and $bestCandidate.Remaining -gt $currentRemaining) {
+        $manager.CurrentIndex = $bestCandidate.Index
+        $script:AppTokenManager = $manager
+        $env:GITHUB_TOKEN = $bestCandidate.Token
+        $global:RateLimitExceeded = $false
+        return @{
+            Switched = $true
+            NewToken = $bestCandidate.Token
+            Index = $bestCandidate.Index
+        }
+    }
+
+    return @{
+        Switched = $false
+        NewToken = Get-AppTokenManagerToken -Index $manager.CurrentIndex
+        Index = $manager.CurrentIndex
+    }
+}
+
+function Register-AppTokenRateLimit {
+    Param (
+        [string] $token,
+        [int] $remaining,
+        [int64] $resetEpoch,
+        [switch] $ForceSwitch
+    )
+
+    $manager = Get-AppTokenManager
+    if (-not $manager -or [string]::IsNullOrWhiteSpace($token)) {
+        return $null
+    }
+
+    $index = $null
+    if ($manager.TokenLookup.ContainsKey($token)) {
+        $index = $manager.TokenLookup[$token]
+    }
+    else {
+        for ($i = 0; $i -lt $manager.Tokens.Count; $i++) {
+            $entry = $manager.Tokens[$i]
+            if ($entry.TokenHistory -and $entry.TokenHistory.Contains($token)) {
+                $index = $i
+                break
+            }
+        }
+    }
+
+    if ($null -eq $index) {
+        return $null
+    }
+
+    $entry = $manager.Tokens[$index]
+    $entry.Remaining = $remaining
+    $entry.ResetTime = if ($resetEpoch -gt 0) { [DateTimeOffset]::FromUnixTimeSeconds($resetEpoch).UtcDateTime } else { $null }
+    $manager.Tokens[$index] = $entry
+    $manager.TokenLookup[$token] = $index
+    $script:AppTokenManager = $manager
+
+    $threshold = $manager.Threshold
+    if ($ForceSwitch -or ($remaining -lt $threshold)) {
+        return Invoke-AppTokenRotation -currentIndex $index -currentRemaining $remaining -currentReset $entry.ResetTime -Force:$ForceSwitch.IsPresent
+    }
+
+    return @{
+        Switched = $false
+        NewToken = Get-AppTokenManagerToken -Index $manager.CurrentIndex
+        Index = $manager.CurrentIndex
+    }
+}
+
+function Handle-AppTokenRateLimit {
+    Param (
+        [string] $token,
+        [int] $remaining,
+        [int64] $resetEpoch,
+        [switch] $ForceSwitch
+    )
+
+    $manager = Get-AppTokenManager
+    if (-not $manager) {
+        return $null
+    }
+
+    return Register-AppTokenRateLimit -token $token -remaining $remaining -resetEpoch $resetEpoch -ForceSwitch:$ForceSwitch.IsPresent
 }
 
 function Get-TokenExpirationTime {
