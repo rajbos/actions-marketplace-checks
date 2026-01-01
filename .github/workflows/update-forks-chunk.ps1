@@ -4,8 +4,8 @@ Param (
     [int] $chunkId = 0,
     $access_token = $env:GITHUB_TOKEN,
     $access_token_destination = $env:GITHUB_TOKEN,
-    [string] $application_id = $env:APPLICATION_ID,
-    [string] $application_private_key = $env:APPLICATION_PRIVATE_KEY,
+    [string[]] $application_id = @($env:APPLICATION_ID),
+    [string[]] $application_private_key = @($env:APPLICATION_PRIVATE_KEY),
     [string] $application_organization = $env:APPLICATION_ORGANIZATION,
     [string] $github_api_url = $env:GITHUB_API_URL
 )
@@ -15,9 +15,26 @@ Param (
 $resolvedApiUrl = if ([string]::IsNullOrWhiteSpace($github_api_url)) { "https://api.github.com" } else { $github_api_url }
 $shouldGenerateToken = ([string]::IsNullOrWhiteSpace($access_token) -or [string]::IsNullOrWhiteSpace($access_token_destination))
 
-if ($shouldGenerateToken -and -not [string]::IsNullOrWhiteSpace($application_id) -and -not [string]::IsNullOrWhiteSpace($application_private_key)) {
+$usableAppIds = @()
+foreach ($id in $application_id) {
+    if (-not [string]::IsNullOrWhiteSpace($id)) {
+        $usableAppIds += $id
+    }
+}
+
+$usableAppKeys = @()
+foreach ($key in $application_private_key) {
+    if (-not [string]::IsNullOrWhiteSpace($key)) {
+        $usableAppKeys += $key
+    }
+}
+
+$selectedAppId = if ($usableAppIds.Count -gt 0) { $usableAppIds[0] } else { $null }
+$selectedPrivateKey = if ($usableAppKeys.Count -gt 0) { $usableAppKeys[0] } else { $null }
+
+if ($shouldGenerateToken -and -not [string]::IsNullOrWhiteSpace($selectedAppId) -and -not [string]::IsNullOrWhiteSpace($selectedPrivateKey)) {
     try {
-        $generatedToken = Get-TokenFromApp -appId $application_id -pemKey $application_private_key -organization $application_organization -apiUrl $resolvedApiUrl
+        $generatedToken = Get-TokenFromApp -appId $selectedAppId -pemKey $selectedPrivateKey -organization $application_organization -apiUrl $resolvedApiUrl
         if ([string]::IsNullOrWhiteSpace($generatedToken)) {
             Write-Error "Failed to generate GitHub App installation token."
         } else {

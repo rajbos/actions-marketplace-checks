@@ -27,6 +27,7 @@ env:
   numberOfReposToDo: 300
   numberOfChunks: 4
   APPLICATION_ID: "264650"
+  APPLICATION_ID2: "2575811"
   APPLICATION_ORGANIZATION: actions-marketplace-validations
 
 jobs:
@@ -137,6 +138,8 @@ jobs:
       actions: read
     env:
       APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
+      APPLICATION_PRIVATE_KEY2: ${{ secrets.Automation_App_Key2 }}
+      
     steps:
       - uses: actions/checkout@v6
 
@@ -193,8 +196,8 @@ jobs:
             -actions $existingForks `
             -forkNames $forkNames `
             -chunkId $chunkId `
-            -application_id $env:APPLICATION_ID `
-            -application_private_key $env:APPLICATION_PRIVATE_KEY `
+            -application_id @($env:APPLICATION_ID, $env:APPLICATION_ID2) `
+            -application_private_key @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY2) `
             -application_organization $env:APPLICATION_ORGANIZATION
 
       - name: Upload partial status for chunk ${{ matrix.chunk-id }}
@@ -338,7 +341,15 @@ jobs:
           Write-Message -message "### Final Rate Limit Check" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
-          $token = Get-TokenFromApp -appId $env:APPLICATION_ID -pemKey $env:APPLICATION_PRIVATE_KEY -organization $env:APPLICATION_ORGANIZATION
+          $appIds = @($env:APPLICATION_ID, $env:APPLICATION_ID2)
+          $appKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY2)
+          $selectedAppId = ($appIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -First 1)
+          $selectedPrivateKey = ($appKeys | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -First 1)
+
+          $token = $null
+          if ($selectedAppId -and $selectedPrivateKey) {
+            $token = Get-TokenFromApp -appId $selectedAppId -pemKey $selectedPrivateKey -organization $env:APPLICATION_ORGANIZATION
+          }
           if ([string]::IsNullOrWhiteSpace($token)) {
             Write-Warning "Unable to retrieve GitHub App installation token for final rate limit check."
           } else {
