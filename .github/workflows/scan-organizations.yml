@@ -164,7 +164,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download all organization scans
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: org-scan-*
           path: org-scans/
