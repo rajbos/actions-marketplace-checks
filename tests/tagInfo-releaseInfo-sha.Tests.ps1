@@ -98,9 +98,10 @@ BeforeAll {
         $response = ApiCall -method GET -url $url -access_token $access_token
 
         # Return array of objects with tag name and target_commitish (SHA)
+        # Note: tag_name from releases API is already a direct string, not a URL path
         $response = $response | ForEach-Object { 
             @{
-                tag_name = SplitUrlLastPart($_.tag_name)
+                tag_name = $_.tag_name
                 target_commitish = $_.target_commitish
             }
         }
