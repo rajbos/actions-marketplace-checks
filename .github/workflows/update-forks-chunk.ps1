@@ -29,6 +29,24 @@ foreach ($key in $application_private_key) {
     }
 }
 
+$tokenManager = $null
+if ($usableAppIds.Count -gt 0 -and $usableAppKeys.Count -gt 0) {
+    $tokenManager = Initialize-AppTokenManager -appIds $usableAppIds -privateKeys $usableAppKeys -organization $application_organization -apiUrl $resolvedApiUrl
+    if ($tokenManager -and $tokenManager.Tokens.Count -gt 0) {
+        try {
+            $managerToken = Get-AppTokenManagerToken
+            if (-not [string]::IsNullOrWhiteSpace($managerToken)) {
+                $access_token = $managerToken
+                $access_token_destination = $managerToken
+                $shouldGenerateToken = $false
+            }
+        }
+        catch {
+            Write-Warning "Failed to retrieve GitHub App token from manager initialization: $($_.Exception.Message)"
+        }
+    }
+}
+
 $selectedAppId = if ($usableAppIds.Count -gt 0) { $usableAppIds[0] } else { $null }
 $selectedPrivateKey = if ($usableAppKeys.Count -gt 0) { $usableAppKeys[0] } else { $null }
 
