@@ -335,8 +335,13 @@ function GetRepoTagInfo {
     $url = "repos/$owner/$repo/git/matching-refs/tags"
     $response = ApiCall -method GET -url $url -access_token $access_token
 
-    # filter the result array to only use the ref field
-    $response = $response | ForEach-Object { SplitUrlLastPart($_.ref) }
+    # Return array of objects with tag name and SHA
+    $response = $response | ForEach-Object { 
+        @{
+            tag = SplitUrlLastPart($_.ref)
+            sha = $_.object.sha
+        }
+    }
 
     return $response
 }
@@ -363,8 +368,13 @@ function GetRepoReleases {
     $url = "repos/$owner/$repo/releases"
     $response = ApiCall -method GET -url $url -access_token $access_token
 
-    # filter the result array to only use the ref field
-    $response = $response | ForEach-Object { SplitUrlLastPart($_.tag_name) }
+    # Return array of objects with tag name and target_commitish (SHA)
+    $response = $response | ForEach-Object { 
+        @{
+            tag_name = SplitUrlLastPart($_.tag_name)
+            target_commitish = $_.target_commitish
+        }
+    }
 
     return $response
 }
