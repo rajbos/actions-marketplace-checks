@@ -114,7 +114,7 @@ jobs:
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Organization Scan Results"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
 
-          $summaryLine = "- [$orgName] has [$($actionCount)] action(s)"
+          $summaryLine = "Organization [$orgName] has [$($actionCount)] action(s)"
           Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summaryLine
           Write-Host $summaryLine          
           
