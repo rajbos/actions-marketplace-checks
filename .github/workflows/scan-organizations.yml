@@ -54,7 +54,8 @@ jobs:
                 'canvas-lms',
                 'cvelist',
                 'msysgit',
-                'linux'                
+                'linux',
+                'libgit2sharp'
               )
             }
 
