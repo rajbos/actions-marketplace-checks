@@ -214,7 +214,7 @@ jobs:
               if ($jsonContent -match '^\uFEFF') {
                 $jsonContent = $jsonContent -replace '^\uFEFF', ''
               }
-              $orgActions = $jsonContent | ConvertFrom-Json
+              $orgActions = ($jsonContent | ConvertFrom-Json).actions
               
               if ($orgActions) {
                 $actionCount = if ($orgActions -is [array]) { $orgActions.Count } else { 1 }
