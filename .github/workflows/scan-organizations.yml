@@ -1,0 +1,276 @@
+# Scan multiple GitHub organizations for available actions
+# Uses devops-actions/load-available-actions to scan orgs
+# Consolidates results into a single file matching actions.json format
+
+name: Scan Organizations
+
+on:
+  push:
+    paths:
+      - .github/workflows/scan-organizations.yml
+
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+  workflow_dispatch:
+    inputs:
+      organizations:
+        description: 'Comma-separated list of orgs to scan (default: github,actions,advanced-security,dependabot)'
+        required: false
+        default: 'github,actions,advanced-security,dependabot'
+
+env:
+  DEFAULT_ORGS: 'github,actions,advanced-security,dependabot'
+
+jobs:
+  prepare:
+    name: Prepare organization matrix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      org_repo_config: ${{ steps.set-matrix.outputs.org_repo_config }}
+    steps:
+      - name: Set matrix
+        id: set-matrix
+        shell: pwsh
+        run: |
+          # Use workflow input if available, otherwise use default
+          $orgsString = "${{ github.event.inputs.organizations }}"
+          if ([string]::IsNullOrWhiteSpace($orgsString)) {
+            $orgsString = "${{ env.DEFAULT_ORGS }}"
+          }
+          
+          # Split into array and create matrix entries with optional skip lists
+          $orgs = $orgsString -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+          $matrixEntries = foreach ($org in $orgs) {
+            $skipRepositories = @()
+            # set up the skip list for the github org to prevent a long run with waisted time
+            if ($org -eq 'github') {
+              $skipRepositories = @(
+                'canvas-lms',
+                'cvelist',
+                'msysgit',
+                'linux',
+                'libgit2sharp'
+              )
+            }
+
+            [PSCustomObject]@{
+              org = $org
+              skipRepositories = if ($skipRepositories.Count -gt 0) { [string]::Join("`n", $skipRepositories) } else { '' }
+            }
+          }
+
+          $matrixObject = @{ include = $matrixEntries }
+          $matrixJson = $matrixObject | ConvertTo-Json -Compress
+          $repoConfigJson = $matrixEntries | ConvertTo-Json -Compress
+
+          Write-Host "Matrix configuration: $matrixJson"
+          "matrix=$matrixJson" >> $env:GITHUB_OUTPUT
+          "org_repo_config=$repoConfigJson" >> $env:GITHUB_OUTPUT
+
+  scan-org:
+    name: Scan ${{ matrix.org }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Get App Token
+        id: get_workflow_token
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264650
+          application_private_key: ${{ secrets.Automation_App_Key }}
+          organization: actions-marketplace-validations     
+
+      - name: Load available actions for ${{ matrix.org }}
+        id: load-actions
+        uses: devops-actions/load-available-actions@v2.2.0
+        with:
+          organization: ${{ matrix.org }}
+          PAT: ${{ steps.get_workflow_token.outputs.token }}
+          exclude-repos: ${{ matrix.skipRepositories }}
+
+      - name: Save actions to file
+        env:
+          CURRENT_ORG: ${{ matrix.org }}
+          ACTIONS_FILE_PATH: ${{ steps.load-actions.outputs.actions-file-path }}
+        shell: pwsh
+        run: |
+          $orgName = $env:CURRENT_ORG
+          $actions = Get-Content $env:ACTIONS_FILE_PATH | ConvertFrom-Json
+          $actionCount = if ($actions -and $actions.actions) { $actions.actions.Count } else { 0 }
+          Write-Host "Found $actionCount actions for organization '$orgName'"
+        
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Organization Scan Results"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+
+          $summaryLine = "Organization [$orgName] has [$($actionCount)] action(s)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summaryLine
+          Write-Host $summaryLine          
+          
+          # Save to file
+          $fileName = "$orgName.json"
+          $actions | ConvertTo-Json -Depth 10 -Compress | Out-File -FilePath $fileName -Encoding UTF8
+          
+          # Show file size
+          $fileSize = (Get-Item $fileName).Length
+          Write-Host "Created file [$fileName] ($fileSize bytes)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Created file [$fileName] ($fileSize bytes)"
+
+      - name: Upload org actions to blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          $result = Set-JsonToBlobStorageFolder `
+            -sasToken $env:BLOB_SAS_TOKEN `
+            -folderPath "organization-scans" `
+            -blobFileName "${{ matrix.org }}.json" `
+            -localFilePath "${{ matrix.org }}.json"
+          
+          if (-not $result) {
+            Write-Error "Failed to upload ${{ matrix.org }}.json to blob storage"
+            exit 1
+          }
+
+      - name: Upload artifact for consolidation
+        uses: actions/upload-artifact@v4
+        with:
+          name: org-scan-${{ matrix.org }}
+          path: ${{ matrix.org }}.json
+          retention-days: 1
+
+  consolidate:
+    name: Consolidate organization scans
+    needs: [prepare, scan-org]
+    if: success() || failure()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all organization scans
+        uses: actions/download-artifact@v4
+        with:
+          pattern: org-scan-*
+          path: org-scans/
+          merge-multiple: true
+
+      - name: Consolidate all organization scans
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          Write-Message -message "# Consolidating Organization Scans" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
+          # Find all org scan files
+          $orgFiles = Get-ChildItem -Path "org-scans" -Filter "*.json" -ErrorAction SilentlyContinue
+          
+          # Get expected organizations
+          $orgRepoConfig = '${{ needs.prepare.outputs.org_repo_config }}' | ConvertFrom-Json
+          $expectedOrgs = $orgRepoConfig | ForEach-Object { $_.org }
+          Write-Message -message "Expected organizations: $($expectedOrgs -join ', ')" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
+          if (-not $orgFiles -or $orgFiles.Count -eq 0) {
+            Write-Warning "No organization scan files found to consolidate"
+            Write-Message -message "⚠️ No organization scan files found. Expected $($expectedOrgs.Count) organizations." -logToSummary $true
+            exit 1
+          }
+          
+          if ($orgFiles.Count -lt $expectedOrgs.Count) {
+            Write-Warning "Found only $($orgFiles.Count) of $($expectedOrgs.Count) expected organization scans"
+            Write-Message -message "⚠️ Found only $($orgFiles.Count) of $($expectedOrgs.Count) expected organization scans" -logToSummary $true
+          }
+          
+          Write-Message -message "Found $($orgFiles.Count) organization scan files to consolidate" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
+          # Consolidate all actions into a single array
+          $allActions = @()
+          $actionsByOrg = @{}
+          
+          foreach ($file in $orgFiles) {
+            $orgName = $file.BaseName
+            Write-Host "Processing $orgName from $($file.Name)..."
+            
+            try {
+              $jsonContent = Get-Content $file.FullName -Raw
+              # Remove BOM only if present
+              if ($jsonContent -match '^\uFEFF') {
+                $jsonContent = $jsonContent -replace '^\uFEFF', ''
+              }
+              $orgActions = ($jsonContent | ConvertFrom-Json).actions
+              
+              if ($orgActions) {
+                $actionCount = if ($orgActions -is [array]) { $orgActions.Count } else { 1 }
+                Write-Message -message "- **$orgName**: $actionCount actions" -logToSummary $true
+                $actionsByOrg[$orgName] = $actionCount
+                
+                # Add all actions to the consolidated array
+                if ($orgActions -is [array]) {
+                  $allActions += $orgActions
+                } else {
+                  $allActions += @($orgActions)
+                }
+              }
+            }
+            catch {
+              Write-Warning "Failed to process $orgName`: $($_.Exception.Message)"
+            }
+          }
+          
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "**Total consolidated actions**: $(DisplayIntWithDots $allActions.Count)" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+          
+          # Save consolidated file
+          $consolidatedFile = "consolidated-github-actions.json"
+          $allActions | ConvertTo-Json -Depth 10 | Out-File -FilePath $consolidatedFile -Encoding UTF8
+          
+          $fileSize = (Get-Item $consolidatedFile).Length
+          $fileSizeFormatted = Format-FileSize -bytes $fileSize
+          Write-Message -message "Created consolidated file: $consolidatedFile ($fileSizeFormatted)" -logToSummary $true
+
+      - name: Upload consolidated file to blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          $result = Set-JsonToBlobStorageFolder `
+            -sasToken $env:BLOB_SAS_TOKEN `
+            -folderPath "organization-scans" `
+            -blobFileName "consolidated-github-actions.json" `
+            -localFilePath "consolidated-github-actions.json"
+          
+          if (-not $result) {
+            Write-Error "Failed to upload consolidated-github-actions.json to blob storage"
+            exit 1
+          }
+          
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Consolidation complete and uploaded to blob storage" -logToSummary $true
+
+      - name: Upload consolidated artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolidated-github-actions
+          path: consolidated-github-actions.json
+          retention-days: 7

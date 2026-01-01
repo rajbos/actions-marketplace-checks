@@ -601,6 +601,187 @@ function Set-SecretScanningAlertsToBlobStorage {
     return Set-JsonToBlobStorage -sasToken $sasToken -blobFileName $script:secretScanningAlertsBlobFileName -localFilePath $secretScanningAlertsFile
 }
 
+<#
+    .SYNOPSIS
+    Upload a JSON file to a custom folder in Azure Blob Storage.
+
+    .DESCRIPTION
+    Uploads a JSON file to a specified folder path in blob storage.
+    Useful for organizing files in different folders (e.g., organization-scans).
+
+    .PARAMETER sasToken
+    The blob storage URL with SAS token query string.
+
+    .PARAMETER folderPath
+    The folder path in blob storage (e.g., 'organization-scans', 'status').
+
+    .PARAMETER blobFileName
+    The name of the file in blob storage.
+
+    .PARAMETER localFilePath
+    The local file path to upload.
+
+    .EXAMPLE
+    Set-JsonToBlobStorageFolder -sasToken $env:BLOB_SAS_TOKEN -folderPath "organization-scans" -blobFileName "github.json" -localFilePath "./github.json"
+#>
+function Set-JsonToBlobStorageFolder {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $folderPath,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $blobFileName,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $localFilePath
+    )
+
+    Write-Message -message "Checking upload status for $blobFileName to folder $folderPath..." -logToSummary $true
+
+    # Validate file existence
+    if (-not (Test-Path $localFilePath)) {
+        $message = "⚠️ ERROR: $blobFileName does not exist at [$localFilePath]. Nothing to upload."
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
+        return $false
+    }
+
+    # Normalize folder path (remove leading/trailing slashes)
+    $folderPath = $folderPath.Trim('/')
+
+    # Parse SAS token URL
+    $baseUrlWithQuery = $sasToken
+    $queryStart = $baseUrlWithQuery.IndexOf('?')
+    $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+    
+    # Construct full blob URL with custom folder
+    $blobUrl = "${baseUrl}/${folderPath}/${blobFileName}${sasQuery}"
+    
+    Write-Host "Blob URL: ${baseUrl}/${folderPath}/$blobFileName (SAS redacted)"
+
+    # Read local file content
+    $localContent = [System.IO.File]::ReadAllBytes($localFilePath)
+    $localFileSize = $localContent.Length
+
+    # Upload the file
+    try {
+        $fileSizeFormatted = Format-FileSize -bytes $localFileSize
+        Write-Host "Uploading $blobFileName ($fileSizeFormatted) to Azure Blob Storage folder '$folderPath'..."
+        
+        $headers = @{
+            "x-ms-blob-type" = "BlockBlob"
+            "Content-Type" = "application/json"
+        }
+        
+        $response = Invoke-WebRequest -Uri $blobUrl -Method PUT -Body $localContent -Headers $headers -UseBasicParsing
+        
+        if ($response.StatusCode -eq 201 -or $response.StatusCode -eq 200) {
+            $message = "✓ Successfully uploaded $blobFileName ($fileSizeFormatted) to blob storage folder '$folderPath'"
+            Write-Message -message $message -logToSummary $true
+            return $true
+        }
+        else {
+            $message = "⚠️ ERROR: Unexpected status code when uploading $blobFileName`: $($response.StatusCode)"
+            Write-Message -message $message -logToSummary $true
+            Write-Error $message
+            return $false
+        }
+    }
+    catch {
+        $message = "⚠️ ERROR: Failed to upload $blobFileName to blob storage: $($_.Exception.Message)"
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
+        return $false
+    }
+}
+
+<#
+    .SYNOPSIS
+    Download a JSON file from a custom folder in Azure Blob Storage.
+
+    .DESCRIPTION
+    Downloads a JSON file from a specified folder path in blob storage.
+
+    .PARAMETER sasToken
+    The blob storage URL with SAS token query string.
+
+    .PARAMETER folderPath
+    The folder path in blob storage (e.g., 'organization-scans', 'status').
+
+    .PARAMETER blobFileName
+    The name of the file in blob storage.
+
+    .PARAMETER localFilePath
+    The local file path where the downloaded file should be saved.
+
+    .EXAMPLE
+    Get-JsonFromBlobStorageFolder -sasToken $env:BLOB_SAS_TOKEN -folderPath "organization-scans" -blobFileName "github.json" -localFilePath "./github.json"
+#>
+function Get-JsonFromBlobStorageFolder {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $sasToken,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $folderPath,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $blobFileName,
+        
+        [Parameter(Mandatory=$true)]
+        [string] $localFilePath
+    )
+
+    Write-Message -message "Downloading $blobFileName from Azure Blob Storage folder '$folderPath'..." -logToSummary $true
+
+    # Normalize folder path (remove leading/trailing slashes)
+    $folderPath = $folderPath.Trim('/')
+
+    # Parse SAS token URL
+    $baseUrlWithQuery = $sasToken
+    $queryStart = $baseUrlWithQuery.IndexOf('?')
+    $baseUrl = $baseUrlWithQuery.Substring(0, $queryStart)
+    $sasQuery = $baseUrlWithQuery.Substring($queryStart)
+    
+    # Construct full blob URL with custom folder
+    $blobUrl = "${baseUrl}/${folderPath}/${blobFileName}${sasQuery}"
+    
+    Write-Host "Blob URL: ${baseUrl}/${folderPath}/$blobFileName (SAS redacted)"
+
+    try {
+        Invoke-WebRequest -Uri $blobUrl -Method GET -OutFile $localFilePath -UseBasicParsing | Out-Null
+        
+        if (Test-Path $localFilePath) {
+            $fileSize = (Get-Item $localFilePath).Length
+            $fileSizeFormatted = Format-FileSize -bytes $fileSize
+            $message = "✓ Successfully downloaded $blobFileName ($fileSizeFormatted) from folder '$folderPath' to [$localFilePath]"
+            Write-Message -message $message -logToSummary $true
+            return $true
+        }
+        else {
+            $message = "⚠️ ERROR: Failed to download $blobFileName - file not found after download"
+            Write-Message -message $message -logToSummary $true
+            Write-Error $message
+            return $false
+        }
+    }
+    catch {
+        if ($_.Exception.Response.StatusCode -eq 404) {
+            $message = "ℹ️ $blobFileName does not exist in blob storage folder '$folderPath' yet."
+            Write-Message -message $message -logToSummary $true
+            return $false
+        }
+        $message = "⚠️ ERROR: Failed to download $blobFileName from blob storage: $($_.Exception.Message)"
+        Write-Message -message $message -logToSummary $true
+        Write-Error $message
+        return $false
+    }
+}
+
 function ApiCall {
     Param (
         $method,
