@@ -189,7 +189,7 @@ jobs:
           Write-Message -message "✓ Work distribution complete. Starting parallel jobs." -logToSummary $true
 
       - name: Upload chunk files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: work-chunks
           path: chunk-*.json
@@ -304,7 +304,7 @@ jobs:
 
       - name: Upload partial status for forking chunk ${{ matrix.chunk-id }}
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: status-partial-functions-${{ matrix.chunk-id }}
           path: status-partial-functions-${{ matrix.chunk-id }}.json
@@ -313,7 +313,7 @@ jobs:
 
       - name: Upload partial failed forks for chunk ${{ matrix.chunk-id }}
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: failedForks-partial-${{ matrix.chunk-id }}
           path: failedForks-partial-${{ matrix.chunk-id }}.json
@@ -459,7 +459,7 @@ jobs:
 
       - name: Upload partial status for repo info chunk ${{ matrix.chunk-id }}
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: status-partial-repoinfo-${{ matrix.chunk-id }}
           path: status-partial-repoinfo-${{ matrix.chunk-id }}.json
