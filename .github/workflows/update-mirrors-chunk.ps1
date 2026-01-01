@@ -176,7 +176,7 @@ function UpdateForkedReposChunk {
             $errorType = $result.error_type
             
             if ($errorType -eq "upstream_not_found") {
-                Write-Warning "$i/$($forksToProcess.Count) Upstream repository not found for mirror [$($existingFork.name)] - marking as unavailable"
+                Write-Warning "$($i+1)/$($forksToProcess.Count) Upstream repository not found for mirror [$($existingFork.name)] - marking as unavailable"
                 $upstreamNotFound++
                 # Mark the upstream as not found so we skip it in future runs
                 $existingFork | Add-Member -Name upstreamAvailable -Value $false -MemberType NoteProperty -Force
@@ -189,7 +189,7 @@ function UpdateForkedReposChunk {
                 }
             }
             elseif ($errorType -eq "mirror_not_found") {
-                    Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking mirrorFound as false"
+                    Write-Warning "$($i+1)/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking mirrorFound as false"
                     $existingFork.mirrorFound = $false
                 $failed++
                 
@@ -201,7 +201,7 @@ function UpdateForkedReposChunk {
                 }
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
-                Write-Warning "$i/$($forksToProcess.Count) Merge conflict detected for mirror [$($existingFork.name)]"
+                Write-Warning "$($i+1)/$($forksToProcess.Count) Merge conflict detected for mirror [$($existingFork.name)]"
                 $conflicts++
                 
                 # Add to failed repos list
@@ -212,7 +212,7 @@ function UpdateForkedReposChunk {
                 }
             }
             elseif ($errorType -eq "auth_error") {
-                Write-Warning "$i/$($forksToProcess.Count) Authentication error for mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$($i+1)/$($forksToProcess.Count) Authentication error for mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
                 
                 # Add to failed repos list
@@ -223,7 +223,7 @@ function UpdateForkedReposChunk {
                 }
             }
             elseif ($errorType -eq "git_reference_error" -or $errorType -eq "ambiguous_refspec") {
-                Write-Warning "$i/$($forksToProcess.Count) Git reference error for mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$($i+1)/$($forksToProcess.Count) Git reference error for mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
                 
                 # Add to failed repos list
@@ -234,7 +234,7 @@ function UpdateForkedReposChunk {
                 }
             }
             else {
-                Write-Warning "$i/$($forksToProcess.Count) Failed to sync mirror [$($existingFork.name)]: $($result.message)"
+                Write-Warning "$($i+1)/$($forksToProcess.Count) Failed to sync mirror [$($existingFork.name)]: $($result.message)"
                 $failed++
                 
                 # Add to failed repos list with descriptive error type for unclassified errors
