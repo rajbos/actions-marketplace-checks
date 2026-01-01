@@ -265,7 +265,7 @@ $reposSyncedLast30Days = ($existingForks | Where-Object {
 }).Count
 
 $reposNeverSynced = ($existingForks | Where-Object {
-    -not $_.lastSynced -or $_.lastSynced -eq $null -or $_.lastSynced -eq ""
+    -not $_.lastSynced -or $null -eq $_.lastSynced -or $_.lastSynced -eq ""
 }).Count
 
 # Calculate percentages based on repos with mirrors
@@ -307,7 +307,7 @@ $reposWithReleases = ($existingForks | Where-Object {
 }).Count
 
 $reposWithRepoInfo = ($existingForks | Where-Object {
-    $_.repoInfo -ne $null
+    $null -ne $_.repoInfo
 }).Count
 
 $reposWithActionType = ($existingForks | Where-Object {

@@ -354,7 +354,7 @@ Describe "Environment State - Repo Info Status" {
         
         # Act
         $reposWithRepoInfo = ($trackedForks | Where-Object { 
-            $_.repoInfo -ne $null 
+            $null -ne $_.repoInfo 
         }).Count
         
         # Assert

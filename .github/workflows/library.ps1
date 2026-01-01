@@ -958,23 +958,23 @@ function ApiCall {
                     $previousInfo = $tokenRotationResult.Previous
                     $nextInfo = $tokenRotationResult.Next
 
-                    $previousRemainingRaw = if ($previousInfo -and $previousInfo.Remaining -ne $null) { $previousInfo.Remaining } else { $rateLimitRemainingValue }
-                    $nextRemainingRaw = if ($nextInfo -and $nextInfo.Remaining -ne $null) { $nextInfo.Remaining } else { $null }
+                    $previousRemainingRaw = if ($previousInfo -and $null -ne $previousInfo.Remaining) { $previousInfo.Remaining } else { $rateLimitRemainingValue }
+                    $nextRemainingRaw = if ($nextInfo -and $null -ne $nextInfo.Remaining) { $nextInfo.Remaining } else { $null }
 
-                    $previousRemainingDisplay = if ($previousRemainingRaw -ne $null) { DisplayIntWithDots -number ([int]$previousRemainingRaw) } else { "n/a" }
-                    $nextRemainingDisplay = if ($nextRemainingRaw -ne $null) { DisplayIntWithDots -number ([int]$nextRemainingRaw) } else { "n/a" }
+                    $previousRemainingDisplay = if ($null -ne $previousRemainingRaw) { DisplayIntWithDots -number ([int]$previousRemainingRaw) } else { "n/a" }
+                    $nextRemainingDisplay = if ($null -ne $nextRemainingRaw) { DisplayIntWithDots -number ([int]$nextRemainingRaw) } else { "n/a" }
 
                     $previousLimitSource = if ($previousInfo -and $previousInfo.Limit) { $previousInfo.Limit } elseif ($rateLimitLimitMetric -gt 0) { $rateLimitLimitMetric } else { $null }
                     $nextLimitSource = if ($nextInfo -and $nextInfo.Limit) { $nextInfo.Limit } else { $null }
 
-                    $previousLimitDisplay = if ($previousLimitSource -ne $null) { DisplayIntWithDots -number ([int]$previousLimitSource) } else { "n/a" }
-                    $nextLimitDisplay = if ($nextLimitSource -ne $null) { DisplayIntWithDots -number ([int]$nextLimitSource) } else { "n/a" }
+                    $previousLimitDisplay = if ($null -ne $previousLimitSource) { DisplayIntWithDots -number ([int]$previousLimitSource) } else { "n/a" }
+                    $nextLimitDisplay = if ($null -ne $nextLimitSource) { DisplayIntWithDots -number ([int]$nextLimitSource) } else { "n/a" }
 
-                    $previousUsedRaw = if ($previousInfo -and $previousInfo.Used -ne $null) { $previousInfo.Used } elseif ($rateLimitUsedMetric -ge 0) { $rateLimitUsedMetric } else { $null }
-                    $nextUsedRaw = if ($nextInfo -and $nextInfo.Used -ne $null) { $nextInfo.Used } else { $null }
+                    $previousUsedRaw = if ($previousInfo -and $null -ne $previousInfo.Used) { $previousInfo.Used } elseif ($rateLimitUsedMetric -ge 0) { $rateLimitUsedMetric } else { $null }
+                    $nextUsedRaw = if ($nextInfo -and $null -ne $nextInfo.Used) { $nextInfo.Used } else { $null }
 
-                    $previousUsedDisplay = if ($previousUsedRaw -ne $null) { DisplayIntWithDots -number ([int]$previousUsedRaw) } else { "n/a" }
-                    $nextUsedDisplay = if ($nextUsedRaw -ne $null) { DisplayIntWithDots -number ([int]$nextUsedRaw) } else { "n/a" }
+                    $previousUsedDisplay = if ($null -ne $previousUsedRaw) { DisplayIntWithDots -number ([int]$previousUsedRaw) } else { "n/a" }
+                    $nextUsedDisplay = if ($null -ne $nextUsedRaw) { DisplayIntWithDots -number ([int]$nextUsedRaw) } else { "n/a" }
 
                     $previousResetDisplay = "unknown"
                     if ($previousInfo -and $previousInfo.ResetTime) {
@@ -990,8 +990,8 @@ function ApiCall {
                         $nextResetDisplay = Format-WaitTime -totalSeconds $nextSeconds
                     }
 
-                    $previousIndexDisplay = if ($previousInfo -and $previousInfo.Index -ne $null) { $previousInfo.Index } else { "n/a" }
-                    $nextIndexDisplay = if ($nextInfo -and $nextInfo.Index -ne $null) { $nextInfo.Index } else { "n/a" }
+                    $previousIndexDisplay = if ($previousInfo -and $null -ne $previousInfo.Index) { $previousInfo.Index } else { "n/a" }
+                    $nextIndexDisplay = if ($nextInfo -and $null -ne $nextInfo.Index) { $nextInfo.Index } else { "n/a" }
 
                     Set-AppTokenLastRotation -rotation ([pscustomobject]@{
                         Timestamp = [DateTime]::UtcNow
@@ -1743,7 +1743,7 @@ function Invoke-AppTokenRotation {
             Remaining = $currentRemaining
             ResetTime = $currentReset
             Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
-            Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+            Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $null -ne $currentEntry.Used) { $currentEntry.Used } else { $null }
         }
         return @{
             Switched = $false
@@ -1781,7 +1781,7 @@ function Invoke-AppTokenRotation {
         if ($snapshot.Remaining -ge $threshold) {
             $shouldUse = $true
         }
-        elseif ($snapshot.Remaining -lt $threshold -and $currentReset -ne $null -and $snapshot.ResetTime -lt $currentReset) {
+        elseif ($snapshot.Remaining -lt $threshold -and $null -ne $currentReset -and $snapshot.ResetTime -lt $currentReset) {
             $shouldUse = $true
         }
         elseif ($Force -and $snapshot.Remaining -gt $currentRemaining) {
@@ -1798,7 +1798,7 @@ function Invoke-AppTokenRotation {
                 Remaining = $currentRemaining
                 ResetTime = $currentReset
                 Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
-                Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+                Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $null -ne $currentEntry.Used) { $currentEntry.Used } else { $null }
             }
             $nextInfo = @{
                 Index = $candidateIndex
@@ -1838,7 +1838,7 @@ function Invoke-AppTokenRotation {
             Remaining = $currentRemaining
             ResetTime = $currentReset
             Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
-            Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+            Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $null -ne $currentEntry.Used) { $currentEntry.Used } else { $null }
         }
         $nextInfo = @{
             Index = $bestCandidate.Index
@@ -1861,7 +1861,7 @@ function Invoke-AppTokenRotation {
         Remaining = $currentRemaining
         ResetTime = $currentReset
         Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
-        Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+        Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $null -ne $currentEntry.Used) { $currentEntry.Used } else { $null }
     }
 
     return @{
@@ -1919,7 +1919,7 @@ function Register-AppTokenRateLimit {
     if ($used -ge 0) {
         $entry.Used = $used
     }
-    elseif ($entry.Used -eq $null) {
+    elseif ($null -eq $entry.Used) {
         $entry.Used = $null
     }
     $manager.Tokens[$index] = $entry
