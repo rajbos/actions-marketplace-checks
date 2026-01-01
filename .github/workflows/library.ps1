@@ -993,6 +993,13 @@ function ApiCall {
                     $previousIndexDisplay = if ($previousInfo -and $previousInfo.Index -ne $null) { $previousInfo.Index } else { "n/a" }
                     $nextIndexDisplay = if ($nextInfo -and $nextInfo.Index -ne $null) { $nextInfo.Index } else { "n/a" }
 
+                    Set-AppTokenLastRotation -rotation ([pscustomobject]@{
+                        Timestamp = [DateTime]::UtcNow
+                        Result = $tokenRotationResult
+                        Url = $url
+                        Method = $method
+                    })
+
                     Write-Host ""
                     Write-Host ("Rotated GitHub App token: index {0} remaining {1} → index {2} remaining {3}." -f $previousIndexDisplay, $previousRemainingDisplay, $nextIndexDisplay, $nextRemainingDisplay)
                     Write-Host ""
@@ -1443,7 +1450,18 @@ function GetRateLimitInfo {
         $waitForRateLimit = $true
     )
     $url = "rate_limit"
+    Clear-AppTokenLastRotation
     $response = ApiCall -method GET -url $url -access_token $access_token -waitForRateLimit $waitForRateLimit
+
+    $rotationEvent = Get-AppTokenLastRotation
+    if ($rotationEvent -and $rotationEvent.Result -and $rotationEvent.Result.Switched) {
+        $activeToken = Get-AppTokenManagerToken
+        if (-not [string]::IsNullOrWhiteSpace($activeToken)) {
+            Clear-AppTokenLastRotation
+            $response = ApiCall -method GET -url $url -access_token $activeToken -waitForRateLimit $waitForRateLimit
+            $access_token = $activeToken
+        }
+    }
 
     # Check if rate limit was exceeded (returns null)
     if ($null -eq $response) {
@@ -1497,6 +1515,22 @@ function Test-RateLimitExceeded {
 
 function Get-AppTokenManager {
     return $script:AppTokenManager
+}
+
+function Set-AppTokenLastRotation {
+    Param (
+        $rotation
+    )
+
+    $script:AppTokenLastRotation = $rotation
+}
+
+function Get-AppTokenLastRotation {
+    return $script:AppTokenLastRotation
+}
+
+function Clear-AppTokenLastRotation {
+    $script:AppTokenLastRotation = $null
 }
 
 function Initialize-AppTokenManager {
