@@ -40,7 +40,7 @@ jobs:
           Write-Host "First 10 lines of actions.json:"
           Get-Content "actions.json" -TotalCount 10 | ForEach-Object { Write-Host $_ }
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: actions.json
           path: actions.json
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload updated status.json as artifact
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: status-updated
           path: status.json
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload updated failedForks.json as artifact
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: failedForks-updated
           path: failedForks.json

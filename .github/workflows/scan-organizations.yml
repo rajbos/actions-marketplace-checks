@@ -147,7 +147,7 @@ jobs:
           }
 
       - name: Upload artifact for consolidation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: org-scan-${{ matrix.org }}
           path: ${{ matrix.org }}.json
@@ -269,7 +269,7 @@ jobs:
           Write-Message -message "✓ Consolidation complete and uploaded to blob storage" -logToSummary $true
 
       - name: Upload consolidated artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: consolidated-github-actions
           path: consolidated-github-actions.json
