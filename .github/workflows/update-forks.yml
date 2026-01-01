@@ -149,7 +149,7 @@ jobs:
           }
 
       - name: Download work chunks
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: work-chunks
           path: .
@@ -263,14 +263,14 @@ jobs:
           organization: actions-marketplace-validations
 
       - name: Download all partial status updates
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: status-partial-*
           path: partial-updates/
           merge-multiple: true
 
       - name: Download all chunk summaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: chunk-summary-*
           path: chunk-summaries/
