@@ -26,6 +26,8 @@ on:
 env:
   numberOfReposToDo: 300
   numberOfChunks: 4
+  APPLICATION_ID: "264650"
+  APPLICATION_ORGANIZATION: actions-marketplace-validations
 
 jobs:
   prepare:
@@ -133,6 +135,8 @@ jobs:
         chunk-id: ${{ fromJson(needs.prepare.outputs.matrix) }}
     permissions:
       actions: read
+    env:
+      APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
     steps:
       - uses: actions/checkout@v6
 
@@ -153,14 +157,6 @@ jobs:
         with:
           name: work-chunks
           path: .
-
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
 
       - name: Process chunk ${{ matrix.chunk-id }}
         shell: pwsh
@@ -197,8 +193,9 @@ jobs:
             -actions $existingForks `
             -forkNames $forkNames `
             -chunkId $chunkId `
-            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
-            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+            -application_id $env:APPLICATION_ID `
+            -application_private_key $env:APPLICATION_PRIVATE_KEY `
+            -application_organization $env:APPLICATION_ORGANIZATION
 
       - name: Upload partial status for chunk ${{ matrix.chunk-id }}
         if: always()
@@ -227,6 +224,8 @@ jobs:
     concurrency:
       group: repo-state-updates
       cancel-in-progress: false
+    env:
+      APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
     steps:
       - uses: actions/checkout@v6
 
@@ -253,14 +252,6 @@ jobs:
             Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
-
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
 
       - name: Download all partial status updates
         uses: actions/download-artifact@v4
@@ -347,7 +338,12 @@ jobs:
           Write-Message -message "### Final Rate Limit Check" -logToSummary $true
           Write-Message -message "" -logToSummary $true
 
-          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}" -waitForRateLimit $false
+          $token = Get-TokenFromApp -appId $env:APPLICATION_ID -pemKey $env:APPLICATION_PRIVATE_KEY -organization $env:APPLICATION_ORGANIZATION
+          if ([string]::IsNullOrWhiteSpace($token)) {
+            Write-Warning "Unable to retrieve GitHub App installation token for final rate limit check."
+          } else {
+            GetRateLimitInfo -access_token $token -access_token_destination $token -waitForRateLimit $false
+          }
 
       - name: Upload status.json to blob storage
         if: always()

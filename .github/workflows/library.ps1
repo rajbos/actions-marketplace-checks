@@ -15,6 +15,8 @@ Write-Host "statusFile location: [$statusFile]"
 Write-Host "failedStatusFile location: [$failedStatusFile]"
 Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 
+. "$PSScriptRoot/github-app-token.ps1"
+
 # Blob file names in the 'status' subfolder
 $script:actionsBlobFileName = "Actions-Full-Overview.Json"
 $script:statusBlobFileName = "status.json"
@@ -2171,42 +2173,45 @@ function Get-TokenFromApp {
     param (
         [string] $appId,
         [string] $installationId,
-        [string] $pemKey
+        [string] $pemKey,
+        [string] $organization,
+        [string] $apiUrl = "https://api.github.com"
     )
-    # get a temporary jwt token from the key file and app id (hardcoded in the file:)
-    $generated_jwt = $(bash ./github-app-jwt.sh $appId $pemKey)
-    $github_api_url = "https://api.github.com/app"
 
-    #Write-Host "Loaded jwt token: [$($generated_jwt)]"
-    $github_api_url="https://api.github.com/app/installations"
-    Write-Debug "Calling [${github_api_url}]"
-    $installationId = ""
+    if ([string]::IsNullOrWhiteSpace($appId)) {
+        Write-Error "AppId is required to request an installation token."
+        return $null
+    }
+
+    if ([string]::IsNullOrWhiteSpace($pemKey)) {
+        Write-Error "Private key content is required to request an installation token."
+        return $null
+    }
+
+    $resolvedOrganization = if ([string]::IsNullOrWhiteSpace($organization)) { $env:APP_ORGANIZATION } else { $organization }
+    $hasInstallation = -not [string]::IsNullOrWhiteSpace($installationId)
+    $hasOrganization = -not [string]::IsNullOrWhiteSpace($resolvedOrganization)
+
+    if (-not $hasInstallation -and -not $hasOrganization) {
+        Write-Error "Provide either installationId or organization to resolve the installation."
+        return $null
+    }
+
+    Write-Host "Requesting GitHub App installation token from $apiUrl"
+
     try {
-        $response = Invoke-RestMethod -Uri $github_api_url -Headers @{Authorization = "Bearer $generated_jwt" } -ContentType "application/json" -Method Get
-
-        Write-Debug "Found installationId: [$($response[0].id)]"
-        $installationId = $response[0].id
+        $tokenInfo = Get-GitHubAppInstallationToken -AppId $appId -PrivateKey $pemKey -InstallationId $installationId -Organization $resolvedOrganization -ApiUrl $apiUrl -IncludeMetadata
+        if ($tokenInfo.installationId) {
+            Write-Host "Using installation id [$($tokenInfo.installationId)]"
+        }
+        Write-Host "Got an access token that will expire at: [$($tokenInfo.expiresAt)]"
+        Write-Host "Found token with [$($tokenInfo.token.Length)]"
+        return $tokenInfo.token
     }
-    catch
-    {
-        Write-Error "Error in finding the app installations: $($_)"
+    catch {
+        Write-Error "Error generating an installation token: $($_)"
+        return $null
     }
-
-    $github_api_url="https://api.github.com/app/installations/$installationId/access_tokens"
-    Write-Host "Calling [${github_api_url}]"
-    $token = ""
-    try {
-        $response = Invoke-RestMethod -Uri $github_api_url -Headers @{Authorization = "Bearer $generated_jwt" } -ContentType "application/json" -Method POST -Body "{}"
-        $token = $response.token
-        Write-Host "Got an access token that will expire at: [$($response.expires_at)]"
-    }
-    catch
-    {
-        Write-Error "Error in getting an access token: $($_)"
-    }
-
-    Write-Host "Found token with [$($token.length)]"
-    return $token
 }
 
 function Get-RepositoryDefaultBranchCommit {
