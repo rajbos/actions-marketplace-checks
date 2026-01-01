@@ -4,9 +4,9 @@ name: Update Mirrors
 on:
   push:
     paths:
-      - .github/workflows/update-forks.yml
-      - .github/workflows/update-forks.ps1
-      - .github/workflows/update-forks-chunk.ps1
+      - .github/workflows/update-mirrors.yml
+      - .github/workflows/update-mirrors.ps1
+      - .github/workflows/update-mirrors-chunk.ps1
       - .github/workflows/library.ps1
 
   schedule:
@@ -192,7 +192,7 @@ jobs:
           Write-Message -message "" -logToSummary $true
 
           # Process the chunk
-          ./.github/workflows/update-forks-chunk.ps1 `
+          ./.github/workflows/update-mirrors-chunk.ps1 `
             -actions $existingForks `
             -forkNames $forkNames `
             -chunkId $chunkId `
