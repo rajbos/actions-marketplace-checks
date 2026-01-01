@@ -921,9 +921,15 @@ function ApiCall {
             }
         }
 
+        $rateLimitLimitHeader = $result.Headers["X-RateLimit-Limit"]
         $rateLimitRemainingHeader = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitResetHeader = $result.Headers["X-RateLimit-Reset"]
         $rateLimitUsedHeader = $result.Headers["X-Ratelimit-Used"]
+
+        $rateLimitLimitValue = $null
+        if ($rateLimitLimitHeader -and $rateLimitLimitHeader.Count -gt 0) {
+            $rateLimitLimitValue = [int]$rateLimitLimitHeader[0]
+        }
 
         $rateLimitRemainingValue = $null
         if ($rateLimitRemainingHeader -and $rateLimitRemainingHeader.Count -gt 0) {
@@ -940,14 +946,61 @@ function ApiCall {
             $rateLimitUsedValue = [int]$rateLimitUsedHeader[0]
         }
 
+        $rateLimitUsedMetric = if ($null -ne $rateLimitUsedValue) { $rateLimitUsedValue } else { -1 }
+        $rateLimitLimitMetric = if ($null -ne $rateLimitLimitValue) { $rateLimitLimitValue } else { 0 }
+
         $tokenRotationResult = $null
         if ($null -ne $rateLimitRemainingValue) {
-            $tokenRotationResult = Handle-AppTokenRateLimit -token $access_token -remaining $rateLimitRemainingValue -resetEpoch $rateLimitResetEpoch
+            $tokenRotationResult = Handle-AppTokenRateLimit -token $access_token -remaining $rateLimitRemainingValue -resetEpoch $rateLimitResetEpoch -limit $rateLimitLimitMetric -used $rateLimitUsedMetric
             if ($tokenRotationResult) {
                 $access_token = $tokenRotationResult.NewToken
                 if ($tokenRotationResult.Switched) {
+                    $previousInfo = $tokenRotationResult.Previous
+                    $nextInfo = $tokenRotationResult.Next
+
+                    $previousRemainingRaw = if ($previousInfo -and $previousInfo.Remaining -ne $null) { $previousInfo.Remaining } else { $rateLimitRemainingValue }
+                    $nextRemainingRaw = if ($nextInfo -and $nextInfo.Remaining -ne $null) { $nextInfo.Remaining } else { $null }
+
+                    $previousRemainingDisplay = if ($previousRemainingRaw -ne $null) { DisplayIntWithDots -number ([int]$previousRemainingRaw) } else { "n/a" }
+                    $nextRemainingDisplay = if ($nextRemainingRaw -ne $null) { DisplayIntWithDots -number ([int]$nextRemainingRaw) } else { "n/a" }
+
+                    $previousLimitSource = if ($previousInfo -and $previousInfo.Limit) { $previousInfo.Limit } elseif ($rateLimitLimitMetric -gt 0) { $rateLimitLimitMetric } else { $null }
+                    $nextLimitSource = if ($nextInfo -and $nextInfo.Limit) { $nextInfo.Limit } else { $null }
+
+                    $previousLimitDisplay = if ($previousLimitSource -ne $null) { DisplayIntWithDots -number ([int]$previousLimitSource) } else { "n/a" }
+                    $nextLimitDisplay = if ($nextLimitSource -ne $null) { DisplayIntWithDots -number ([int]$nextLimitSource) } else { "n/a" }
+
+                    $previousUsedRaw = if ($previousInfo -and $previousInfo.Used -ne $null) { $previousInfo.Used } elseif ($rateLimitUsedMetric -ge 0) { $rateLimitUsedMetric } else { $null }
+                    $nextUsedRaw = if ($nextInfo -and $nextInfo.Used -ne $null) { $nextInfo.Used } else { $null }
+
+                    $previousUsedDisplay = if ($previousUsedRaw -ne $null) { DisplayIntWithDots -number ([int]$previousUsedRaw) } else { "n/a" }
+                    $nextUsedDisplay = if ($nextUsedRaw -ne $null) { DisplayIntWithDots -number ([int]$nextUsedRaw) } else { "n/a" }
+
+                    $previousResetDisplay = "unknown"
+                    if ($previousInfo -and $previousInfo.ResetTime) {
+                        $prevSeconds = ($previousInfo.ResetTime - [DateTime]::UtcNow).TotalSeconds
+                        if ($prevSeconds -lt 0) { $prevSeconds = 0 }
+                        $previousResetDisplay = Format-WaitTime -totalSeconds $prevSeconds
+                    }
+
+                    $nextResetDisplay = "unknown"
+                    if ($nextInfo -and $nextInfo.ResetTime) {
+                        $nextSeconds = ($nextInfo.ResetTime - [DateTime]::UtcNow).TotalSeconds
+                        if ($nextSeconds -lt 0) { $nextSeconds = 0 }
+                        $nextResetDisplay = Format-WaitTime -totalSeconds $nextSeconds
+                    }
+
+                    $previousIndexDisplay = if ($previousInfo -and $previousInfo.Index -ne $null) { $previousInfo.Index } else { "n/a" }
+                    $nextIndexDisplay = if ($nextInfo -and $nextInfo.Index -ne $null) { $nextInfo.Index } else { "n/a" }
+
                     Write-Host ""
-                    Write-Host "Switched to alternate GitHub App token due to low rate limit (remaining: $rateLimitRemainingValue)."
+                    Write-Host ("Rotated GitHub App token: index {0} remaining {1} → index {2} remaining {3}." -f $previousIndexDisplay, $previousRemainingDisplay, $nextIndexDisplay, $nextRemainingDisplay)
+                    Write-Host ""
+                    Write-Host "**Token Rotation Status:**"
+                    Write-Host "| Token | Limit | Used | Remaining | Resets In |"
+                    Write-Host "|------|------:|-----:|----------:|-----------|"
+                    Write-Host ("| Previous (index {0}) | {1} | {2} | {3} | {4} |" -f $previousIndexDisplay, $previousLimitDisplay, $previousUsedDisplay, $previousRemainingDisplay, $previousResetDisplay)
+                    Write-Host ("| Current (index {0}) | {1} | {2} | {3} | {4} |" -f $nextIndexDisplay, $nextLimitDisplay, $nextUsedDisplay, $nextRemainingDisplay, $nextResetDisplay)
                 }
             }
         }
@@ -1026,7 +1079,7 @@ function ApiCall {
                 return $null
             }
             
-            $rotationResult = Handle-AppTokenRateLimit -token $access_token -remaining 0 -resetEpoch 0 -ForceSwitch
+            $rotationResult = Handle-AppTokenRateLimit -token $access_token -remaining 0 -resetEpoch 0 -limit 0 -used -1 -ForceSwitch
             if ($rotationResult) {
                 $access_token = $rotationResult.NewToken
                 if ($rotationResult.Switched) {
@@ -1065,7 +1118,7 @@ function ApiCall {
                 }
             }
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
-            $secondaryRotation = Handle-AppTokenRateLimit -token $access_token -remaining 0 -resetEpoch 0 -ForceSwitch
+            $secondaryRotation = Handle-AppTokenRateLimit -token $access_token -remaining 0 -resetEpoch 0 -limit 0 -used -1 -ForceSwitch
             if ($secondaryRotation) {
                 $access_token = $secondaryRotation.NewToken
                 if ($secondaryRotation.Switched) {
@@ -1091,7 +1144,7 @@ function ApiCall {
 
             $remainingValue = if ($rateLimitRemaining -and $rateLimitRemaining[0]) { [int]$rateLimitRemaining[0] } else { 0 }
             $resetValue = if ($rateLimitReset -and $rateLimitReset[0]) { [int64]$rateLimitReset[0] } else { 0 }
-            $apiRateRotation = Handle-AppTokenRateLimit -token $access_token -remaining $remainingValue -resetEpoch $resetValue -ForceSwitch
+            $apiRateRotation = Handle-AppTokenRateLimit -token $access_token -remaining $remainingValue -resetEpoch $resetValue -limit 0 -used -1 -ForceSwitch
             if ($apiRateRotation) {
                 $access_token = $apiRateRotation.NewToken
                 if ($apiRateRotation.Switched) {
@@ -1483,6 +1536,8 @@ function Initialize-AppTokenManager {
                 InstallationId = $null
                 Remaining = $null
                 ResetTime = $null
+                Limit = $null
+                Used = $null
                 LastFetched = $null
                 TokenHistory = [System.Collections.Generic.HashSet[string]]::new()
             }
@@ -1546,6 +1601,8 @@ function Get-AppTokenManagerToken {
             $entry.LastFetched = [DateTime]::UtcNow
             $entry.Remaining = $null
             $entry.ResetTime = $null
+            $entry.Limit = $null
+            $entry.Used = $null
         }
         catch {
             Write-Error "Failed to generate GitHub App token for appId [$($entry.AppId)]: $($_.Exception.Message)"
@@ -1616,6 +1673,8 @@ function Get-AppTokenRateSnapshot {
         return [pscustomobject]@{
             Remaining = [int]$rate.remaining
             ResetTime = $resetTime
+            Limit = if ($null -ne $rate.limit) { [int]$rate.limit } else { $null }
+            Used = if ($null -ne $rate.used) { [int]$rate.used } else { $null }
         }
     }
     catch {
@@ -1629,6 +1688,8 @@ function Invoke-AppTokenRotation {
         [int] $currentIndex,
         [int] $currentRemaining,
         [DateTime] $currentReset,
+        [int] $currentLimit = 0,
+        [int] $currentUsed = -1,
         [switch] $Force
     )
 
@@ -1637,11 +1698,25 @@ function Invoke-AppTokenRotation {
         return $null
     }
 
+    $currentEntry = $null
+    if ($currentIndex -ge 0 -and $currentIndex -lt $manager.Tokens.Count) {
+        $currentEntry = $manager.Tokens[$currentIndex]
+    }
+
     if ($manager.Tokens.Count -le 1) {
+        $previousInfo = @{
+            Index = $currentIndex
+            Remaining = $currentRemaining
+            ResetTime = $currentReset
+            Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
+            Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+        }
         return @{
             Switched = $false
             NewToken = Get-AppTokenManagerToken -Index $currentIndex
             Index = $currentIndex
+            Previous = $previousInfo
+            Next = $previousInfo
         }
     }
 
@@ -1663,6 +1738,8 @@ function Invoke-AppTokenRotation {
         $candidateEntry = $manager.Tokens[$candidateIndex]
         $candidateEntry.Remaining = $snapshot.Remaining
         $candidateEntry.ResetTime = $snapshot.ResetTime
+        $candidateEntry.Limit = $snapshot.Limit
+        $candidateEntry.Used = $snapshot.Used
         $manager.Tokens[$candidateIndex] = $candidateEntry
         $script:AppTokenManager = $manager
 
@@ -1682,10 +1759,26 @@ function Invoke-AppTokenRotation {
             $script:AppTokenManager = $manager
             $env:GITHUB_TOKEN = $candidateToken
             $global:RateLimitExceeded = $false
+            $previousInfo = @{
+                Index = $currentIndex
+                Remaining = $currentRemaining
+                ResetTime = $currentReset
+                Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
+                Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+            }
+            $nextInfo = @{
+                Index = $candidateIndex
+                Remaining = $snapshot.Remaining
+                ResetTime = $snapshot.ResetTime
+                Limit = $snapshot.Limit
+                Used = $snapshot.Used
+            }
             return @{
                 Switched = $true
                 NewToken = $candidateToken
                 Index = $candidateIndex
+                Previous = $previousInfo
+                Next = $nextInfo
             }
         }
 
@@ -1695,6 +1788,8 @@ function Invoke-AppTokenRotation {
                 Remaining = $snapshot.Remaining
                 ResetTime = $snapshot.ResetTime
                 Token = $candidateToken
+                Limit = $snapshot.Limit
+                Used = $snapshot.Used
             }
         }
     }
@@ -1704,17 +1799,43 @@ function Invoke-AppTokenRotation {
         $script:AppTokenManager = $manager
         $env:GITHUB_TOKEN = $bestCandidate.Token
         $global:RateLimitExceeded = $false
+        $previousInfo = @{
+            Index = $currentIndex
+            Remaining = $currentRemaining
+            ResetTime = $currentReset
+            Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
+            Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
+        }
+        $nextInfo = @{
+            Index = $bestCandidate.Index
+            Remaining = $bestCandidate.Remaining
+            ResetTime = $bestCandidate.ResetTime
+            Limit = $bestCandidate.Limit
+            Used = $bestCandidate.Used
+        }
         return @{
             Switched = $true
             NewToken = $bestCandidate.Token
             Index = $bestCandidate.Index
+            Previous = $previousInfo
+            Next = $nextInfo
         }
+    }
+
+    $previousFallback = @{
+        Index = $currentIndex
+        Remaining = $currentRemaining
+        ResetTime = $currentReset
+        Limit = if ($currentLimit -gt 0) { $currentLimit } elseif ($currentEntry -and $currentEntry.Limit) { $currentEntry.Limit } else { $null }
+        Used = if ($currentUsed -ge 0) { $currentUsed } elseif ($currentEntry -and $currentEntry.Used -ne $null) { $currentEntry.Used } else { $null }
     }
 
     return @{
         Switched = $false
         NewToken = Get-AppTokenManagerToken -Index $manager.CurrentIndex
         Index = $manager.CurrentIndex
+        Previous = $previousFallback
+        Next = $previousFallback
     }
 }
 
@@ -1723,6 +1844,8 @@ function Register-AppTokenRateLimit {
         [string] $token,
         [int] $remaining,
         [int64] $resetEpoch,
+        [int] $limit = 0,
+        [int] $used = -1,
         [switch] $ForceSwitch
     )
 
@@ -1752,13 +1875,26 @@ function Register-AppTokenRateLimit {
     $entry = $manager.Tokens[$index]
     $entry.Remaining = $remaining
     $entry.ResetTime = if ($resetEpoch -gt 0) { [DateTimeOffset]::FromUnixTimeSeconds($resetEpoch).UtcDateTime } else { $null }
+    if ($limit -gt 0) {
+        $entry.Limit = $limit
+    }
+    elseif (-not $entry.Limit) {
+        $entry.Limit = $null
+    }
+
+    if ($used -ge 0) {
+        $entry.Used = $used
+    }
+    elseif ($entry.Used -eq $null) {
+        $entry.Used = $null
+    }
     $manager.Tokens[$index] = $entry
     $manager.TokenLookup[$token] = $index
     $script:AppTokenManager = $manager
 
     $threshold = $manager.Threshold
     if ($ForceSwitch -or ($remaining -lt $threshold)) {
-        return Invoke-AppTokenRotation -currentIndex $index -currentRemaining $remaining -currentReset $entry.ResetTime -Force:$ForceSwitch.IsPresent
+        return Invoke-AppTokenRotation -currentIndex $index -currentRemaining $remaining -currentReset $entry.ResetTime -currentLimit $limit -currentUsed $used -Force:$ForceSwitch.IsPresent
     }
 
     return @{
@@ -1773,6 +1909,8 @@ function Handle-AppTokenRateLimit {
         [string] $token,
         [int] $remaining,
         [int64] $resetEpoch,
+        [int] $limit = 0,
+        [int] $used = -1,
         [switch] $ForceSwitch
     )
 
@@ -1781,7 +1919,7 @@ function Handle-AppTokenRateLimit {
         return $null
     }
 
-    return Register-AppTokenRateLimit -token $token -remaining $remaining -resetEpoch $resetEpoch -ForceSwitch:$ForceSwitch.IsPresent
+    return Register-AppTokenRateLimit -token $token -remaining $remaining -resetEpoch $resetEpoch -limit $limit -used $used -ForceSwitch:$ForceSwitch.IsPresent
 }
 
 function Get-TokenExpirationTime {
