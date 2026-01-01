@@ -306,6 +306,32 @@ $reposWithReleases = ($existingForks | Where-Object {
     $_.releaseInfo -and $_.releaseInfo.Count -gt 0
 }).Count
 
+# Count repos with SHA information in tags
+$reposWithTagSHA = ($existingForks | Where-Object {
+    if ($_.tagInfo -and $_.tagInfo.Count -gt 0) {
+        # Check if the first tag has SHA property (new format with objects)
+        $firstTag = $_.tagInfo[0]
+        if ($firstTag -is [hashtable] -or $firstTag -is [PSCustomObject]) {
+            # Check if it has a sha property
+            return ($null -ne $firstTag.sha -or $null -ne $firstTag.PSObject.Properties['sha'])
+        }
+    }
+    return $false
+}).Count
+
+# Count repos with SHA information in releases
+$reposWithReleaseSHA = ($existingForks | Where-Object {
+    if ($_.releaseInfo -and $_.releaseInfo.Count -gt 0) {
+        # Check if the first release has target_commitish property (new format with objects)
+        $firstRelease = $_.releaseInfo[0]
+        if ($firstRelease -is [hashtable] -or $firstRelease -is [PSCustomObject]) {
+            # Check if it has a target_commitish property
+            return ($null -ne $firstRelease.target_commitish -or $null -ne $firstRelease.PSObject.Properties['target_commitish'])
+        }
+    }
+    return $false
+}).Count
+
 $reposWithRepoInfo = ($existingForks | Where-Object {
     $_.repoInfo -ne $null
 }).Count
@@ -319,7 +345,9 @@ $reposWithActionType = ($existingForks | Where-Object {
 Write-Message -message "| Info Type | Count | Percentage |" -logToSummary $true
 Write-Message -message "|-----------|------:|-----------:|" -logToSummary $true
 Write-Message -message "| 📦 Has Tags | $(DisplayIntWithDots $reposWithTags) | $(Format-Percentage (($reposWithTags / $totalTrackedActions) * 100))% |" -logToSummary $true
+Write-Message -message "| 🔖 Tags with SHA Info | $(DisplayIntWithDots $reposWithTagSHA) | $(Format-Percentage (($reposWithTagSHA / $totalTrackedActions) * 100))% |" -logToSummary $true
 Write-Message -message "| 🎯 Has Releases | $(DisplayIntWithDots $reposWithReleases) | $(Format-Percentage (($reposWithReleases / $totalTrackedActions) * 100))% |" -logToSummary $true
+Write-Message -message "| 🎁 Releases with SHA Info | $(DisplayIntWithDots $reposWithReleaseSHA) | $(Format-Percentage (($reposWithReleaseSHA / $totalTrackedActions) * 100))% |" -logToSummary $true
 Write-Message -message "| ℹ️ Has Repo Info | $(DisplayIntWithDots $reposWithRepoInfo) | $(Format-Percentage (($reposWithRepoInfo / $totalTrackedActions) * 100))% |" -logToSummary $true
 Write-Message -message "| 🎭 Has Valid Action Type | $(DisplayIntWithDots $reposWithActionType) | $(Format-Percentage (($reposWithActionType / $totalTrackedActions) * 100))% |" -logToSummary $true
 
