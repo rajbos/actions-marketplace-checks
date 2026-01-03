@@ -86,6 +86,7 @@ Describe "Docker Composition Unknown Category" {
         $shouldShowUnknown = $localDockerfileUnknown -gt 0
         
         # Assert
+        Write-Host "DEBUG: localDockerFile=$localDockerFile, localDockerfileWithCustomCode=$localDockerfileWithCustomCode, localDockerfileWithoutCustomCode=$localDockerfileWithoutCustomCode, localDockerfileUnknown=$localDockerfileUnknown"
         $shouldShowUnknown | Should -Be $true
         $localDockerfileUnknown | Should -Be 20
     }

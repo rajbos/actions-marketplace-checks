@@ -676,7 +676,6 @@ function MakeRepoInfoCall {
     catch {
         $errorMsg = $_.Exception.Message
         Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $errorMsg"
-        
         # Track fork 404 errors if error tracking is initialized
         if ($null -ne $script:errorCounts) {
             if (Is404Error -errorMessage $errorMsg) {
