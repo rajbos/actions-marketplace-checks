@@ -676,7 +676,6 @@ function MakeRepoInfoCall {
     catch {
         $errorMsg = $_.Exception.Message
         Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $errorMsg"
-        
         # Track fork 404 errors if error tracking is initialized
         if ($null -ne $script:errorCounts) {
             if (Is404Error -errorMessage $errorMsg) {
@@ -1513,7 +1512,7 @@ function Run {
     $startTime = Get-Date
     Write-Host "Run started at [$startTime]"
 
-    Write-Host "Got $($actions.Length) actions to get the repo information for"
+    Write-Host "Got $(DisplayIntWithDots($actions.Length)) actions to get the repo information for"
     GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
 
     ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $access_token_destination

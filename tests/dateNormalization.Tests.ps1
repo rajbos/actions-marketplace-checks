@@ -33,9 +33,9 @@ Describe "ConvertTo-NormalizedDateTime" {
             $result.Year | Should -Be 2022
             $result.Month | Should -Be 11
             $result.Day | Should -Be 4
-            $result.Hour | Should -Be 20
-            $result.Minute | Should -Be 15
-            $result.Second | Should -Be 45
+            $result.ToUniversalTime().Hour | Should -Be 20
+            $result.ToUniversalTime().Minute | Should -Be 15
+            $result.ToUniversalTime().Second | Should -Be 45
         }
 
         It "Should parse ISO 8601 with timezone offset" {
