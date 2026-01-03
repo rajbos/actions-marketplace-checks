@@ -1151,12 +1151,39 @@ function SplitUrl {
         return $null
     }
 
-    # split the url into the last 2 parts
-    $urlParts = $url.Split('/')
-    $repo = $urlParts[-1]
-    $owner = $urlParts[-2]
-    # return repo and org
-    return $owner, $repo
+    # Parse URL to extract owner and repo (first 2 path segments)
+    # For URLs like https://github.com/owner/repo or https://github.com/owner/repo/path
+    # we want to extract: owner, repo (ignoring any additional path components)
+    try {
+        # Handle both full URLs and simple owner/repo strings
+        if ($url -match '^https?://') {
+            $uri = [Uri]$url
+            $segments = $uri.AbsolutePath.Trim('/').Split('/')
+            if ($segments.Length -ge 2) {
+                $owner = $segments[0]
+                $repo = $segments[1]
+                return $owner, $repo
+            }
+        } else {
+            # Handle simple owner/repo or owner/repo/path strings
+            $urlParts = $url.Trim('/').Split('/')
+            if ($urlParts.Length -ge 2) {
+                $owner = $urlParts[0]
+                $repo = $urlParts[1]
+                return $owner, $repo
+            }
+        }
+    } catch {
+        # Fall back to old logic if parsing fails
+        $urlParts = $url.Split('/')
+        if ($urlParts.Length -ge 2) {
+            $repo = $urlParts[-1]
+            $owner = $urlParts[-2]
+            return $owner, $repo
+        }
+    }
+
+    return $null, $null
 }
 
 function GetForkedRepoName {
@@ -1164,7 +1191,9 @@ function GetForkedRepoName {
         $owner,
         $repo
      )
-    return "$($owner)_$($repo)"
+    # Replace all slashes in repo name with underscores (handles composite action paths)
+    $repoSanitized = $repo -replace '/', '_'
+    return "$($owner)_$($repoSanitized)"
 }
 
 function GetOrgActionInfo {
@@ -1176,6 +1205,8 @@ function GetOrgActionInfo {
         $forkedOwnerRepoParts = $forkedOwnerRepo.Split('_')
         $owner = $forkedOwnerRepoParts[0]
         $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
+        # Convert underscores back to slashes in repo name (reverses the sanitization from GetForkedRepoName)
+        $repo = $repo -replace '_', '/'
 
         return $owner, $repo
     }
