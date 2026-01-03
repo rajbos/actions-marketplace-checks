@@ -1569,11 +1569,12 @@ function Test-TokenRateLimit {
     catch {
         Write-Warning "Failed to check rate limit for token: $($_.Exception.Message)"
         # Return a conservative response - assume token cannot be used
+        # Set a very high wait time to ensure this token won't be selected
         return @{
             CanUse = $false
             Remaining = 0
             WaitMinutes = 999
-            ResetTime = [DateTime]::UtcNow.AddHours(1)
+            ResetTime = [DateTime]::UtcNow.AddMinutes(999)
         }
     }
 }
