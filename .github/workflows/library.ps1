@@ -932,6 +932,28 @@ function ApiCall {
             $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
+                # If we are completely out of remaining requests, prefer an immediate
+                # failover to the next configured GitHub App (when available) instead
+                # of waiting for the reset time, regardless of how long that wait is.
+                if ($waitForRateLimit -and $rateLimitRemaining[0] -eq 0) {
+                    $manager = Get-GitHubAppTokenManagerInstance
+                    $organization = $env:APP_ORGANIZATION
+                    if ($null -ne $manager -and -not [string]::IsNullOrWhiteSpace($organization) -and $appSwitchCount -lt $maxAppSwitchCount) {
+                        Write-Host "Rate limit remaining is 0 (short wait of [$($rateLimitReset.TotalSeconds)] seconds), attempting to switch to next GitHub App for organization [$organization] instead of waiting"
+                        try {
+                            $manager.MoveToNextApp()
+                            $tokenResult = $manager.GetTokenForOrganization($organization)
+                            if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
+                                $newToken = $tokenResult.Token
+                                Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                            }
+                        }
+                        catch {
+                            Write-Warning "Failed to switch GitHub App after rate limit: $($_.Exception.Message)"
+                        }
+                    }
+                }
                 if ($rateLimitReset.TotalSeconds -gt 1200) {
                     # Only show messages and halt execution if we're configured to wait for rate limits
                     if ($waitForRateLimit) {
@@ -1072,6 +1094,30 @@ function ApiCall {
             if ($isInstallationRateLimit -and $waitSeconds -le 0) {
                 $waitSeconds = 60
                 $continueAt = [DateTime]::UtcNow.AddSeconds($waitSeconds)
+            }
+
+            # When we hit an explicit API rate limit error, prefer trying to
+            # fail over to the next configured GitHub App immediately (if any)
+            # instead of waiting, regardless of the computed wait time.
+            if ($waitForRateLimit -and $appSwitchCount -lt $maxAppSwitchCount) {
+                $manager = Get-GitHubAppTokenManagerInstance
+                $organization = $env:APP_ORGANIZATION
+                if ($null -ne $manager -and -not [string]::IsNullOrWhiteSpace($organization)) {
+                    $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
+                    Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], attempting to switch to next GitHub App for organization [$organization] instead of waiting [$waitSeconds] seconds"
+                    try {
+                        $manager.MoveToNextApp()
+                        $tokenResult = $manager.GetTokenForOrganization($organization)
+                        if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
+                            $newToken = $tokenResult.Token
+                            Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
+                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                        }
+                    }
+                    catch {
+                        Write-Warning "Failed to switch GitHub App after rate limit: $($_.Exception.Message)"
+                    }
+                }
             }
 
             # Check if wait time exceeds 20 minutes (1200 seconds)
