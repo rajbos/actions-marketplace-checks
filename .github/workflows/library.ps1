@@ -1007,35 +1007,38 @@ function ApiCall {
             return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
         }
 
-        if ($messageData.message -And ($messageData.message.StartsWith("API rate limit exceeded for user ID"))) {
+        $isUserRateLimit = $messageData.message -and $messageData.message.StartsWith("API rate limit exceeded for user ID")
+        $isInstallationRateLimit = $messageData.message -and $messageData.message.StartsWith("API rate limit exceeded for installation ID")
+        if ($isUserRateLimit -or $isInstallationRateLimit) {
             # If we're calling the rate_limit endpoint itself, don't retry - just return null
             if ($url.Contains("rate_limit")) {
                 Write-Debug "Rate limit endpoint call failed with API rate limit exceeded, skipping retry to avoid recursion"
                 return $null
             }
-            
-            $rateLimitReset = $_.Exception.Response.Headers["X-RateLimit-Reset"]
-            $rateLimitRemaining = $_.Exception.Response.Headers["X-RateLimit-Remaining"]
-            
-            # Calculate wait time if reset time is available
-            $waitSeconds = 0
-            $oUNIXDate = $null
-            if ($rateLimitReset -and $rateLimitReset[0]) {
-                $rateLimitResetInt = [int]$rateLimitReset[0]
-                $oUNIXDate = (Get-Date 01.01.1970) + ([System.TimeSpan]::fromseconds($rateLimitResetInt))
-                $timeUntilReset = $oUNIXDate - [DateTime]::UtcNow
-                if ($timeUntilReset.TotalMilliseconds -gt 0) {
-                    $waitSeconds = $timeUntilReset.TotalSeconds
-                }
+
+            $responseHeaders = $null
+            if ($null -ne $_.Exception -and $null -ne $_.Exception.Response) {
+                $responseHeaders = $_.Exception.Response.Headers
             }
-            
+
+            $rateInfo = Get-RateLimitRetryPlan -headers $responseHeaders
+            $waitSeconds = $rateInfo.WaitSeconds
+            $continueAt = $rateInfo.ContinueAt
+            $remaining = $rateInfo.Remaining
+            $used = $rateInfo.Used
+
+            if ($isInstallationRateLimit -and $waitSeconds -le 0) {
+                $waitSeconds = 60
+                $continueAt = [DateTime]::UtcNow.AddSeconds($waitSeconds)
+            }
+
             # Check if wait time exceeds 20 minutes (1200 seconds)
             if ($waitSeconds -gt 1200) {
                 # Only show messages and halt execution if we're configured to wait for rate limits
                 if ($waitForRateLimit) {
-                    $remaining = if ($rateLimitRemaining -and $rateLimitRemaining[0]) { $rateLimitRemaining[0] } else { 0 }
-                    if ($null -ne $oUNIXDate) {
-                        Format-RateLimitErrorTable -remaining $remaining -used 0 -waitSeconds $waitSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                    $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
+                    if ($rateInfo.HasHeaderData -or $isInstallationRateLimit) {
+                        Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType $formatType
                     }
                     $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
                     Write-Message -message $message -logToSummary $true
@@ -1049,13 +1052,19 @@ function ApiCall {
                 # Don't set the global flag since we're intentionally not halting the workflow
                 return $null
             }
-            
+
             # For shorter wait times, only wait if requested
             if ($waitForRateLimit -and $waitSeconds -gt 0) {
-                Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
+                if ($isInstallationRateLimit) {
+                    Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType "Installation"
+                    Write-Host "Pausing after installation rate limit error for [$waitSeconds] seconds"
+                }
+                else {
+                    Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
+                }
                 Start-Sleep -Milliseconds ($waitSeconds * 1000)
             }
-            
+
             # Only retry if we're configured to wait for rate limits
             if ($waitForRateLimit) {
                 # prevent hitting max interval too fast
@@ -1067,7 +1076,7 @@ function ApiCall {
                 }
                 return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
             }
-            
+
             # When not waiting, return null
             return $null
         }
@@ -1295,6 +1304,68 @@ function Format-RateLimitErrorTable {
     Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
     Write-Message -message "| $(DisplayIntWithDots $remaining) | $(DisplayIntWithDots $used) | $waitTime | $continueAt |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+}
+
+function Get-RateLimitRetryPlan {
+    Param (
+        $headers
+    )
+
+    $remainingValue = 0
+    $usedValue = 0
+    $waitSeconds = 0
+    $continueAt = [DateTime]::UtcNow
+    $hasHeaderData = $false
+
+    if ($null -ne $headers) {
+        $remainingHeader = $headers["X-RateLimit-Remaining"]
+        if ($null -eq $remainingHeader) {
+            $remainingHeader = $headers["X-Ratelimit-Remaining"]
+        }
+
+        if ($remainingHeader -and $remainingHeader.Count -gt 0) {
+            $parsedRemaining = 0
+            if ([int]::TryParse($remainingHeader[0], [ref]$parsedRemaining)) {
+                $remainingValue = $parsedRemaining
+                $hasHeaderData = $true
+            }
+        }
+
+        $usedHeader = $headers["X-RateLimit-Used"]
+        if ($null -eq $usedHeader) {
+            $usedHeader = $headers["X-Ratelimit-Used"]
+        }
+
+        if ($usedHeader -and $usedHeader.Count -gt 0) {
+            $parsedUsed = 0
+            if ([int]::TryParse($usedHeader[0], [ref]$parsedUsed)) {
+                $usedValue = $parsedUsed
+                $hasHeaderData = $true
+            }
+        }
+
+        $resetHeader = $headers["X-RateLimit-Reset"]
+        if ($resetHeader -and $resetHeader.Count -gt 0) {
+            $parsedReset = 0
+            if ([int]::TryParse($resetHeader[0], [ref]$parsedReset)) {
+                $resetTime = (Get-Date 01.01.1970) + ([System.TimeSpan]::FromSeconds($parsedReset))
+                $timeUntilReset = $resetTime - [DateTime]::UtcNow
+                if ($timeUntilReset.TotalSeconds -gt 0) {
+                    $waitSeconds = $timeUntilReset.TotalSeconds
+                    $continueAt = $resetTime
+                    $hasHeaderData = $true
+                }
+            }
+        }
+    }
+
+    return [pscustomobject]@{
+        Remaining = $remainingValue
+        Used = $usedValue
+        WaitSeconds = $waitSeconds
+        ContinueAt = $continueAt
+        HasHeaderData = $hasHeaderData
+    }
 }
 
 function GetRateLimitInfo {

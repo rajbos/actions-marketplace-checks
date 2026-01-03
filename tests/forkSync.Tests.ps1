@@ -107,7 +107,7 @@ Describe "Mirror Sync Tests" {
     Context "UpdateForkedRepos function from update-forks.ps1" {
         It "Should have UpdateForkedRepos function defined after script execution" {
             # Dot source the script content to define functions without executing main logic
-            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-forks.ps1 -Raw
+            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-mirrors.ps1 -Raw
             # Extract just the function definition
             $functionMatch = [regex]::Match($scriptContent, 'function UpdateForkedRepos\s*\{[\s\S]*?\n\}(?=\s*\n)')
             
@@ -142,7 +142,7 @@ Describe "Mirror Sync Tests" {
             }
             
             # Now define UpdateForkedRepos function
-            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-forks.ps1 -Raw
+            $scriptContent = Get-Content $PSScriptRoot/../.github/workflows/update-mirrors.ps1 -Raw
             $functionMatch = [regex]::Match($scriptContent, 'function UpdateForkedRepos\s*\{[\s\S]*?\n\}(?=\s*\n)')
             $functionMatch.Success | Should -Be $true
             Invoke-Expression $functionMatch.Value

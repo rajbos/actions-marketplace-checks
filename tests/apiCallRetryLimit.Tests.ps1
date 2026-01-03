@@ -66,6 +66,57 @@ Describe "ApiCall Retry Limit Tests" {
             # Global flag should be set
             $global:RateLimitExceeded | Should -Be $true
         }
+
+        It "Should pause when installation rate limit is exceeded" {
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
+            Mock Start-Sleep { param($Seconds, $Milliseconds) }
+
+            $script:invokeCount = 0
+            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
+
+            Mock Invoke-WebRequest {
+                $script:invokeCount++
+                if ($script:invokeCount -eq 1) {
+                    $response = New-Object PSObject -Property @{
+                        Headers = @{
+                            "X-RateLimit-Reset" = @($futureTimestamp.ToString())
+                            "X-RateLimit-Remaining" = @("0")
+                            "X-RateLimit-Used" = @("500")
+                        }
+                        StatusCode = 403
+                    }
+
+                    $exception = New-Object System.Net.WebException("API rate limit exceeded for installation ID")
+                    $webResponse = New-Object PSObject -Property @{
+                        Headers = $response.Headers
+                    }
+                    $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
+
+                    $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                        $exception,
+                        "WebException",
+                        [System.Management.Automation.ErrorCategory]::InvalidOperation,
+                        $null
+                    )
+                    $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"API rate limit exceeded for installation ID`"}")
+                    throw $errorRecord
+                }
+
+                return New-Object PSObject -Property @{
+                    StatusCode = 200
+                    Headers = @{}
+                    Content = "{}"
+                }
+            }
+
+            $result = ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 1
+
+            $result | Should -Not -Be $null
+            Assert-MockCalled Format-RateLimitErrorTable -Times 1 -ParameterFilter { $errorType -eq "Installation" }
+            Assert-MockCalled Start-Sleep -Times 1 -ParameterFilter { $Milliseconds -gt 0 }
+            $global:RateLimitExceeded | Should -Be $false
+        }
         
         It "Should not exceed maxRetries even with rate limit issues" {
             # Track the number of times Invoke-WebRequest is called
