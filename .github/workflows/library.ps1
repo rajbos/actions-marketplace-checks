@@ -932,28 +932,76 @@ function ApiCall {
             $rateLimitReset = $oUNIXDate - [DateTime]::UtcNow
             if ($rateLimitReset.TotalMilliseconds -gt 0) {
                 Write-Host ""
-                # If we are completely out of remaining requests, prefer an immediate
-                # failover to the next configured GitHub App (when available) instead
-                # of waiting for the reset time, regardless of how long that wait is.
-                if ($waitForRateLimit -and $rateLimitRemaining[0] -eq 0) {
-                    $manager = Get-GitHubAppTokenManagerInstance
-                    $organization = $env:APP_ORGANIZATION
-                    if ($null -ne $manager -and -not [string]::IsNullOrWhiteSpace($organization) -and $appSwitchCount -lt $maxAppSwitchCount) {
-                        Write-Host "Rate limit remaining is 0 (short wait of [$($rateLimitReset.TotalSeconds)] seconds), attempting to switch to next GitHub App for organization [$organization] instead of waiting"
-                        try {
-                            $manager.MoveToNextApp()
-                            $tokenResult = $manager.GetTokenForOrganization($organization)
-                            if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
-                                $newToken = $tokenResult.Token
-                                Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                $roundedSeconds = [math]::Round($rateLimitReset.TotalSeconds)
+                $roundedMinutes = [math]::Round($rateLimitReset.TotalMinutes, 1)
+
+                # When we are completely out of remaining requests, first look across
+                # all configured GitHub Apps. If any app still has quota, switch to the
+                # one with the highest remaining. If all apps are exhausted, sleep until
+                # the earliest reset and then re-check all apps, selecting the one with
+                # the highest rate limit at that time.
+                if ($rateLimitRemaining[0] -eq 0) {
+                    if ($waitForRateLimit) {
+                        $organization = $env:APP_ORGANIZATION
+                        $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+
+                        if ($null -ne $bestBeforeWait) {
+                            if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
+                                if ($bestBeforeWait.Token -ne $access_token) {
+                                    Write-Host "Rate limit remaining is 0 for current token, switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests"
+                                } else {
+                                    Write-Host "Rate limit remaining is 0, but refreshed token for app id [$($bestBeforeWait.AppId)] has [$($bestBeforeWait.Remaining)] remaining requests"
+                                }
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
                             }
+
+                            # All apps are currently exhausted; wait for the soonest
+                            # reset time across all apps, then re-evaluate and pick the
+                            # app with the highest remaining quota.
+                            $waitSecondsAllApps = [math]::Round([double]$bestBeforeWait.WaitSeconds)
+                            if ($waitSecondsAllApps -gt 1200) {
+                                Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $waitSecondsAllApps -continueAt $bestBeforeWait.ContinueAt -errorType "Exceeded"
+                                $message = "Rate limit wait time is longer than 20 minutes across all apps, stopping execution"
+                                Write-Message -message $message -logToSummary $true
+                                Write-Warning $message
+                                $global:RateLimitExceeded = $true
+                                return $null
+                            }
+
+                            if ($waitSecondsAllApps -gt 0) {
+                                Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $waitSecondsAllApps -continueAt $bestBeforeWait.ContinueAt -errorType "Exceeded"
+                                Write-Host "All configured GitHub Apps are out of rate limit. Waiting for [$waitSecondsAllApps] seconds (earliest reset at [$($bestBeforeWait.ContinueAt)]) before re-checking and selecting the best app."
+                                Start-Sleep -Seconds $waitSecondsAllApps
+                            }
+
+                            $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                            if ($null -ne $bestAfterWait -and $bestAfterWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                                Write-Host "After waiting for rate limit reset, selected GitHub App id [$($bestAfterWait.AppId)] with [$($bestAfterWait.Remaining)] remaining requests"
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestAfterWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                            }
+
+                            $message = "Rate limit did not recover after waiting across all apps; stopping execution"
+                            Write-Message -message $message -logToSummary $true
+                            Write-Warning $message
+                            $global:RateLimitExceeded = $true
+                            return $null
                         }
-                        catch {
-                            Write-Warning "Failed to switch GitHub App after rate limit: $($_.Exception.Message)"
-                        }
+
+                        # No app configuration or tokens available; fall back to
+                        # treating this as a hard stop to avoid tight loops.
+                        Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
+                        $message = "Rate limit reached with 0 remaining requests and no GitHub App configuration available, stopping execution"
+                        Write-Message -message $message -logToSummary $true
+                        Write-Warning $message
+                        $global:RateLimitExceeded = $true
+                        return $null
                     }
+
+                    # When waitForRateLimit is false and remaining is 0, just return
+                    # the partial/empty response we already have without waiting.
+                    return $response
                 }
+
                 if ($rateLimitReset.TotalSeconds -gt 1200) {
                     # Only show messages and halt execution if we're configured to wait for rate limits
                     if ($waitForRateLimit) {
@@ -1096,26 +1144,26 @@ function ApiCall {
                 $continueAt = [DateTime]::UtcNow.AddSeconds($waitSeconds)
             }
 
-            # When we hit an explicit API rate limit error, prefer trying to
-            # fail over to the next configured GitHub App immediately (if any)
-            # instead of waiting, regardless of the computed wait time.
-            if ($waitForRateLimit -and $appSwitchCount -lt $maxAppSwitchCount) {
-                $manager = Get-GitHubAppTokenManagerInstance
+            # When we hit an explicit API rate limit error, first look across all
+            # configured GitHub Apps. If any app still has quota, immediately switch
+            # to the one with the highest remaining. If all apps are exhausted, use
+            # the earliest reset across all apps to decide how long to wait.
+            if ($waitForRateLimit) {
                 $organization = $env:APP_ORGANIZATION
-                if ($null -ne $manager -and -not [string]::IsNullOrWhiteSpace($organization)) {
-                    $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                    Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], attempting to switch to next GitHub App for organization [$organization] instead of waiting [$waitSeconds] seconds"
-                    try {
-                        $manager.MoveToNextApp()
-                        $tokenResult = $manager.GetTokenForOrganization($organization)
-                        if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
-                            $newToken = $tokenResult.Token
-                            Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
-                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
-                        }
+                $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+
+                if ($null -ne $bestBeforeWait) {
+                    if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
+                        $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
+                        Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
+                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
                     }
-                    catch {
-                        Write-Warning "Failed to switch GitHub App after rate limit: $($_.Exception.Message)"
+
+                    # All apps are currently exhausted; prefer the earliest reset
+                    # across all apps instead of the current token's reset time.
+                    if ($bestBeforeWait.WaitSeconds -gt 0) {
+                        $waitSeconds = [double]$bestBeforeWait.WaitSeconds
+                        $continueAt = $bestBeforeWait.ContinueAt
                     }
                 }
             }
@@ -1412,6 +1460,101 @@ function Format-RateLimitErrorTable {
     Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
     Write-Message -message "| $(DisplayIntWithDots $remaining) | $(DisplayIntWithDots $used) | $waitTime | $continueAt |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+}
+
+function Get-GitHubAppRateLimitOverview {
+    Param (
+        [string] $organization = $env:APP_ORGANIZATION
+    )
+
+    $primaryKey = $env:APPLICATION_PRIVATE_KEY
+    $secondaryKey = $env:APPLICATION_PRIVATE_KEY_2
+
+    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appPrivateKeys = @($primaryKey, $secondaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
+        return @()
+    }
+
+    if ([string]::IsNullOrWhiteSpace($organization)) {
+        return @()
+    }
+
+    $max = [Math]::Min($appIds.Count, $appPrivateKeys.Count)
+    $results = @()
+
+    for ($i = 0; $i -lt $max; $i++) {
+        $appId = $appIds[$i]
+        $pemKey = $appPrivateKeys[$i]
+
+        if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($pemKey)) {
+            continue
+        }
+
+        try {
+            $token = Get-TokenFromApp -appId $appId -pemKey $pemKey -targetAccountLogin $organization
+            if ([string]::IsNullOrWhiteSpace($token)) {
+                continue
+            }
+
+            $headers = @{
+                Authorization = GetBasicAuthenticationHeader -access_token $token
+            }
+
+            try {
+                $rateUrl = "https://api.github.com/rate_limit"
+                $result = Invoke-WebRequest -Uri $rateUrl -Headers $headers -Method GET -ErrorAction Stop
+                $rateResponse = $result.Content | ConvertFrom-Json
+                $rateData = $rateResponse.rate
+
+                $rateInfo = Get-RateLimitRetryPlan -headers $result.Headers
+
+                $remaining = if ($null -ne $rateData.remaining) { [int]$rateData.remaining } else { [int]$rateInfo.Remaining }
+                $used = if ($null -ne $rateData.used) { [int]$rateData.used } else { [int]$rateInfo.Used }
+                $waitSeconds = [double]$rateInfo.WaitSeconds
+                $continueAt = $rateInfo.ContinueAt
+
+                $results += [pscustomobject]@{
+                    AppId = $appId
+                    Token = $token
+                    Remaining = $remaining
+                    Used = $used
+                    WaitSeconds = $waitSeconds
+                    ContinueAt = $continueAt
+                }
+            }
+            catch {
+                Write-Warning "Failed to get rate limit info for app id [$appId]: $($_.Exception.Message)"
+            }
+        }
+        catch {
+            Write-Warning "Failed to get token for app id [$appId] while checking rate limits: $($_.Exception.Message)"
+        }
+    }
+
+    return ,$results
+}
+
+function Select-BestGitHubAppTokenForOrganization {
+    Param (
+        [string] $organization = $env:APP_ORGANIZATION
+    )
+
+    $overview = Get-GitHubAppRateLimitOverview -organization $organization
+
+    if ($null -eq $overview -or $overview.Count -eq 0) {
+        return $null
+    }
+
+    $withRemaining = $overview | Where-Object { $_.Remaining -gt 0 }
+    if ($withRemaining -and $withRemaining.Count -gt 0) {
+        return $withRemaining | Sort-Object -Property Remaining -Descending | Select-Object -First 1
+    }
+
+    # All apps are currently exhausted; return the one that will
+    # become available soonest based on the shortest wait time.
+    return $overview | Sort-Object -Property WaitSeconds | Select-Object -First 1
 }
 
 function Get-RateLimitRetryPlan {

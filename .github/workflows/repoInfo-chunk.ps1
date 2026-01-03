@@ -37,9 +37,6 @@ Test-AccessTokens -accessToken $accessToken -numberOfReposToDo $actionNames.Coun
 
 Import-Module powershell-yaml -Force
 
-# default variables
-$forkOrg = "actions-marketplace-validations"
-
 function ProcessRepoInfoChunk {
     Param (
         $allActions,
