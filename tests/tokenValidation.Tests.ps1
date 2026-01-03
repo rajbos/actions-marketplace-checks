@@ -8,37 +8,27 @@ BeforeAll {
 Describe "Token Validation Tests" {
     Context "Test-AccessTokens function" {
         It "Should throw error when accessToken is null" {
-            { Test-AccessTokens -accessToken $null -access_token_destination "valid_token" -numberOfReposToDo 10 } | 
+            { Test-AccessTokens -accessToken $null -numberOfReposToDo 10 } | 
                 Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when accessToken is empty string" {
-            { Test-AccessTokens -accessToken "" -access_token_destination "valid_token" -numberOfReposToDo 10 } | 
+            { Test-AccessTokens -accessToken "" -numberOfReposToDo 10 } | 
                 Should -Throw -ExpectedMessage "*access token*"
         }
 
         It "Should throw error when accessToken is whitespace" {
-            { Test-AccessTokens -accessToken "   " -access_token_destination "valid_token" -numberOfReposToDo 10 } | 
+            { Test-AccessTokens -accessToken "   " -numberOfReposToDo 10 } | 
                 Should -Throw -ExpectedMessage "*access token*"
         }
 
-        It "Should throw error when access_token_destination is null" {
-            { Test-AccessTokens -accessToken "valid_token" -access_token_destination $null -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*access token*destination*"
-        }
-
-        It "Should throw error when access_token_destination is empty string" {
-            { Test-AccessTokens -accessToken "valid_token" -access_token_destination "" -numberOfReposToDo 10 } | 
-                Should -Throw -ExpectedMessage "*access token*destination*"
-        }
-
         It "Should not throw error when both tokens are valid" {
-            { Test-AccessTokens -accessToken "valid_token_123" -access_token_destination "valid_token_456" -numberOfReposToDo 10 } | 
+            { Test-AccessTokens -accessToken "valid_token_123" -numberOfReposToDo 10 } | 
                 Should -Not -Throw
         }
 
         It "Should set GITHUB_TOKEN environment variable" {
-            Test-AccessTokens -accessToken "test_token_789" -access_token_destination "dest_token_789" -numberOfReposToDo 10
+            Test-AccessTokens -accessToken "test_token_789" -numberOfReposToDo 10
             $env:GITHUB_TOKEN | Should -Be "test_token_789"
         }
     }

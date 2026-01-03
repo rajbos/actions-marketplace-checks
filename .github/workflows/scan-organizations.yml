@@ -22,6 +22,9 @@ on:
 
 env:
   DEFAULT_ORGS: 'github,actions,advanced-security,dependabot'
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
   prepare:
@@ -87,11 +90,15 @@ jobs:
 
       - name: Get App Token
         id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations     
+        shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.Automation_App_Key_2 }}
+        run: |
+          . ./.github/workflows/github-app-token-manager.ps1
+          $manager = New-GitHubAppTokenManagerFromEnvironment
+          $tokenResult = $manager.GetTokenForOrganization($env:APP_ORGANIZATION)
+          "token=$($tokenResult.Token)" >> $env:GITHUB_OUTPUT
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions

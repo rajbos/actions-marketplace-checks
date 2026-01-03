@@ -26,6 +26,9 @@ on:
 env:
   numberOfReposToDo: 300
   numberOfChunks: 4
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
   prepare:
@@ -154,16 +157,10 @@ jobs:
           name: work-chunks
           path: .
 
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-
       - name: Process chunk ${{ matrix.chunk-id }}
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
         run: |
           . ./.github/workflows/library.ps1
 
@@ -196,9 +193,7 @@ jobs:
           ./.github/workflows/update-mirrors-chunk.ps1 `
             -actions $existingForks `
             -forkNames $forkNames `
-            -chunkId $chunkId `
-            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
-            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+            -chunkId $chunkId
 
       - name: Upload partial status for chunk ${{ matrix.chunk-id }}
         if: always()
@@ -253,14 +248,6 @@ jobs:
             Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
-
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
 
       - name: Download all partial status updates
         uses: actions/download-artifact@v7
@@ -340,14 +327,12 @@ jobs:
 
       - name: Check rate limit status
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
         run: |
           . ./.github/workflows/library.ps1
 
-          Write-Message -message "" -logToSummary $true
-          Write-Message -message "### Final Rate Limit Check" -logToSummary $true
-          Write-Message -message "" -logToSummary $true
-
-          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}" -waitForRateLimit $false
+          Invoke-GitHubAppRateLimitCheckForConfiguredApps
 
       - name: Upload status.json to blob storage
         if: always()

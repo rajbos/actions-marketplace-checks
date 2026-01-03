@@ -17,6 +17,11 @@ on:
 
   workflow_dispatch:
 
+env:
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
+
 jobs:
   document-environment:
     runs-on: ubuntu-latest
@@ -53,16 +58,11 @@ jobs:
 
           Write-Host "Status.json downloaded successfully"
 
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-
       - name: Generate Environment State Documentation
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.Automation_App_Key_2 }}
         run: |
           # Clean BOM if present before parsing JSON
           $actionsContent = Get-Content actions.json -Raw
@@ -90,6 +90,4 @@ jobs:
           Write-Host "Found [$($actions.Length)] actions in marketplace data"
           Write-Host "Found [$($existingForks.Length)] tracked actions in status file"
           Write-Host ""
-
-          $token = "${{ steps.get_workflow_token.outputs.token }}"
-          ./.github/workflows/environment-state.ps1 -actions $actions -existingForks $existingForks -access_token_destination $token
+          ./.github/workflows/environment-state.ps1 -actions $actions -existingForks $existingForks

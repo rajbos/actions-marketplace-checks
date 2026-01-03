@@ -1,14 +1,30 @@
 Param (
-  $actions,
-  $logSummary,
-  $numberOfReposToDo = 10,
-  $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN
+    $actions,
+    $logSummary,
+    $numberOfReposToDo = 10,
+    $access_token = $env:GITHUB_TOKEN,
+    $access_token_destination = $env:GITHUB_TOKEN
 )
 
 . $PSScriptRoot/library.ps1
 
-Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+if ([string]::IsNullOrWhiteSpace($access_token)) {
+    try {
+        $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+        $access_token = $tokenResult.Token
+    }
+    catch {
+        Write-Error "Failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
+        throw
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
+    $access_token_destination = $access_token
+}
+
+Test-AccessTokens -accessToken $access_token -numberOfReposToDo $numberOfReposToDo
 
 function Get-OSSFInfoForRepo {
     Param (

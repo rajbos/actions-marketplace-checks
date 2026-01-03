@@ -9,20 +9,26 @@ Param (
 . $PSScriptRoot/library.ps1
 . $PSScriptRoot/dependents.ps1
 
-if ($env:APP_PEM_KEY) {
-    Write-Host "GitHub App information found, using GitHub App"
-    # todo: move into codespace variable
-    $env:APP_ID = 264650
-    $env:INSTALLATION_ID = 31486141
-    # get a token to use from the app
-    $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
-}
-else {
-  # use the one send in as a file param
-  $accessToken = $access_token
+$accessToken = $access_token
+
+if ([string]::IsNullOrWhiteSpace($accessToken)) {
+    try {
+        $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+        $accessToken = $tokenResult.Token
+    }
+    catch {
+        Write-Error "Failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
+        throw
+    }
 }
 
-Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+$access_token = $accessToken
+if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
+    $access_token_destination = $accessToken
+}
+
+Test-AccessTokens -accessToken $accessToken -numberOfReposToDo $numberOfReposToDo
 
 Import-Module powershell-yaml -Force
 

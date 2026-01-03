@@ -15,6 +15,26 @@ Write-Host "statusFile location: [$statusFile]"
 Write-Host "failedStatusFile location: [$failedStatusFile]"
 Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 
+. "$PSScriptRoot/get-github-app-token.ps1"
+. "$PSScriptRoot/github-app-token-manager.ps1"
+
+$script:GitHubAppTokenManagerInstance = $null
+
+function Get-GitHubAppTokenManagerInstance {
+    if ($null -ne $script:GitHubAppTokenManagerInstance) {
+        return $script:GitHubAppTokenManagerInstance
+    }
+
+    try {
+        $script:GitHubAppTokenManagerInstance = New-GitHubAppTokenManagerFromEnvironment
+    }
+    catch {
+        $script:GitHubAppTokenManagerInstance = $null
+    }
+
+    return $script:GitHubAppTokenManagerInstance
+}
+
 # Blob file names in the 'status' subfolder
 $script:actionsBlobFileName = "Actions-Full-Overview.Json"
 $script:statusBlobFileName = "status.json"
@@ -797,7 +817,9 @@ function ApiCall {
         [string] $contextInfo = "",
         [bool] $waitForRateLimit = $true,
         [int] $retryCount = 0,
-        [int] $maxRetries = 10
+        [int] $maxRetries = 10,
+        [int] $appSwitchCount = 0,
+        [int] $maxAppSwitchCount = 1
     )
     
     # Check if we've exceeded the maximum number of retries
@@ -894,7 +916,7 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount
                     $response += $nextResult
                 }
             }
@@ -913,6 +935,26 @@ function ApiCall {
                 if ($rateLimitReset.TotalSeconds -gt 1200) {
                     # Only show messages and halt execution if we're configured to wait for rate limits
                     if ($waitForRateLimit) {
+                        # First try to switch to the next GitHub App (if configured) and retry
+                        $manager = Get-GitHubAppTokenManagerInstance
+                        $organization = $env:APP_ORGANIZATION
+                        if ($null -ne $manager -and -not [string]::IsNullOrWhiteSpace($organization) -and $appSwitchCount -lt $maxAppSwitchCount) {
+                            Write-Host "Rate limit wait > 20 minutes, attempting to switch to next GitHub App for organization [$organization]"
+                            try {
+                                $manager.MoveToNextApp()
+                                $tokenResult = $manager.GetTokenForOrganization($organization)
+                                if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
+                                    $newToken = $tokenResult.Token
+                                    Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
+                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                                }
+                            }
+                            catch {
+                                Write-Warning "Failed to switch GitHub App after rate limit: $($_.Exception.Message)"
+                            }
+                        }
+
+                        # If we cannot switch apps or failover still leaves us waiting too long, stop execution
                         Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Exceeded"
                         $message = "Rate limit wait time is longer than 20 minutes, stopping execution"
                         Write-Message -message $message -logToSummary $true
@@ -940,7 +982,7 @@ function ApiCall {
             else {
                 $backOff = $backOff * 2
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount
         }
 
         if ($null -ne $expected) {
@@ -975,7 +1017,7 @@ function ApiCall {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount
         }
         else {
             if (!$hideFailedCall) {
@@ -1004,7 +1046,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount
         }
 
         $isUserRateLimit = $messageData.message -and $messageData.message.StartsWith("API rate limit exceeded for user ID")
@@ -1036,6 +1078,26 @@ function ApiCall {
             if ($waitSeconds -gt 1200) {
                 # Only show messages and halt execution if we're configured to wait for rate limits
                 if ($waitForRateLimit) {
+                    # First try to switch to the next GitHub App (if configured) and retry
+                    $manager = Get-GitHubAppTokenManagerInstance
+                    $organization = $env:APP_ORGANIZATION
+                    if ($null -ne $manager -and -not [string]::IsNullOrWhiteSpace($organization) -and $appSwitchCount -lt $maxAppSwitchCount) {
+                        $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
+                        Write-Host "Rate limit wait > 20 minutes ($formatType), attempting to switch to next GitHub App for organization [$organization]"
+                        try {
+                            $manager.MoveToNextApp()
+                            $tokenResult = $manager.GetTokenForOrganization($organization)
+                            if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
+                                $newToken = $tokenResult.Token
+                                Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                            }
+                        }
+                        catch {
+                            Write-Warning "Failed to switch GitHub App after rate limit: $($_.Exception.Message)"
+                        }
+                    }
+
                     $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
                     if ($rateInfo.HasHeaderData -or $isInstallationRateLimit) {
                         Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType $formatType
@@ -1074,7 +1136,7 @@ function ApiCall {
                 else {
                     $backOff = $backOff * 2
                 }
-                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount
             }
 
             # When not waiting, return null
@@ -1409,6 +1471,64 @@ function GetRateLimitInfo {
     if ($response.rate.limit -eq 60) {
         throw "Rate limit is 60, this is not enough to run any of these scripts, check the token that is used"
     }
+}
+
+function Invoke-GitHubAppRateLimitCheckForConfiguredApps {
+    Param (
+        [string] $organization = $env:APP_ORGANIZATION
+    )
+
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "### Final Rate Limit Check" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+
+    $primaryKey = $env:APPLICATION_PRIVATE_KEY
+    $secondaryKey = $env:APPLICATION_PRIVATE_KEY_2
+
+    if ([string]::IsNullOrWhiteSpace($primaryKey) -and [string]::IsNullOrWhiteSpace($secondaryKey)) {
+        throw "At least one APPLICATION_PRIVATE_KEY (or APPLICATION_PRIVATE_KEY_2) must be provided to perform the rate limit check"
+    }
+
+    if ([string]::IsNullOrWhiteSpace($organization)) {
+        throw "APP_ORGANIZATION (or explicit organization parameter) must be provided to perform the rate limit check"
+    }
+
+    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appPrivateKeys = @($primaryKey, $secondaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
+        throw "At least one APP_ID and APPLICATION_PRIVATE_KEY must be provided to perform the rate limit check"
+    }
+
+    $max = [Math]::Min($appIds.Count, $appPrivateKeys.Count)
+    $accessToken = $null
+
+    for ($i = 0; $i -lt $max; $i++) {
+        $appId = $appIds[$i]
+        $pemKey = $appPrivateKeys[$i]
+
+        if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($pemKey)) {
+            continue
+        }
+
+        Write-Host "Trying GitHub App id [$appId] for organization [$organization]"
+        try {
+            $accessToken = Get-TokenFromApp -appId $appId -pemKey $pemKey -targetAccountLogin $organization
+            if (-not [string]::IsNullOrWhiteSpace($accessToken)) {
+                Write-Host "Successfully obtained token using app id [$appId]"
+                break
+            }
+        }
+        catch {
+            Write-Warning "Failed to get token for app id [$appId]: $($_.Exception.Message)"
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($accessToken)) {
+        throw "Failed to obtain a GitHub App token for organization using any provided APP_ID/APPLICATION_PRIVATE_KEY combination"
+    }
+
+    GetRateLimitInfo -access_token $accessToken -access_token_destination $accessToken -waitForRateLimit $false
 }
 
 <#
@@ -1886,7 +2006,6 @@ function GetDependabotVulnerabilityAlerts {
 function Test-AccessTokens {
     Param (
         [string] $accessToken,
-        [string] $access_token_destination,
         [int] $numberOfReposToDo
     )
     
@@ -1896,20 +2015,10 @@ function Test-AccessTokens {
         throw "No access token provided, please provide one!"
     }
     
-    # Validate that access_token_destination is not null or empty
-    if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
-        Write-Error "Missing GitHub access token for destination (Automation_App_Key). Please ensure the secret is configured in the repository."
-        throw "No access token for destination provided, please provide one!"
-    }
-    
-    #store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
+    # Store the given access token as the environment variable GITHUB_TOKEN so that it will be used in the Workflow run
     $env:GITHUB_TOKEN = $accessToken
     
     Write-Host "Got an access token with a length of [$($accessToken.Length)], running for [$($numberOfReposToDo)] repos"
-
-    if ($access_token_destination -ne $accessToken) {
-        Write-Host "Got an access token for the destination with a length of [$($access_token_destination.Length)]"
-    }
 }
 
 function ConvertCommasToDots {
@@ -1941,9 +2050,27 @@ function Format-Percentage {
 
 function GetFoundSecretCount {
     Param (
-        [Parameter(Mandatory=$true)]
         [string] $access_token_destination
     )
+    if ([string]::IsNullOrWhiteSpace($access_token_destination)) {
+        try {
+            if (-not [string]::IsNullOrWhiteSpace($env:APP_ORGANIZATION)) {
+                $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+                $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+                $access_token_destination = $tokenResult.Token
+            }
+            elseif (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN)) {
+                $access_token_destination = $env:GITHUB_TOKEN
+            }
+            else {
+                throw "No access token provided and no APP_ORGANIZATION or GITHUB_TOKEN configured for GetFoundSecretCount."
+            }
+        }
+        catch {
+            Write-Message "Failed to obtain token for secret scanning alerts: $($_.Exception.Message)" -logToSummary $true
+            return
+        }
+    }
     Write-Message "Getting secret scanning alerts" -logToSummary $true
 
     $url = "/orgs/$forkOrg/secret-scanning/alerts"
@@ -2233,51 +2360,29 @@ function GetForkedActionRepos {
 
 <#
     .DESCRIPTION
-    Get-TokenFromApp uses the paramsas credentials
-    for the GitHub App to load an aceess token with. Be aware that this token is only valid for an hour.
-    Note: this token has only access to the repositories that the App has been installed to.
-    We cannot use this token to create new repositories or install the app in a repo.
+    Wrapper that retrieves a GitHub App installation token. Either supply the installationId
+    directly or provide the organization login so the installation can be resolved dynamically.
 #>
 function Get-TokenFromApp {
     param (
+        [Parameter(Mandatory=$true)]
         [string] $appId,
         [string] $installationId,
-        [string] $pemKey
+        [Parameter(Mandatory=$true)]
+        [string] $pemKey,
+        [string] $targetAccountLogin
     )
-    # get a temporary jwt token from the key file and app id (hardcoded in the file:)
-    $generated_jwt = $(bash ./github-app-jwt.sh $appId $pemKey)
-    $github_api_url = "https://api.github.com/app"
 
-    #Write-Host "Loaded jwt token: [$($generated_jwt)]"
-    $github_api_url="https://api.github.com/app/installations"
-    Write-Debug "Calling [${github_api_url}]"
-    $installationId = ""
-    try {
-        $response = Invoke-RestMethod -Uri $github_api_url -Headers @{Authorization = "Bearer $generated_jwt" } -ContentType "application/json" -Method Get
-
-        Write-Debug "Found installationId: [$($response[0].id)]"
-        $installationId = $response[0].id
-    }
-    catch
-    {
-        Write-Error "Error in finding the app installations: $($_)"
+    if ([string]::IsNullOrWhiteSpace($appId)) {
+        throw "GitHub App ID is required to request an installation token"
     }
 
-    $github_api_url="https://api.github.com/app/installations/$installationId/access_tokens"
-    Write-Host "Calling [${github_api_url}]"
-    $token = ""
-    try {
-        $response = Invoke-RestMethod -Uri $github_api_url -Headers @{Authorization = "Bearer $generated_jwt" } -ContentType "application/json" -Method POST -Body "{}"
-        $token = $response.token
-        Write-Host "Got an access token that will expire at: [$($response.expires_at)]"
-    }
-    catch
-    {
-        Write-Error "Error in getting an access token: $($_)"
+    if ([string]::IsNullOrWhiteSpace($pemKey)) {
+        throw "GitHub App private key is required to request an installation token"
     }
 
-    Write-Host "Found token with [$($token.length)]"
-    return $token
+    $tokenInfo = Get-GitHubAppInstallationToken -AppId $appId -AppPrivateKey $pemKey -InstallationId $installationId -Organization $targetAccountLogin
+    return $tokenInfo.token
 }
 
 function Get-RepositoryDefaultBranchCommit {
