@@ -39,15 +39,9 @@ async function uploadActions() {
   console.log('Initializing Actions Marketplace Client...');
   const client = new ActionsMarketplaceClient({ apiUrl: apiUrl });
   
-  // Test API connection with a simple validation
+  // API connection will be tested with the first upsert call
   console.log('Testing API connection...');
-  try {
-    // The client is initialized, but we'll test it with the first upsert
-    console.log('API client initialized successfully');
-  } catch (error) {
-    console.error('Failed to initialize API client: ' + error.message);
-    process.exit(1);
-  }
+  console.log('API client initialized successfully');
   
   console.log('Uploading [' + actions.length + '] actions...');
   
