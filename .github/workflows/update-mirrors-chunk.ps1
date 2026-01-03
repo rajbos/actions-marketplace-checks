@@ -3,10 +3,72 @@ Param (
   $forkNames,  # Array of fork names to process in this chunk
   [int] $chunkId = 0,
   $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN
+  $access_token_destination = $env:GITHUB_TOKEN,
+  $access_token_secondary = ""
 )
 
 . $PSScriptRoot/library.ps1
+
+# Check and select the best available token before processing
+Write-Message -message "## Token Selection and Rate Limit Check" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+$tokenSelection = Select-BestAvailableToken `
+    -primary_token $access_token_destination `
+    -secondary_token $access_token_secondary `
+    -minRemainingCalls 50 `
+    -maxWaitMinutes 20
+
+Write-Message -message $tokenSelection.Message -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+# Display rate limit status table
+if ($tokenSelection.PrimaryStatus) {
+    Format-RateLimitTable -rateData @{
+        limit = 5000
+        remaining = $tokenSelection.PrimaryStatus.Remaining
+        reset = ([DateTimeOffset]$tokenSelection.PrimaryStatus.ResetTime).ToUnixTimeSeconds()
+        used = (5000 - $tokenSelection.PrimaryStatus.Remaining)
+    } -title "Primary Token Rate Limit Status"
+}
+
+if ($tokenSelection.SecondaryStatus) {
+    Format-RateLimitTable -rateData @{
+        limit = 5000
+        remaining = $tokenSelection.SecondaryStatus.Remaining
+        reset = ([DateTimeOffset]$tokenSelection.SecondaryStatus.ResetTime).ToUnixTimeSeconds()
+        used = (5000 - $tokenSelection.SecondaryStatus.Remaining)
+    } -title "Secondary Token Rate Limit Status"
+}
+
+# If no token is available, log the issue and exit gracefully
+if (-not $tokenSelection.TokenAvailable) {
+    Write-Message -message "⚠️ **All tokens are rate limited - stopping chunk processing**" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "This chunk will be skipped. The workflow will retry on the next scheduled run." -logToSummary $true
+    
+    # Save empty partial status to indicate this chunk was attempted but skipped
+    $emptyResult = @()
+    Save-PartialStatusUpdate -processedForks $emptyResult -chunkId $chunkId -outputPath "status-partial-$chunkId.json"
+    
+    # Save chunk summary showing the issue
+    Save-ChunkSummary `
+        -chunkId $chunkId `
+        -synced 0 `
+        -upToDate 0 `
+        -conflicts 0 `
+        -upstreamNotFound 0 `
+        -failed 0 `
+        -skipped $forkNames.Count `
+        -totalProcessed 0 `
+        -failedRepos @() `
+        -outputPath "chunk-summary-$chunkId.json"
+    
+    exit 0
+}
+
+# Use the selected token for processing
+$access_token_destination = $tokenSelection.Token
 
 Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $forkNames.Count
 

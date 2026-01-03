@@ -1504,6 +1504,185 @@ function Test-TokenExpiration {
     return $false
 }
 
+<#
+    .SYNOPSIS
+    Checks if a GitHub token has sufficient rate limit remaining to continue processing.
+    
+    .DESCRIPTION
+    Makes a lightweight API call to check the rate limit status of a token.
+    Returns information about whether the token can be used, and how long until reset if rate limited.
+    
+    .PARAMETER access_token
+    The GitHub token to check
+    
+    .PARAMETER minRemainingCalls
+    Minimum number of API calls that should remain. Default is 100.
+    
+    .PARAMETER maxWaitMinutes
+    Maximum wait time in minutes before considering the token unusable. Default is 20.
+    
+    .EXAMPLE
+    $status = Test-TokenRateLimit -access_token $token
+    if ($status.CanUse) {
+        # Proceed with using the token
+    }
+    
+    .OUTPUTS
+    Returns a hashtable with:
+    - CanUse: Boolean indicating if token has sufficient rate limit
+    - Remaining: Number of API calls remaining
+    - WaitMinutes: Minutes until rate limit reset (0 if CanUse is true)
+    - ResetTime: DateTime when rate limit resets
+#>
+function Test-TokenRateLimit {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string]$access_token,
+        [int]$minRemainingCalls = 100,
+        [int]$maxWaitMinutes = 20
+    )
+    
+    try {
+        # Make a lightweight API call to check rate limit
+        $headers = @{
+            Authorization = GetBasicAuthenticationHeader -access_token $access_token
+        }
+        
+        $result = Invoke-WebRequest -Uri "https://api.github.com/rate_limit" -Headers $headers -Method GET -ErrorAction Stop
+        $rateData = ($result.Content | ConvertFrom-Json).rate
+        
+        $remaining = $rateData.remaining
+        $resetEpoch = $rateData.reset
+        $resetTime = (Get-Date 01.01.1970) + ([System.TimeSpan]::FromSeconds($resetEpoch))
+        $waitMinutes = [math]::Max(0, ($resetTime - [DateTime]::UtcNow).TotalMinutes)
+        
+        # Token is usable if it has enough calls remaining OR reset time is acceptable
+        $canUse = ($remaining -ge $minRemainingCalls) -or ($waitMinutes -le $maxWaitMinutes)
+        
+        return @{
+            CanUse = $canUse
+            Remaining = $remaining
+            WaitMinutes = [math]::Round($waitMinutes, 1)
+            ResetTime = $resetTime
+        }
+    }
+    catch {
+        Write-Warning "Failed to check rate limit for token: $($_.Exception.Message)"
+        # Return a conservative response - assume token cannot be used
+        return @{
+            CanUse = $false
+            Remaining = 0
+            WaitMinutes = 999
+            ResetTime = [DateTime]::UtcNow.AddHours(1)
+        }
+    }
+}
+
+<#
+    .SYNOPSIS
+    Selects the best available token from multiple options based on rate limit status.
+    
+    .DESCRIPTION
+    Checks rate limit status for primary and secondary tokens (if provided).
+    Returns the token with the best rate limit status, along with information about
+    which token was selected and why.
+    
+    .PARAMETER primary_token
+    The primary GitHub token to use
+    
+    .PARAMETER secondary_token
+    Optional secondary GitHub token to fall back to
+    
+    .PARAMETER minRemainingCalls
+    Minimum number of API calls that should remain. Default is 100.
+    
+    .PARAMETER maxWaitMinutes
+    Maximum wait time in minutes before falling back. Default is 20.
+    
+    .EXAMPLE
+    $tokenInfo = Select-BestAvailableToken -primary_token $token1 -secondary_token $token2
+    if ($tokenInfo.TokenAvailable) {
+        # Use $tokenInfo.Token for API calls
+        Write-Host $tokenInfo.Message
+    }
+    
+    .OUTPUTS
+    Returns a hashtable with:
+    - TokenAvailable: Boolean indicating if any token is usable
+    - Token: The selected token (or primary if none usable)
+    - TokenType: "Primary", "Secondary", or "None"
+    - Message: Human-readable message about token selection
+    - PrimaryStatus: Rate limit status of primary token
+    - SecondaryStatus: Rate limit status of secondary token (if provided)
+#>
+function Select-BestAvailableToken {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string]$primary_token,
+        [string]$secondary_token = "",
+        [int]$minRemainingCalls = 100,
+        [int]$maxWaitMinutes = 20
+    )
+    
+    # Check primary token
+    Write-Host "Checking rate limit status of primary token..."
+    $primaryStatus = Test-TokenRateLimit -access_token $primary_token -minRemainingCalls $minRemainingCalls -maxWaitMinutes $maxWaitMinutes
+    
+    Write-Host "Primary token: Remaining=$($primaryStatus.Remaining), WaitMinutes=$($primaryStatus.WaitMinutes), CanUse=$($primaryStatus.CanUse)"
+    
+    # If primary is good, use it
+    if ($primaryStatus.CanUse) {
+        return @{
+            TokenAvailable = $true
+            Token = $primary_token
+            TokenType = "Primary"
+            Message = "Using primary token (remaining: $($primaryStatus.Remaining) calls)"
+            PrimaryStatus = $primaryStatus
+            SecondaryStatus = $null
+        }
+    }
+    
+    # Check if secondary token is available
+    if ([string]::IsNullOrWhiteSpace($secondary_token)) {
+        return @{
+            TokenAvailable = $false
+            Token = $primary_token
+            TokenType = "None"
+            Message = "Primary token rate limited (wait: $($primaryStatus.WaitMinutes) min, remaining: $($primaryStatus.Remaining)). No secondary token configured."
+            PrimaryStatus = $primaryStatus
+            SecondaryStatus = $null
+        }
+    }
+    
+    # Check secondary token
+    Write-Host "Primary token rate limited, checking secondary token..."
+    $secondaryStatus = Test-TokenRateLimit -access_token $secondary_token -minRemainingCalls $minRemainingCalls -maxWaitMinutes $maxWaitMinutes
+    
+    Write-Host "Secondary token: Remaining=$($secondaryStatus.Remaining), WaitMinutes=$($secondaryStatus.WaitMinutes), CanUse=$($secondaryStatus.CanUse)"
+    
+    # Use secondary if it's available
+    if ($secondaryStatus.CanUse) {
+        return @{
+            TokenAvailable = $true
+            Token = $secondary_token
+            TokenType = "Secondary"
+            Message = "Fell back to secondary token (primary wait: $($primaryStatus.WaitMinutes) min, secondary remaining: $($secondaryStatus.Remaining) calls)"
+            PrimaryStatus = $primaryStatus
+            SecondaryStatus = $secondaryStatus
+        }
+    }
+    
+    # Both tokens are rate limited
+    return @{
+        TokenAvailable = $false
+        Token = $primary_token
+        TokenType = "None"
+        Message = "Both tokens rate limited. Primary: wait $($primaryStatus.WaitMinutes) min (remaining: $($primaryStatus.Remaining)). Secondary: wait $($secondaryStatus.WaitMinutes) min (remaining: $($secondaryStatus.Remaining))."
+        PrimaryStatus = $primaryStatus
+        SecondaryStatus = $secondaryStatus
+    }
+}
+
 function SaveStatus {
     Param (
         $existingForks,
