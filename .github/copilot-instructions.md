@@ -83,6 +83,8 @@ Test files should:
 - Import required functions in `BeforeAll` block
 - Use `Describe` and `It` blocks
 
+When making changes to inline PowerShell scripts in workflow YAML files, ensure to test them locally using `pwsh` and validate syntax with `Validate-Workflow-Pwsh.ps1`.
+
 ## Important Considerations
 
 1. **Rate Limiting**: GitHub API calls need backoff strategies

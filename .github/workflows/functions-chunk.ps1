@@ -10,12 +10,24 @@ Param (
     $actions,
     $actionNames,  # Array of action names to process in this chunk
     [int] $chunkId = 0,
-    [string[]] $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) },
-    [string[]] $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) },
-    [string] $appOrganization = $env:APP_ORGANIZATION
+    [string[]] $appIds,
+    [string[]] $appPrivateKeys,
+    [string] $appOrganization
 )
 
 . $PSScriptRoot/library.ps1
+
+if (-not $appIds -or $appIds.Count -eq 0) {
+    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+}
+
+if (-not $appPrivateKeys -or $appPrivateKeys.Count -eq 0) {
+    $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+}
+
+if ([string]::IsNullOrWhiteSpace($appOrganization)) {
+    $appOrganization = $env:APP_ORGANIZATION
+}
 
 if ($appPrivateKeys.Count -eq 0 -or $appIds.Count -eq 0) {
     throw "APP_ID and APPLICATION_PRIVATE_KEY environment variables must be provided when running functions-chunk.ps1"
