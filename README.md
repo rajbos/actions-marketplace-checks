@@ -96,6 +96,28 @@ The Update Mirrors workflow maintains synchronized copies of upstream GitHub Act
 
 This force update behavior ensures that mirrors remain accurate copies of their upstream sources, even when there are conflicting changes.
 
+#### Rate Limit Fallback
+
+The Update Mirrors workflow includes intelligent rate limit handling with automatic fallback to a secondary GitHub App when the primary app is rate limited:
+
+1. **Token Selection**: Before processing each chunk, the workflow checks the rate limit status of available tokens
+2. **Primary Token**: Uses the primary GitHub App token (ID 264650) when rate limit is sufficient
+3. **Automatic Fallback**: If the primary token is rate limited (>20 minute wait), automatically falls back to the secondary token (if configured)
+4. **Graceful Handling**: If both tokens are rate limited, the chunk is skipped and will be retried in the next scheduled run
+5. **Step Summary**: The workflow summary clearly shows which token is being used and provides rate limit details for both tokens
+
+**Configuring a Secondary GitHub App:**
+
+To enable rate limit fallback, configure a second GitHub App and add its credentials as repository secrets:
+- `Automation_App_Key_2`: Private key for the secondary GitHub App (ID 264651)
+
+If the secondary app is not configured, the workflow will continue to use only the primary token.
+
+**Example Step Summary Messages:**
+- "Using primary token (remaining: 4000 calls)"
+- "Fell back to secondary token (primary wait: 25 min, secondary remaining: 3500 calls)"
+- "Both tokens rate limited. Primary: wait 25 min (remaining: 10). Secondary: wait 35 min (remaining: 5)."
+
 ### Environment State Documentation
 
 The Environment State Documentation workflow provides a comprehensive overview of the system's current state:
