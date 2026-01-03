@@ -91,6 +91,12 @@ try {
     Write-Message -message "| 📝 Updated | [$updatedCount] |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
+    # Check if all uploads failed
+    if ($failCount -gt 0 -and $successCount -eq 0) {
+      Write-Message -message "⚠️ **All uploads failed!**" -logToSummary $true
+      Write-Message -message "" -logToSummary $true
+    }
+    
     # Show details
     Write-Message -message "### Details" -logToSummary $true
     Write-Message -message "" -logToSummary $true
@@ -102,6 +108,12 @@ try {
       } else {
         Write-Message -message "- ❌ ``$($result.action)`` - $($result.error)" -logToSummary $true
       }
+    }
+    
+    # Exit with error if all uploads failed
+    if ($failCount -gt 0 -and $successCount -eq 0) {
+      Write-Error "All $failCount uploads failed"
+      exit 1
     }
   } else {
     Write-Warning "Could not parse results from Node.js output"

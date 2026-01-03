@@ -44,6 +44,13 @@ Describe "API Upsert Script" {
             $scriptContent | Should -Match 'if \(-not \$apiUrl'
         }
 
+        It "Should exit with error code 1 if all uploads fail" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            # Check for logic that exits with error when all uploads fail
+            $scriptContent | Should -Match 'if \(\$failCount -gt 0 -and \$successCount -eq 0\)'
+            $scriptContent | Should -Match 'exit 1'
+        }
+
         It "Should reference external Node.js script" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
             $scriptContent | Should -Match 'node-scripts/upload-to-api\.js'
