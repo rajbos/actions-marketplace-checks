@@ -50,6 +50,16 @@ Describe "API Upsert Script" {
             $scriptContent | Should -Match 'Set-Content.*nodeScriptPath'
         }
 
+        It "Should create temp JSON file for actions data" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'temp-actions-data\.json'
+        }
+
+        It "Should check for Node.js availability" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'node --version'
+        }
+
         It "Should use ActionsMarketplaceClient" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
             $scriptContent | Should -Match 'ActionsMarketplaceClient'
@@ -96,9 +106,9 @@ Describe "API Upsert Script" {
             $workflowContent | Should -Match 'DEVOPS_ACTIONS_PACKAGE_DOWNLOAD'
         }
 
-        It "Should use ACTIONS_API secret" {
+        It "Should use AZ_FUNCTION_URL secret" {
             $workflowContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.yml" -Raw
-            $workflowContent | Should -Match 'ACTIONS_API'
+            $workflowContent | Should -Match 'AZ_FUNCTION_URL'
         }
     }
 }
@@ -108,6 +118,11 @@ Describe "Gitignore configuration" {
         It "Should exclude temp-api-upload.js" {
             $gitignoreContent = Get-Content "$PSScriptRoot/../.gitignore" -Raw
             $gitignoreContent | Should -Match 'temp-api-upload\.js'
+        }
+
+        It "Should exclude temp-actions-data.json" {
+            $gitignoreContent = Get-Content "$PSScriptRoot/../.gitignore" -Raw
+            $gitignoreContent | Should -Match 'temp-actions-data\.json'
         }
 
         It "Should exclude node_modules" {

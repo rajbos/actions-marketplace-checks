@@ -43,20 +43,29 @@ Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repo
 Write-Message -message "" -logToSummary $true
 
 # Create a temporary Node.js script to use the npm package
-$nodeScriptPath = Join-Path $PSScriptRoot "temp-api-upload.js"
+# Use the current working directory instead of script root for better environment compatibility
+$nodeScriptPath = Join-Path $PWD "temp-api-upload.js"
 
 $nodeScript = @"
 const { ActionsMarketplaceClient } = require('@devops-actions/actions-marketplace-client');
+const fs = require('fs');
 
 async function uploadActions() {
   const apiUrl = process.argv[2];
-  const actionsJson = process.argv[3];
+  const actionsJsonPath = process.argv[3];
   
   if (!apiUrl) {
     console.error('API URL is required');
     process.exit(1);
   }
   
+  if (!actionsJsonPath) {
+    console.error('Actions JSON file path is required');
+    process.exit(1);
+  }
+  
+  // Read actions from file instead of command line argument
+  const actionsJson = fs.readFileSync(actionsJsonPath, 'utf8');
   const actions = JSON.parse(actionsJson);
   
   console.log('Initializing Actions Marketplace Client...');
@@ -120,15 +129,23 @@ uploadActions().catch(error => {
 # Write the Node.js script
 Set-Content -Path $nodeScriptPath -Value $nodeScript -Force
 
-# Convert repos to JSON for Node.js
-$actionsJson = $validRepos | ConvertTo-Json -Compress -Depth 10
+# Write repos to a temp JSON file to avoid command line length limits
+$actionsJsonPath = Join-Path $PWD "temp-actions-data.json"
+$validRepos | ConvertTo-Json -Depth 10 | Set-Content -Path $actionsJsonPath -Force
 
 Write-Message -message "### Upload Results" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 try {
-  # Run the Node.js script
-  $output = node $nodeScriptPath $apiUrl $actionsJson 2>&1 | Out-String
+  # Check if Node.js is available
+  $nodeVersion = node --version 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    throw "Node.js is not installed or not in PATH. Please ensure Node.js is installed."
+  }
+  Write-Host "Using Node.js version: $nodeVersion"
+  
+  # Run the Node.js script with JSON file path instead of inline JSON
+  $output = node $nodeScriptPath $apiUrl $actionsJsonPath 2>&1 | Out-String
   
   Write-Host "Node.js output:"
   Write-Host $output
@@ -174,9 +191,12 @@ try {
   Write-Message -message "❌ Upload failed: $($_.Exception.Message)" -logToSummary $true
   exit 1
 } finally {
-  # Clean up temporary file
+  # Clean up temporary files
   if (Test-Path $nodeScriptPath) {
     Remove-Item $nodeScriptPath -Force
+  }
+  if (Test-Path $actionsJsonPath) {
+    Remove-Item $actionsJsonPath -Force
   }
 }
 

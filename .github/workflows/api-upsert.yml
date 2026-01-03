@@ -44,7 +44,7 @@ jobs:
       - shell: pwsh
         name: Upload actions to API
         env:
-          ACTIONS_API: ${{ secrets.ACTIONS_API }}
+          AZ_FUNCTION_URL: ${{ secrets.AZ_FUNCTION_URL }}
           NUMBER_OF_REPOS: ${{ inputs.numberOfRepos }}
         run: |
           try {
@@ -70,4 +70,4 @@ jobs:
           . ./.github/workflows/library.ps1
           
           # Run the upload script
-          ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:ACTIONS_API
+          ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL
