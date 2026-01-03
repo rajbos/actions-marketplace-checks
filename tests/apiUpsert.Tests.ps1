@@ -44,10 +44,14 @@ Describe "API Upsert Script" {
             $scriptContent | Should -Match 'if \(-not \$apiUrl'
         }
 
-        It "Should create Node.js script" {
+        It "Should reference external Node.js script" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
-            $scriptContent | Should -Match 'temp-api-upload\.js'
-            $scriptContent | Should -Match 'Set-Content.*nodeScriptPath'
+            $scriptContent | Should -Match 'node-scripts/upload-to-api\.js'
+        }
+
+        It "Should validate Node.js script exists" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'Test-Path.*nodeScriptPath'
         }
 
         It "Should create temp JSON file for actions data" {
@@ -61,13 +65,44 @@ Describe "API Upsert Script" {
         }
 
         It "Should use ActionsMarketplaceClient" {
-            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
-            $scriptContent | Should -Match 'ActionsMarketplaceClient'
+            # Check that the external Node.js script exists
+            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" | Should -Be $true
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            $nodeScript | Should -Match 'ActionsMarketplaceClient'
         }
 
         It "Should clean up temporary files" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
-            $scriptContent | Should -Match 'Remove-Item.*nodeScriptPath'
+            $scriptContent | Should -Match 'Remove-Item.*actionsJsonPath'
+        }
+
+        It "Should validate argument lengths in Node.js script" {
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            $nodeScript | Should -Match 'apiUrl\.length'
+            $nodeScript | Should -Match 'actionsJsonPath\.length'
+        }
+
+        It "Should test API connection" {
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            $nodeScript | Should -Match 'Testing API connection'
+        }
+
+        It "Should use correct status.json schema fields" {
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            # Check that it uses schema-documented fields
+            $nodeScript | Should -Match 'action\.actionType'
+            $nodeScript | Should -Match 'action\.repoInfo'
+            $nodeScript | Should -Match 'action\.vulnerabilityStatus'
+            # Ensure it doesn't use invented fields
+            $nodeScript | Should -Not -Match 'actionData\.description'
+            $nodeScript | Should -Not -Match 'actionData\.icon'
+            $nodeScript | Should -Not -Match 'actionData\.color'
+        }
+    }
+
+    Context "Node.js script file" {
+        It "Should have upload-to-api.js script file" {
+            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" | Should -Be $true
         }
     }
 
@@ -115,11 +150,6 @@ Describe "API Upsert Script" {
 
 Describe "Gitignore configuration" {
     Context "Temporary files excluded" {
-        It "Should exclude temp-api-upload.js" {
-            $gitignoreContent = Get-Content "$PSScriptRoot/../.gitignore" -Raw
-            $gitignoreContent | Should -Match 'temp-api-upload\.js'
-        }
-
         It "Should exclude temp-actions-data.json" {
             $gitignoreContent = Get-Content "$PSScriptRoot/../.gitignore" -Raw
             $gitignoreContent | Should -Match 'temp-actions-data\.json'
