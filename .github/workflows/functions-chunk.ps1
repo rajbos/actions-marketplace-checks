@@ -102,33 +102,44 @@ function ProcessForkingChunk {
         Write-Host "Action schema preview: $schemaPreview"
     }
     
-    # Normalize chunk names upfront (lowercase + underscore→slash) then do single-pass lookups
-    $normalizedChunkNames = @()
-    foreach ($nm in $actionNamesToProcess) {
-        if ($null -ne $nm -and $nm -ne "") {
-            # Replace only the first underscore with a slash to form owner/repo, keep underscores in repo names intact
-            $normalizedChunkNames += ([regex]::Replace($nm.ToLower(), '_', '/', 1))
-        }
-    }
-
+    # Normalize chunk names for lookup - try both formats
+    # 1. Direct underscore format (matches forkedRepoName in hashtable)
+    # 2. First underscore to slash (matches name in hashtable)
     $actionsToProcess = @()
-    foreach ($lookupKey in $normalizedChunkNames) {
-        if ($actionsByName.ContainsKey($lookupKey)) {
-            $actionsToProcess += $actionsByName[$lookupKey]
-        } else {
-            # Brief diagnostics for unmatched names (reduced per-item noise)
+    foreach ($nm in $actionNamesToProcess) {
+        if ($null -eq $nm -or $nm -eq "") {
+            continue
+        }
+        
+        $lowerName = $nm.ToLower()
+        $found = $false
+        
+        # Try 1: Direct lookup with underscore format (for forkedRepoName)
+        if ($actionsByName.ContainsKey($lowerName)) {
+            $actionsToProcess += $actionsByName[$lowerName]
+            $found = $true
+        }
+        # Try 2: Convert first underscore to slash (for name)
+        elseif ($lowerName.Contains('_')) {
+            $slashVariant = [regex]::Replace($lowerName, '_', '/', 1)
+            if ($actionsByName.ContainsKey($slashVariant)) {
+                $actionsToProcess += $actionsByName[$slashVariant]
+                $found = $true
+            }
+        }
+        
+        if (-not $found) {
+            # Brief diagnostics for unmatched names
+            $lookupKey = $lowerName
             $prefixMatches = $actionsByName.Keys | Where-Object { $_.StartsWith($lookupKey) } | Select-Object -First 2
             $containsMatches = $actionsByName.Keys | Where-Object { $_ -like "*${lookupKey}*" } | Select-Object -First 2
-
-            # Also show normalized variants we attempt and the status 'name'-style guess (slash→underscore)
-            $originalName = $actionNamesToProcess[[array]::IndexOf($normalizedChunkNames, $lookupKey)]
-            $firstUnderscoreVariant = [regex]::Replace($originalName.ToLower(), '_', '/', 1)
-            $statusNameStyle = $lookupKey -replace '/','_'
-
-            Write-Warning "Action not found. Original=[$originalName] LookupKey=[$lookupKey] FirstUnderscoreVariant=[$firstUnderscoreVariant] StatusNameGuess=[$statusNameStyle]"
+            
+            $slashVariant = if ($lookupKey.Contains('_')) { [regex]::Replace($lookupKey, '_', '/', 1) } else { "N/A" }
+            
+            Write-Warning "Action not found. Original=[$nm] Tried: [$lookupKey] and [$slashVariant]"
             if ($prefixMatches) { Write-Host "Near prefix matches: $(($prefixMatches -join ', '))" }
             if ($containsMatches) { Write-Host "Near contains matches: $(($containsMatches -join ', '))" }
-
+            
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Action [$lookupKey] not found in actions list, skipping" -isError $true
         }
     }
