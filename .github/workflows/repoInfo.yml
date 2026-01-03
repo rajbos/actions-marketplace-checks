@@ -77,6 +77,16 @@ jobs:
           application_private_key: ${{ secrets.Automation_App_Key }}
           organization: actions-marketplace-validations
 
+      - name: Get Secondary App Token (if configured)
+        id: get_secondary_token
+        if: ${{ secrets.Automation_App_Key_2 != '' }}
+        continue-on-error: true
+        uses: rajbos-actions/workflow-application-token-action@v3.0.0
+        with:
+          application_id: 264651
+          application_private_key: ${{ secrets.Automation_App_Key_2 }}
+          organization: actions-marketplace-validations
+
       - shell: pwsh
         name: Gotta check 'em all
         run: |
@@ -98,8 +108,18 @@ jobs:
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
+           
+           # Prepare token parameters
+           $primaryToken = "${{ steps.get_workflow_token.outputs.token }}"
+           $secondaryToken = "${{ steps.get_secondary_token.outputs.token }}"
+           
            # get repo information
-           ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+           ${{ github.workspace }}/.github/workflows/repoInfo.ps1 `
+             -actions $actions `
+             -numberofReposToDo ${{ env.numberOfReposToDo }} `
+             -access_token $primaryToken `
+             -access_token_destination $primaryToken `
+             -access_token_secondary $secondaryToken
 
       - name: Upload updated status.json as artifact
         if: always()

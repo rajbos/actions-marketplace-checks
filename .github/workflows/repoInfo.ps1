@@ -3,11 +3,56 @@ Param (
   $numberOfReposToDo = 10,
   $access_token = $env:GITHUB_TOKEN,
   $access_token_destination = $env:GITHUB_TOKEN,
+  $access_token_secondary = "",
   [switch]$skipSecretScanSummary = $false
 )
 
 . $PSScriptRoot/library.ps1
 . $PSScriptRoot/dependents.ps1
+
+# Check and select the best available token before processing
+Write-Message -message "## Token Selection and Rate Limit Check" -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+$tokenSelection = Select-BestAvailableToken `
+    -primary_token $access_token_destination `
+    -secondary_token $access_token_secondary `
+    -minRemainingCalls 50 `
+    -maxWaitMinutes 20
+
+Write-Message -message $tokenSelection.Message -logToSummary $true
+Write-Message -message "" -logToSummary $true
+
+# Display rate limit status table
+if ($tokenSelection.PrimaryStatus) {
+    Format-RateLimitTable -rateData @{
+        limit = 5000
+        remaining = $tokenSelection.PrimaryStatus.Remaining
+        reset = ([DateTimeOffset]$tokenSelection.PrimaryStatus.ResetTime).ToUnixTimeSeconds()
+        used = (5000 - $tokenSelection.PrimaryStatus.Remaining)
+    } -title "Primary Token Rate Limit Status"
+}
+
+if ($tokenSelection.SecondaryStatus) {
+    Format-RateLimitTable -rateData @{
+        limit = 5000
+        remaining = $tokenSelection.SecondaryStatus.Remaining
+        reset = ([DateTimeOffset]$tokenSelection.SecondaryStatus.ResetTime).ToUnixTimeSeconds()
+        used = (5000 - $tokenSelection.SecondaryStatus.Remaining)
+    } -title "Secondary Token Rate Limit Status"
+}
+
+# If no token is available, log the issue and exit gracefully
+if (-not $tokenSelection.TokenAvailable) {
+    Write-Message -message "⚠️ **All tokens are rate limited - stopping processing**" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "The workflow will retry on the next scheduled run." -logToSummary $true
+    
+    exit 0
+}
+
+# Use the selected token for processing
+$access_token_destination = $tokenSelection.Token
 
 if ($env:APP_PEM_KEY) {
     Write-Host "GitHub App information found, using GitHub App"
