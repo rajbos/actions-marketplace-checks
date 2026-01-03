@@ -47,7 +47,8 @@ Describe "API Upsert Script" {
         It "Should exit with error code 1 if all uploads fail" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
             # Check for logic that exits with error when all uploads fail
-            $scriptContent | Should -Match 'if \(\$failCount -gt 0 -and \$successCount -eq 0\)'
+            $scriptContent | Should -Match '\$allUploadsFailed = \(\$failCount -gt 0 -and \$successCount -eq 0\)'
+            $scriptContent | Should -Match 'if \(\$allUploadsFailed\)'
             $scriptContent | Should -Match 'exit 1'
         }
 

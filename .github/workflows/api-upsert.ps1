@@ -82,6 +82,7 @@ try {
     $failCount = ($results | Where-Object { $_.success -eq $false }).Count
     $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
     $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
+    $allUploadsFailed = ($failCount -gt 0 -and $successCount -eq 0)
     
     Write-Message -message "| Status | Count |" -logToSummary $true
     Write-Message -message "|--------|-------|" -logToSummary $true
@@ -92,7 +93,7 @@ try {
     Write-Message -message "" -logToSummary $true
     
     # Check if all uploads failed
-    if ($failCount -gt 0 -and $successCount -eq 0) {
+    if ($allUploadsFailed) {
       Write-Message -message "⚠️ **All uploads failed!**" -logToSummary $true
       Write-Message -message "" -logToSummary $true
     }
@@ -111,7 +112,7 @@ try {
     }
     
     # Exit with error if all uploads failed
-    if ($failCount -gt 0 -and $successCount -eq 0) {
+    if ($allUploadsFailed) {
       Write-Error "All $failCount uploads failed"
       exit 1
     }
