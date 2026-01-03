@@ -19,7 +19,7 @@ if (-not $status -or $status.Count -eq 0) {
 }
 
 if (-not $apiUrl) {
-  Write-Error "API URL not provided (ACTIONS_API secret)"
+  Write-Error "API URL not provided (AZ_FUNCTION_URL secret)"
   exit 1
 }
 
@@ -43,7 +43,10 @@ Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repo
 Write-Message -message "" -logToSummary $true
 
 # Create a temporary Node.js script to use the npm package
-# Use the current working directory instead of script root for better environment compatibility
+# Use the current working directory ($PWD) since:
+# 1. We're running in a GitHub Actions runner with a known workspace
+# 2. The npm package is installed in node_modules in this directory
+# 3. The temp files are in .gitignore and will be cleaned up
 $nodeScriptPath = Join-Path $PWD "temp-api-upload.js"
 
 $nodeScript = @"
@@ -130,6 +133,7 @@ uploadActions().catch(error => {
 Set-Content -Path $nodeScriptPath -Value $nodeScript -Force
 
 # Write repos to a temp JSON file to avoid command line length limits
+# Using $PWD since we need the file in the working directory where node_modules is located
 $actionsJsonPath = Join-Path $PWD "temp-actions-data.json"
 $validRepos | ConvertTo-Json -Depth 10 | Set-Content -Path $actionsJsonPath -Force
 
