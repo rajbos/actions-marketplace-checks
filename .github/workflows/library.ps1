@@ -19,6 +19,7 @@ Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 . "$PSScriptRoot/github-app-token-manager.ps1"
 
 $script:GitHubAppTokenManagerInstance = $null
+$script:HasLoggedRateLimitAppSwitch = $false
 
 function Get-GitHubAppTokenManagerInstance {
     if ($null -ne $script:GitHubAppTokenManagerInstance) {
@@ -1155,7 +1156,10 @@ function ApiCall {
                 if ($null -ne $bestBeforeWait) {
                     if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
                         $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                        Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
+                        if (-not $script:HasLoggedRateLimitAppSwitch) {
+                            Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
+                            $script:HasLoggedRateLimitAppSwitch = $true
+                        }
                         return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
                     }
 
@@ -1164,6 +1168,7 @@ function ApiCall {
                     if ($bestBeforeWait.WaitSeconds -gt 0) {
                         $waitSeconds = [double]$bestBeforeWait.WaitSeconds
                         $continueAt = $bestBeforeWait.ContinueAt
+                        Write-Message -message "Using earliest reset across all GitHub Apps: waiting [$waitSeconds] seconds until [$continueAt] before retrying" -logToSummary $true
                     }
                 }
             }
@@ -1490,6 +1495,37 @@ function Format-RateLimitComparisonTable {
     Write-Message -message "" -logToSummary $true
 }
 
+function Write-GitHubAppRateLimitOverview {
+    Param (
+        [string] $organization = $env:APP_ORGANIZATION
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($organization)) {
+        try {
+            $appOverview = Get-GitHubAppRateLimitOverview -organization $organization
+        }
+        catch {
+            Write-Warning "Failed to retrieve GitHub App rate limit overview: $($_.Exception.Message)"
+            $appOverview = $null
+        }
+
+        if ($null -ne $appOverview -and $appOverview.Count -gt 0) {
+            Write-Message -message "| # | App Id | Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
+            Write-Message -message "|---:|-------:|----------:|-----:|-----------|-------------------|" -logToSummary $true
+
+            $index = 1
+            foreach ($app in $appOverview) {
+                $appWaitSeconds = if ($null -ne $app.WaitSeconds) { [double]$app.WaitSeconds } else { 0 }
+                $appWaitTime = Format-WaitTime -totalSeconds $appWaitSeconds
+                Write-Message -message "| $index | $($app.AppId) | $(DisplayIntWithDots $app.Remaining) | $(DisplayIntWithDots $app.Used) | $appWaitTime | $($app.ContinueAt) |" -logToSummary $true
+                $index++
+            }
+
+            Write-Message -message "" -logToSummary $true
+        }
+    }
+}
+
 function Format-RateLimitErrorTable {
     Param (
         [int] $remaining,
@@ -1508,6 +1544,10 @@ function Format-RateLimitErrorTable {
     Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
     Write-Message -message "| $(DisplayIntWithDots $remaining) | $(DisplayIntWithDots $used) | $waitTime | $continueAt |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+
+    # Also log the per-app overview (if apps are configured) so we always see
+    # the latest status for both apps when we choose to show an error table.
+    Write-GitHubAppRateLimitOverview
 }
 
 function Test-IsLikelyGitHubAppPemKey {
