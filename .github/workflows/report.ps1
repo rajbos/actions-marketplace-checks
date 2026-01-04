@@ -150,15 +150,34 @@ function AnalyzeActionInformation {
                 $global:actiondDockerFile++
             }
 
-            if ($action.repoSize) {
-                if ($action.repoSize -gt $global:maxRepoSize) {
-                    $global:maxRepoSize = $action.repoSize
-                }
-                $global:sumRepoSize += $action.repoSize
-                $global:countRepoSize++
+            # Normalize repoSize to a single numeric value to handle cases
+            # where the field is an array (System.Object[]) in the data.
+            $repoSizeValue = $action.repoSize
 
-                if (($action.repoSize / 1024) -gt 100) {
-                    $global:countRepoSizeBiggerThen100Mb++
+            if ($null -ne $repoSizeValue -and $repoSizeValue -is [System.Array]) {
+                $numericCandidates = $repoSizeValue | Where-Object { $_ -is [int] -or $_ -is [long] -or $_ -is [double] }
+                if ($numericCandidates.Count -gt 0) {
+                    $repoSizeValue = ($numericCandidates | Measure-Object -Maximum).Maximum
+                }
+                else {
+                    $repoSizeValue = $null
+                }
+            }
+
+            if ($null -ne $repoSizeValue) {
+                $sizeNumber = [double]$repoSizeValue
+
+                # Preserve existing semantics: only count strictly positive sizes
+                if ($sizeNumber -gt 0) {
+                    if ($sizeNumber -gt $global:maxRepoSize) {
+                        $global:maxRepoSize = $sizeNumber
+                    }
+                    $global:sumRepoSize += $sizeNumber
+                    $global:countRepoSize++
+
+                    if (($sizeNumber / 1024) -gt 100) {
+                        $global:countRepoSizeBiggerThen100Mb++
+                    }
                 }
             }
         }

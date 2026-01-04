@@ -16,6 +16,7 @@ on:
 env:
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
   APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
@@ -41,16 +42,15 @@ jobs:
         env:
           APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
           APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
+          APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
         run: |
+           . ./.github/workflows/library.ps1
            try {
                # Clean BOM if present before parsing JSON
                $jsonContent = Get-Content status.json -Raw
                $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
                $actions = $jsonContent | ConvertFrom-Json
-               
-               # Load library functions for date normalization
-           
-               ./.github/workflows/report.ps1 -actions $actions -logSummary "$(($env:GITHUB_STEP_SUMMARY))"
+
                Write-Host "Normalizing date fields in status data..."
                $actions = Normalize-ActionDates -actions $actions
            } catch {
@@ -63,11 +63,10 @@ jobs:
                Write-Host "Stopping workflow with exit 1 due to parse failure."
                Write-Host "==============================="
                exit 1
-           }
-           Write-Host "Found [$($actions.Length)] actions in the datafile"
-           $token="${{ steps.get_workflow_token.outputs.token }}"  # this one expires after an hour
-           
-           ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token_destination $token
+            }
+            Write-Host "Found [$($actions.Length)] actions in the datafile"
+
+            ./.github/workflows/report.ps1 -actions $actions -logSummary "$($env:GITHUB_STEP_SUMMARY)"
 
       - name: Upload secretScanningAlerts.json to blob storage
         if: always()

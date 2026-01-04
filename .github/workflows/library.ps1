@@ -953,6 +953,10 @@ function ApiCall {
                                 } else {
                                     Write-Host "Rate limit remaining is 0, but refreshed token for app id [$($bestBeforeWait.AppId)] has [$($bestBeforeWait.Remaining)] remaining requests"
                                 }
+                                # Persist the new token so future calls that rely on
+                                # GITHUB_TOKEN will immediately use this app instead
+                                # of continuing to hit the exhausted token.
+                                $env:GITHUB_TOKEN = $bestBeforeWait.Token
                                 return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
                             }
 
@@ -1160,6 +1164,10 @@ function ApiCall {
                             Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
                             $script:HasLoggedRateLimitAppSwitch = $true
                         }
+                        # Persist the new token globally so subsequent calls
+                        # that don't explicitly pass access_token pick up the
+                        # rotated app token instead of the exhausted one.
+                        $env:GITHUB_TOKEN = $bestBeforeWait.Token
                         return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
                     }
 
@@ -1189,6 +1197,9 @@ function ApiCall {
                             if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
                                 $newToken = $tokenResult.Token
                                 Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
+                                # Update the shared environment token so future
+                                # calls use this app id by default.
+                                $env:GITHUB_TOKEN = $newToken
                                 return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
                             }
                         }
@@ -1577,9 +1588,10 @@ function Get-GitHubAppRateLimitOverview {
 
     $primaryKey = $env:APPLICATION_PRIVATE_KEY
     $secondaryKey = $env:APPLICATION_PRIVATE_KEY_2
+    $tertiaryKey = $env:APPLICATION_PRIVATE_KEY_3
 
-    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $appPrivateKeys = @($primaryKey, $secondaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appPrivateKeys = @($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 
     if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
         return @()
@@ -1797,17 +1809,18 @@ function Invoke-GitHubAppRateLimitCheckForConfiguredApps {
 
     $primaryKey = $env:APPLICATION_PRIVATE_KEY
     $secondaryKey = $env:APPLICATION_PRIVATE_KEY_2
+    $tertiaryKey = $env:APPLICATION_PRIVATE_KEY_3
 
-    if ([string]::IsNullOrWhiteSpace($primaryKey) -and [string]::IsNullOrWhiteSpace($secondaryKey)) {
-        throw "At least one APPLICATION_PRIVATE_KEY (or APPLICATION_PRIVATE_KEY_2) must be provided to perform the rate limit check"
+    if ([string]::IsNullOrWhiteSpace($primaryKey) -and [string]::IsNullOrWhiteSpace($secondaryKey) -and [string]::IsNullOrWhiteSpace($tertiaryKey)) {
+        throw "At least one APPLICATION_PRIVATE_KEY (or APPLICATION_PRIVATE_KEY_2 or APPLICATION_PRIVATE_KEY_3) must be provided to perform the rate limit check"
     }
 
     if ([string]::IsNullOrWhiteSpace($organization)) {
         throw "APP_ORGANIZATION (or explicit organization parameter) must be provided to perform the rate limit check"
     }
 
-    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $appPrivateKeys = @($primaryKey, $secondaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appPrivateKeys = @($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 
     if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
         throw "At least one APP_ID and APPLICATION_PRIVATE_KEY must be provided to perform the rate limit check"

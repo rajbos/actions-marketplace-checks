@@ -12,6 +12,9 @@ $resolvedToken = $access_token
 if ([string]::IsNullOrWhiteSpace($resolvedToken)) {
     try {
         $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+        # Share the token manager instance with library.ps1 so ApiCall can
+        # coordinate app switching and failover across all requests in this run.
+        $script:GitHubAppTokenManagerInstance = $tokenManager
         $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
         $resolvedToken = $tokenResult.Token
     }

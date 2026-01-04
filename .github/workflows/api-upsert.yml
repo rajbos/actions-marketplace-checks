@@ -9,6 +9,11 @@ on:
         required: false
         default: '5'
         type: string
+  push:
+    paths:
+      - .github/workflows/api-upsert.yml
+      - .github/workflows/api-upsert.ps1
+      - .github/workflows/node-scripts/upload-to-api.js
 
 jobs:
   upload-to-api:
@@ -46,7 +51,8 @@ jobs:
       - shell: pwsh
         name: Upload actions to API
         env:
-          AZ_FUNCTION_URL: ${{ secrets.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
           NUMBER_OF_REPOS: ${{ inputs.numberOfRepos }}
         run: |
           try {
@@ -72,4 +78,9 @@ jobs:
           . ./.github/workflows/library.ps1
           
           # Run the upload script
-          ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL
+          if ([string]::IsNullOrWhiteSpace($env:NUMBER_OF_REPOS)) {
+            # Use default from script (5) when no input was provided (e.g. push trigger)
+            ./.github/workflows/api-upsert.ps1 -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
+          } else {
+            ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
+          }
