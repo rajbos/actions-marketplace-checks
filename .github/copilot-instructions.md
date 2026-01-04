@@ -64,12 +64,19 @@ $result = ApiCall -url $apiUrl -access_token $token
 ```
 
 ### Authentication
+
+The primary authentication mechanism is a GitHub App. Tokens are obtained via helper functions in `.github/workflows/library.ps1`, not by manually wiring PATs into individual scripts.
+
 ```powershell
-# Uses environment variable or parameter
-$env:GITHUB_TOKEN
-# Or passed as parameter
--access_token $token
+# Preferred: use the GitHub App token manager from library.ps1
+$tokenManager = Get-GitHubAppTokenManagerInstance
+$tokenResult  = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+$accessToken  = $tokenResult.Token
+
+$result = ApiCall -url $apiUrl -access_token $accessToken
 ```
+
+Legacy patterns using `$env:GITHUB_TOKEN` or passing `-access_token_destination` directly into scripts are being removed. When touching code, prefer the token manager pattern above and avoid introducing new usages of raw PATs.
 
 ## Testing
 
@@ -87,18 +94,19 @@ When making changes to inline PowerShell scripts in workflow YAML files, ensure 
 
 ## Important Considerations
 
-1. **Rate Limiting**: GitHub API calls need backoff strategies
-2. **Large Dataset**: The project processes ~29,000 actions per run
-3. **Fork Organization**: Uses `actions-marketplace-validations` org
-4. **Workflow Duration**: Analyze workflow typically runs 45-60 minutes (varies based on data size and API rate limits)
-5. **JSON Depth**: Be aware of JSON serialization depth limits
+1. **Rate Limiting**: GitHub API calls need backoff strategies. Use `GetRateLimitInfo` and the shared `ApiCall` helpers rather than implementing custom sleep/retry logic.
+2. **GitHub App Tokens**: Workflows set `APP_ID`, `APP_ID_2`, `APP_ORGANIZATION`, `APPLICATION_PRIVATE_KEY`, and `APPLICATION_PRIVATE_KEY_2`. Token acquisition should go through the GitHub App token manager (`Get-GitHubAppTokenManagerInstance` / `New-GitHubAppTokenManagerFromEnvironment`).
+3. **Large Dataset**: The project processes ~29,000 actions per run
+4. **Fork Organization**: Uses `actions-marketplace-validations` org
+5. **Workflow Duration**: Analyze workflow typically runs 45-60 minutes (varies based on data size and API rate limits)
+6. **JSON Depth**: Be aware of JSON serialization depth limits
 
 ## Security
 
 - Never commit secrets or tokens
-- Use GitHub secrets for sensitive data
+- Use GitHub secrets for sensitive data and let workflows pass App configuration (`APP_ID`, `APP_ORGANIZATION`, private keys) via environment variables.
 - Validate external inputs before processing
-- The workflow uses GitHub App tokens for authentication
+- The workflow uses GitHub App tokens for authentication; do not add new code paths that depend on long‑lived personal access tokens.
 
 ## What NOT to do
 
