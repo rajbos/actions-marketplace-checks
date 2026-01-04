@@ -106,11 +106,65 @@ Describe "API Upsert Script" {
             $nodeScript | Should -Not -Match 'actionData\.icon'
             $nodeScript | Should -Not -Match 'actionData\.color'
         }
+
+        It "Should reference get-actions-count.js script" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'node-scripts/get-actions-count\.js'
+        }
+
+        It "Should get initial actions count from API" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match '\$initialKnownCount'
+            $scriptContent | Should -Match 'Getting initial count of known actions from API'
+        }
+
+        It "Should display initial count in configuration table" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'Known actions in table storage \(start\)'
+        }
+
+        It "Should get final actions count from API" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match '\$finalKnownCount'
+            $scriptContent | Should -Match 'Getting final count of known actions from API'
+        }
+
+        It "Should display final count after upload completed" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'Known actions in table storage \(end\)'
+            $scriptContent | Should -Match 'Upload process completed'
+        }
     }
 
     Context "Node.js script file" {
         It "Should have upload-to-api.js script file" {
             Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" | Should -Be $true
+        }
+
+        It "Should have get-actions-count.js script file" {
+            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" | Should -Be $true
+        }
+
+        It "Should use ActionsMarketplaceClient in get-actions-count.js" {
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript | Should -Match 'ActionsMarketplaceClient'
+        }
+
+        It "Should call listActions in get-actions-count.js" {
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript | Should -Match 'listActions'
+        }
+
+        It "Should output count with markers in get-actions-count.js" {
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript | Should -Match '__COUNT_START__'
+            $countScript | Should -Match '__COUNT_END__'
+        }
+
+        It "Should validate arguments in get-actions-count.js" {
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript | Should -Match 'apiUrl\.length'
+            $countScript | Should -Match 'functionKey\.length'
         }
     }
 
@@ -152,6 +206,11 @@ Describe "API Upsert Script" {
         It "Should use AZ_FUNCTION_URL secret" {
             $workflowContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.yml" -Raw
             $workflowContent | Should -Match 'AZ_FUNCTION_URL'
+        }
+
+        It "Should trigger on changes to get-actions-count.js" {
+            $workflowContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.yml" -Raw
+            $workflowContent | Should -Match 'node-scripts/get-actions-count\.js'
         }
     }
 }
