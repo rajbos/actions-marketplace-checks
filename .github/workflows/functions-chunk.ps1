@@ -38,6 +38,9 @@ if ([string]::IsNullOrWhiteSpace($appOrganization)) {
 }
 
 $tokenManager = New-GitHubAppTokenManager -AppIds $appIds -AppPrivateKeys $appPrivateKeys
+# Share the token manager instance with library.ps1 so ApiCall can
+# coordinate app switching and failover across all requests in this chunk.
+$script:GitHubAppTokenManagerInstance = $tokenManager
 $tokenResult = $tokenManager.GetTokenForOrganization($appOrganization)
 
 $access_token = $tokenResult.Token
