@@ -1,13 +1,13 @@
 Param (
-  $actions,
-  $numberOfReposToDo = 100,
-  $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN
+    $actions,
+    $numberOfReposToDo = 100,
+    $access_token = $env:GITHUB_TOKEN,
+    $access_token_destination = $env:GITHUB_TOKEN
 )
 
 . $PSScriptRoot/library.ps1
 
-Test-AccessTokens -accessToken $access_token -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+Test-AccessTokens -accessToken $access_token -numberOfReposToDo $numberOfReposToDo
 
 function UpdateForkedRepos {
     Param (

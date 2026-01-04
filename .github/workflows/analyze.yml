@@ -36,6 +36,9 @@ env:
   numberOfReposForking: 250
   numberOfReposRepoInfo: 250
   numberOfChunks: 4
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
   prepare:
@@ -250,14 +253,6 @@ jobs:
           name: work-chunks
           path: .
 
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-
       - name: Install PowerShell modules
         shell: pwsh
         run: |
@@ -266,6 +261,9 @@ jobs:
 
       - name: Process forking chunk ${{ matrix.chunk-id }}
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/library.ps1
 
@@ -298,9 +296,7 @@ jobs:
           ./.github/workflows/functions-chunk.ps1 `
             -actions $actions `
             -actionNames $actionNames `
-            -chunkId $chunkId `
-            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
-            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+            -chunkId $chunkId
 
       - name: Upload partial status for forking chunk ${{ matrix.chunk-id }}
         if: always()
@@ -406,14 +402,6 @@ jobs:
           name: work-chunks
           path: .
 
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-
       - name: Install PowerShell modules
         shell: pwsh
         run: |
@@ -421,6 +409,9 @@ jobs:
 
       - name: Process repo info chunk ${{ matrix.chunk-id }}
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/library.ps1
 
@@ -448,14 +439,11 @@ jobs:
           $actionNames = Get-Content $chunkFile | ConvertFrom-Json
           Write-Message -message "Loaded [$(DisplayIntWithDots $actionNames.Count)] actions to process from [$chunkFile]" -logToSummary $true
           Write-Message -message "" -logToSummary $true
-
           # Process the chunk
           ./.github/workflows/repoInfo-chunk.ps1 `
             -actions $actions `
             -actionNames $actionNames `
-            -chunkId $chunkId `
-            -access_token "${{ steps.get_workflow_token.outputs.token }}" `
-            -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+            -chunkId $chunkId
 
       - name: Upload partial status for repo info chunk ${{ matrix.chunk-id }}
         if: always()
@@ -502,14 +490,6 @@ jobs:
             Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
-
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
 
       - name: Download all partial status updates
         uses: actions/download-artifact@v7
@@ -620,23 +600,25 @@ jobs:
 
       - name: Show secret scanning summary
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/library.ps1
 
           Write-Message -message "" -logToSummary $true
 
-          GetFoundSecretCount -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+          GetFoundSecretCount
 
       - name: Check rate limit status
         shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/library.ps1
 
-          Write-Message -message "" -logToSummary $true
-          Write-Message -message "### Final Rate Limit Check" -logToSummary $true
-          Write-Message -message "" -logToSummary $true
-
-          GetRateLimitInfo -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}" -waitForRateLimit $false
+          Invoke-GitHubAppRateLimitCheckForConfiguredApps
 
       - name: Upload status.json to blob storage
         if: always()

@@ -18,6 +18,9 @@ on:
 
 env:
   numberOfReposToDo: 500 
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
   process-repo-info:
@@ -69,16 +72,11 @@ jobs:
             exit 1
           }
 
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-
       - shell: pwsh
         name: Gotta check 'em all
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
            # Debug: Show first 10 lines of actions.json
            Write-Host "First 10 lines of actions.json:"
@@ -99,7 +97,7 @@ jobs:
            Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
            Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
            # get repo information
-           ${{ github.workspace }}/.github/workflows/repoInfo.ps1  -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+           & "${{ github.workspace }}/.github/workflows/repoInfo.ps1" -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }}
 
       - name: Upload updated status.json as artifact
         if: always()

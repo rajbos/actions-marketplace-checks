@@ -9,7 +9,6 @@ BeforeAll {
     function Test-AccessTokens {
         Param (
             [string] $accessToken,
-            [string] $access_token_destination,
             [int] $numberOfReposToDo
         )
         # Do nothing in tests

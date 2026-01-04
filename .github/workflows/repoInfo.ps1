@@ -9,20 +9,25 @@ Param (
 . $PSScriptRoot/library.ps1
 . $PSScriptRoot/dependents.ps1
 
-if ($env:APP_PEM_KEY) {
-    Write-Host "GitHub App information found, using GitHub App"
-    # todo: move into codespace variable
-    $env:APP_ID = 264650
-    $env:INSTALLATION_ID = 31486141
-    # get a token to use from the app
-    $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
+$accessToken = $access_token
+
+if ([string]::IsNullOrWhiteSpace($accessToken)) {
+    try {
+        $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+        $accessToken = $tokenResult.Token
+    }
+    catch {
+        Write-Error "Failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
+        throw
+    }
 }
-else {
-  # use the one send in as a file param
-  $accessToken = $access_token
+$accessTokenDestination = $access_token_destination
+if ([string]::IsNullOrWhiteSpace($accessTokenDestination)) {
+    $accessTokenDestination = $accessToken
 }
 
-Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $numberOfReposToDo
+Test-AccessTokens -accessToken $accessToken -numberOfReposToDo $numberOfReposToDo
 
 Import-Module powershell-yaml -Force
 
@@ -279,7 +284,8 @@ function GetRepoInfo {
         $owner,
         $repo,
         [Parameter(Mandatory=$true)]
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -297,10 +303,10 @@ function GetRepoInfo {
     $url = "/repos/$owner/$repo"
     Write-Host "Loading repository info for [$owner/$repo]"
     try {
-        $response = ApiCall -method GET -url $url -access_token $access_token
+        $response = ApiCall -method GET -url $url -access_token $accessToken
         try {
             $url = "/repos/$owner/$repo/releases/latest"
-            $release = ApiCall -method GET -url $url -access_token $access_token
+            $release = ApiCall -method GET -url $url -access_token $accessToken
             return ($response.archived, $response.disabled, $response.updated_at, $release.published_at, $null)
         }
         catch {
@@ -317,7 +323,8 @@ function GetRepoTagInfo {
     Param (
         $owner,
         $repo,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -333,7 +340,7 @@ function GetRepoTagInfo {
     }
 
     $url = "repos/$owner/$repo/git/matching-refs/tags"
-    $response = ApiCall -method GET -url $url -access_token $access_token
+    $response = ApiCall -method GET -url $url -access_token $accessToken
 
     # Return array of objects with tag name and SHA
     $response = $response | ForEach-Object { 
@@ -350,7 +357,8 @@ function GetRepoReleases {
     Param (
         $owner,
         $repo,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -366,7 +374,7 @@ function GetRepoReleases {
     }
 
     $url = "repos/$owner/$repo/releases"
-    $response = ApiCall -method GET -url $url -access_token $access_token
+    $response = ApiCall -method GET -url $url -access_token $accessToken
 
     # Return array of objects with tag name and target_commitish (SHA)
     # Note: tag_name from releases API is already a direct string, not a URL path
@@ -384,7 +392,8 @@ function GetFundingInfo {
     Param (
         $owner,
         $repo,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -405,12 +414,12 @@ function GetFundingInfo {
 
     try {
         Write-Debug "Checking for FUNDING.yml at [$fundingFileLocation]"
-        $response = ApiCall -method GET -url $fundingFileLocation -hideFailedCall $true -access_token $access_token
+        $response = ApiCall -method GET -url $fundingFileLocation -hideFailedCall $true -access_token $accessToken
         
         if ($response -and $response.download_url) {
             Write-Message "Found FUNDING.yml for [$owner/$repo] at [$fundingFileLocation]"
             # Download the file content
-            $fundingFileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
+            $fundingFileContent = ApiCall -method GET -url $response.download_url -access_token $accessToken -returnErrorInfo $true
         }
     }
     catch {
@@ -481,7 +490,8 @@ function GetActionType {
     Param (
         $owner,
         $repo,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -506,20 +516,20 @@ function GetActionType {
     $actionType = ""
     try {
         $url = "/repos/$owner/$repo/contents/action.yml"
-        $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
         $fileFound = "action.yml"
     }
     catch {
         Write-Debug "No action.yml, checking for action.yaml"
         try {
             $url = "/repos/$owner/$repo/contents/action.yaml"
-            $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
+            $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
             $fileFound = "action.yaml"
         }
         catch {
             try {
                 $url = "/repos/$owner/$repo/contents/Dockerfile"
-                $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
+                $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
                 $fileFound = "Dockerfile"
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
@@ -529,7 +539,7 @@ function GetActionType {
             catch {
                 try {
                     $url = "/repos/$owner/$repo/contents/dockerfile"
-                    $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token
+                    $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
                     $fileFound = "dockerfile"
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
@@ -551,7 +561,7 @@ function GetActionType {
 
     # load the file
     Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
-    $fileContent = ApiCall -method GET -url $response.download_url -access_token $access_token -returnErrorInfo $true
+    $fileContent = ApiCall -method GET -url $response.download_url -access_token $accessToken -returnErrorInfo $true
     
     # Check if ApiCall returned an error
     if (($fileContent -is [hashtable]) -and ($fileContent.ContainsKey('Error'))) {
@@ -658,7 +668,8 @@ function MakeRepoInfoCall {
     Param (
         $action,
         $forkOrg,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -671,7 +682,7 @@ function MakeRepoInfoCall {
 
     $url = "/repos/$forkOrg/$($action.name)"
     try {
-        $response = ApiCall -method GET -url $url -access_token $access_token
+        $response = ApiCall -method GET -url $url -access_token $accessToken
     }
     catch {
         $errorMsg = $_.Exception.Message
@@ -694,7 +705,8 @@ function MakeRepoInfoCall {
 function GetInfo {
     Param (
         $existingForks,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
 
@@ -752,7 +764,7 @@ function GetInfo {
                 continue
             }
             # load owner from repo info out of the fork
-            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
+            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -accessToken $accessToken -startTime $startTime
             Write-Host "Loading repo information for fork [$forkOrg/$($action.name)]"
                 if ($response -and $response.parent) {
                     # load owner info from parent
@@ -779,7 +791,7 @@ function GetInfo {
         $hasField = Get-Member -inputobject $action -name "mirrorLastUpdated" -Membertype Properties
         if (!$hasField) {
             if ($null -eq $response) {
-                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -accessToken $accessToken -startTime $startTime
             }
             if ($response -and $response.updated_at) {
                 # add the new field
@@ -796,7 +808,7 @@ function GetInfo {
         $hasField = Get-Member -inputobject $action -name repoSize -Membertype Properties
         if ($null -eq $response) {
             # try fork first
-            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -access_token $access_token -startTime $startTime
+            $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -accessToken $accessToken -startTime $startTime
         }
 
         $sizeValue = $null
@@ -809,7 +821,7 @@ function GetInfo {
                 ($owner, $repo) = GetOrgActionInfo($action.name)
                 if ($owner -and $repo) {
                     $upstreamUrl = "/repos/$owner/$repo"
-                    $upstreamResponse = ApiCall -method GET -url $upstreamUrl -access_token $access_token -hideFailedCall $true
+                    $upstreamResponse = ApiCall -method GET -url $upstreamUrl -access_token $accessToken -hideFailedCall $true
                     if ($null -ne $upstreamResponse -and $null -ne $upstreamResponse.size) {
                         $sizeValue = $upstreamResponse.size
                     }
@@ -877,7 +889,7 @@ function GetInfo {
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
-            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
 
             If (!$hasActionTypeField) {
                 $actionType = @{
@@ -913,7 +925,7 @@ function GetInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             if ($repo -ne "" -and $owner -ne "") {
                 Write-Debug "Checking funding information for [$($owner)/$($repo)]"
-                $fundingInfo = GetFundingInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                $fundingInfo = GetFundingInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                 if ($null -ne $fundingInfo) {
                     $action | Add-Member -Name fundingInfo -Value $fundingInfo -MemberType NoteProperty
                     $i++ | Out-Null
@@ -931,7 +943,7 @@ function GetInfo {
                     ($owner, $repo) = GetOrgActionInfo($action.name)
                     if ($repo -ne "" -and $owner -ne "") {
                         Write-Debug "Re-checking funding information for [$($owner)/$($repo)]"
-                        $fundingInfo = GetFundingInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                        $fundingInfo = GetFundingInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                         if ($null -ne $fundingInfo) {
                             $action.fundingInfo = $fundingInfo
                             $i++ | Out-Null
@@ -1058,7 +1070,8 @@ function GetRepoDockerBaseImage {
         [string] $owner,
         [string] $repo,
         $actionType,
-        $access_token
+        [Alias('access_token')]
+        $accessToken
     )
 
     $result = @{
@@ -1072,10 +1085,10 @@ function GetRepoDockerBaseImage {
         $dockerfilePath = "Dockerfile"
         $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
         try {
-            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
+            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken -contextInfo $contextInfo
             $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
             if ($hasValidDownloadUrl) {
-                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
+                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $accessToken -contextInfo $contextInfo
                 $result.dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
                 $result.hasCustomCode = Test-DockerfileHasCustomCode -dockerFileContent $dockerFileContent
             }
@@ -1090,10 +1103,10 @@ function GetRepoDockerBaseImage {
             $dockerfilePath = "dockerfile"
             $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
             try {
-                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $access_token -contextInfo $contextInfo
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken -contextInfo $contextInfo
                 $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
                 if ($hasValidDownloadUrl) {
-                    $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $access_token -contextInfo $contextInfo
+                    $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -access_token $accessToken -contextInfo $contextInfo
                     $result.dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
                     $result.hasCustomCode = Test-DockerfileHasCustomCode -dockerFileContent $dockerFileContent
                 }
@@ -1117,12 +1130,13 @@ function EnableSecretScanning {
     param (
         [string] $owner,
         [string] $repo,
-        [string] $access_token
+        [Alias('access_token')]
+        [string] $accessToken
     )
 
     $url = "/repos/$owner/$repo"
     $body = "{""security_and_analysis"": {""secret_scanning"": {""status"": ""enabled""}}}"
-    $patchResult = ApiCall -method PATCH -url $url -body $body -access_token $access_token -expected 200
+    $patchResult = ApiCall -method PATCH -url $url -body $body -access_token $accessToken -expected 200
 
     return $patchResult
 }
@@ -1130,7 +1144,8 @@ function EnableSecretScanning {
 function GetMoreInfo {
     param (
         $existingForks,
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
         $startTime
     )
     # get repo information
@@ -1195,7 +1210,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
                 Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
                         $action.upstreamFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
@@ -1249,7 +1264,7 @@ function GetMoreInfo {
                     # Check if our forked copy exists
                     try {
                         $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
-                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -access_token $access_token -hideFailedCall $true
+                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -access_token $accessToken -hideFailedCall $true
                         if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
                             Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
                         }
@@ -1275,7 +1290,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.tagInfo)) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $AccessToken -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
 
@@ -1296,7 +1311,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.secretScanningEnabled) -or !$action.secretScanningEnabled) {
                 Write-Host "$i/$max - Enabling secret scanning information for [$forkOrg/$($action.name)]. hasField: [$hasField], action.secretScanningEnabled: [$($action.secretScanningEnabled)]]"
                 try {
-                    $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name -access_token $access_token
+                    $secretScanningEnabled = EnableSecretScanning -owner $forkOrg -repo $action.name -accessToken $accessToken
                     if (!$hasField) {
                         Write-Host "Adding secret scanning information object with enabled:[$($secretScanningEnabled)] for [$($forkOrg)/$($action.name)]"
 
@@ -1317,7 +1332,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.releaseInfo)) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -access_token $access_token -startTime $startTime
+                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
 
@@ -1345,7 +1360,7 @@ function GetMoreInfo {
                     Write-Host "$i/$max - Checking Docker information for [$($owner)/$($repo)]. hasBaseImageField: [$hasBaseImageField], hasCustomCodeField: [$hasCustomCodeField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
                     try {
                         # search for the docker file in the fork organization, since the original repo might already have seen updates
-                        $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -access_token $access_token
+                        $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
                         
                         if ($dockerInfo.dockerBaseImage -ne "") {
                             if (!$hasBaseImageField) {
@@ -1503,21 +1518,23 @@ function Run {
         $actions,
 
         [Parameter(Mandatory=$true)]
-        $access_token,
+        [Alias('access_token')]
+        $accessToken,
 
         [Parameter(Mandatory=$true)]
-        $access_token_destination
+        [Alias('access_token_destination')]
+        $accessTokenDestination
     )
 
     $startTime = Get-Date
     Write-Host "Run started at [$startTime]"
 
     Write-Host "Got $(DisplayIntWithDots($actions.Length)) actions to get the repo information for"
-    GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination
+    GetRateLimitInfo -access_token $accessToken -access_token_destination $accessTokenDestination
 
-    ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $access_token_destination
+    ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $accessTokenDestination
 
-    $existingForks = GetInfo -existingForks $existingForks -access_token $access_token -startTime $startTime
+    $existingForks = GetInfo -existingForks $existingForks -accessToken $accessToken -startTime $startTime
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
 
@@ -1529,17 +1546,17 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -access_token $access_token_destination -startTime $startTime
+    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -accessToken $accessTokenDestination -startTime $startTime
     SaveStatus -existingForks $existingForks
 
     if (-not $skipSecretScanSummary) {
-        GetFoundSecretCount -access_token_destination $access_token_destination
+        GetFoundSecretCount -access_token_destination $accessTokenDestination
     }
-    GetRateLimitInfo -access_token $access_token -access_token_destination $access_token_destination -waitForRateLimit $false
+    GetRateLimitInfo -access_token $accessToken -access_token_destination $accessTokenDestination -waitForRateLimit $false
 }
 
 # main call
-Run -actions $actions -access_token $access_token -access_token_destination $access_token_destination
+Run -actions $actions -accessToken $accessToken -accessTokenDestination $accessTokenDestination
 
 # Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
 exit 0
