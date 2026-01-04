@@ -4,7 +4,9 @@ Param (
   [Parameter(Mandatory = $false)]
   [int]$numberOfRepos = 5,
   [Parameter(Mandatory = $true)]
-  [string]$apiUrl
+  [string]$apiUrl,
+  [Parameter(Mandatory = $true)]
+  [string]$functionKey
 )
 
 . $PSScriptRoot/library.ps1
@@ -23,7 +25,13 @@ if (-not $apiUrl) {
   exit 1
 }
 
+if (-not $functionKey) {
+  Write-Error "Function key not provided (AZ_FUNCTION_TOKEN secret)"
+  exit 1
+}
+
 Write-Message -message "API URL: [$apiUrl]" -logToSummary $true
+Write-Message -message "Function key provided: [$($functionKey.Length) characters]" -logToSummary $true
 Write-Message -message "Number of repos to upload: [$numberOfRepos]" -logToSummary $true
 Write-Message -message "Total repos in status.json: $(DisplayIntWithDots $status.Count)" -logToSummary $true
 Write-Message -message "" -logToSummary $true
@@ -67,7 +75,7 @@ try {
   Write-Host "Using Node.js version: [$nodeVersion]"
   
   # Run the Node.js script with JSON file path instead of inline JSON
-  $output = node $nodeScriptPath $apiUrl $actionsJsonPath 2>&1 | Out-String
+  $output = node $nodeScriptPath $apiUrl $functionKey $actionsJsonPath 2>&1 | Out-String
   
   Write-Host "Node.js output:"
   Write-Host $output
