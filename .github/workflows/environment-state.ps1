@@ -17,11 +17,8 @@
 .PARAMETER existingForks
     The array of existing forks from status.json
 
-.PARAMETER access_token_destination
-    GitHub App token for API calls to the marketplace validations org
-
 .EXAMPLE
-    ./environment-state.ps1 -actions $actions -existingForks $existingForks -access_token_destination $token
+    ./environment-state.ps1 -actions $actions -existingForks $existingForks
 #>
 
 Param (
@@ -29,10 +26,7 @@ Param (
     $actions,
 
     [Parameter(Mandatory=$true)]
-    $existingForks,
-
-    [Parameter(Mandatory=$false)]
-    [string] $access_token_destination = ""
+    $existingForks
 )
 
 # Import library functions
@@ -581,19 +575,17 @@ Write-Message -message "" -logToSummary $true
 # 7. RATE LIMIT STATUS (if token available) - console only
 # ============================================================================
 
-$rateLimitToken = $access_token_destination
+$rateLimitToken = $null
 
-if ([string]::IsNullOrWhiteSpace($rateLimitToken)) {
-    try {
-        $tokenManager = New-GitHubAppTokenManagerFromEnvironment
-        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
-        $rateLimitToken = $tokenResult.Token
-    }
-    catch {
-        Write-Host ""
-        Write-Host "Skipping rate limit status: failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
-        $rateLimitToken = $null
-    }
+try {
+    $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+    $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+    $rateLimitToken = $tokenResult.Token
+}
+catch {
+    Write-Host ""
+    Write-Host "Skipping rate limit status: failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
+    $rateLimitToken = $null
 }
 
 if (-not [string]::IsNullOrWhiteSpace($rateLimitToken)) {

@@ -1414,39 +1414,6 @@ function Format-WaitTime {
     }
 }
 
-function Format-RateLimitTable {
-    Param (
-        $rateData,
-        [string] $title = "Rate Limit Status"
-    )
-    
-    # Convert Unix timestamp to human-readable time
-    $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rateData.reset).UtcDateTime
-    $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
-    
-    # Format time remaining as human-readable string
-    if ($timeUntilReset.TotalMinutes -lt 1) {
-        $resetDisplay = "< 1 minute"
-    } elseif ($timeUntilReset.TotalHours -lt 1) {
-        $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
-    } else {
-        $hours = [math]::Floor($timeUntilReset.TotalHours)
-        $minutes = [math]::Floor($timeUntilReset.Minutes)
-        if ($minutes -eq 0) {
-            $resetDisplay = "$hours hours"
-        } else {
-            $resetDisplay = "$hours hours $minutes minutes"
-        }
-    }
-    
-    Write-Message -message "**${title}:**" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Limit | Used | Remaining | Resets In |" -logToSummary $true
-    Write-Message -message "|------:|-----:|----------:|-----------|" -logToSummary $true
-    Write-Message -message "| $(DisplayIntWithDots $rateData.limit) | $(DisplayIntWithDots $rateData.used) | $(DisplayIntWithDots $rateData.remaining) | $resetDisplay |" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-}
-
 function Format-RateLimitComparisonTable {
     Param (
         $rateEntries,
