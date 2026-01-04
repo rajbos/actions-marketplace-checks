@@ -28,7 +28,7 @@ async function getActionsCount() {
   }
 
   console.log('Initializing Actions Marketplace Client...');
-  const client = new ActionsMarketplaceClient({ apiUrl: apiUrl, functionKey: functionKey });
+  const client = new ActionsMarketplaceClient({ apiUrl, functionKey });
   
   try {
     console.log('Getting actions count from API...');
