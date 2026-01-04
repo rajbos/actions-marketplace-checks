@@ -1782,35 +1782,8 @@ function Invoke-GitHubAppRateLimitCheckForConfiguredApps {
         throw "At least one APP_ID and APPLICATION_PRIVATE_KEY must be provided to perform the rate limit check"
     }
 
-    $max = [Math]::Min($appIds.Count, $appPrivateKeys.Count)
-    $accessToken = $null
-
-    for ($i = 0; $i -lt $max; $i++) {
-        $appId = $appIds[$i]
-        $pemKey = $appPrivateKeys[$i]
-
-        if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($pemKey)) {
-            continue
-        }
-
-        Write-Host "Trying GitHub App id [$appId] for organization [$organization]"
-        try {
-            $accessToken = Get-TokenFromApp -appId $appId -pemKey $pemKey -targetAccountLogin $organization
-            if (-not [string]::IsNullOrWhiteSpace($accessToken)) {
-                Write-Host "Successfully obtained token using app id [$appId]"
-                break
-            }
-        }
-        catch {
-            Write-Warning "Failed to get token for app id [$appId]: $($_.Exception.Message)"
-        }
-    }
-
-    if ([string]::IsNullOrWhiteSpace($accessToken)) {
-        throw "Failed to obtain a GitHub App token for organization using any provided APP_ID/APPLICATION_PRIVATE_KEY combination"
-    }
-
-    GetRateLimitInfo -access_token $accessToken -access_token_destination $accessToken -waitForRateLimit $false
+    # Show rate limit status for all configured GitHub Apps instead of a single token
+    Write-GitHubAppRateLimitOverview -organization $organization
 }
 
 <#
