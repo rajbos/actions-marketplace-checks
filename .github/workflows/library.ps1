@@ -1153,6 +1153,7 @@ function ApiCall {
             # configured GitHub Apps. If any app still has quota, immediately switch
             # to the one with the highest remaining. If all apps are exhausted, use
             # the earliest reset across all apps to decide how long to wait.
+            $usedAllAppsWaitPlan = $false
             if ($waitForRateLimit) {
                 $organization = $env:APP_ORGANIZATION
                 $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization
@@ -1176,13 +1177,14 @@ function ApiCall {
                     if ($bestBeforeWait.WaitSeconds -gt 0) {
                         $waitSeconds = [double]$bestBeforeWait.WaitSeconds
                         $continueAt = $bestBeforeWait.ContinueAt
+                        $usedAllAppsWaitPlan = $true
                         Write-Message -message "Using earliest reset across all GitHub Apps: waiting [$waitSeconds] seconds until [$continueAt] before retrying" -logToSummary $true
                     }
                 }
             }
 
             # Check if wait time exceeds 20 minutes (1200 seconds)
-            if ($waitSeconds -gt 1200) {
+            if ($waitSeconds -gt 1200 -and -not $usedAllAppsWaitPlan) {
                 # Only show messages and halt execution if we're configured to wait for rate limits
                 if ($waitForRateLimit) {
                     # First try to switch to the next GitHub App (if configured) and retry
