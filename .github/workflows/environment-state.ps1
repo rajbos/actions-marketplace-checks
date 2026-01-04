@@ -17,11 +17,8 @@
 .PARAMETER existingForks
     The array of existing forks from status.json
 
-.PARAMETER access_token_destination
-    GitHub App token for API calls to the marketplace validations org
-
 .EXAMPLE
-    ./environment-state.ps1 -actions $actions -existingForks $existingForks -access_token_destination $token
+    ./environment-state.ps1 -actions $actions -existingForks $existingForks
 #>
 
 Param (
@@ -29,10 +26,7 @@ Param (
     $actions,
 
     [Parameter(Mandatory=$true)]
-    $existingForks,
-
-    [Parameter(Mandatory=$false)]
-    [string] $access_token_destination = ""
+    $existingForks
 )
 
 # Import library functions
@@ -578,22 +572,36 @@ Write-Message -message "*To improve this coverage, run this workflow: [Analyze](
 Write-Message -message "" -logToSummary $true
 
 # ============================================================================
-# 7. RATE LIMIT STATUS (if token provided) - console only
+# 7. RATE LIMIT STATUS (if token available) - console only
 # ============================================================================
-if ($access_token_destination -ne "") {
+
+$rateLimitToken = $null
+
+try {
+    $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+    $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+    $rateLimitToken = $tokenResult.Token
+}
+catch {
+    Write-Host ""
+    Write-Host "Skipping rate limit status: failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
+    $rateLimitToken = $null
+}
+
+if (-not [string]::IsNullOrWhiteSpace($rateLimitToken)) {
     Write-Host ""
     Write-Host "Rate Limit Status (console only):"
     Write-Host ""
-    
+
     # Get rate limit info but don't log to summary to save space
     # Use waitForRateLimit = $false since this is optional info and shouldn't block the report
     $url = "rate_limit"
-    $response = ApiCall -method GET -url $url -access_token $access_token_destination -waitForRateLimit $false
-    
+    $response = ApiCall -method GET -url $url -access_token $rateLimitToken -waitForRateLimit $false
+
     if ($null -ne $response -and $null -ne $response.rate) {
         $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($response.rate.reset).UtcDateTime
         $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
-        
+
         if ($timeUntilReset.TotalMinutes -lt 1) {
             $resetDisplay = "< 1 minute"
         } elseif ($timeUntilReset.TotalHours -lt 1) {
@@ -607,7 +615,7 @@ if ($access_token_destination -ne "") {
                 $resetDisplay = "$hours hours $minutes minutes"
             }
         }
-        
+
         Write-Host "  Limit: $($response.rate.limit)"
         Write-Host "  Used: $($response.rate.used)"
         Write-Host "  Remaining: $($response.rate.remaining)"
@@ -616,7 +624,7 @@ if ($access_token_destination -ne "") {
     elseif ($null -eq $response) {
         Write-Host "  (Rate limit information unavailable - API rate limit may be exceeded)"
     }
-    
+
     Write-Host ""
 }
 

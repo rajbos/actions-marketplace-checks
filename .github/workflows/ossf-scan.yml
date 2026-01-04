@@ -13,6 +13,11 @@ on:
 
   workflow_dispatch:
 
+env:
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
+
 jobs:
   get-data:
     concurrency:
@@ -45,37 +50,34 @@ jobs:
             Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
-
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
           
       - shell: pwsh
         name: Run reporting script
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
            # Debug: Show first 10 lines of status.json
            Write-Host "First 10 lines of status.json:"
            Get-Content status.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-           
+
            # Clean BOM if present before parsing JSON
            $jsonContent = Get-Content status.json -Raw
            $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
            try {
-               $actions = $jsonContent | ConvertFrom-Json
+             $actions = $jsonContent | ConvertFrom-Json
            } catch {
-               Write-Host "ERROR: JSON parsing failed"
-               Write-Host "First 10 lines of content:"
-               Get-Content status.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
-               throw $_
+             Write-Host "ERROR: JSON parsing failed"
+             Write-Host "First 10 lines of content:"
+             Get-Content status.json -TotalCount 10 | ForEach-Object { Write-Host $_ }
+             throw $_
            }
+
            Write-Host "Found [$($actions.Length)] actions in the datafile"
            # $numberOfReposToDo = $actions.Length
            $numberOfReposToDo = 1000
-           ./.github/workflows/ossf-scan.ps1 -actions $actions -numberOfReposToDo $numberOfReposToDo -logSummary "$($env:GITHUB_STEP_SUMMARY)" -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+
+           & "${{ github.workspace }}/.github/workflows/ossf-scan.ps1" -actions $actions -numberOfReposToDo $numberOfReposToDo -logSummary "$($env:GITHUB_STEP_SUMMARY)"
 
       - name: Upload status.json to blob storage
         if: always()

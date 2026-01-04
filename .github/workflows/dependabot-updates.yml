@@ -16,6 +16,9 @@ on:
 env: 
   numberOfReposToDo: 1000
   numberOfReposToDoRepoInfo: 100
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
   enable-em-all:
@@ -65,16 +68,11 @@ jobs:
             exit 1
           }
           
-      - name: Get App Token
-        id: get_workflow_token
-        uses: rajbos-actions/workflow-application-token-action@v3.0.0
-        with:
-          application_id: 264650
-          application_private_key: ${{ secrets.Automation_App_Key }}
-          organization: actions-marketplace-validations
-          
       - shell: pwsh
         name: Gotta enable 'em all
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
            # Debug: Show first 10 lines of status.json
            Write-Host "First 10 lines of status.json:"
@@ -97,7 +95,7 @@ jobs:
 
            # fork repos and load Dependabot status
            # this started to fail with the PAT ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ secrets.ACCESS_TOKEN }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
-           ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }} -access_token "${{ steps.get_workflow_token.outputs.token }}" -access_token_destination "${{ steps.get_workflow_token.outputs.token }}"
+           ./.github/workflows/dependabot-updates.ps1 -actions $existingForks -numberOfReposToDo ${{ env.numberOfReposToDo }}
 
       - name: Upload status.json to blob storage
         if: always()

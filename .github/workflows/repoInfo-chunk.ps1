@@ -11,28 +11,43 @@ Param (
   $actionNames,  # Array of action names (fork names) to process in this chunk
   [int] $chunkId = 0,
   $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN
+  [string[]] $appIds,
+  [string[]] $appPrivateKeys,
+  [string] $appOrganization
 )
+
+if (-not $appIds -or $appIds.Count -eq 0) {
+    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+}
+
+if (-not $appPrivateKeys -or $appPrivateKeys.Count -eq 0) {
+    $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+}
+
+if ([string]::IsNullOrWhiteSpace($appOrganization)) {
+    $appOrganization = $env:APP_ORGANIZATION
+}
 
 . $PSScriptRoot/library.ps1
 . $PSScriptRoot/dependents.ps1
 
-if ($env:APP_PEM_KEY) {
-    Write-Host "GitHub App information found, using GitHub App"
-    $env:APP_ID = 264650
-    $env:INSTALLATION_ID = 31486141
-    $accessToken = Get-TokenFromApp -appId $env:APP_ID -installationId $env:INSTALLATION_ID -pemKey $env:APP_PEM_KEY
+if ($appPrivateKeys.Count -gt 0 -and $appIds.Count -gt 0) {
+    if ([string]::IsNullOrWhiteSpace($appOrganization)) {
+        throw "APP_ORGANIZATION must be provided when using GitHub App credentials"
+    }
+
+    $tokenManager = New-GitHubAppTokenManager -AppIds $appIds -AppPrivateKeys $appPrivateKeys
+    $tokenResult = $tokenManager.GetTokenForOrganization($appOrganization)
+
+    $accessToken = $tokenResult.Token
 }
 else {
     $accessToken = $access_token
 }
 
-Test-AccessTokens -accessToken $accessToken -access_token_destination $access_token_destination -numberOfReposToDo $actionNames.Count
+Test-AccessTokens -accessToken $accessToken -numberOfReposToDo $actionNames.Count
 
 Import-Module powershell-yaml -Force
-
-# default variables
-$forkOrg = "actions-marketplace-validations"
 
 function ProcessRepoInfoChunk {
     Param (
@@ -109,7 +124,7 @@ function ProcessRepoInfoChunk {
             -actions $allActions `
             -numberOfReposToDo $forksToProcess.Count `
             -access_token $accessToken `
-            -access_token_destination $access_token_destination `
+            -access_token_destination $accessToken `
             -skipSecretScanSummary
         
         # Check if rate limit was exceeded during processing
@@ -160,7 +175,7 @@ Write-Host ""
 Write-Host "Got $($actions.Length) total actions"
 Write-Host "Will process $($actionNames.Count) forks in this chunk"
 
-GetRateLimitInfo -access_token $accessToken -access_token_destination $access_token_destination
+GetRateLimitInfo -access_token $accessToken -access_token_destination $accessToken
 
 # Process the chunk (handles its own conditional summary logging)
 $processedForks = ProcessRepoInfoChunk -allActions $actions -actionNamesToProcess $actionNames -chunkId $chunkId
@@ -169,7 +184,7 @@ $processedForks = ProcessRepoInfoChunk -allActions $actions -actionNamesToProces
 $outputPath = "status-partial-repoinfo-$chunkId.json"
 Save-PartialStatusUpdate -processedForks $processedForks -chunkId $chunkId -outputPath $outputPath
 
-GetRateLimitInfo -access_token $accessToken -access_token_destination $access_token_destination -waitForRateLimit $false
+GetRateLimitInfo -access_token $accessToken -access_token_destination $accessToken -waitForRateLimit $false
 
 Write-Host ""
 Write-Host "✓ Chunk [$chunkId] repoInfo processing complete"

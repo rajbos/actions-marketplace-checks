@@ -1,7 +1,6 @@
 Param (
-  $actions,
-  $logSummary,
-  $access_token_destination = $env:GITHUB_TOKEN
+    $actions,
+    $logSummary
 )
 
 Write-Host "Found [$($actions.Count)] actions to report on"
@@ -784,7 +783,7 @@ ReportVulnChartInMarkdown -chartTitle "Composite actions"  -actions $compositeAc
 
 GetTagReleaseInfo
 
-GetFoundSecretCount -access_token_destination $access_token_destination
+GetFoundSecretCount
 
 GetMostUsedActionsList
 

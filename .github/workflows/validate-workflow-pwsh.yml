@@ -1,0 +1,25 @@
+name: Validate workflow PowerShell
+
+on:
+  push:
+    paths:
+      - .github/workflows/*.yml
+      - .github/workflows/validate-workflow-pwsh.ps1
+  pull_request:
+    paths:
+      - .github/workflows/*.yml
+      - .github/workflows/validate-workflow-pwsh.ps1
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  validate-workflow-pwsh:
+    name: Validate all workflows inline PowerShell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run workflow PowerShell validator
+        run: pwsh -NoLogo -File .github/workflows/validate-workflow-pwsh.ps1

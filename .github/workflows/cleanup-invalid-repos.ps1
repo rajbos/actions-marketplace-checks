@@ -7,6 +7,24 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+$resolvedToken = $access_token
+
+if ([string]::IsNullOrWhiteSpace($resolvedToken)) {
+    try {
+        $tokenManager = New-GitHubAppTokenManagerFromEnvironment
+        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+        $resolvedToken = $tokenResult.Token
+    }
+    catch {
+        Write-Error "Failed to obtain GitHub App token for organization [$($env:APP_ORGANIZATION)]: $($_.Exception.Message)"
+        throw
+    }
+}
+
+$access_token = $resolvedToken
+
+Test-AccessTokens -accessToken $access_token -numberOfReposToDo $numberOfReposToDo
+
 # Constants
 $MaxDisplayReposToCleanup = 15  # Maximum number of repos to display in "to cleanup" list
 $MaxDisplayReposCleaned = 10    # Maximum number of repos to display in "cleaned" and "invalid" lists
