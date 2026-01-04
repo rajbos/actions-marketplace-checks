@@ -364,6 +364,9 @@ Write-Message -message "" -logToSummary $true
 $actionTypeCount = @{}
 foreach ($fork in $existingForks) {
     $type = Get-ActionTypeValue -data $fork.actionType
+    if ($null -eq $type -or $type -eq "") {
+        $type = "Unknown"
+    }
     
     if ($actionTypeCount.ContainsKey($type)) {
         $actionTypeCount[$type]++
