@@ -696,12 +696,27 @@ function MakeRepoInfoCall {
             if (Is404Error -errorMessage $errorMsg) {
                 $script:errorCounts.ForkRepo404++
                 $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+
+                # Mark this fork as missing so future runs and other workflows
+                # can skip it entirely. This is a lightweight persistent hint
+                # stored on the action object and respected by
+                # CheckForInfoUpdateNeeded and Split-ForksIntoChunks.
+                if (-not (Get-Member -InputObject $action -Name "mirrorFound" -MemberType Properties)) {
+                    $action | Add-Member -Name mirrorFound -Value $false -MemberType NoteProperty
+                } else {
+                    $action.mirrorFound = $false
+                }
             }
             else {
                 $script:errorCounts.OtherErrors++
                 $script:errorDetails.OtherErrors += "$forkOrg/$($action.name) : $errorMsg"
             }
         }
+
+        # Ensure we only make this repo info call once per action per run.
+        # Returning a non-null sentinel object prevents additional calls that
+        # check for $null -eq $response from retrying this failing request.
+        $response = [PSCustomObject]@{ error = $errorMsg }
     }
 
     return $response

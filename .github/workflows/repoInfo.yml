@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 env:
-  numberOfReposToDo: 500 
+  numberOfReposToDo: 100 
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
