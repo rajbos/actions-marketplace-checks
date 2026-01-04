@@ -4,8 +4,8 @@ Param (
   [int] $chunkId = 0,
   $access_token = $env:GITHUB_TOKEN,
   $access_token_destination = $env:GITHUB_TOKEN,
-  [string[]] $appIds = @($env:APP_ID, $env:APP_ID_2),
-  [string[]] $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2),
+    [string[]] $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3),
+    [string[]] $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2, $env:APPLICATION_PRIVATE_KEY_3),
   [string] $appOrganization = $env:APP_ORGANIZATION
 )
 
@@ -16,6 +16,9 @@ if ($appPrivateKeys.Count -gt 0 -and $appIds.Count -gt 0) {
     }
 
     $tokenManager = New-GitHubAppTokenManager -AppIds $appIds -AppPrivateKeys $appPrivateKeys
+    # Share the token manager instance with library.ps1 so ApiCall can
+    # coordinate app switching and failover across all requests in this chunk.
+    $script:GitHubAppTokenManagerInstance = $tokenManager
     $tokenResult = $tokenManager.GetTokenForOrganization($appOrganization)
 
     $access_token = $tokenResult.Token

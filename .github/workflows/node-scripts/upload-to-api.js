@@ -3,33 +3,47 @@ const fs = require('fs');
 
 async function uploadActions() {
   const apiUrl = process.argv[2];
-  const actionsJsonPath = process.argv[3];
+  const functionKey = process.argv[3];
+  const actionsJsonPath = process.argv[4];
   
   // Validate arguments
   if (!apiUrl) {
     console.error('API URL is required');
     process.exit(1);
   }
-  
+
+  if (!functionKey) {
+    console.error('Function key is required');
+    process.exit(1);
+  }
+
   if (!actionsJsonPath) {
     console.error('Actions JSON file path is required');
     process.exit(1);
   }
-  
+
   // Validate URL format
   if (apiUrl.length === 0) {
     console.error('API URL cannot be empty (length: 0)');
     process.exit(1);
   }
-  
+
   console.log('API URL length: [' + apiUrl.length + ']');
-  
+
+  // Validate function key format
+  if (functionKey.length === 0) {
+    console.error('Function key cannot be empty (length: 0)');
+    process.exit(1);
+  }
+
+  console.log('Function key length: [' + functionKey.length + ']');
+
   // Validate file path
   if (actionsJsonPath.length === 0) {
     console.error('Actions JSON file path cannot be empty (length: 0)');
     process.exit(1);
   }
-  
+
   console.log('Actions JSON file path length: [' + actionsJsonPath.length + ']');
   
   // Read actions from file instead of command line argument
@@ -37,7 +51,7 @@ async function uploadActions() {
   const actions = JSON.parse(actionsJson);
   
   console.log('Initializing Actions Marketplace Client...');
-  const client = new ActionsMarketplaceClient({ apiUrl: apiUrl });
+  const client = new ActionsMarketplaceClient({ apiUrl: apiUrl, functionKey: functionKey });
   
   // API connection will be tested with the first upsert call
   console.log('Testing API connection...');
