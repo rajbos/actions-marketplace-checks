@@ -30,16 +30,20 @@ if (-not $functionKey) {
   exit 1
 }
 
-Write-Message -message "API URL: [$apiUrl]" -logToSummary $true
-Write-Message -message "Function key provided: [$($functionKey.Length) characters]" -logToSummary $true
-Write-Message -message "Total repos in status.json: $(DisplayIntWithDots $status.Count)" -logToSummary $true
+Write-Message -message "### Configuration" -logToSummary $true
+Write-Message -message "" -logToSummary $true
 
 # Cap numberOfRepos at total available (0 means "upload none" if explicitly passed)
 if ($numberOfRepos -gt $status.Count) {
   $numberOfRepos = $status.Count
 }
 
-Write-Message -message "Number of repos to upload: [$numberOfRepos]" -logToSummary $true
+Write-Message -message "| Setting | Value |" -logToSummary $true
+Write-Message -message "|---------|-------|" -logToSummary $true
+Write-Message -message "| API URL | [$apiUrl] |" -logToSummary $true
+Write-Message -message "| Function key length | [$($functionKey.Length) characters] |" -logToSummary $true
+Write-Message -message "| Total repos in status.json | $(DisplayIntWithDots $status.Count) |" -logToSummary $true
+Write-Message -message "| Number of repos to upload | [$numberOfRepos] |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Filter repos that have the necessary data for the API
