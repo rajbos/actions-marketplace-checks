@@ -18,7 +18,7 @@ env:
   numberOfReposToDoRepoInfo: 100
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
-   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
+  APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
   APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
