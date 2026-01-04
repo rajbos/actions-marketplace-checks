@@ -9,6 +9,11 @@ on:
         required: false
         default: '5'
         type: string
+  push:
+    paths:
+      - .github/workflows/api-upsert.yml
+      - .github/workflows/api-upsert.ps1
+      - .github/workflows/node-scripts/upload-to-api.js
 
 jobs:
   upload-to-api:
