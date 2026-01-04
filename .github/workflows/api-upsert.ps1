@@ -47,14 +47,20 @@ if (Test-Path $getCountScriptPath) {
     Write-Host "Getting initial count of known actions from API..."
     $countOutput = node $getCountScriptPath $apiUrl $functionKey 2>&1 | Out-String
     
+    Write-Host "Node.js output:"
+    Write-Host $countOutput
+    
     if ($countOutput -match '(?s)__COUNT_START__(.*?)__COUNT_END__') {
       $initialKnownCount = [int]$matches[1].Trim()
       Write-Host "Initial known actions count: [$initialKnownCount]"
     } else {
       Write-Warning "Could not parse count from API response. Continuing without count."
+      Write-Warning "Full output was:"
+      Write-Warning $countOutput
     }
   } catch {
     Write-Warning "Failed to get initial actions count: $($_.Exception.Message). Continuing without count."
+    Write-Warning "Exception details: $($_.Exception | Format-List -Force | Out-String)"
   }
 } else {
   Write-Warning "Count script not found at [$getCountScriptPath]. Continuing without count."
@@ -184,6 +190,9 @@ if (Test-Path $getCountScriptPath) {
     Write-Host "Getting final count of known actions from API..."
     $countOutput = node $getCountScriptPath $apiUrl $functionKey 2>&1 | Out-String
     
+    Write-Host "Node.js output:"
+    Write-Host $countOutput
+    
     if ($countOutput -match '(?s)__COUNT_START__(.*?)__COUNT_END__') {
       $finalKnownCount = [int]$matches[1].Trim()
       Write-Host "Final known actions count: [$finalKnownCount]"
@@ -191,9 +200,12 @@ if (Test-Path $getCountScriptPath) {
       Write-Message -message "📊 Known actions in table storage (end): **$(DisplayIntWithDots $finalKnownCount)**" -logToSummary $true
     } else {
       Write-Warning "Could not parse final count from API response."
+      Write-Warning "Full output was:"
+      Write-Warning $countOutput
     }
   } catch {
     Write-Warning "Failed to get final actions count: $($_.Exception.Message)"
+    Write-Warning "Exception details: $($_.Exception | Format-List -Force | Out-String)"
   }
 } else {
   Write-Warning "Count script not found at [$getCountScriptPath]."

@@ -35,12 +35,17 @@ async function getActionsCount() {
     const actions = await client.listActions();
     const count = actions ? actions.length : 0;
     
+    console.log('Successfully retrieved actions list');
+    console.log('Actions count:', count);
+    
     // Output count for PowerShell to parse
     console.log('__COUNT_START__');
     console.log(count);
     console.log('__COUNT_END__');
   } catch (error) {
     console.error('Failed to get actions count:', error.message);
+    console.error('Error details:', error);
+    console.error('Stack trace:', error.stack);
     process.exit(1);
   }
 }
