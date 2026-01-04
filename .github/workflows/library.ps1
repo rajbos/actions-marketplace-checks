@@ -1442,6 +1442,54 @@ function Format-RateLimitTable {
     Write-Message -message "" -logToSummary $true
 }
 
+function Format-RateLimitComparisonTable {
+    Param (
+        $rateEntries,
+        [string] $title = "Rate Limit Status"
+    )
+
+    if ($null -eq $rateEntries -or $rateEntries.Count -eq 0) {
+        return
+    }
+
+    Write-Message -message "**${title}:**" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Token | Limit | Used | Remaining | Resets In |" -logToSummary $true
+    Write-Message -message "|-------|------:|-----:|----------:|-----------|" -logToSummary $true
+
+    foreach ($entry in $rateEntries) {
+        if ($null -eq $entry -or $null -eq $entry.Rate) {
+            continue
+        }
+
+        $rateData = $entry.Rate
+
+        # Convert Unix timestamp to human-readable time remaining
+        $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rateData.reset).UtcDateTime
+        $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+
+        if ($timeUntilReset.TotalMinutes -lt 1) {
+            $resetDisplay = "< 1 minute"
+        } elseif ($timeUntilReset.TotalHours -lt 1) {
+            $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
+        } else {
+            $hours = [math]::Floor($timeUntilReset.TotalHours)
+            $minutes = [math]::Floor($timeUntilReset.Minutes)
+            if ($minutes -eq 0) {
+                $resetDisplay = "$hours hours"
+            } else {
+                $resetDisplay = "$hours hours $minutes minutes"
+            }
+        }
+
+        $tokenName = if ($null -ne $entry.Name -and -not [string]::IsNullOrWhiteSpace($entry.Name)) { $entry.Name } else { "Token" }
+
+        Write-Message -message "| $tokenName | $(DisplayIntWithDots $rateData.limit) | $(DisplayIntWithDots $rateData.used) | $(DisplayIntWithDots $rateData.remaining) | $resetDisplay |" -logToSummary $true
+    }
+
+    Write-Message -message "" -logToSummary $true
+}
+
 function Format-RateLimitErrorTable {
     Param (
         [int] $remaining,
@@ -1673,16 +1721,27 @@ function GetRateLimitInfo {
         return
     }
 
-    # Format rate limit info as a table using the helper function
-    Format-RateLimitTable -rateData $response.rate -title "Rate Limit Status"
+    # Collect rate limit info for one or two tokens
+    $rateEntries = @()
+
+    $rateEntries += [pscustomobject]@{
+        Name = "Primary"
+        Rate = $response.rate
+    }
 
     if ($access_token -ne $access_token_destination -and $access_token_destination -ne "" ) {
         # check the ratelimit for the destination token as well:
         $response2 = ApiCall -method GET -url $url -access_token $access_token_destination -waitForRateLimit $waitForRateLimit
         if ($null -ne $response2) {
-            Format-RateLimitTable -rateData $response2.rate -title "Access Token Destination Rate Limit Status"
+            $rateEntries += [pscustomobject]@{
+                Name = "Destination"
+                Rate = $response2.rate
+            }
         }
     }
+
+    # Format combined rate limit info as a single table for easier comparison
+    Format-RateLimitComparisonTable -rateEntries $rateEntries -title "Rate Limit Status"
 
     if ($response.rate.limit -eq 60) {
         throw "Rate limit is 60, this is not enough to run any of these scripts, check the token that is used"

@@ -95,7 +95,7 @@ jobs:
           APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
           APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
-          . ./.github/workflows/github-app-token-manager.ps1
+          . ./.github/workflows/library.ps1
           $manager = New-GitHubAppTokenManagerFromEnvironment
           $tokenResult = $manager.GetTokenForOrganization($env:APP_ORGANIZATION)
           "token=$($tokenResult.Token)" >> $env:GITHUB_OUTPUT
