@@ -24,8 +24,8 @@ jobs:
       - shell: pwsh
         name: Run reporting script
         env:
-          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
-          APPLICATION_PRIVATE_KEY_2: ${{ secrets.Automation_App_Key_2 }}
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
            try {
                # Clean BOM if present before parsing JSON

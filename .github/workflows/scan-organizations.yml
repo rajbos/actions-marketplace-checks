@@ -92,8 +92,8 @@ jobs:
         id: get_workflow_token
         shell: pwsh
         env:
-          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
-          APPLICATION_PRIVATE_KEY_2: ${{ secrets.Automation_App_Key_2 }}
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/github-app-token-manager.ps1
           $manager = New-GitHubAppTokenManagerFromEnvironment

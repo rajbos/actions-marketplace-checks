@@ -835,7 +835,7 @@ function ApiCall {
     # Validate that access token is not null or empty before making API calls
     if ([string]::IsNullOrWhiteSpace($access_token)) {
         Write-Error "Missing GitHub access token. API call to [$url] cannot proceed without valid credentials."
-        throw "No access token available for API call. Please ensure ACCESS_TOKEN or Automation_App_Key secrets are properly configured."
+        throw "No access token available for API call. Please ensure ACCESS_TOKEN or AUTOMATION_APP_KEY secrets are properly configured."
     }
     
     $headers = @{
@@ -1462,6 +1462,28 @@ function Format-RateLimitErrorTable {
     Write-Message -message "" -logToSummary $true
 }
 
+function Test-IsLikelyGitHubAppPemKey {
+    Param (
+        [string] $pemKey
+    )
+
+    if ([string]::IsNullOrWhiteSpace($pemKey)) {
+        return $false
+    }
+
+    # Very short values are almost certainly not full PEM contents
+    if ($pemKey.Length -lt 100) {
+        return $false
+    }
+
+    # GitHub App private keys are PEM-encoded and start with a BEGIN line
+    if ($pemKey -match '-----BEGIN [A-Z ]*PRIVATE KEY-----') {
+        return $true
+    }
+
+    return $false
+}
+
 function Get-GitHubAppRateLimitOverview {
     Param (
         [string] $organization = $env:APP_ORGANIZATION
@@ -1489,6 +1511,11 @@ function Get-GitHubAppRateLimitOverview {
         $pemKey = $appPrivateKeys[$i]
 
         if ([string]::IsNullOrWhiteSpace($appId) -or [string]::IsNullOrWhiteSpace($pemKey)) {
+            continue
+        }
+
+        if (-not (Test-IsLikelyGitHubAppPemKey -pemKey $pemKey)) {
+            Write-Warning "APPLICATION_PRIVATE_KEY value for app id [$appId] does not look like a PEM-encoded private key. Ensure you pasted the key contents, not the path or ID. Skipping this app for rate limit checks."
             continue
         }
 

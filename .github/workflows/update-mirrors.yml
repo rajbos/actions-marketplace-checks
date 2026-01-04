@@ -160,7 +160,8 @@ jobs:
       - name: Process chunk ${{ matrix.chunk-id }}
         shell: pwsh
         env:
-          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/library.ps1
 
@@ -328,7 +329,8 @@ jobs:
       - name: Check rate limit status
         shell: pwsh
         env:
-          APPLICATION_PRIVATE_KEY: ${{ secrets.Automation_App_Key }}
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
         run: |
           . ./.github/workflows/library.ps1
 
