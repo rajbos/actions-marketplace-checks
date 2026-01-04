@@ -23,6 +23,7 @@ env:
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ORGANIZATION: actions-marketplace-validations
+    APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
     
 jobs:
   cleanup-invalid-repos:
@@ -84,6 +85,7 @@ jobs:
         env:
           APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
           APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
+            APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
         run: |
            ./.github/workflows/cleanup-invalid-repos.ps1 -numberOfReposToDo ${{ steps.setup.outputs.numberOfReposToDo }} -dryRun $${{ steps.setup.outputs.dryRun }}
 

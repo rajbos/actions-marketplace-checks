@@ -17,11 +17,11 @@ Param (
 )
 
 if (-not $appIds -or $appIds.Count -eq 0) {
-    $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 }
 
 if (-not $appPrivateKeys -or $appPrivateKeys.Count -eq 0) {
-    $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2, $env:APPLICATION_PRIVATE_KEY_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 }
 
 if ([string]::IsNullOrWhiteSpace($appOrganization)) {

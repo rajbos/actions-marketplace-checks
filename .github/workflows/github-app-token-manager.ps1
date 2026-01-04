@@ -61,8 +61,8 @@ class GitHubAppTokenManager {
     }
 
     static [GitHubAppTokenManager] CreateFromEnvironment() {
-        $envAppIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-        $envAppPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        $envAppIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        $envAppPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2, $env:APPLICATION_PRIVATE_KEY_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 
         if ($envAppIds.Count -eq 0 -or $envAppPrivateKeys.Count -eq 0) {
             throw "At least one APP_ID and APPLICATION_PRIVATE_KEY must be provided in environment to create GitHubAppTokenManager"
