@@ -1229,12 +1229,30 @@ function ApiCall {
 
             # For shorter wait times, only wait if requested
             if ($waitForRateLimit -and $waitSeconds -gt 0) {
-                if ($isInstallationRateLimit) {
-                    Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType "Installation"
-                    Write-Host "Pausing after installation rate limit error for [$waitSeconds] seconds"
+                # Round the wait time for display and show a human readable duration
+                $roundedWaitSeconds = [Math]::Ceiling($waitSeconds)
+                $waitTimeSpan = [TimeSpan]::FromSeconds($roundedWaitSeconds)
+
+                if ($waitTimeSpan.TotalHours -ge 1) {
+                    $humanDuration = "{0}h {1}m {2}s" -f [int][Math]::Floor($waitTimeSpan.TotalHours), $waitTimeSpan.Minutes, $waitTimeSpan.Seconds
+                }
+                elseif ($waitTimeSpan.TotalMinutes -ge 1) {
+                    $humanDuration = "{0}m {1}s" -f [int][Math]::Floor($waitTimeSpan.TotalMinutes), $waitTimeSpan.Seconds
                 }
                 else {
-                    Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
+                    $humanDuration = "{0}s" -f $waitTimeSpan.Seconds
+                }
+
+                # Prefer the precomputed continueAt value if available; otherwise derive it locally
+                $resumeAt = if ($null -ne $continueAt) { $continueAt } else { (Get-Date).AddSeconds($roundedWaitSeconds) }
+                $resumeAtText = $resumeAt.ToString("u")
+
+                if ($isInstallationRateLimit) {
+                    Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType "Installation"
+                    Write-Host "Pausing after installation rate limit error for [$humanDuration] (until [$resumeAtText])"
+                }
+                else {
+                    Write-Host "Rate limit hit, waiting for [$humanDuration] (until [$resumeAtText]) before continuing"
                 }
                 Start-Sleep -Milliseconds ($waitSeconds * 1000)
             }
