@@ -32,8 +32,14 @@ if (-not $functionKey) {
 
 Write-Message -message "API URL: [$apiUrl]" -logToSummary $true
 Write-Message -message "Function key provided: [$($functionKey.Length) characters]" -logToSummary $true
-Write-Message -message "Number of repos to upload: [$numberOfRepos]" -logToSummary $true
 Write-Message -message "Total repos in status.json: $(DisplayIntWithDots $status.Count)" -logToSummary $true
+
+# Normalize numberOfRepos: treat 0 or empty as "all"; cap at total available
+if ($numberOfRepos -le 0 -or $numberOfRepos -gt $status.Count) {
+  $numberOfRepos = $status.Count
+}
+
+Write-Message -message "Number of repos to upload: [$numberOfRepos]" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Filter repos that have the necessary data for the API
