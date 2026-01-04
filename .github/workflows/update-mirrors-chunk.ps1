@@ -2,11 +2,11 @@ Param (
   $actions,
   $forkNames,  # Array of fork names to process in this chunk
   [int] $chunkId = 0,
-    $access_token = $env:GITHUB_TOKEN,
-    $access_token_destination = $env:GITHUB_TOKEN,
-    [string[]] $appIds = @($env:APP_ID, $env:APP_ID_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) },
-    [string[]] $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) },
-        [string] $appOrganization = $env:APP_ORGANIZATION
+  $access_token = $env:GITHUB_TOKEN,
+  $access_token_destination = $env:GITHUB_TOKEN,
+  [string[]] $appIds = @($env:APP_ID, $env:APP_ID_2),
+  [string[]] $appPrivateKeys = @($env:APPLICATION_PRIVATE_KEY, $env:APPLICATION_PRIVATE_KEY_2),
+  [string] $appOrganization = $env:APP_ORGANIZATION
 )
 
 . $PSScriptRoot/library.ps1
@@ -18,8 +18,8 @@ if ($appPrivateKeys.Count -gt 0 -and $appIds.Count -gt 0) {
     $tokenManager = New-GitHubAppTokenManager -AppIds $appIds -AppPrivateKeys $appPrivateKeys
     $tokenResult = $tokenManager.GetTokenForOrganization($appOrganization)
 
-    $access_token = $tokenResult.SourceToken
-    $access_token_destination = $tokenResult.DestinationToken
+    $access_token = $tokenResult.Token
+    $access_token_destination = $tokenResult.Token
 }
 
 Test-AccessTokens -accessToken $access_token -numberOfReposToDo $forkNames.Count
