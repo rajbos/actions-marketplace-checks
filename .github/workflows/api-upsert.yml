@@ -78,4 +78,9 @@ jobs:
           . ./.github/workflows/library.ps1
           
           # Run the upload script
-          ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
+          if ([string]::IsNullOrWhiteSpace($env:NUMBER_OF_REPOS)) {
+            # Use default from script (5) when no input was provided (e.g. push trigger)
+            ./.github/workflows/api-upsert.ps1 -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
+          } else {
+            ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
+          }
