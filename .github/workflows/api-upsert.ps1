@@ -137,6 +137,18 @@ try {
   Write-Host "Node.js output:"
   Write-Host $output
   
+  # Try to parse list statistics (existing actions count and list duration)
+  # emitted by the Node.js script so we can surface them in the step summary.
+  $listStats = $null
+  if ($output -match '(?s)__LIST_STATS_START__(.*?)__LIST_STATS_END__') {
+    $statsJson = $matches[1].Trim()
+    try {
+      $listStats = $statsJson | ConvertFrom-Json
+    } catch {
+      Write-Warning "Failed to parse list stats JSON from Node.js output: $($_.Exception.Message)"
+    }
+  }
+
   # Parse results from output
   if ($output -match '(?s)__RESULTS_JSON_START__(.*?)__RESULTS_JSON_END__') {
     $resultsJson = $matches[1].Trim()
@@ -150,6 +162,26 @@ try {
     $skippedNotUpdatedCount = ($results | Where-Object { $_.skippedNotUpdated -eq $true }).Count
     $allUploadsFailed = ($failCount -gt 0 -and $successCount -eq 0)
     
+    # Log list statistics if available
+    if ($listStats) {
+      $existingCountDisplay = if ($listStats.existingCount -ne $null) {
+        try { $(DisplayIntWithDots([int]$listStats.existingCount)) } catch { "$($listStats.existingCount)" }
+      } else {
+        "unknown"
+      }
+
+      $durationDisplay = if ($listStats.listDurationHuman) {
+        $listStats.listDurationHuman
+      } elseif ($listStats.listDurationMs -ne $null) {
+        "$($listStats.listDurationMs) ms"
+      } else {
+        "unknown"
+      }
+
+      Write-Message -message "Indexed $existingCountDisplay existing actions from API in [$durationDisplay]" -logToSummary $true
+      Write-Message -message "" -logToSummary $true
+    }
+
     Write-Message -message "| Status | Count |" -logToSummary $true
     Write-Message -message "|--------|-------|" -logToSummary $true
     Write-Message -message "| ✅ Successful | $successCount |" -logToSummary $true

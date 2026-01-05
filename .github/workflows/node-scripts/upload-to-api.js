@@ -101,6 +101,16 @@ async function uploadActions() {
       }
       const formattedDuration = formatDuration(listDurationMs);
       console.log('Indexed [' + existingIndex.size + '] existing actions for comparison in [' + formattedDuration + '].');
+
+      // Emit structured stats so the PowerShell wrapper can surface this
+      // information in the GitHub Actions step summary.
+      console.log('__LIST_STATS_START__');
+      console.log(JSON.stringify({
+        existingCount: existingIndex.size,
+        listDurationMs: listDurationMs,
+        listDurationHuman: formattedDuration
+      }, null, 2));
+      console.log('__LIST_STATS_END__');
     } else {
       console.log('Existing actions list was not an array; skipping pre-comparison.');
     }
