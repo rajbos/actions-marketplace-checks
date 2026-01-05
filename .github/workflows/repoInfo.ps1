@@ -37,6 +37,80 @@ Import-Module powershell-yaml -Force
 # default variables
 $forkOrg = "actions-marketplace-validations"
 
+# Helper to filter out actions that have no RepoUrl but do have a non-marketplace Url
+function FilterInvalidMarketplaceLinks {
+    Param (
+        $actions
+    )
+
+    if ($null -eq $actions -or $actions.Count -eq 0) {
+        return $actions
+    }
+
+    $validActions = @()
+    $invalidActions = @()
+
+    foreach ($action in $actions) {
+        $hasRepoUrl = $null -ne $action.RepoUrl -and $action.RepoUrl -ne ""
+
+        # Support both Url and URL property names
+        $urlValue = $null
+        if ($null -ne $action.Url -and $action.Url -ne "") {
+            $urlValue = $action.Url
+        }
+        elseif ($null -ne $action.URL -and $action.URL -ne "") {
+            $urlValue = $action.URL
+        }
+
+        $hasUrl = $null -ne $urlValue -and $urlValue -ne ""
+
+        if (-not $hasRepoUrl -and $hasUrl) {
+            if ($urlValue.StartsWith("https://github.com/marketplace/actions")) {
+                $validActions += $action
+            }
+            else {
+                $invalidActions += $action
+            }
+        }
+        else {
+            $validActions += $action
+        }
+    }
+
+    if ($invalidActions.Count -gt 0) {
+        $totalInvalid = $invalidActions.Count
+        $displayCount = [Math]::Min(10, $totalInvalid)
+
+        Write-Host "Found [$totalInvalid] actions with RepoUrl = null and non-marketplace Url; skipping them as non valid marketplace links"
+
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "Skipped [$(DisplayIntWithDots $totalInvalid)] actions with RepoUrl = null and non marketplace Url (non valid marketplace links)" -logToSummary $true
+        Write-Message -message "<details>" -logToSummary $true
+        Write-Message -message "<summary>Non valid marketplace links (showing first $(DisplayIntWithDots $displayCount) of $(DisplayIntWithDots $totalInvalid))</summary>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| # | Title | Publisher | Url |" -logToSummary $true
+        Write-Message -message "|---:|-------|----------|-----|" -logToSummary $true
+
+        $index = 1
+        foreach ($invalid in ($invalidActions | Select-Object -First $displayCount)) {
+            $title = if ($null -ne $invalid.Title -and $invalid.Title -ne "") { $invalid.Title } else { "(no title)" }
+            $publisher = if ($null -ne $invalid.Publisher -and $invalid.Publisher -ne "") { $invalid.Publisher } else { "(no publisher)" }
+            $url = if ($null -ne $invalid.Url -and $invalid.Url -ne "") { $invalid.Url }
+                   elseif ($null -ne $invalid.URL -and $invalid.URL -ne "") { $invalid.URL }
+                   else { "(no url)" }
+
+            Write-Message -message "| $index | $title | $publisher | $url |" -logToSummary $true
+            $index++
+        }
+
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "</details>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+    }
+
+    return ,$validActions
+}
+
 # Helper function to check if an error is a 404
 function Is404Error {
     Param (
@@ -1560,6 +1634,8 @@ function Run {
 
     $startTime = Get-Date
     Write-Host "Run started at [$startTime]"
+
+    $actions = FilterInvalidMarketplaceLinks -actions $actions
 
     Write-Host "Got $(DisplayIntWithDots($actions.Length)) actions to get the repo information for"
     GetRateLimitInfo -access_token $accessToken -access_token_destination $accessTokenDestination

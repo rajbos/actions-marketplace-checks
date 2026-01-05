@@ -2585,33 +2585,127 @@ function GetForkedActionRepos {
         $failedForks = New-Object System.Collections.ArrayList
     }
 
-    Write-Host "Updating actions with split RepoUrl from the list of [$($actions.Count)] actions"
-    if ($null -ne $actions -And $actions.Count -gt 0) {
-        Write-Host "This is the first action on the list: "
-        Write-Host "$($actions[0] | ConvertTo-Json)"
-    }
-
-    # prep the actions file so that we only have to split the repourl once
-    $counter = 0
-    foreach ($actionStatus in $actions){
-        # Support both RepoUrl (marketplace data) and repoUrl (internal data)
-        $repoUrlValue = if ($null -ne $actionStatus.RepoUrl -and $actionStatus.RepoUrl -ne "") { $actionStatus.RepoUrl }
-                        elseif ($null -ne $actionStatus.repoUrl -and $actionStatus.repoUrl -ne "") { $actionStatus.repoUrl }
-                        else { $null }
-
-        if ($null -eq $repoUrlValue) {
-            continue
+    if ($null -ne $actions) {
+        Write-Host "Updating actions with split RepoUrl from the list of [$($actions.Count)] actions"
+        if ($actions.Count -gt 0) {
+            Write-Host "This is the first action on the list: "
+            Write-Host "$(($actions[0] | ConvertTo-Json))"
         }
 
-        ($owner, $repo) = SplitUrl -url $repoUrlValue
-        # Skip invalid URLs that would produce an underscore-only name
-        if ([string]::IsNullOrEmpty($owner) -or [string]::IsNullOrEmpty($repo)) {
-            continue
+        # Track actions where we successfully derived a RepoUrl from the marketplace Url
+        $derivedRepoUrlActions = @()
+
+        # prep the actions file so that we only have to split the RepoUrl once
+        $counter = 0
+        foreach ($actionStatus in $actions){
+            # Support both RepoUrl (marketplace data) and repoUrl (internal data)
+            $repoUrlValue = if ($null -ne $actionStatus.RepoUrl -and $actionStatus.RepoUrl -ne "") { $actionStatus.RepoUrl }
+                            elseif ($null -ne $actionStatus.repoUrl -and $actionStatus.repoUrl -ne "") { $actionStatus.repoUrl }
+                            else { $null }
+
+            # If RepoUrl is missing but we have a marketplace Url, try to derive the repo from Url + Publisher
+            if ($null -eq $repoUrlValue) {
+                $marketplaceUrl = $null
+                if ($null -ne $actionStatus.Url -and $actionStatus.Url -ne "") {
+                    $marketplaceUrl = $actionStatus.Url
+                }
+                elseif ($null -ne $actionStatus.URL -and $actionStatus.URL -ne "") {
+                    $marketplaceUrl = $actionStatus.URL
+                }
+
+                if ($null -ne $marketplaceUrl -and $marketplaceUrl.StartsWith("https://github.com/marketplace/actions/")) {
+                    $publisher = $actionStatus.Publisher
+                    if (-not [string]::IsNullOrWhiteSpace($publisher)) {
+                        $slug = $null
+                        try {
+                            $uri = [System.Uri]$marketplaceUrl
+                            if ($uri.Segments.Count -gt 0) {
+                                $slug = $uri.Segments[$uri.Segments.Count - 1].Trim('/')
+                            }
+                        }
+                        catch {
+                            $parts = $marketplaceUrl.TrimEnd('/') -split '/'
+                            if ($parts.Length -gt 0) {
+                                $slug = $parts[$parts.Length - 1]
+                            }
+                        }
+
+                        if (-not [string]::IsNullOrWhiteSpace($slug)) {
+                            $candidateRepo = "$publisher/$slug"
+                            $contextInfo = "Checking derived repoUrl [$candidateRepo] for marketplace action [$marketplaceUrl]"
+                            $repoCheck = ApiCall -method GET -url "repos/$candidateRepo" -body $null -expected $null -currentResultCount 0 -backOff 5 -maxResultCount 0 -hideFailedCall $true -returnErrorInfo $true -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $true
+
+                            # When returnErrorInfo is enabled, ApiCall returns a hashtable with Error=$true on failures
+                            $isErrorResult = ($repoCheck -is [hashtable] -and $repoCheck.ContainsKey('Error') -and $repoCheck.Error)
+                            if ($null -ne $repoCheck -and -not $isErrorResult) {
+                                # Repository exists - record and update the action with a concrete RepoUrl
+                                $repoUrlValue = "https://github.com/$candidateRepo"
+
+                                if ($actionStatus.PSObject.Properties["RepoUrl"]) {
+                                    $actionStatus.RepoUrl = $repoUrlValue
+                                }
+                                elseif ($actionStatus.PSObject.Properties["repoUrl"]) {
+                                    $actionStatus.repoUrl = $repoUrlValue
+                                }
+                                else {
+                                    $actionStatus | Add-Member -Name RepoUrl -Value $repoUrlValue -MemberType NoteProperty
+                                }
+
+                                $title = if ($null -ne $actionStatus.Title -and $actionStatus.Title -ne "") { $actionStatus.Title }
+                                         elseif ($null -ne $actionStatus.name -and $actionStatus.name -ne "") { $actionStatus.name }
+                                         else { "(no title)" }
+                                $publisherDisplay = if ($null -ne $publisher -and $publisher -ne "") { $publisher } else { "(no publisher)" }
+
+                                $derivedRepoUrlActions += [PSCustomObject]@{
+                                    Title          = $title
+                                    Publisher      = $publisherDisplay
+                                    MarketplaceUrl = $marketplaceUrl
+                                    Repo           = $candidateRepo
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($null -eq $repoUrlValue) {
+                continue
+            }
+
+            ($owner, $repo) = SplitUrl -url $repoUrlValue
+            # Skip invalid URLs that would produce an underscore-only name
+            if ([string]::IsNullOrEmpty($owner) -or [string]::IsNullOrEmpty($repo)) {
+                continue
+            }
+            $actionStatus | Add-Member -Name name -Value (GetForkedRepoName -owner $owner -repo $repo) -MemberType NoteProperty
+            $counter++
         }
-        $actionStatus | Add-Member -Name name -Value (GetForkedRepoName -owner $owner -repo $repo) -MemberType NoteProperty
-        $counter++
+        Write-Host "Updated [$($counter)] actions with split RepoUrl"
+
+        # Log summary of actions where we successfully derived a RepoUrl from the marketplace Url
+        if ($derivedRepoUrlActions.Count -gt 0) {
+            $totalDerived = $derivedRepoUrlActions.Count
+            $message = "Derived RepoUrl from marketplace Url and verified repository existence for [$(DisplayIntWithDots $totalDerived)] actions"
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message $message -logToSummary $true
+            Write-Message -message "<details>" -logToSummary $true
+            $firstToShow = [Math]::Min(10, $totalDerived)
+            Write-Message -message "<summary>Derived RepoUrl from marketplace Url (showing first $firstToShow of $totalDerived)</summary>" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "| # | Title | Publisher | Marketplace Url | Derived Repo |" -logToSummary $true
+            Write-Message -message "| -: | --- | --- | --- | --- |" -logToSummary $true
+
+            for ($i = 0; $i -lt $firstToShow; $i++) {
+                $item = $derivedRepoUrlActions[$i]
+                $index = $i + 1
+                $row = "| $index | $($item.Title) | $($item.Publisher) | $($item.MarketplaceUrl) | $($item.Repo) |"
+                Write-Message -message $row -logToSummary $true
+            }
+
+            Write-Message -message "</details>" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+        }
     }
-    Write-Host "Updated [$($counter)] actions with split RepoUrl"
 
     # convert the static array into a collection so we can add items to it
     $status = {$status}.Invoke()
@@ -2629,14 +2723,22 @@ function GetForkedActionRepos {
         }
     }
 
+    $missingNameNoRepoUrlCount = 0
     foreach ($action in $actions) {
         # check if action is already in $statusTable
         # guard against null/empty names to avoid null index errors
         if ([string]::IsNullOrWhiteSpace($action.name)) {
-            $repoUrlValue = if ($null -ne $action.RepoUrl -and $action.RepoUrl -ne "") { $action.RepoUrl }
-                            elseif ($null -ne $action.repoUrl -and $action.repoUrl -ne "") { $action.repoUrl }
-                            else { "<no RepoUrl/repoUrl>" }
-            Write-Host "Skipping action with missing name from RepoUrl: [$repoUrlValue]"
+            $hasRepoUrl = $null -ne $action.RepoUrl -and $action.RepoUrl -ne ""
+            $hasLowerRepoUrl = $null -ne $action.repoUrl -and $action.repoUrl -ne ""
+
+            if (-not $hasRepoUrl -and -not $hasLowerRepoUrl) {
+                # Many marketplace entries simply have no repository URL; skip quietly
+                $missingNameNoRepoUrlCount++
+            }
+            else {
+                $repoUrlValue = if ($hasRepoUrl) { $action.RepoUrl } else { $action.repoUrl }
+                Write-Host "Skipping action with missing name from RepoUrl: [$repoUrlValue]"
+            }
             continue
         }
         $found = $statusTable[$action.name]
@@ -2667,6 +2769,11 @@ function GetForkedActionRepos {
     $status = $statusTable.Values
     $statusVerified = $status | Where-Object {$_.verified}
     Write-Host "Found [$($statusVerified.Count)] verified repos in status file of total $($status.Count) repos"
+
+    if ($missingNameNoRepoUrlCount -gt 0) {
+        Write-Host "Skipped [$missingNameNoRepoUrlCount] actions with missing name and no RepoUrl/repoUrl"
+    }
+
     return ($status, $failedForks)
 }
 
