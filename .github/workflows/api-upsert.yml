@@ -18,7 +18,7 @@ on:
       - .github/workflows/node-scripts/get-actions-count.js
 
   schedule:
-    - cron: '/15 * * * *'
+    - cron: '*/15 * * * *'
 
 jobs:
   upload-to-api:
