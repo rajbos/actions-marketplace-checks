@@ -203,11 +203,14 @@ try {
     
     foreach ($result in $results) {
       if ($result.success) {
+        # Skip logging per-action lines for repos that were skipped because
+        # they were not updated since the last upload; they are counted in
+        # the summary table but are not interesting at the detail level.
         if ($result.skippedNotUpdated) {
-          $status = "skipped (not updated)"
-        } else {
-          $status = if ($result.created) { "created" } elseif ($result.updated) { "updated" } else { "no change" }
+          continue
         }
+
+        $status = if ($result.created) { "created" } elseif ($result.updated) { "updated" } else { "no change" }
         Write-Message -message "- ✅ ``$($result.action)`` - $status" -logToSummary $true
       } else {
         Write-Message -message "- ❌ ``$($result.action)`` - $($result.error)" -logToSummary $true

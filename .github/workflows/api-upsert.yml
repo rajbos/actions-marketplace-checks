@@ -7,14 +7,18 @@ on:
       numberOfRepos:
         description: 'Number of repos to upload'
         required: false
-        default: '5'
+        default: '50'
         type: string
+
   push:
     paths:
       - .github/workflows/api-upsert.yml
       - .github/workflows/api-upsert.ps1
       - .github/workflows/node-scripts/upload-to-api.js
       - .github/workflows/node-scripts/get-actions-count.js
+
+  shedule:
+    - cron: '/15 * * * *'
 
 jobs:
   upload-to-api:
