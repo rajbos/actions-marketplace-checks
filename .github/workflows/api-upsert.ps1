@@ -74,6 +74,11 @@ if (Test-Path $getCountScriptPath) {
 $initialKnownCountDisplay = if ($initialKnownCountFetched) { "$(DisplayIntWithDots $initialKnownCount)" } else { "unknown" }
 Write-Host "Known actions in table storage (start): [$initialKnownCountDisplay]"
 
+if (-not $initialKnownCountFetched -and $initialCountExitCode -ne $null -and $initialCountExitCode -ne 0) {
+  Write-Message -message "⚠️ Failed to retrieve initial known actions count from API (see logs above for details)." -logToSummary $true
+  Write-Message -message "" -logToSummary $true
+}
+
 Write-Message -message "| Setting | Value |" -logToSummary $true
 Write-Message -message "|---------|-------|" -logToSummary $true
 Write-Message -message "| API URL | $apiUrl |" -logToSummary $true
@@ -225,10 +230,12 @@ if (Test-Path $getCountScriptPath) {
 }
 
 if (-not $finalKnownCountFetched) {
-  if ($finalCountExitCode -ne $null -and $finalCountExitCode -ne 0) {
+  if ($null -ne $finalCountExitCode -and $finalCountExitCode -ne 0) {
     Write-Error "Final count lookup failed with exit code $finalCountExitCode"
+    Write-Message -message "❌ Final known actions count lookup failed with exit code $finalCountExitCode (see logs above for details)." -logToSummary $true
   } else {
     Write-Error "Final count lookup failed: no count markers found in output"
+    Write-Message -message "❌ Final known actions count lookup failed: no count markers found in output (see logs above for details)." -logToSummary $true
   }
   Write-Message -message "" -logToSummary $true
   Write-Message -message "📊 Known actions in table storage (end): unavailable (count step failed)" -logToSummary $true
