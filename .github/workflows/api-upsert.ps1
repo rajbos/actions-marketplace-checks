@@ -90,16 +90,18 @@ Write-Message -message "" -logToSummary $true
 
 # Filter repos that have the necessary data for the API
 # Need: owner, name (from status), and additional metadata
-$validRepos = $status | Where-Object {
-  $_.name -and $_.owner
-} | Select-Object -First $numberOfRepos
+# Sort by last repo update (repoInfo.updated_at) so we consistently start
+# with the most recently updated repos when deciding which ones to upload
+$validRepos = $status |
+  Where-Object { $_.name -and $_.owner } |
+  Sort-Object -Property @{ Expression = { $_.repoInfo.updated_at }; Descending = $true }
 
 if ($validRepos.Count -eq 0) {
   Write-Message -message "⚠️ No valid repos found with required fields (name and owner)" -logToSummary $true
   exit 0
 }
 
-Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos to upload" -logToSummary $true
+Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos to consider for upload" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Path to the external Node.js script
@@ -127,7 +129,10 @@ try {
   Write-Host "Using Node.js version: [$nodeVersion]"
   
   # Run the Node.js script with JSON file path instead of inline JSON
-  $output = node $nodeScriptPath $apiUrl $functionKey $actionsJsonPath 2>&1 | Out-String
+  # Pass numberOfRepos as a max uploads limit; the script will stop once that
+  # many repos have actually been uploaded (created/updated), skipping any
+  # that have not changed since the last upload.
+  $output = node $nodeScriptPath $apiUrl $functionKey $actionsJsonPath $numberOfRepos 2>&1 | Out-String
   
   Write-Host "Node.js output:"
   Write-Host $output
@@ -142,6 +147,7 @@ try {
     $failCount = ($results | Where-Object { $_.success -eq $false }).Count
     $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
     $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
+    $skippedNotUpdatedCount = ($results | Where-Object { $_.skippedNotUpdated -eq $true }).Count
     $allUploadsFailed = ($failCount -gt 0 -and $successCount -eq 0)
     
     Write-Message -message "| Status | Count |" -logToSummary $true
@@ -150,6 +156,7 @@ try {
     Write-Message -message "| ❌ Failed | $failCount |" -logToSummary $true
     Write-Message -message "| 🆕 Created | $createdCount |" -logToSummary $true
     Write-Message -message "| 📝 Updated | $updatedCount |" -logToSummary $true
+    Write-Message -message "| ⏭️ Skipped (not updated) | $skippedNotUpdatedCount |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Check if all uploads failed
@@ -164,7 +171,11 @@ try {
     
     foreach ($result in $results) {
       if ($result.success) {
-        $status = if ($result.created) { "created" } elseif ($result.updated) { "updated" } else { "no change" }
+        if ($result.skippedNotUpdated) {
+          $status = "skipped (not updated)"
+        } else {
+          $status = if ($result.created) { "created" } elseif ($result.updated) { "updated" } else { "no change" }
+        }
         Write-Message -message "- ✅ ``$($result.action)`` - $status" -logToSummary $true
       } else {
         Write-Message -message "- ❌ ``$($result.action)`` - $($result.error)" -logToSummary $true

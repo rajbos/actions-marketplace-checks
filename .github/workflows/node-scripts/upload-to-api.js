@@ -1,10 +1,26 @@
 const { ActionsMarketplaceClient } = require('@devops-actions/actions-marketplace-client');
 const fs = require('fs');
 
+function formatDuration(ms) {
+  if (ms < 1000) {
+    return ms + ' ms';
+  }
+
+  const seconds = ms / 1000;
+  if (seconds < 60) {
+    return seconds.toFixed(1) + ' s';
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = (seconds % 60).toFixed(1);
+  return minutes + ' min ' + remainingSeconds + ' s';
+}
+
 async function uploadActions() {
   const apiUrl = process.argv[2];
   const functionKey = process.argv[3];
   const actionsJsonPath = process.argv[4];
+  const maxUploadsArg = process.argv[5];
   
   // Validate arguments
   if (!apiUrl) {
@@ -57,11 +73,54 @@ async function uploadActions() {
   console.log('Testing API connection...');
   console.log('API client initialized successfully');
   
-  console.log('Uploading [' + actions.length + '] actions...');
+  // Determine optional maximum number of repos to actually upload
+  let maxUploads = undefined;
+  if (maxUploadsArg !== undefined) {
+    const parsed = parseInt(maxUploadsArg, 10);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      maxUploads = parsed;
+      console.log('Maximum uploads to perform: [' + maxUploads + ']');
+    }
+  }
+
+  // Get current actions from the API so we can detect which ones have not
+  // changed since the last upload based on repoInfo.updated_at.
+  let existingIndex = new Map();
+  try {
+    console.log('Retrieving existing actions from API for comparison...');
+    const listStart = Date.now();
+    const existingActions = await client.listActions();
+    const listDurationMs = Date.now() - listStart;
+    if (Array.isArray(existingActions)) {
+      for (const existing of existingActions) {
+        if (!existing || !existing.owner || !existing.name) {
+          continue;
+        }
+        const key = existing.owner + '/' + existing.name;
+        existingIndex.set(key, existing);
+      }
+      const formattedDuration = formatDuration(listDurationMs);
+      console.log('Indexed [' + existingIndex.size + '] existing actions for comparison in [' + formattedDuration + '].');
+    } else {
+      console.log('Existing actions list was not an array; skipping pre-comparison.');
+    }
+  } catch (error) {
+    console.error('Warning: failed to retrieve existing actions for comparison:', error.message);
+    existingIndex = new Map();
+  }
+
+  console.log('Uploading from candidate set of [' + actions.length + '] actions...');
   
   const results = [];
-  
+  let uploadedCount = 0;
+  let skippedNotUpdatedCount = 0;
+
   for (const action of actions) {
+    if (maxUploads !== undefined && uploadedCount >= maxUploads) {
+      console.log('Reached maximum uploads limit of [' + maxUploads + ']; stopping.');
+      break;
+    }
+
     try {
       console.log('Uploading: [' + action.owner + '/' + action.name + ']');
       
@@ -98,14 +157,48 @@ async function uploadActions() {
       if (action.ossfDateLastUpdate) actionData.ossfDateLastUpdate = action.ossfDateLastUpdate;
       if (action.dependents) actionData.dependents = action.dependents;
       if (action.verified !== undefined) actionData.verified = action.verified;
-      
+
+      const key = action.owner + '/' + action.name;
+
+      // Check if this action exists already and whether the last updated
+      // timestamp matches; if so, skip uploading it.
+      const existing = existingIndex.get(key);
+      let skippedNotUpdated = false;
+      if (existing && existing.repoInfo && existing.repoInfo.updated_at &&
+          actionData.repoInfo && actionData.repoInfo.updated_at) {
+        try {
+          const existingUpdated = new Date(existing.repoInfo.updated_at).toISOString();
+          const candidateUpdated = new Date(actionData.repoInfo.updated_at).toISOString();
+          if (existingUpdated === candidateUpdated) {
+            skippedNotUpdated = true;
+          }
+        } catch (dateError) {
+          console.error('  ⚠️ Date comparison failed for [' + key + ']: ' + dateError.message);
+        }
+      }
+
+      if (skippedNotUpdated) {
+        skippedNotUpdatedCount++;
+        results.push({
+          success: true,
+          action: key,
+          created: false,
+          updated: false,
+          skippedNotUpdated: true
+        });
+        console.log('  ↷ Skipped - not updated since last upload');
+        continue;
+      }
+
       const result = await client.upsertAction(actionData);
+      uploadedCount++;
       
       results.push({
         success: true,
-        action: action.owner + '/' + action.name,
+        action: key,
         created: result.created,
-        updated: result.updated
+        updated: result.updated,
+        skippedNotUpdated: false
       });
       
       console.log('  ✓ Success - ' + (result.created ? 'created' : result.updated ? 'updated' : 'no change'));
