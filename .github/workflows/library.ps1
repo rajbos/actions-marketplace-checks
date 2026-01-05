@@ -2594,7 +2594,16 @@ function GetForkedActionRepos {
     # prep the actions file so that we only have to split the repourl once
     $counter = 0
     foreach ($actionStatus in $actions){
-        ($owner, $repo) = SplitUrl -url $actionStatus.RepoUrl
+        # Support both RepoUrl (marketplace data) and repoUrl (internal data)
+        $repoUrlValue = if ($null -ne $actionStatus.RepoUrl -and $actionStatus.RepoUrl -ne "") { $actionStatus.RepoUrl }
+                        elseif ($null -ne $actionStatus.repoUrl -and $actionStatus.repoUrl -ne "") { $actionStatus.repoUrl }
+                        else { $null }
+
+        if ($null -eq $repoUrlValue) {
+            continue
+        }
+
+        ($owner, $repo) = SplitUrl -url $repoUrlValue
         # Skip invalid URLs that would produce an underscore-only name
         if ([string]::IsNullOrEmpty($owner) -or [string]::IsNullOrEmpty($repo)) {
             continue
@@ -2624,7 +2633,10 @@ function GetForkedActionRepos {
         # check if action is already in $statusTable
         # guard against null/empty names to avoid null index errors
         if ([string]::IsNullOrWhiteSpace($action.name)) {
-            Write-Host "Skipping action with missing name from RepoUrl: [$($action.RepoUrl)]"
+            $repoUrlValue = if ($null -ne $action.RepoUrl -and $action.RepoUrl -ne "") { $action.RepoUrl }
+                            elseif ($null -ne $action.repoUrl -and $action.repoUrl -ne "") { $action.repoUrl }
+                            else { "<no RepoUrl/repoUrl>" }
+            Write-Host "Skipping action with missing name from RepoUrl: [$repoUrlValue]"
             continue
         }
         $found = $statusTable[$action.name]
