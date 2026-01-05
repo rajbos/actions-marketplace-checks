@@ -17,7 +17,7 @@ on:
       - .github/workflows/node-scripts/upload-to-api.js
       - .github/workflows/node-scripts/get-actions-count.js
 
-  shedule:
+  schedule:
     - cron: '/15 * * * *'
 
 jobs:
