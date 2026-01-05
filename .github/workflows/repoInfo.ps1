@@ -788,11 +788,18 @@ function GetInfo {
                 if ($response -and $response.parent) {
                     # load owner info from parent
                     $action | Add-Member -Name owner -Value $response.parent.owner.login -MemberType NoteProperty
-                    $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
                 } else {
                     # new entry with leading owner name
                     $action | Add-Member -Name owner -Value $forkOrg -MemberType NoteProperty
+                }
+
+                # ensure mirrorFound is set to true without duplicating the property
+                $mirrorFoundField = Get-Member -InputObject $action -Name "mirrorFound" -MemberType Properties
+                if (-not $mirrorFoundField) {
                     $action | Add-Member -Name mirrorFound -Value $true -MemberType NoteProperty
+                }
+                else {
+                    $action.mirrorFound = $true
                 }
         }
         else {
