@@ -40,18 +40,23 @@ if ($numberOfRepos -gt $status.Count) {
 
 # Get initial count of known actions in table storage
 $getCountScriptPath = Join-Path $PSScriptRoot "node-scripts/get-actions-count.js"
-$initialKnownCount = 0
+$initialKnownCount = $null
+$initialKnownCountFetched = $false
+$initialCountExitCode = $null
 
 if (Test-Path $getCountScriptPath) {
   try {
     Write-Host "Getting initial count of known actions from API..."
     $countOutput = node $getCountScriptPath $apiUrl $functionKey 2>&1 | Out-String
+    $initialCountExitCode = $LASTEXITCODE
     
     Write-Host "Node.js output:"
     Write-Host $countOutput
+    Write-Host "Count script exit code: [$initialCountExitCode]"
     
     if ($countOutput -match '(?s)__COUNT_START__(.*?)__COUNT_END__') {
       $initialKnownCount = [int]$matches[1].Trim()
+      $initialKnownCountFetched = $true
       Write-Host "Initial known actions count: [$initialKnownCount]"
     } else {
       Write-Warning "Could not parse count from API response. Continuing without count."
@@ -66,13 +71,16 @@ if (Test-Path $getCountScriptPath) {
   Write-Warning "Count script not found at [$getCountScriptPath]. Continuing without count."
 }
 
+$initialKnownCountDisplay = if ($initialKnownCountFetched) { "$(DisplayIntWithDots $initialKnownCount)" } else { "unknown" }
+Write-Host "Known actions in table storage (start): [$initialKnownCountDisplay]"
+
 Write-Message -message "| Setting | Value |" -logToSummary $true
 Write-Message -message "|---------|-------|" -logToSummary $true
 Write-Message -message "| API URL | [$apiUrl] |" -logToSummary $true
 Write-Message -message "| Function key length | [$($functionKey.Length) characters] |" -logToSummary $true
 Write-Message -message "| Total repos in status.json | $(DisplayIntWithDots $status.Count) |" -logToSummary $true
 Write-Message -message "| Number of repos to upload | [$numberOfRepos] |" -logToSummary $true
-Write-Message -message "| Known actions in table storage (start) | $(DisplayIntWithDots $initialKnownCount) |" -logToSummary $true
+Write-Message -message "| Known actions in table storage (start) | [$initialKnownCountDisplay] |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Filter repos that have the necessary data for the API
@@ -183,18 +191,23 @@ Write-Message -message "" -logToSummary $true
 Write-Message -message "✓ Upload process completed" -logToSummary $true
 
 # Get final count of known actions in table storage
-$finalKnownCount = 0
+$finalKnownCount = $null
+$finalKnownCountFetched = $false
+$finalCountExitCode = $null
 
 if (Test-Path $getCountScriptPath) {
   try {
     Write-Host "Getting final count of known actions from API..."
     $countOutput = node $getCountScriptPath $apiUrl $functionKey 2>&1 | Out-String
+    $finalCountExitCode = $LASTEXITCODE
     
     Write-Host "Node.js output:"
     Write-Host $countOutput
+    Write-Host "Count script exit code: [$finalCountExitCode]"
     
     if ($countOutput -match '(?s)__COUNT_START__(.*?)__COUNT_END__') {
       $finalKnownCount = [int]$matches[1].Trim()
+      $finalKnownCountFetched = $true
       Write-Host "Final known actions count: [$finalKnownCount]"
       Write-Message -message "" -logToSummary $true
       Write-Message -message "📊 Known actions in table storage (end): **$(DisplayIntWithDots $finalKnownCount)**" -logToSummary $true
@@ -210,3 +223,16 @@ if (Test-Path $getCountScriptPath) {
 } else {
   Write-Warning "Count script not found at [$getCountScriptPath]."
 }
+
+if (-not $finalKnownCountFetched) {
+  if ($finalCountExitCode -ne $null -and $finalCountExitCode -ne 0) {
+    Write-Error "Final count lookup failed with exit code $finalCountExitCode"
+  } else {
+    Write-Error "Final count lookup failed: no count markers found in output"
+  }
+  Write-Message -message "" -logToSummary $true
+  Write-Message -message "📊 Known actions in table storage (end): unavailable (count step failed)" -logToSummary $true
+  exit 1
+}
+
+exit 0

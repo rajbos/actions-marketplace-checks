@@ -1,3 +1,7 @@
+---
+applyTo: ".github/workflows/**"
+---
+
 # Custom Instructions: GitHub Actions Usage in actions-marketplace-checks
 
 ## Project Context
