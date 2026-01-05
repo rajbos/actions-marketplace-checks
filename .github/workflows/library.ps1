@@ -1178,7 +1178,8 @@ function ApiCall {
                         $waitSeconds = [double]$bestBeforeWait.WaitSeconds
                         $continueAt = $bestBeforeWait.ContinueAt
                         $usedAllAppsWaitPlan = $true
-                        Write-Message -message "Using earliest reset across all GitHub Apps: waiting [$waitSeconds] seconds until [$continueAt] before retrying" -logToSummary $true
+                        $waitDisplay = Format-WaitTime -totalSeconds $waitSeconds
+                        Write-Message -message "Using earliest reset across all GitHub Apps: waiting [$waitSeconds] seconds ($waitDisplay) until [$continueAt] before retrying" -logToSummary $true
                     }
                 }
             }
@@ -1229,9 +1230,10 @@ function ApiCall {
 
             # For shorter wait times, only wait if requested
             if ($waitForRateLimit -and $waitSeconds -gt 0) {
+                $waitDisplay = Format-WaitTime -totalSeconds $waitSeconds
                 if ($isInstallationRateLimit) {
                     Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType "Installation"
-                    Write-Host "Pausing after installation rate limit error for [$waitSeconds] seconds"
+                    Write-Host "Pausing after installation rate limit error for $waitDisplay"
                 }
                 else {
                     Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
@@ -1294,14 +1296,23 @@ function ApiCall {
             }
             
             if (!$hideFailedCall) {
-                Write-Host "Error calling $url, status code [$($result.StatusCode)]"
+                $statusCode = $null
+                $content = $null
+                if ($null -ne $_.Exception -and $null -ne $_.Exception.Response) {
+                    $statusCode = $_.Exception.Response.StatusCode.value__
+                    $content = $_.Exception.Response.Content
+                }
+
+                Write-Host "Error calling $url, status code [$statusCode]"
                 Write-Host "MessageData: " $messageData
                 Write-Host "Error: " $_
-                if ($result.Content.Length -gt 100) {
-                    Write-Host "Content: " $result.Content.Substring(0, 100) + "..."
-                }
-                else {
-                    Write-Host "Content: " $result.Content
+                if ($null -ne $content) {
+                    if ($content.Length -gt 100) {
+                        Write-Host "Content: " $content.Substring(0, 100) + "..."
+                    }
+                    else {
+                        Write-Host "Content: " $content
+                    }
                 }
 
                 throw
@@ -1508,10 +1519,11 @@ function Format-RateLimitComparisonTable {
 
 function Write-GitHubAppRateLimitOverview {
     Param (
-        [string] $organization = $env:APP_ORGANIZATION
+        [string] $organization = $env:APP_ORGANIZATION,
+        $appOverview = $null
     )
 
-    if (-not [string]::IsNullOrWhiteSpace($organization)) {
+    if ($null -eq $appOverview -and -not [string]::IsNullOrWhiteSpace($organization)) {
         try {
             $appOverview = Get-GitHubAppRateLimitOverview -organization $organization
         }
@@ -1519,21 +1531,21 @@ function Write-GitHubAppRateLimitOverview {
             Write-Warning "Failed to retrieve GitHub App rate limit overview: $($_.Exception.Message)"
             $appOverview = $null
         }
+    }
 
-        if ($null -ne $appOverview -and $appOverview.Count -gt 0) {
-            Write-Message -message "| # | App Id | Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
-            Write-Message -message "|---:|-------:|----------:|-----:|-----------|-------------------|" -logToSummary $true
+    if ($null -ne $appOverview -and $appOverview.Count -gt 0) {
+        Write-Message -message "| # | App Id | Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
+        Write-Message -message "|---:|-------:|----------:|-----:|-----------|-------------------|" -logToSummary $true
 
-            $index = 1
-            foreach ($app in $appOverview) {
-                $appWaitSeconds = if ($null -ne $app.WaitSeconds) { [double]$app.WaitSeconds } else { 0 }
-                $appWaitTime = Format-WaitTime -totalSeconds $appWaitSeconds
-                Write-Message -message "| $index | $($app.AppId) | $(DisplayIntWithDots $app.Remaining) | $(DisplayIntWithDots $app.Used) | $appWaitTime | $($app.ContinueAt) |" -logToSummary $true
-                $index++
-            }
-
-            Write-Message -message "" -logToSummary $true
+        $index = 1
+        foreach ($app in $appOverview) {
+            $appWaitSeconds = if ($null -ne $app.WaitSeconds) { [double]$app.WaitSeconds } else { 0 }
+            $appWaitTime = Format-WaitTime -totalSeconds $appWaitSeconds
+            Write-Message -message "| $index | $($app.AppId) | $(DisplayIntWithDots $app.Remaining) | $(DisplayIntWithDots $app.Used) | $appWaitTime | $($app.ContinueAt) |" -logToSummary $true
+            $index++
         }
+
+        Write-Message -message "" -logToSummary $true
     }
 }
 
@@ -1547,18 +1559,31 @@ function Format-RateLimitErrorTable {
     )
     
     $waitTime = Format-WaitTime -totalSeconds $waitSeconds
+
+    # Capture app overview once so we can avoid writing two tables when app data is available.
+    $appOverview = $null
+    try {
+        $appOverview = Get-GitHubAppRateLimitOverview -organization $env:APP_ORGANIZATION
+    }
+    catch {
+        Write-Warning "Failed to retrieve GitHub App rate limit overview: $($_.Exception.Message)"
+    }
+    $hasAppOverview = $null -ne $appOverview -and $appOverview.Count -gt 0
     
     Write-Message -message "" -logToSummary $true
     Write-Message -message "**Rate Limit ${errorType}:**" -logToSummary $true
     Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
-    Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
-    Write-Message -message "| $(DisplayIntWithDots $remaining) | $(DisplayIntWithDots $used) | $waitTime | $continueAt |" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
 
-    # Also log the per-app overview (if apps are configured) so we always see
-    # the latest status for both apps when we choose to show an error table.
-    Write-GitHubAppRateLimitOverview
+    if (-not $hasAppOverview) {
+        Write-Message -message "| Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
+        Write-Message -message "|----------:|-----:|-----------|-------------------|" -logToSummary $true
+        Write-Message -message "| $(DisplayIntWithDots $remaining) | $(DisplayIntWithDots $used) | $waitTime | $continueAt |" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+    }
+
+    if ($hasAppOverview) {
+        Write-GitHubAppRateLimitOverview -appOverview $appOverview
+    }
 }
 
 function Test-IsLikelyGitHubAppPemKey {
