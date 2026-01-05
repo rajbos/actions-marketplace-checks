@@ -7,8 +7,6 @@ on:
 
   pull_request: 
 
-  push:
-  
   schedule:
     # Run daily at 1 AM UTC to catch token expiration issues early
     - cron: '0 1 * * *'
