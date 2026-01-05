@@ -683,13 +683,20 @@ function MakeRepoInfoCall {
         return
     }
 
+    # try to load repo info
     $url = "/repos/$forkOrg/$($action.name)"
     try {
-        $response = ApiCall -method GET -url $url
+        $response = ApiCall -method GET -url $url -hideFailedCall $true
     }
     catch {
-        $errorMsg = $_.Exception.Message
-        Write-Host "Error getting last updated repo info for fork [$forkOrg/$($action.name)]: $errorMsg"
+        if (Is404Error -errorMessage $errorMsg) {
+            Write-Host "Mirror repo [$forkOrg/$($action.name)] not found (404), will be mirrored in a different workflow."
+        }
+        else {
+            $errorMsg = $_.Exception.Message
+            Write-Host "Error getting last updated repo info for mirror [$forkOrg/$($action.name)]: $errorMsg"
+        }
+
         # Track fork 404 errors if error tracking is initialized
         if ($null -ne $script:errorCounts) {
             if (Is404Error -errorMessage $errorMsg) {
