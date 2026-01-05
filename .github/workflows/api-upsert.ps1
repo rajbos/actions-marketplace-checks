@@ -76,11 +76,11 @@ Write-Host "Known actions in table storage (start): [$initialKnownCountDisplay]"
 
 Write-Message -message "| Setting | Value |" -logToSummary $true
 Write-Message -message "|---------|-------|" -logToSummary $true
-Write-Message -message "| API URL | [$apiUrl] |" -logToSummary $true
-Write-Message -message "| Function key length | [$($functionKey.Length) characters] |" -logToSummary $true
+Write-Message -message "| API URL | $apiUrl |" -logToSummary $true
+Write-Message -message "| Function key length | $($functionKey.Length) characters |" -logToSummary $true
 Write-Message -message "| Total repos in status.json | $(DisplayIntWithDots $status.Count) |" -logToSummary $true
-Write-Message -message "| Number of repos to upload | [$numberOfRepos] |" -logToSummary $true
-Write-Message -message "| Known actions in table storage (start) | [$initialKnownCountDisplay] |" -logToSummary $true
+Write-Message -message "| Number of repos to upload | $numberOfRepos |" -logToSummary $true
+Write-Message -message "| Known actions in table storage (start) | $initialKnownCountDisplay |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Filter repos that have the necessary data for the API
@@ -141,10 +141,10 @@ try {
     
     Write-Message -message "| Status | Count |" -logToSummary $true
     Write-Message -message "|--------|-------|" -logToSummary $true
-    Write-Message -message "| ✅ Successful | [$successCount] |" -logToSummary $true
-    Write-Message -message "| ❌ Failed | [$failCount] |" -logToSummary $true
-    Write-Message -message "| 🆕 Created | [$createdCount] |" -logToSummary $true
-    Write-Message -message "| 📝 Updated | [$updatedCount] |" -logToSummary $true
+    Write-Message -message "| ✅ Successful | $successCount |" -logToSummary $true
+    Write-Message -message "| ❌ Failed | $failCount |" -logToSummary $true
+    Write-Message -message "| 🆕 Created | $createdCount |" -logToSummary $true
+    Write-Message -message "| 📝 Updated | $updatedCount |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Check if all uploads failed
