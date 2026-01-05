@@ -2,8 +2,7 @@ Param (
   $actions,
   $numberOfReposToDo = 10,
   $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN,
-  [switch]$skipSecretScanSummary = $false
+  $access_token_destination = $env:GITHUB_TOKEN
 )
 
 . $PSScriptRoot/library.ps1
@@ -1575,9 +1574,6 @@ function Run {
     ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -accessToken $accessTokenDestination -startTime $startTime
     SaveStatus -existingForks $existingForks
 
-    if (-not $skipSecretScanSummary) {
-        GetFoundSecretCount -access_token_destination $accessTokenDestination
-    }
     GetRateLimitInfo -access_token $accessToken -access_token_destination $accessTokenDestination -waitForRateLimit $false
 }
 
