@@ -277,30 +277,30 @@ function Format-ErrorSummaryTable {
     
     # Upstream Repo 404 Details
     if ($errorDetails.UpstreamRepo404.Count -gt 0) {
-        $detailsSection += "`n### Upstream Repo 404 Details (first $limit):`n`n"
+        $upstreamTotal = $errorDetails.UpstreamRepo404.Count
+        $displayCount = [Math]::Min($limit, $upstreamTotal)
+        $detailsSection += "`n### Upstream Repo 404 Details (first $displayCount of $upstreamTotal):`n`n"
         $detailsSection += "| Repository | Mirror Link | Original Link |`n"
         $detailsSection += "| --- | --- | --- |`n"
         
-        $errorDetails.UpstreamRepo404 | Select-Object -First $limit | ForEach-Object {
+        $errorDetails.UpstreamRepo404 | Select-Object -First $displayCount | ForEach-Object {
             $repoPath = $_
             $mirrorName = $repoPath -replace '/', '_'
             $mirrorUrl = "https://github.com/$forkOrg/$mirrorName"
             $originalUrl = "https://github.com/$repoPath"
             $detailsSection += "| $repoPath | [Mirror]($mirrorUrl) | [Original]($originalUrl) |`n"
         }
-        
-        if ($errorDetails.UpstreamRepo404.Count -gt $limit) {
-            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.UpstreamRepo404.Count - $limit)) more`n"
-        }
     }
     
     # Fork Repo 404 Details
     if ($errorDetails.ForkRepo404.Count -gt 0) {
-        $detailsSection += "`n### Fork Repo 404 Details (first $limit):`n`n"
+        $forkTotal = $errorDetails.ForkRepo404.Count
+        $displayCount = [Math]::Min($limit, $forkTotal)
+        $detailsSection += "`n### Fork Repo 404 Details (first $displayCount of $forkTotal):`n`n"
         $detailsSection += "| Repository | Mirror Link | Original Link |`n"
         $detailsSection += "| --- | --- | --- |`n"
         
-        $errorDetails.ForkRepo404 | Select-Object -First $limit | ForEach-Object {
+        $errorDetails.ForkRepo404 | Select-Object -First $displayCount | ForEach-Object {
             $repoPath = $_
             $mirrorUrl = "https://github.com/$repoPath"
             # Extract original repo from mirror name (format: org_repo)
@@ -318,33 +318,25 @@ function Format-ErrorSummaryTable {
                 $detailsSection += "| $repoPath | [Mirror]($mirrorUrl) | N/A |`n"
             }
         }
-        
-        if ($errorDetails.ForkRepo404.Count -gt $limit) {
-            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.ForkRepo404.Count - $limit)) more`n"
-        }
     }
     
     # Action File 404 Details
     if ($errorDetails.ActionFile404.Count -gt 0) {
-        $detailsSection += "`n### Action File 404 Details (first $limit):`n`n"
-        $errorDetails.ActionFile404 | Select-Object -First $limit | ForEach-Object {
+        $action404Total = $errorDetails.ActionFile404.Count
+        $displayCount = [Math]::Min($limit, $action404Total)
+        $detailsSection += "`n### Action File 404 Details (first $displayCount of $action404Total):`n`n"
+        $errorDetails.ActionFile404 | Select-Object -First $displayCount | ForEach-Object {
             $detailsSection += "  - $_`n"
-        }
-        
-        if ($errorDetails.ActionFile404.Count -gt $limit) {
-            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.ActionFile404.Count - $limit)) more`n"
         }
     }
     
     # Other Error Details
     if ($errorDetails.OtherErrors.Count -gt 0) {
-        $detailsSection += "`n### Other Error Details (first 5):`n`n"
-        $errorDetails.OtherErrors | Select-Object -First 5 | ForEach-Object {
+        $otherTotal = $errorDetails.OtherErrors.Count
+        $displayCount = [Math]::Min(5, $otherTotal)
+        $detailsSection += "`n### Other Error Details (first $displayCount of $otherTotal):`n`n"
+        $errorDetails.OtherErrors | Select-Object -First $displayCount | ForEach-Object {
             $detailsSection += "  - $_`n"
-        }
-        
-        if ($errorDetails.OtherErrors.Count -gt 5) {
-            $detailsSection += "`n... and $(DisplayIntWithDots ($errorDetails.OtherErrors.Count - 5)) more`n"
         }
     }
     
@@ -379,21 +371,45 @@ function GetRepoInfo {
 
     $url = "/repos/$owner/$repo"
     Write-Host "Loading repository info for [$owner/$repo]"
-    try {
-        $response = ApiCall -method GET -url $url
-        try {
-            $url = "/repos/$owner/$repo/releases/latest"
-            $release = ApiCall -method GET -url $url
-            return ($response.archived, $response.disabled, $response.updated_at, $release.published_at, $null)
+
+    # Treat 404s as expected (repo deleted or private) without flooding logs
+    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true
+    if ($repoResponse -is [hashtable] -and $repoResponse.Error) {
+        $statusCode = $null
+        if ($repoResponse.StatusCode) {
+            $statusCode = [System.Net.HttpStatusCode]$repoResponse.StatusCode
         }
-        catch {
-            return ($response.archived, $response.disabled, $response.updated_at, $null, $null)
+
+        if ($null -ne $script:errorCounts) {
+            if ($statusCode -eq [System.Net.HttpStatusCode]::NotFound) {
+                $script:errorCounts.UpstreamRepo404++
+                $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
+            }
+            elseif ($null -ne $statusCode) {
+                $script:errorCounts.OtherErrors++
+                $script:errorDetails.OtherErrors += "$owner/$repo : StatusCode $statusCode"
+            }
         }
+
+        if ($statusCode -ne [System.Net.HttpStatusCode]::NotFound) {
+            Write-Host "Error loading repository info for [$owner/$repo]: StatusCode [$statusCode]"
+        }
+
+        return ($null, $null, $null, $null, $statusCode)
     }
-    catch {
-        Write-Error "Error loading repository info for [$owner/$repo]: $($_.Exception.Message)"
-        return ($null, $null, $null, $null, $_.Exception.Response.StatusCode)
+
+    if ($null -eq $repoResponse) {
+        return ($null, $null, $null, $null, $null)
     }
+
+    $releaseUrl = "/repos/$owner/$repo/releases/latest"
+    $releaseResponse = ApiCall -method GET -url $releaseUrl -hideFailedCall $true -returnErrorInfo $true
+    $latestReleaseDate = $null
+    if (-not ($releaseResponse -is [hashtable] -and $releaseResponse.Error)) {
+        $latestReleaseDate = $releaseResponse.published_at
+    }
+
+    return ($repoResponse.archived, $repoResponse.disabled, $repoResponse.updated_at, $latestReleaseDate, $null)
 }
 
 function GetRepoTagInfo {
@@ -417,7 +433,18 @@ function GetRepoTagInfo {
     }
 
     $url = "repos/$owner/$repo/git/matching-refs/tags"
-    $response = ApiCall -method GET -url $url
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true
+
+    if ($response -is [hashtable] -and $response.Error) {
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading tags for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return @()
+    }
+
+    if ($null -eq $response) {
+        return @()
+    }
 
     # Return array of objects with tag name and SHA
     $response = $response | ForEach-Object { 
@@ -451,7 +478,18 @@ function GetRepoReleases {
     }
 
     $url = "repos/$owner/$repo/releases"
-    $response = ApiCall -method GET -url $url
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true
+
+    if ($response -is [hashtable] -and $response.Error) {
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading releases for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return @()
+    }
+
+    if ($null -eq $response) {
+        return @()
+    }
 
     # Return array of objects with tag name and target_commitish (SHA)
     # Note: tag_name from releases API is already a direct string, not a URL path
