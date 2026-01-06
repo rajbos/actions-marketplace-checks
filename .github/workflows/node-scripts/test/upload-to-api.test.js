@@ -57,3 +57,36 @@ test('trimTagInfoToLatest keeps latest 10 string tags by semver or alphabet', ()
   assert.ok(actionData.tagInfo.includes('v1.0.5'));
   assert.ok(!actionData.tagInfo.includes('v0'));
 });
+
+test('trimTagInfoToLatest filters out +run* tags and prefers SemVer', () => {
+  const actionData = {
+    tagInfo: [
+      '+run2368-attempt1',
+      '+run2367-attempt1',
+      '+run2366-attempt1',
+      'v1.0.0',
+      'v1.0.1',
+      'v1.1.0',
+      '+run1000-attempt2'
+    ]
+  };
+
+  trimTagInfoToLatest(actionData, 3);
+
+  // Should keep only SemVer tags, dropping the +run* noise
+  actionData.tagInfo.forEach(t => {
+    if (typeof t === 'string') {
+      if (t.startsWith('+run')) throw new Error('Noise tag should have been filtered');
+    } else if (t && typeof t === 'object' && t.tag) {
+      if (String(t.tag).startsWith('+run')) throw new Error('Noise tag should have been filtered');
+    }
+  });
+
+  // And prefer the highest SemVer tags
+  const names = actionData.tagInfo.map(x => (typeof x === 'string' ? x : x.tag));
+  // Expect top 3 semver tags by desc
+  if (names.length !== 3) throw new Error('Expected 3 tags after trimming');
+  if (names[0] !== 'v1.1.0') throw new Error('Expected v1.1.0 to be first');
+  if (names[1] !== 'v1.0.1') throw new Error('Expected v1.0.1 to be second');
+  if (names[2] !== 'v1.0.0') throw new Error('Expected v1.0.0 to be third');
+});

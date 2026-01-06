@@ -93,6 +93,12 @@ function compareTagStringsDesc(a, b) {
   return b.localeCompare(a);
 }
 
+function isNoiseTag(tag) {
+  if (typeof tag !== 'string') return false;
+  // Filter out CI/run-style tags like "+run2368-attempt1"
+  return /^\+run\d+(?:-attempt\d+)?$/i.test(tag);
+}
+
 function trimTagInfoToLatest(actionData, maxTags) {
   if (!actionData || !actionData.tagInfo) {
     return;
@@ -105,15 +111,44 @@ function trimTagInfoToLatest(actionData, maxTags) {
 
   const isObjectArray = typeof tagInfo[0] === 'object' && tagInfo[0] !== null && Object.prototype.hasOwnProperty.call(tagInfo[0], 'tag');
 
-  const items = tagInfo.slice();
-
-  items.sort((a, b) => {
-    const tagA = isObjectArray ? a.tag : a;
-    const tagB = isObjectArray ? b.tag : b;
-    return compareTagStringsDesc(tagA, tagB);
+  // Remove noise tags (e.g., "+run...-attempt...") before considering SemVer
+  const filtered = tagInfo.filter(item => {
+    const t = isObjectArray ? item.tag : item;
+    return !isNoiseTag(t);
   });
 
-  actionData.tagInfo = items.slice(0, maxTags);
+  // Partition into semver and non-semver
+  const semverItems = [];
+  const nonSemverItems = [];
+  for (const item of filtered) {
+    const t = isObjectArray ? item.tag : item;
+    if (parseSemverLike(t)) {
+      semverItems.push(item);
+    } else {
+      nonSemverItems.push(item);
+    }
+  }
+
+  let selected;
+  if (semverItems.length > 0) {
+    // Prefer SemVer tags when available
+    semverItems.sort((a, b) => {
+      const tagA = isObjectArray ? a.tag : a;
+      const tagB = isObjectArray ? b.tag : b;
+      return compareTagStringsDesc(tagA, tagB);
+    });
+    selected = semverItems.slice(0, maxTags);
+  } else {
+    // Fallback to non-SemVer, sorted with alphabetic-desc comparator
+    nonSemverItems.sort((a, b) => {
+      const tagA = isObjectArray ? a.tag : a;
+      const tagB = isObjectArray ? b.tag : b;
+      return compareTagStringsDesc(tagA, tagB);
+    });
+    selected = nonSemverItems.slice(0, maxTags);
+  }
+
+  actionData.tagInfo = selected;
 }
 
 async function uploadActions() {
