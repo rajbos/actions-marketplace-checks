@@ -287,3 +287,4 @@ jobs:
             Write-Error "Failed to upload failedForks.json to blob storage"
             exit 1
           }
+

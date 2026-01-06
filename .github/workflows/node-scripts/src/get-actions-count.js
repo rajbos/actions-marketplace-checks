@@ -50,7 +50,13 @@ async function getActionsCount() {
   }
 }
 
-getActionsCount().catch(error => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+if (require.main === module) {
+  getActionsCount().catch(error => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  getActionsCount
+};

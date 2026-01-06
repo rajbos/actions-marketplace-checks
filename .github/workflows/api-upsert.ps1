@@ -39,19 +39,24 @@ if ($numberOfRepos -gt $status.Count) {
 }
 
 # Get initial count of known actions in table storage
-$getCountScriptPath = Join-Path $PSScriptRoot "node-scripts/get-actions-count.js"
-$initialKnownCount = 0
+$getCountScriptPath = Join-Path $PSScriptRoot "node-scripts/src/get-actions-count.js"
+$initialKnownCount = $null
+$initialKnownCountFetched = $false
+$initialCountExitCode = $null
 
 if (Test-Path $getCountScriptPath) {
   try {
     Write-Host "Getting initial count of known actions from API..."
     $countOutput = node $getCountScriptPath $apiUrl $functionKey 2>&1 | Out-String
+    $initialCountExitCode = $LASTEXITCODE
     
     Write-Host "Node.js output:"
     Write-Host $countOutput
+    Write-Host "Count script exit code: [$initialCountExitCode]"
     
     if ($countOutput -match '(?s)__COUNT_START__(.*?)__COUNT_END__') {
       $initialKnownCount = [int]$matches[1].Trim()
+      $initialKnownCountFetched = $true
       Write-Host "Initial known actions count: [$initialKnownCount]"
     } else {
       Write-Warning "Could not parse count from API response. Continuing without count."
@@ -66,31 +71,41 @@ if (Test-Path $getCountScriptPath) {
   Write-Warning "Count script not found at [$getCountScriptPath]. Continuing without count."
 }
 
+$initialKnownCountDisplay = if ($initialKnownCountFetched) { "$(DisplayIntWithDots $initialKnownCount)" } else { "unknown" }
+Write-Host "Known actions in table storage (start): [$initialKnownCountDisplay]"
+
+if (-not $initialKnownCountFetched -and $initialCountExitCode -ne $null -and $initialCountExitCode -ne 0) {
+  Write-Message -message "⚠️ Failed to retrieve initial known actions count from API (see logs above for details)." -logToSummary $true
+  Write-Message -message "" -logToSummary $true
+}
+
 Write-Message -message "| Setting | Value |" -logToSummary $true
 Write-Message -message "|---------|-------|" -logToSummary $true
-Write-Message -message "| API URL | [$apiUrl] |" -logToSummary $true
-Write-Message -message "| Function key length | [$($functionKey.Length) characters] |" -logToSummary $true
+Write-Message -message "| API URL | $apiUrl |" -logToSummary $true
+Write-Message -message "| Function key length | $($functionKey.Length) characters |" -logToSummary $true
 Write-Message -message "| Total repos in status.json | $(DisplayIntWithDots $status.Count) |" -logToSummary $true
-Write-Message -message "| Number of repos to upload | [$numberOfRepos] |" -logToSummary $true
-Write-Message -message "| Known actions in table storage (start) | $(DisplayIntWithDots $initialKnownCount) |" -logToSummary $true
+Write-Message -message "| Number of repos to upload | $numberOfRepos |" -logToSummary $true
+Write-Message -message "| Known actions in table storage (start) | $initialKnownCountDisplay |" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Filter repos that have the necessary data for the API
 # Need: owner, name (from status), and additional metadata
-$validRepos = $status | Where-Object {
-  $_.name -and $_.owner
-} | Select-Object -First $numberOfRepos
+# Sort by last repo update (repoInfo.updated_at) so we consistently start
+# with the most recently updated repos when deciding which ones to upload
+$validRepos = $status |
+  Where-Object { $_.name -and $_.owner } |
+  Sort-Object -Property @{ Expression = { $_.repoInfo.updated_at }; Descending = $true }
 
 if ($validRepos.Count -eq 0) {
   Write-Message -message "⚠️ No valid repos found with required fields (name and owner)" -logToSummary $true
   exit 0
 }
 
-Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos to upload" -logToSummary $true
+Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos to consider for upload" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
-# Path to the external Node.js script
-$nodeScriptPath = Join-Path $PSScriptRoot "node-scripts/upload-to-api.js"
+# Path to the external Node.js script (use src implementation directly)
+$nodeScriptPath = Join-Path $PSScriptRoot "node-scripts/src/upload-to-api.js"
 
 if (-not (Test-Path $nodeScriptPath)) {
   Write-Error "Node.js script not found at [$nodeScriptPath]"
@@ -114,11 +129,38 @@ try {
   Write-Host "Using Node.js version: [$nodeVersion]"
   
   # Run the Node.js script with JSON file path instead of inline JSON
-  $output = node $nodeScriptPath $apiUrl $functionKey $actionsJsonPath 2>&1 | Out-String
+  # Pass numberOfRepos as a max uploads limit; the script will stop once that
+  # many repos have actually been uploaded (created/updated), skipping any
+  # that have not changed since the last upload.
+  $output = node $nodeScriptPath $apiUrl $functionKey $actionsJsonPath $numberOfRepos 2>&1 | Out-String
   
   Write-Host "Node.js output:"
   Write-Host $output
   
+  # Try to parse list statistics (existing actions count and list duration)
+  # emitted by the Node.js script so we can surface them in the step summary.
+  $listStats = $null
+  if ($output -match '(?s)__LIST_STATS_START__(.*?)__LIST_STATS_END__') {
+    $statsJson = $matches[1].Trim()
+    try {
+      $listStats = $statsJson | ConvertFrom-Json
+    } catch {
+      Write-Warning "Failed to parse list stats JSON from Node.js output: $($_.Exception.Message)"
+    }
+  }
+
+  # Try to parse skip statistics (number of actions skipped because they
+  # were not updated since the last upload) emitted by the Node.js script.
+  $skipStats = $null
+  if ($output -match '(?s)__SKIP_STATS_START__(.*?)__SKIP_STATS_END__') {
+    $skipJson = $matches[1].Trim()
+    try {
+      $skipStats = $skipJson | ConvertFrom-Json
+    } catch {
+      Write-Warning "Failed to parse skip stats JSON from Node.js output: $($_.Exception.Message)"
+    }
+  }
+
   # Parse results from output
   if ($output -match '(?s)__RESULTS_JSON_START__(.*?)__RESULTS_JSON_END__') {
     $resultsJson = $matches[1].Trim()
@@ -129,14 +171,40 @@ try {
     $failCount = ($results | Where-Object { $_.success -eq $false }).Count
     $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
     $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
+    if ($skipStats -and $skipStats.skippedNotUpdatedCount -ne $null) {
+      $skippedNotUpdatedCount = [int]$skipStats.skippedNotUpdatedCount
+    } else {
+      $skippedNotUpdatedCount = 0
+    }
     $allUploadsFailed = ($failCount -gt 0 -and $successCount -eq 0)
     
+    # Log list statistics if available
+    if ($listStats) {
+      $existingCountDisplay = if ($listStats.existingCount -ne $null) {
+        try { $(DisplayIntWithDots([int]$listStats.existingCount)) } catch { "$($listStats.existingCount)" }
+      } else {
+        "unknown"
+      }
+
+      $durationDisplay = if ($listStats.listDurationHuman) {
+        $listStats.listDurationHuman
+      } elseif ($listStats.listDurationMs -ne $null) {
+        "$($listStats.listDurationMs) ms"
+      } else {
+        "unknown"
+      }
+
+      Write-Message -message "Indexed $existingCountDisplay existing actions from API in [$durationDisplay]" -logToSummary $true
+      Write-Message -message "" -logToSummary $true
+    }
+
     Write-Message -message "| Status | Count |" -logToSummary $true
     Write-Message -message "|--------|-------|" -logToSummary $true
-    Write-Message -message "| ✅ Successful | [$successCount] |" -logToSummary $true
-    Write-Message -message "| ❌ Failed | [$failCount] |" -logToSummary $true
-    Write-Message -message "| 🆕 Created | [$createdCount] |" -logToSummary $true
-    Write-Message -message "| 📝 Updated | [$updatedCount] |" -logToSummary $true
+    Write-Message -message "| ✅ Successful | $successCount |" -logToSummary $true
+    Write-Message -message "| ❌ Failed | $failCount |" -logToSummary $true
+    Write-Message -message "| 🆕 Created | $createdCount |" -logToSummary $true
+    Write-Message -message "| 📝 Updated | $updatedCount |" -logToSummary $true
+    Write-Message -message "| ⏭️ Skipped (not updated) | $skippedNotUpdatedCount |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Check if all uploads failed
@@ -151,6 +219,13 @@ try {
     
     foreach ($result in $results) {
       if ($result.success) {
+        # Skip logging per-action lines for repos that were skipped because
+        # they were not updated since the last upload; they are counted in
+        # the summary table but are not interesting at the detail level.
+        if ($result.skippedNotUpdated) {
+          continue
+        }
+
         $status = if ($result.created) { "created" } elseif ($result.updated) { "updated" } else { "no change" }
         Write-Message -message "- ✅ ``$($result.action)`` - $status" -logToSummary $true
       } else {
@@ -183,18 +258,23 @@ Write-Message -message "" -logToSummary $true
 Write-Message -message "✓ Upload process completed" -logToSummary $true
 
 # Get final count of known actions in table storage
-$finalKnownCount = 0
+$finalKnownCount = $null
+$finalKnownCountFetched = $false
+$finalCountExitCode = $null
 
 if (Test-Path $getCountScriptPath) {
   try {
     Write-Host "Getting final count of known actions from API..."
     $countOutput = node $getCountScriptPath $apiUrl $functionKey 2>&1 | Out-String
+    $finalCountExitCode = $LASTEXITCODE
     
     Write-Host "Node.js output:"
     Write-Host $countOutput
+    Write-Host "Count script exit code: [$finalCountExitCode]"
     
     if ($countOutput -match '(?s)__COUNT_START__(.*?)__COUNT_END__') {
       $finalKnownCount = [int]$matches[1].Trim()
+      $finalKnownCountFetched = $true
       Write-Host "Final known actions count: [$finalKnownCount]"
       Write-Message -message "" -logToSummary $true
       Write-Message -message "📊 Known actions in table storage (end): **$(DisplayIntWithDots $finalKnownCount)**" -logToSummary $true
@@ -210,3 +290,18 @@ if (Test-Path $getCountScriptPath) {
 } else {
   Write-Warning "Count script not found at [$getCountScriptPath]."
 }
+
+if (-not $finalKnownCountFetched) {
+  if ($null -ne $finalCountExitCode -and $finalCountExitCode -ne 0) {
+    Write-Error "Final count lookup failed with exit code $finalCountExitCode"
+    Write-Message -message "❌ Final known actions count lookup failed with exit code $finalCountExitCode (see logs above for details)." -logToSummary $true
+  } else {
+    Write-Error "Final count lookup failed: no count markers found in output"
+    Write-Message -message "❌ Final known actions count lookup failed: no count markers found in output (see logs above for details)." -logToSummary $true
+  }
+  Write-Message -message "" -logToSummary $true
+  Write-Message -message "📊 Known actions in table storage (end): unavailable (count step failed)" -logToSummary $true
+  exit 1
+}
+
+exit 0

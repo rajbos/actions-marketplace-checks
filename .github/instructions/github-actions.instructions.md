@@ -1,3 +1,7 @@
+---
+applyTo: ".github/workflows/**"
+---
+
 # Custom Instructions: GitHub Actions Usage in actions-marketplace-checks
 
 ## Project Context
@@ -15,6 +19,7 @@
 - Use the helper `Write-Message -message <text> -logToSummary $true` to write to the GitHub Step Summary.
 - Prefer concise, human-readable sections with tables for counts and outcome summaries.
 - Continue using `Write-Host` for console output; use `Write-Message` when content should appear in the workflow summary.
+- When showing limited detail lists, format headings as `first X of Y` (no slashes) and avoid trailing "... and X more" lines.
 
 ## Data Files Handling
 - Do NOT read or expand the large JSON files into Copilot context:

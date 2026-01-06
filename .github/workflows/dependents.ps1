@@ -35,7 +35,7 @@ function GetDependentsForRepo {
     }
     catch {
         if ($_.Exception.Response.StatusCode -eq 404) {
-            Write-Host "404 Not Found: The repository or owner does not exist for [$owner/$repo]."
+            Write-Host "404 Not Found: The repository or owner does not exist for [$owner/$repo]"
         } else {
             Write-Host "Error loading dependents for owner [$owner/$repo]:"
             Write-Host "$_"

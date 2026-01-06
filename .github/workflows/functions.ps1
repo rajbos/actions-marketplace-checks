@@ -9,6 +9,79 @@ Param (
 
 Test-AccessTokens -accessToken $access_token -numberOfReposToDo $numberOfReposToDo
 
+function FilterInvalidMarketplaceLinks {
+    Param (
+        $actions
+    )
+
+    if ($null -eq $actions -or $actions.Count -eq 0) {
+        return $actions
+    }
+
+    $validActions = @()
+    $invalidActions = @()
+
+    foreach ($action in $actions) {
+        $hasRepoUrl = $null -ne $action.RepoUrl -and $action.RepoUrl -ne ""
+
+        # Support both Url and URL property names
+        $urlValue = $null
+        if ($null -ne $action.Url -and $action.Url -ne "") {
+            $urlValue = $action.Url
+        }
+        elseif ($null -ne $action.URL -and $action.URL -ne "") {
+            $urlValue = $action.URL
+        }
+
+        $hasUrl = $null -ne $urlValue -and $urlValue -ne ""
+
+        if (-not $hasRepoUrl -and $hasUrl) {
+            if ($urlValue.StartsWith("https://github.com/marketplace/actions")) {
+                $validActions += $action
+            }
+            else {
+                $invalidActions += $action
+            }
+        }
+        else {
+            $validActions += $action
+        }
+    }
+
+    if ($invalidActions.Count -gt 0) {
+        $totalInvalid = $invalidActions.Count
+        $displayCount = [Math]::Min(10, $totalInvalid)
+
+        Write-Host "Found [$totalInvalid] actions with RepoUrl = null and non-marketplace Url; skipping them as non valid marketplace links (forking phase)"
+
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "Skipped [$(DisplayIntWithDots $totalInvalid)] actions with RepoUrl = null and non marketplace Url (non valid marketplace links - forking phase)" -logToSummary $true
+        Write-Message -message "<details>" -logToSummary $true
+        Write-Message -message "<summary>Non valid marketplace links (forking phase, showing first $(DisplayIntWithDots $displayCount) of $(DisplayIntWithDots $totalInvalid))</summary>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| # | Title | Publisher | Url |" -logToSummary $true
+        Write-Message -message "|---:|-------|----------|-----|" -logToSummary $true
+
+        $index = 1
+        foreach ($invalid in ($invalidActions | Select-Object -First $displayCount)) {
+            $title = if ($null -ne $invalid.Title -and $invalid.Title -ne "") { $invalid.Title } else { "(no title)" }
+            $publisher = if ($null -ne $invalid.Publisher -and $invalid.Publisher -ne "") { $invalid.Publisher } else { "(no publisher)" }
+            $url = if ($null -ne $invalid.Url -and $invalid.Url -ne "") { $invalid.Url }
+                   elseif ($null -ne $invalid.URL -and $invalid.URL -ne "") { $invalid.URL }
+                   else { "(no url)" }
+
+            Write-Message -message "| $index | $title | $publisher | $url |" -logToSummary $true
+            $index++
+        }
+
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "</details>" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+    }
+
+    return ,$validActions
+}
+
 function GetForkedActionRepoList {
     Param (
         $access_token
@@ -31,6 +104,8 @@ function RunForActions {
         $existingForks,
         $failedForks
     )
+
+    $actions = FilterInvalidMarketplaceLinks -actions $actions
 
     Write-Host "Running for [$($actions.Count)] actions"
     # filter actions list to only the ones with a repoUrl
