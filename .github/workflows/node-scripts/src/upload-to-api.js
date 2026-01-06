@@ -275,48 +275,48 @@ async function uploadActions() {
       break;
     }
 
+    const key = action.owner + '/' + action.name;
+    
+    // Build the action data for the API outside try block so it's accessible in catch
+    // Only use fields that exist in the status.json schema
+    const actionData = {
+      owner: action.owner,
+      name: action.name
+    };
+    
+    // Add optional fields if they exist in the schema
+    // Based on status.json schema documented in validate-status-schema.ps1:
+    // - actionType (object/string)
+    // - repoInfo (object)
+    // - tagInfo, releaseInfo (version information)
+    // - forkFound, mirrorLastUpdated, repoSize
+    // - secretScanningEnabled, dependabotEnabled, dependabot
+    // - vulnerabilityStatus, ossf, ossfScore, ossfDateLastUpdate
+    // - dependents, verified
+    
+    if (action.actionType) actionData.actionType = action.actionType;
+    if (action.repoInfo) actionData.repoInfo = action.repoInfo;
+    if (action.tagInfo) actionData.tagInfo = action.tagInfo;
+    if (action.releaseInfo) actionData.releaseInfo = action.releaseInfo;
+    if (action.forkFound !== undefined) actionData.forkFound = action.forkFound;
+    if (action.mirrorLastUpdated) actionData.mirrorLastUpdated = action.mirrorLastUpdated;
+    if (action.repoSize !== undefined) actionData.repoSize = action.repoSize;
+    if (action.secretScanningEnabled !== undefined) actionData.secretScanningEnabled = action.secretScanningEnabled;
+    if (action.dependabotEnabled !== undefined) actionData.dependabotEnabled = action.dependabotEnabled;
+    if (action.dependabot) actionData.dependabot = action.dependabot;
+    if (action.vulnerabilityStatus) actionData.vulnerabilityStatus = action.vulnerabilityStatus;
+    if (action.ossf !== undefined) actionData.ossf = action.ossf;
+    if (action.ossfScore !== undefined) actionData.ossfScore = action.ossfScore;
+    if (action.ossfDateLastUpdate) actionData.ossfDateLastUpdate = action.ossfDateLastUpdate;
+    if (action.dependents) actionData.dependents = action.dependents;
+    if (action.verified !== undefined) actionData.verified = action.verified;
+
+    // Trim tag list to the latest tags, preferring SemVer ordering and
+    // falling back to alphabetical if SemVer parsing fails.
+    trimTagInfoToLatest(actionData, 10);
+
     try {
-      console.log('Uploading: [' + action.owner + '/' + action.name + ']');
-      
-      // Build the action data for the API
-      // Only use fields that exist in the status.json schema
-      const actionData = {
-        owner: action.owner,
-        name: action.name
-      };
-      
-      // Add optional fields if they exist in the schema
-      // Based on status.json schema documented in validate-status-schema.ps1:
-      // - actionType (object/string)
-      // - repoInfo (object)
-      // - tagInfo, releaseInfo (version information)
-      // - forkFound, mirrorLastUpdated, repoSize
-      // - secretScanningEnabled, dependabotEnabled, dependabot
-      // - vulnerabilityStatus, ossf, ossfScore, ossfDateLastUpdate
-      // - dependents, verified
-      
-      if (action.actionType) actionData.actionType = action.actionType;
-      if (action.repoInfo) actionData.repoInfo = action.repoInfo;
-      if (action.tagInfo) actionData.tagInfo = action.tagInfo;
-      if (action.releaseInfo) actionData.releaseInfo = action.releaseInfo;
-      if (action.forkFound !== undefined) actionData.forkFound = action.forkFound;
-      if (action.mirrorLastUpdated) actionData.mirrorLastUpdated = action.mirrorLastUpdated;
-      if (action.repoSize !== undefined) actionData.repoSize = action.repoSize;
-      if (action.secretScanningEnabled !== undefined) actionData.secretScanningEnabled = action.secretScanningEnabled;
-      if (action.dependabotEnabled !== undefined) actionData.dependabotEnabled = action.dependabotEnabled;
-      if (action.dependabot) actionData.dependabot = action.dependabot;
-      if (action.vulnerabilityStatus) actionData.vulnerabilityStatus = action.vulnerabilityStatus;
-      if (action.ossf !== undefined) actionData.ossf = action.ossf;
-      if (action.ossfScore !== undefined) actionData.ossfScore = action.ossfScore;
-      if (action.ossfDateLastUpdate) actionData.ossfDateLastUpdate = action.ossfDateLastUpdate;
-      if (action.dependents) actionData.dependents = action.dependents;
-      if (action.verified !== undefined) actionData.verified = action.verified;
-
-      // Trim tag list to the latest tags, preferring SemVer ordering and
-      // falling back to alphabetical if SemVer parsing fails.
-      trimTagInfoToLatest(actionData, 10);
-
-      const key = action.owner + '/' + action.name;
+      console.log('Uploading: [' + key + ']');
 
       // Check if this action exists already and whether the last updated
       // timestamp matches; if so, skip uploading it.
