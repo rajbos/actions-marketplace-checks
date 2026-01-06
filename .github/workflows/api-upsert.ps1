@@ -39,7 +39,7 @@ if ($numberOfRepos -gt $status.Count) {
 }
 
 # Get initial count of known actions in table storage
-$getCountScriptPath = Join-Path $PSScriptRoot "node-scripts/get-actions-count.js"
+$getCountScriptPath = Join-Path $PSScriptRoot "node-scripts/src/get-actions-count.js"
 $initialKnownCount = $null
 $initialKnownCountFetched = $false
 $initialCountExitCode = $null
@@ -104,8 +104,8 @@ if ($validRepos.Count -eq 0) {
 Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos to consider for upload" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
-# Path to the external Node.js script
-$nodeScriptPath = Join-Path $PSScriptRoot "node-scripts/upload-to-api.js"
+# Path to the external Node.js script (use src implementation directly)
+$nodeScriptPath = Join-Path $PSScriptRoot "node-scripts/src/upload-to-api.js"
 
 if (-not (Test-Path $nodeScriptPath)) {
   Write-Error "Node.js script not found at [$nodeScriptPath]"

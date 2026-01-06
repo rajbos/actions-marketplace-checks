@@ -1,4 +1,3 @@
-const { ActionsMarketplaceClient } = require('@devops-actions/actions-marketplace-client');
 const fs = require('fs');
 
 function formatDuration(ms) {
@@ -122,6 +121,7 @@ async function uploadActions() {
   const functionKey = process.argv[3];
   const actionsJsonPath = process.argv[4];
   const maxUploadsArg = process.argv[5];
+  const { ActionsMarketplaceClient } = require('@devops-actions/actions-marketplace-client');
   
   // Validate arguments
   if (!apiUrl) {
@@ -363,7 +363,18 @@ async function uploadActions() {
   console.log('__RESULTS_JSON_END__');
 }
 
-uploadActions().catch(error => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+if (require.main === module) {
+  uploadActions().catch(error => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  uploadActions,
+  formatDuration,
+  formatErrorForSummary,
+  parseSemverLike,
+  compareTagStringsDesc,
+  trimTagInfoToLatest
+};

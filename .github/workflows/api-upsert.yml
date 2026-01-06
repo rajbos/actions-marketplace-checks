@@ -14,8 +14,7 @@ on:
     paths:
       - .github/workflows/api-upsert.yml
       - .github/workflows/api-upsert.ps1
-      - .github/workflows/node-scripts/upload-to-api.js
-      - .github/workflows/node-scripts/get-actions-count.js
+      - .github/workflows/node-scripts/src/*.js
 
   schedule:
     - cron: '*/15 * * * *'

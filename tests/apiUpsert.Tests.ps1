@@ -54,7 +54,7 @@ Describe "API Upsert Script" {
 
         It "Should reference external Node.js script" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
-            $scriptContent | Should -Match 'node-scripts/upload-to-api\.js'
+            $scriptContent | Should -Match 'node-scripts/src/upload-to-api\.js'
         }
 
         It "Should validate Node.js script exists" {
@@ -73,9 +73,9 @@ Describe "API Upsert Script" {
         }
 
         It "Should use ActionsMarketplaceClient" {
-            # Check that the external Node.js script exists
-            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" | Should -Be $true
-            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            # Check that the implementation script exists under workflows node-scripts/src
+            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" | Should -Be $true
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" -Raw
             $nodeScript | Should -Match 'ActionsMarketplaceClient'
         }
 
@@ -85,18 +85,18 @@ Describe "API Upsert Script" {
         }
 
         It "Should validate argument lengths in Node.js script" {
-            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" -Raw
             $nodeScript | Should -Match 'apiUrl\.length'
             $nodeScript | Should -Match 'actionsJsonPath\.length'
         }
 
         It "Should test API connection" {
-            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" -Raw
             $nodeScript | Should -Match 'Testing API connection'
         }
 
         It "Should use correct status.json schema fields" {
-            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" -Raw
+            $nodeScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" -Raw
             # Check that it uses schema-documented fields
             $nodeScript | Should -Match 'action\.actionType'
             $nodeScript | Should -Match 'action\.repoInfo'
@@ -109,7 +109,7 @@ Describe "API Upsert Script" {
 
         It "Should reference get-actions-count.js script" {
             $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
-            $scriptContent | Should -Match 'node-scripts/get-actions-count\.js'
+            $scriptContent | Should -Match 'node-scripts/src/get-actions-count\.js'
         }
 
         It "Should get initial actions count from API" {
@@ -137,32 +137,32 @@ Describe "API Upsert Script" {
     }
 
     Context "Node.js script file" {
-        It "Should have upload-to-api.js script file" {
-            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/upload-to-api.js" | Should -Be $true
+        It "Should have upload-to-api.js script file (src)" {
+            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" | Should -Be $true
         }
 
-        It "Should have get-actions-count.js script file" {
-            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" | Should -Be $true
+        It "Should have get-actions-count.js script file (src)" {
+            Test-Path "$PSScriptRoot/../.github/workflows/node-scripts/src/get-actions-count.js" | Should -Be $true
         }
 
         It "Should use ActionsMarketplaceClient in get-actions-count.js" {
-            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/get-actions-count.js" -Raw
             $countScript | Should -Match 'ActionsMarketplaceClient'
         }
 
         It "Should call listActions in get-actions-count.js" {
-            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/get-actions-count.js" -Raw
             $countScript | Should -Match 'listActions'
         }
 
         It "Should output count with markers in get-actions-count.js" {
-            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/get-actions-count.js" -Raw
             $countScript | Should -Match '__COUNT_START__'
             $countScript | Should -Match '__COUNT_END__'
         }
 
         It "Should validate arguments in get-actions-count.js" {
-            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/get-actions-count.js" -Raw
+            $countScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/get-actions-count.js" -Raw
             $countScript | Should -Match 'apiUrl\.length'
             $countScript | Should -Match 'functionKey\.length'
         }
@@ -208,9 +208,9 @@ Describe "API Upsert Script" {
             $workflowContent | Should -Match 'AZ_FUNCTION_URL'
         }
 
-        It "Should trigger on changes to get-actions-count.js" {
+        It "Should trigger on changes to get-actions-count.js (src)" {
             $workflowContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.yml" -Raw
-            $workflowContent | Should -Match 'node-scripts/get-actions-count\.js'
+            $workflowContent | Should -Match 'node-scripts/src/get-actions-count\.js'
         }
     }
 }
