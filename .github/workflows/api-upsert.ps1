@@ -149,6 +149,18 @@ try {
     }
   }
 
+  # Try to parse skip statistics (number of actions skipped because they
+  # were not updated since the last upload) emitted by the Node.js script.
+  $skipStats = $null
+  if ($output -match '(?s)__SKIP_STATS_START__(.*?)__SKIP_STATS_END__') {
+    $skipJson = $matches[1].Trim()
+    try {
+      $skipStats = $skipJson | ConvertFrom-Json
+    } catch {
+      Write-Warning "Failed to parse skip stats JSON from Node.js output: $($_.Exception.Message)"
+    }
+  }
+
   # Parse results from output
   if ($output -match '(?s)__RESULTS_JSON_START__(.*?)__RESULTS_JSON_END__') {
     $resultsJson = $matches[1].Trim()
@@ -159,7 +171,11 @@ try {
     $failCount = ($results | Where-Object { $_.success -eq $false }).Count
     $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
     $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
-    $skippedNotUpdatedCount = ($results | Where-Object { $_.skippedNotUpdated -eq $true }).Count
+    if ($skipStats -and $skipStats.skippedNotUpdatedCount -ne $null) {
+      $skippedNotUpdatedCount = [int]$skipStats.skippedNotUpdatedCount
+    } else {
+      $skippedNotUpdatedCount = 0
+    }
     $allUploadsFailed = ($failCount -gt 0 -and $successCount -eq 0)
     
     # Log list statistics if available

@@ -16,6 +16,30 @@ function formatDuration(ms) {
   return minutes + ' min ' + remainingSeconds + ' s';
 }
 
+function formatErrorForSummary(error) {
+  if (!error) {
+    return 'Unknown error';
+  }
+
+  const codePrefix = error.code ? error.code + ': ' : '';
+  const message = error.message || 'Unknown error';
+  let summary = codePrefix + message;
+
+  const meta = [];
+  if (typeof error.statusCode === 'number') {
+    meta.push('statusCode=' + error.statusCode);
+  }
+  if (error.correlationId) {
+    meta.push('correlationId=' + error.correlationId);
+  }
+
+  if (meta.length > 0) {
+    summary += ' (' + meta.join(', ') + ')';
+  }
+
+  return summary;
+}
+
 async function uploadActions() {
   const apiUrl = process.argv[2];
   const functionKey = process.argv[3];
@@ -115,7 +139,15 @@ async function uploadActions() {
       console.log('Existing actions list was not an array; skipping pre-comparison.');
     }
   } catch (error) {
-    console.error('Warning: failed to retrieve existing actions for comparison:', error.message);
+    const summary = formatErrorForSummary(error);
+    console.error('Warning: failed to retrieve existing actions for comparison: ' + summary);
+    if (error && error.details) {
+      try {
+        console.error('  Details: ' + JSON.stringify(error.details));
+      } catch {
+        // ignore JSON stringify issues
+      }
+    }
     existingIndex = new Map();
   }
 
@@ -189,13 +221,6 @@ async function uploadActions() {
 
       if (skippedNotUpdated) {
         skippedNotUpdatedCount++;
-        results.push({
-          success: true,
-          action: key,
-          created: false,
-          updated: false,
-          skippedNotUpdated: true
-        });
         console.log('  ↷ Skipped - not updated since last upload');
         continue;
       }
@@ -213,15 +238,32 @@ async function uploadActions() {
       
       console.log('  ✓ Success - ' + (result.created ? 'created' : result.updated ? 'updated' : 'no change'));
     } catch (error) {
-      console.error('  ✗ Failed: ' + error.message);
+      const summary = formatErrorForSummary(error);
+      console.error('  ✗ Failed: ' + summary);
+      if (error && error.details) {
+        try {
+          console.error('  Details: ' + JSON.stringify(error.details));
+        } catch {
+          // ignore JSON stringify issues
+        }
+      }
       results.push({
         success: false,
         action: action.owner + '/' + action.name,
-        error: error.message
+        error: summary
       });
     }
   }
   
+  // Output skip statistics separately so the PowerShell wrapper can show
+  // the total number of skipped (not updated) actions without including
+  // each skipped item in the detailed results JSON.
+  console.log('__SKIP_STATS_START__');
+  console.log(JSON.stringify({
+    skippedNotUpdatedCount: skippedNotUpdatedCount
+  }, null, 2));
+  console.log('__SKIP_STATS_END__');
+
   // Output results as JSON for PowerShell to parse
   console.log('__RESULTS_JSON_START__');
   console.log(JSON.stringify(results, null, 2));
