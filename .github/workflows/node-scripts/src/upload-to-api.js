@@ -151,6 +151,65 @@ function trimTagInfoToLatest(actionData, maxTags) {
   actionData.tagInfo = selected;
 }
 
+function trimReleaseInfoToLatest(actionData, maxReleases) {
+  if (!actionData || !actionData.releaseInfo) {
+    return;
+  }
+
+  const releaseInfo = actionData.releaseInfo;
+  if (!Array.isArray(releaseInfo) || releaseInfo.length <= maxReleases) {
+    return;
+  }
+
+  // Release objects typically have tag_name or name field
+  const getReleaseName = (release) => {
+    if (typeof release === 'string') return release;
+    if (release && typeof release === 'object') {
+      return release.tag_name || release.name || '';
+    }
+    return '';
+  };
+
+  // Remove noise releases (e.g., "+run...-attempt...")
+  const filtered = releaseInfo.filter(item => {
+    const name = getReleaseName(item);
+    return !isNoiseTag(name);
+  });
+
+  // Partition into semver and non-semver
+  const semverItems = [];
+  const nonSemverItems = [];
+  for (const item of filtered) {
+    const name = getReleaseName(item);
+    if (parseSemverLike(name)) {
+      semverItems.push(item);
+    } else {
+      nonSemverItems.push(item);
+    }
+  }
+
+  let selected;
+  if (semverItems.length > 0) {
+    // Prefer SemVer releases when available
+    semverItems.sort((a, b) => {
+      const nameA = getReleaseName(a);
+      const nameB = getReleaseName(b);
+      return compareTagStringsDesc(nameA, nameB);
+    });
+    selected = semverItems.slice(0, maxReleases);
+  } else {
+    // Fallback to non-SemVer, sorted with alphabetic-desc comparator
+    nonSemverItems.sort((a, b) => {
+      const nameA = getReleaseName(a);
+      const nameB = getReleaseName(b);
+      return compareTagStringsDesc(nameA, nameB);
+    });
+    selected = nonSemverItems.slice(0, maxReleases);
+  }
+
+  actionData.releaseInfo = selected;
+}
+
 async function uploadActions() {
   const apiUrl = process.argv[2];
   const functionKey = process.argv[3];
@@ -314,6 +373,9 @@ async function uploadActions() {
     // Trim tag list to the latest tags, preferring SemVer ordering and
     // falling back to alphabetical if SemVer parsing fails.
     trimTagInfoToLatest(actionData, 10);
+    
+    // Trim release list to the latest releases, using same SemVer logic
+    trimReleaseInfoToLatest(actionData, 10);
 
     try {
       console.log('Uploading: [' + key + ']');
@@ -433,5 +495,6 @@ module.exports = {
   formatErrorForSummary,
   parseSemverLike,
   compareTagStringsDesc,
-  trimTagInfoToLatest
+  trimTagInfoToLatest,
+  trimReleaseInfoToLatest
 };

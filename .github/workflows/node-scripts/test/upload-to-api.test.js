@@ -3,6 +3,7 @@ const assert = require('node:assert');
 
 const {
   trimTagInfoToLatest,
+  trimReleaseInfoToLatest,
   compareTagStringsDesc,
   parseSemverLike
 } = require('../src/upload-to-api');
@@ -89,4 +90,31 @@ test('trimTagInfoToLatest filters out +run* tags and prefers SemVer', () => {
   if (names[0] !== 'v1.1.0') throw new Error('Expected v1.1.0 to be first');
   if (names[1] !== 'v1.0.1') throw new Error('Expected v1.0.1 to be second');
   if (names[2] !== 'v1.0.0') throw new Error('Expected v1.0.0 to be third');
+});
+
+test('trimReleaseInfoToLatest filters out +run* releases and prefers SemVer', () => {
+  const actionData = {
+    releaseInfo: [
+      { tag_name: '+run2368-attempt1', name: 'Run 2368' },
+      { tag_name: '+run2367-attempt1', name: 'Run 2367' },
+      { tag_name: 'v1.0.0', name: 'Release 1.0.0' },
+      { tag_name: 'v1.0.1', name: 'Release 1.0.1' },
+      { tag_name: 'v1.1.0', name: 'Release 1.1.0' },
+      { tag_name: '+run1000-attempt2', name: 'Run 1000' }
+    ]
+  };
+
+  trimReleaseInfoToLatest(actionData, 3);
+
+  // Should remove all +run* noise releases
+  actionData.releaseInfo.forEach(r => {
+    const tagName = r.tag_name || r.name || '';
+    if (tagName.startsWith('+run')) throw new Error('Noise release should have been filtered');
+  });
+
+  // Should keep top 3 SemVer releases in desc order
+  if (actionData.releaseInfo.length !== 3) throw new Error('Expected 3 releases after trimming');
+  if (actionData.releaseInfo[0].tag_name !== 'v1.1.0') throw new Error('Expected v1.1.0 first');
+  if (actionData.releaseInfo[1].tag_name !== 'v1.0.1') throw new Error('Expected v1.0.1 second');
+  if (actionData.releaseInfo[2].tag_name !== 'v1.0.0') throw new Error('Expected v1.0.0 third');
 });
