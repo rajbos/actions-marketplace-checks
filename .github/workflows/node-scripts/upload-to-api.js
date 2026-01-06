@@ -40,6 +40,83 @@ function formatErrorForSummary(error) {
   return summary;
 }
 
+function parseSemverLike(tag) {
+  if (typeof tag !== 'string') {
+    return null;
+  }
+
+  const match = tag.match(/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-([0-9A-Za-z\.-]+))?/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    major: parseInt(match[1], 10),
+    minor: match[2] ? parseInt(match[2], 10) : 0,
+    patch: match[3] ? parseInt(match[3], 10) : 0,
+    prerelease: match[4] || ''
+  };
+}
+
+function compareTagStringsDesc(a, b) {
+  const pa = parseSemverLike(a);
+  const pb = parseSemverLike(b);
+
+  if (pa && pb) {
+    if (pa.major !== pb.major) {
+      return pb.major - pa.major;
+    }
+    if (pa.minor !== pb.minor) {
+      return pb.minor - pa.minor;
+    }
+    if (pa.patch !== pb.patch) {
+      return pb.patch - pa.patch;
+    }
+    if (pa.prerelease !== pb.prerelease) {
+      if (!pa.prerelease) {
+        return -1;
+      }
+      if (!pb.prerelease) {
+        return 1;
+      }
+      return pb.prerelease.localeCompare(pa.prerelease);
+    }
+    return 0;
+  }
+
+  if (pa && !pb) {
+    return -1;
+  }
+  if (!pa && pb) {
+    return 1;
+  }
+
+  return b.localeCompare(a);
+}
+
+function trimTagInfoToLatest(actionData, maxTags) {
+  if (!actionData || !actionData.tagInfo) {
+    return;
+  }
+
+  const tagInfo = actionData.tagInfo;
+  if (!Array.isArray(tagInfo) || tagInfo.length <= maxTags) {
+    return;
+  }
+
+  const isObjectArray = typeof tagInfo[0] === 'object' && tagInfo[0] !== null && Object.prototype.hasOwnProperty.call(tagInfo[0], 'tag');
+
+  const items = tagInfo.slice();
+
+  items.sort((a, b) => {
+    const tagA = isObjectArray ? a.tag : a;
+    const tagB = isObjectArray ? b.tag : b;
+    return compareTagStringsDesc(tagA, tagB);
+  });
+
+  actionData.tagInfo = items.slice(0, maxTags);
+}
+
 async function uploadActions() {
   const apiUrl = process.argv[2];
   const functionKey = process.argv[3];
@@ -200,6 +277,10 @@ async function uploadActions() {
       if (action.dependents) actionData.dependents = action.dependents;
       if (action.verified !== undefined) actionData.verified = action.verified;
 
+      // Trim tag list to the latest tags, preferring SemVer ordering and
+      // falling back to alphabetical if SemVer parsing fails.
+      trimTagInfoToLatest(actionData, 10);
+
       const key = action.owner + '/' + action.name;
 
       // Check if this action exists already and whether the last updated
@@ -223,6 +304,18 @@ async function uploadActions() {
         skippedNotUpdatedCount++;
         console.log('  ↷ Skipped - not updated since last upload');
         continue;
+      }
+
+      // Compute payload length so we can more easily detect when we are
+      // approaching the Azure Table Storage per-property limit (~32K
+      // characters for UTF-16 strings, i.e. 64KB).
+      try {
+        const payloadLength = JSON.stringify(actionData).length;
+        if (payloadLength > 32000) {
+          console.warn('  ⚠️ Payload size [' + payloadLength + '] characters may exceed Azure Table 32K-character limit per property (64KB UTF-16).');
+        }
+      } catch (jsonError) {
+        console.error('  ⚠️ Failed to compute payload size: ' + jsonError.message);
       }
 
       const result = await client.upsertAction(actionData);
