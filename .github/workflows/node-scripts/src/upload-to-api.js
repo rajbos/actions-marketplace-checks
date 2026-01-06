@@ -368,6 +368,12 @@ async function uploadActions() {
     } catch (error) {
       const summary = formatErrorForSummary(error);
       console.error('  ✗ Failed: ' + summary);
+      
+      // Log array sizes for diagnostic purposes
+      const tagCount = Array.isArray(actionData.tagInfo) ? actionData.tagInfo.length : 0;
+      const releaseCount = Array.isArray(actionData.releaseInfo) ? actionData.releaseInfo.length : 0;
+      console.error('  📊 tagInfo count: ' + tagCount + ', releaseInfo count: ' + releaseCount);
+      
       if (error && error.details) {
         try {
           console.error('  Details: ' + JSON.stringify(error.details));
@@ -375,6 +381,22 @@ async function uploadActions() {
           // ignore JSON stringify issues
         }
       }
+      
+      // Write failing action to file for debugging
+      try {
+        const path = require('path');
+        const failedDir = 'failed-uploads';
+        if (!fs.existsSync(failedDir)) {
+          fs.mkdirSync(failedDir, { recursive: true });
+        }
+        const safeName = (action.owner + '_' + action.name).replace(/[^a-zA-Z0-9_-]/g, '_');
+        const failedFile = path.join(failedDir, safeName + '.json');
+        fs.writeFileSync(failedFile, JSON.stringify(actionData, null, 2));
+        console.error('  💾 Failed action data written to: ' + failedFile);
+      } catch (writeError) {
+        console.error('  ⚠️ Could not write failed action to file: ' + writeError.message);
+      }
+      
       results.push({
         success: false,
         action: action.owner + '/' + action.name,

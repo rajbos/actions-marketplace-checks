@@ -210,7 +210,8 @@ Describe "API Upsert Script" {
 
         It "Should trigger on changes to get-actions-count.js (src)" {
             $workflowContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.yml" -Raw
-            $workflowContent | Should -Match 'node-scripts/src/get-actions-count\.js'
+            # Use wildcard pattern since we now use *.js in the workflow
+            $workflowContent | Should -Match 'node-scripts/src/\*\.js'
         }
     }
 }

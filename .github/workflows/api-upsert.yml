@@ -88,3 +88,12 @@ jobs:
           } else {
             ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
           }
+
+      - name: Upload failed actions as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-uploads
+          path: failed-uploads/
+          if-no-files-found: ignore
+          retention-days: 7
