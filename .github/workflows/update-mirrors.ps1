@@ -44,12 +44,8 @@ function UpdateForkedRepos {
                 else { $existingFork | Add-Member -Name upstreamFound -Value $true -MemberType NoteProperty -Force }
             }
 
-            # Skip repos that don't have mirrorFound property or where it's false
-            if ($existingFork.mirrorFound -eq $false) {
-            Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
-            $skipped++
-            continue
-        }
+            # Don't skip repos with mirrorFound=false - let them proceed to recovery logic
+            # The sync attempt will detect mirror_not_found and attempt to create it
 
         # Get the upstream owner and repo from the mirror name
         # Mirror name format: upstreamOwner_upstreamRepo

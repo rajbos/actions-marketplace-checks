@@ -85,12 +85,8 @@ function UpdateForkedReposChunk {
             $existingFork | Add-Member -Name upstreamFound -Value $true -MemberType NoteProperty -Force
         }
 
-        # Skip repos when mirrorFound is false
-        if ($existingFork.mirrorFound -eq $false) {
-            Write-Debug "Mirror not found for [$($existingFork.name)], skipping"
-            $skipped++
-            continue
-        }
+        # Don't skip repos with mirrorFound=false - let them proceed to recovery logic
+        # The sync attempt will detect mirror_not_found and attempt to create it
 
         # Get the upstream owner and repo from the mirror name
         # Mirror name format: upstreamOwner_upstreamRepo
@@ -145,15 +141,57 @@ function UpdateForkedReposChunk {
                 }
             }
             elseif ($errorType -eq "mirror_not_found") {
-                    Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - marking mirrorFound as false"
+                Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - attempting to create mirror and retry"
+                # Attempt to create the missing mirror if upstream exists
+                $createResult = $false
+                try {
+                    # Source functions.ps1 to get ForkActionRepo function
+                    if (-not (Get-Command ForkActionRepo -ErrorAction SilentlyContinue)) {
+                        . $PSScriptRoot/functions.ps1
+                    }
+                    $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
+                }
+                catch {
+                    Write-Warning "Error while creating mirror [$upstreamOwner/$upstreamRepo]: $($_.Exception.Message)"
+                    $createResult = $false
+                }
+
+                if ($createResult) {
+                    # Mark mirrorFound true and retry one sync
+                    $existingFork.mirrorFound = $true
+                    Write-Host "Created mirror [$forkOrg/$($existingFork.name)], retrying sync"
+                    $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+                    if ($retry.success) {
+                        Write-Host "Successfully synced newly created mirror [$($existingFork.name)]"
+                        $synced++
+                        $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+                    }
+                    else {
+                        Write-Warning "Failed to sync newly created mirror [$($existingFork.name)]: $($retry.message)"
+                        $failed++
+                        $existingFork | Add-Member -Name lastSyncError -Value $retry.message -MemberType NoteProperty -Force
+                        $existingFork | Add-Member -Name lastSyncErrorType -Value $retry.error_type -MemberType NoteProperty -Force
+                        $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+                        
+                        # Add to failed repos list
+                        $failedReposList += @{
+                            name = $existingFork.name
+                            errorType = $retry.error_type
+                            errorMessage = $retry.message
+                        }
+                    }
+                }
+                else {
+                    Write-Warning "Could not create mirror for [$upstreamOwner/$upstreamRepo]; marking mirrorFound as false"
                     $existingFork.mirrorFound = $false
-                $failed++
-                
-                # Add to failed repos list
-                $failedReposList += @{
-                    name = $existingFork.name
-                    errorType = $errorType
-                    errorMessage = $result.message
+                    $failed++
+                    
+                    # Add to failed repos list
+                    $failedReposList += @{
+                        name = $existingFork.name
+                        errorType = $errorType
+                        errorMessage = $result.message
+                    }
                 }
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {

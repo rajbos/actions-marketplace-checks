@@ -2,7 +2,7 @@ Param (
   [Parameter(Mandatory = $true)]
   $status,
   [Parameter(Mandatory = $false)]
-  [int]$numberOfRepos = 5,
+  [int]$numberOfRepos = 500,
   [Parameter(Mandatory = $true)]
   [string]$apiUrl,
   [Parameter(Mandatory = $true)]
@@ -171,7 +171,7 @@ try {
     $failCount = ($results | Where-Object { $_.success -eq $false }).Count
     $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
     $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
-    if ($skipStats -and $skipStats.skippedNotUpdatedCount -ne $null) {
+    if ($skipStats -and $null -ne $skipStats.skippedNotUpdatedCount) {
       $skippedNotUpdatedCount = [int]$skipStats.skippedNotUpdatedCount
     } else {
       $skippedNotUpdatedCount = 0
@@ -180,7 +180,7 @@ try {
     
     # Log list statistics if available
     if ($listStats) {
-      $existingCountDisplay = if ($listStats.existingCount -ne $null) {
+      $existingCountDisplay = if ($null -ne $listStats.existingCount) {
         try { $(DisplayIntWithDots([int]$listStats.existingCount)) } catch { "$($listStats.existingCount)" }
       } else {
         "unknown"
@@ -188,7 +188,7 @@ try {
 
       $durationDisplay = if ($listStats.listDurationHuman) {
         $listStats.listDurationHuman
-      } elseif ($listStats.listDurationMs -ne $null) {
+      } elseif ($null -ne $listStats.listDurationMs) {
         "$($listStats.listDurationMs) ms"
       } else {
         "unknown"
@@ -214,7 +214,8 @@ try {
     }
     
     # Show details
-    Write-Message -message "### Details" -logToSummary $true
+    Write-Message -message "<details>" -logToSummary $true
+    Write-Message -message "<summary>Details</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     foreach ($result in $results) {
@@ -232,6 +233,10 @@ try {
         Write-Message -message "- ❌ ``$($result.action)`` - $($result.error)" -logToSummary $true
       }
     }
+    
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "</details>" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     
     # Exit with error if all uploads failed
     if ($allUploadsFailed) {
