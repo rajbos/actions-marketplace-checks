@@ -2,7 +2,7 @@ Param (
   [Parameter(Mandatory = $true)]
   $status,
   [Parameter(Mandatory = $false)]
-  [int]$numberOfRepos = 5,
+  [int]$numberOfRepos = 500,
   [Parameter(Mandatory = $true)]
   [string]$apiUrl,
   [Parameter(Mandatory = $true)]
