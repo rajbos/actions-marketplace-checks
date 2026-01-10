@@ -950,10 +950,13 @@ function ApiCall {
                 if ($rateLimitRemaining[0] -eq 0) {
                     if ($waitForRateLimit) {
                         $organization = $env:APP_ORGANIZATION
-                        $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                        $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization -triedAppIds $triedAppIds
 
                         if ($null -ne $bestBeforeWait) {
                             if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
+                                # Mark this app as tried
+                                $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
+                                
                                 if ($bestBeforeWait.Token -ne $access_token) {
                                     Write-Host "Rate limit remaining is 0 for current token, switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests"
                                 } else {
@@ -966,13 +969,12 @@ function ApiCall {
                                 return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
                             }
 
-                            # All apps are currently exhausted; wait for the soonest
-                            # reset time across all apps, then re-evaluate and pick the
-                            # app with the highest remaining quota.
+                            # All untried apps are currently exhausted; wait for the soonest
+                            # reset time across remaining untried apps, then re-evaluate.
                             $waitSecondsAllApps = [math]::Round([double]$bestBeforeWait.WaitSeconds)
                             if ($waitSecondsAllApps -gt 1200) {
                                 Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $waitSecondsAllApps -continueAt $bestBeforeWait.ContinueAt -errorType "Exceeded"
-                                $message = "Rate limit wait time is longer than 20 minutes across all apps, stopping execution"
+                                $message = "Rate limit wait time is longer than 20 minutes across all untried apps, stopping execution"
                                 Write-Message -message $message -logToSummary $true
                                 Write-Warning $message
                                 $global:RateLimitExceeded = $true
@@ -981,12 +983,18 @@ function ApiCall {
 
                             if ($waitSecondsAllApps -gt 0) {
                                 Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $waitSecondsAllApps -continueAt $bestBeforeWait.ContinueAt -errorType "Exceeded"
-                                Write-Host "All configured GitHub Apps are out of rate limit. Waiting for [$waitSecondsAllApps] seconds (earliest reset at [$($bestBeforeWait.ContinueAt)]) before re-checking and selecting the best app."
+                                Write-Host "All untried GitHub Apps are out of rate limit. Waiting for [$waitSecondsAllApps] seconds (earliest reset at [$($bestBeforeWait.ContinueAt)]) before re-checking."
                                 Start-Sleep -Seconds $waitSecondsAllApps
+                                # Clear tried apps after waiting - give all apps a fresh chance after reset
+                                $triedAppIds.Clear()
+                                Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                             }
 
-                            $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                            $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization -triedAppIds $triedAppIds
                             if ($null -ne $bestAfterWait -and $bestAfterWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                                # Mark this app as tried
+                                $triedAppIds.Add($bestAfterWait.AppId) | Out-Null
+                                
                                 Write-Host "After waiting for rate limit reset, selected GitHub App id [$($bestAfterWait.AppId)] with [$($bestAfterWait.Remaining)] remaining requests"
                                 return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestAfterWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
                             }
@@ -1283,13 +1291,20 @@ function ApiCall {
                 }
                 Start-Sleep -Milliseconds ($waitSeconds * 1000)
 
+                # After waiting, clear tried apps to give all apps a fresh chance
+                $triedAppIds.Clear()
+                Write-Host "Reset tried apps tracking after waiting for installation rate limit"
+
                 # After waiting, re-check rate limit status before retrying
                 Write-Host "Wait completed, rechecking rate limit status before retry..."
                 $organization = $env:APP_ORGANIZATION
-                $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization -triedAppIds $triedAppIds
                 
                 if ($null -ne $bestAfterWait) {
                     if ($bestAfterWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                        # Mark this app as tried
+                        $triedAppIds.Add($bestAfterWait.AppId) | Out-Null
+                        
                         Write-Host "Rate limit recovered: GitHub App id [$($bestAfterWait.AppId)] now has [$($bestAfterWait.Remaining)] remaining requests"
                         # Update to use the token with available quota
                         $access_token = $bestAfterWait.Token
