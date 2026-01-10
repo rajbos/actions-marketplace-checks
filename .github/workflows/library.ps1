@@ -4461,8 +4461,8 @@ function ShowOverallDatasetStatistics {
         Write-Message -message "<details>" -logToSummary $true
         Write-Message -message "<summary>Top $(if ($reposWithoutMirrorsList.Count -lt 10) { $reposWithoutMirrorsList.Count } else { 10 }) Repositories without Mirrors</summary>" -logToSummary $true
         Write-Message -message "" -logToSummary $true
-        Write-Message -message "| Mirror | Upstream |" -logToSummary $true
-        Write-Message -message "|--------|----------|" -logToSummary $true
+        Write-Message -message "| Mirror | Upstream | Reason |" -logToSummary $true
+        Write-Message -message "|--------|----------|--------|" -logToSummary $true
         
         foreach ($repo in $top10ReposWithoutMirrors) {
             $repoName = $repo.name
@@ -4480,7 +4480,26 @@ function ShowOverallDatasetStatistics {
                 }
             }
             
-            Write-Message -message "| $mirrorLink | $upstreamLink |" -logToSummary $true
+            # Determine a human-readable reason for why the mirror is missing
+            $lastSyncError = if ($repo.PSObject.Properties["lastSyncError"]) { $repo.lastSyncError } else { $null }
+            $lastSyncErrorType = if ($repo.PSObject.Properties["lastSyncErrorType"]) { $repo.lastSyncErrorType } else { $null }
+            $upstreamAvailable = if ($repo.PSObject.Properties["upstreamAvailable"]) { $repo.upstreamAvailable } else { $null }
+
+            $reason = "Not yet checked"
+            if ($upstreamAvailable -eq $false -or $lastSyncErrorType -eq "upstream_not_found") {
+                $reason = "Upstream missing/renamed"
+            }
+            elseif ($lastSyncErrorType -eq "mirror_create_failed") {
+                $reason = "Mirror creation failed"
+            }
+            elseif ($lastSyncErrorType -eq "mirror_not_found" -or ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -eq $false)) {
+                $reason = "Mirror missing after check"
+            }
+            elseif ($lastSyncErrorType -eq "mirror_conflict" -or ($lastSyncError -and ($lastSyncError -match "already exists" -or $lastSyncError -match "name already exists" -or $lastSyncError -match "repository already exists"))) {
+                $reason = "Mirror name collision"
+            }
+
+            Write-Message -message "| $mirrorLink | $upstreamLink | $reason |" -logToSummary $true
         }
         
         Write-Message -message "" -logToSummary $true
