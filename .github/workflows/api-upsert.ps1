@@ -161,6 +161,17 @@ try {
     }
   }
 
+  # Try to parse delta statistics (reconciliation status) emitted by the Node.js script.
+  $deltaStats = $null
+  if ($output -match '(?s)__DELTA_STATS_START__(.*?)__DELTA_STATS_END__') {
+    $deltaJson = $matches[1].Trim()
+    try {
+      $deltaStats = $deltaJson | ConvertFrom-Json
+    } catch {
+      Write-Warning "Failed to parse delta stats JSON from Node.js output: $($_.Exception.Message)"
+    }
+  }
+
   # Parse results from output
   if ($output -match '(?s)__RESULTS_JSON_START__(.*?)__RESULTS_JSON_END__') {
     $resultsJson = $matches[1].Trim()
@@ -309,6 +320,33 @@ if (Test-Path $getCountScriptPath) {
       Write-Host "Final known actions count: [$finalKnownCount]"
       Write-Message -message "" -logToSummary $true
       Write-Message -message "📊 Known actions in table storage (end): **$(DisplayIntWithDots $finalKnownCount)**" -logToSummary $true
+      
+      # Display delta statistics if available
+      if ($deltaStats) {
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "### Reconciliation Status" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "Based on comparing \`repoInfo.updated_at\` timestamps:" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "| Metric | Count |" -logToSummary $true
+        Write-Message -message "|--------|-------|" -logToSummary $true
+        Write-Message -message "| Actions in status.json | $(DisplayIntWithDots $deltaStats.totalInStatusJson) |" -logToSummary $true
+        Write-Message -message "| Actions in API storage | $(DisplayIntWithDots $deltaStats.totalInApi) |" -logToSummary $true
+        Write-Message -message "| **Actions needing updates** | **$(DisplayIntWithDots $deltaStats.actionsNeedingUpdates)** |" -logToSummary $true
+        Write-Message -message "| Actions up-to-date | $(DisplayIntWithDots $deltaStats.actionsUpToDate) |" -logToSummary $true
+        
+        if ($deltaStats.actionsInApiNotInStatus -gt 0) {
+          Write-Message -message "| ⚠️ Actions in API but not in status.json | $(DisplayIntWithDots $deltaStats.actionsInApiNotInStatus) |" -logToSummary $true
+        }
+        
+        Write-Message -message "" -logToSummary $true
+        
+        if ($deltaStats.actionsNeedingUpdates -gt 0) {
+          Write-Message -message "> 📝 **$(DisplayIntWithDots $deltaStats.actionsNeedingUpdates) actions still need to be reconciled** (either created or updated in API storage based on updated timestamps)." -logToSummary $true
+        } else {
+          Write-Message -message "> ✅ All actions in status.json are up-to-date in API storage!" -logToSummary $true
+        }
+      }
     } else {
       Write-Warning "Could not parse final count from API response."
       Write-Warning "Full output was:"

@@ -467,6 +467,62 @@ async function uploadActions() {
     }
   }
   
+  // Calculate delta: how many actions in the full list would need updates
+  // based on the same updated_at comparison criteria.
+  let actionsNeedingUpdates = 0;
+  let actionsInApiNotInStatus = 0;
+  let actionsUpToDate = 0;
+  
+  // Count actions from status.json that need updates
+  for (const action of actions) {
+    if (!action.owner || !action.name) {
+      continue;
+    }
+    const key = action.owner + '/' + action.name;
+    const existing = existingIndex.get(key);
+    
+    let needsUpdate = false;
+    if (!existing) {
+      // Action is in status.json but not in API - needs to be created
+      needsUpdate = true;
+    } else if (existing.repoInfo && existing.repoInfo.updated_at &&
+               action.repoInfo && action.repoInfo.updated_at) {
+      try {
+        const existingUpdated = new Date(existing.repoInfo.updated_at).toISOString();
+        const candidateUpdated = new Date(action.repoInfo.updated_at).toISOString();
+        if (existingUpdated !== candidateUpdated) {
+          needsUpdate = true;
+        }
+      } catch (dateError) {
+        // If date comparison fails, assume it needs update to be safe
+        needsUpdate = true;
+      }
+    } else if (!existing.repoInfo || !existing.repoInfo.updated_at ||
+               !action.repoInfo || !action.repoInfo.updated_at) {
+      // If either side is missing updated_at, assume it needs update
+      needsUpdate = true;
+    }
+    
+    if (needsUpdate) {
+      actionsNeedingUpdates++;
+    } else {
+      actionsUpToDate++;
+    }
+  }
+  
+  // Count actions in API that are not in status.json (orphaned)
+  const statusKeys = new Set();
+  for (const action of actions) {
+    if (action.owner && action.name) {
+      statusKeys.add(action.owner + '/' + action.name);
+    }
+  }
+  for (const key of existingIndex.keys()) {
+    if (!statusKeys.has(key)) {
+      actionsInApiNotInStatus++;
+    }
+  }
+  
   // Output skip statistics separately so the PowerShell wrapper can show
   // the total number of skipped (not updated) actions without including
   // each skipped item in the detailed results JSON.
@@ -475,6 +531,17 @@ async function uploadActions() {
     skippedNotUpdatedCount: skippedNotUpdatedCount
   }, null, 2));
   console.log('__SKIP_STATS_END__');
+  
+  // Output delta statistics for reconciliation tracking
+  console.log('__DELTA_STATS_START__');
+  console.log(JSON.stringify({
+    totalInStatusJson: actions.length,
+    totalInApi: existingIndex.size,
+    actionsNeedingUpdates: actionsNeedingUpdates,
+    actionsUpToDate: actionsUpToDate,
+    actionsInApiNotInStatus: actionsInApiNotInStatus
+  }, null, 2));
+  console.log('__DELTA_STATS_END__');
 
   // Output results as JSON for PowerShell to parse
   console.log('__RESULTS_JSON_START__');
