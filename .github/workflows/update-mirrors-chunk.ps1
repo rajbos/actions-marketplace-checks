@@ -65,6 +65,7 @@ function UpdateForkedReposChunk {
     $conflicts = 0
     $upstreamNotFound = 0
     $skipped = 0
+    $mirrorsCreated = 0
     $failedReposList = @()
 
     foreach ($existingFork in $forksToProcess) {
@@ -158,6 +159,7 @@ function UpdateForkedReposChunk {
 
                 if ($createResult) {
                     # Mark mirrorFound true and retry one sync
+                    $mirrorsCreated++
                     $existingFork.mirrorFound = $true
                     Write-Host "Created mirror [$forkOrg/$($existingFork.name)], retrying sync"
                     $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
@@ -255,6 +257,7 @@ function UpdateForkedReposChunk {
     Write-Message -message "|--------|------:|" -logToSummary $true
     Write-Message -message "| ✅ Synced | $synced |" -logToSummary $true
     Write-Message -message "| ✓ Up to Date | $upToDate |" -logToSummary $true
+    Write-Message -message "| 🆕 Mirrors Created | $mirrorsCreated |" -logToSummary $true
     Write-Message -message "| ⚠️ Conflicts | $conflicts |" -logToSummary $true
     Write-Message -message "| ❌ Upstream Not Found | $upstreamNotFound |" -logToSummary $true
     Write-Message -message "| ❌ Failed | $failed |" -logToSummary $true
@@ -268,6 +271,7 @@ function UpdateForkedReposChunk {
         stats = @{
             synced = $synced
             upToDate = $upToDate
+            mirrorsCreated = $mirrorsCreated
             conflicts = $conflicts
             upstreamNotFound = $upstreamNotFound
             failed = $failed
@@ -292,6 +296,7 @@ Save-ChunkSummary `
     -chunkId $chunkId `
     -synced $result.stats.synced `
     -upToDate $result.stats.upToDate `
+    -mirrorsCreated $result.stats.mirrorsCreated `
     -conflicts $result.stats.conflicts `
     -upstreamNotFound $result.stats.upstreamNotFound `
     -failed $result.stats.failed `

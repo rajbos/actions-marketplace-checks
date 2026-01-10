@@ -94,7 +94,7 @@ When making changes to inline PowerShell scripts in workflow YAML files, ensure 
 
 ## Important Considerations
 
-1. **Rate Limiting**: GitHub API calls need backoff strategies. Use `GetRateLimitInfo` and the shared `ApiCall` helpers rather than implementing custom sleep/retry logic.
+1. **Rate Limiting**: Always go through `ApiCall`, which already handles primary and secondary limits: it rotates across configured GitHub App tokens, backs off exponentially (caps long waits >20 minutes by stopping), and treats secondary limits with larger initial sleeps. Use `GetRateLimitInfo` for visibility; do not add ad-hoc sleeps/retries elsewhere.
 2. **GitHub App Tokens**: Workflows set `APP_ID`, `APP_ID_2`, `APP_ID_3`, `APP_ORGANIZATION`, `APPLICATION_PRIVATE_KEY`, `APPLICATION_PRIVATE_KEY_2`, and `APPLICATION_PRIVATE_KEY_3`. Token acquisition should go through the GitHub App token manager (`Get-GitHubAppTokenManagerInstance` / `New-GitHubAppTokenManagerFromEnvironment`).
 3. **Large Dataset**: The project processes ~29,000 actions per run
 4. **Fork Organization**: Uses `actions-marketplace-validations` org

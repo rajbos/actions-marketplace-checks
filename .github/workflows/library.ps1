@@ -4031,6 +4031,7 @@ function Save-ChunkSummary {
         [int] $chunkId,
         [int] $synced = 0,
         [int] $upToDate = 0,
+        [int] $mirrorsCreated = 0,
         [int] $conflicts = 0,
         [int] $upstreamNotFound = 0,
         [int] $failed = 0,
@@ -4044,6 +4045,7 @@ function Save-ChunkSummary {
         chunkId = $chunkId
         synced = $synced
         upToDate = $upToDate
+        mirrorsCreated = $mirrorsCreated
         conflicts = $conflicts
         upstreamNotFound = $upstreamNotFound
         failed = $failed
@@ -4087,6 +4089,7 @@ function Show-ConsolidatedChunkSummary {
     # Initialize totals
     $totalSynced = 0
     $totalUpToDate = 0
+    $totalMirrorsCreated = 0
     $totalConflicts = 0
     $totalUpstreamNotFound = 0
     $totalFailed = 0
@@ -4103,6 +4106,7 @@ function Show-ConsolidatedChunkSummary {
         return @{
             synced = $totalSynced
             upToDate = $totalUpToDate
+            mirrorsCreated = $totalMirrorsCreated
             conflicts = $totalConflicts
             upstreamNotFound = $totalUpstreamNotFound
             failed = $totalFailed
@@ -4128,6 +4132,7 @@ function Show-ConsolidatedChunkSummary {
             
             $totalSynced += $chunkSummary.synced
             $totalUpToDate += $chunkSummary.upToDate
+            $totalMirrorsCreated += (if ($chunkSummary.PSObject.Properties["mirrorsCreated"]) { $chunkSummary.mirrorsCreated } else { 0 })
             $totalConflicts += $chunkSummary.conflicts
             $totalUpstreamNotFound += $chunkSummary.upstreamNotFound
             $totalFailed += $chunkSummary.failed
@@ -4168,6 +4173,7 @@ function Show-ConsolidatedChunkSummary {
     Write-Message -message "|--------|------:|" -logToSummary $true
     Write-Message -message "| ✅ Synced | $(DisplayIntWithDots $totalSynced) |" -logToSummary $true
     Write-Message -message "| ✓ Up to Date | $(DisplayIntWithDots $totalUpToDate) |" -logToSummary $true
+    Write-Message -message "| 🆕 Mirrors Created | $(DisplayIntWithDots $totalMirrorsCreated) |" -logToSummary $true
     Write-Message -message "| ⚠️ Conflicts | $(DisplayIntWithDots $totalConflicts) |" -logToSummary $true
     Write-Message -message "| ❌ Upstream Not Found | $(DisplayIntWithDots $totalUpstreamNotFound) |" -logToSummary $true
     Write-Message -message "| ❌ Failed | $(DisplayIntWithDots $totalFailed) |" -logToSummary $true
@@ -4235,6 +4241,7 @@ function Show-ConsolidatedChunkSummary {
     return @{
         synced = $totalSynced
         upToDate = $totalUpToDate
+        mirrorsCreated = $totalMirrorsCreated
         conflicts = $totalConflicts
         upstreamNotFound = $totalUpstreamNotFound
         failed = $totalFailed
@@ -4461,8 +4468,8 @@ function ShowOverallDatasetStatistics {
         Write-Message -message "<details>" -logToSummary $true
         Write-Message -message "<summary>Top $(if ($reposWithoutMirrorsList.Count -lt 10) { $reposWithoutMirrorsList.Count } else { 10 }) Repositories without Mirrors</summary>" -logToSummary $true
         Write-Message -message "" -logToSummary $true
-        Write-Message -message "| Mirror | Upstream |" -logToSummary $true
-        Write-Message -message "|--------|----------|" -logToSummary $true
+        Write-Message -message "| Mirror | Upstream | Reason |" -logToSummary $true
+        Write-Message -message "|--------|----------|--------|" -logToSummary $true
         
         foreach ($repo in $top10ReposWithoutMirrors) {
             $repoName = $repo.name
@@ -4480,7 +4487,26 @@ function ShowOverallDatasetStatistics {
                 }
             }
             
-            Write-Message -message "| $mirrorLink | $upstreamLink |" -logToSummary $true
+            # Derive a human-readable reason for missing mirror
+            $lastSyncError = $repo.PSObject.Properties["lastSyncError"] ? $repo.lastSyncError : $null
+            $lastSyncErrorType = $repo.PSObject.Properties["lastSyncErrorType"] ? $repo.lastSyncErrorType : $null
+            $upstreamAvailable = $repo.PSObject.Properties["upstreamAvailable"] ? $repo.upstreamAvailable : $null
+
+            $reason = "Not yet checked"
+            if ($upstreamAvailable -eq $false -or $lastSyncErrorType -eq "upstream_not_found") {
+                $reason = "Upstream missing or renamed"
+            }
+            elseif ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -eq $false) {
+                $reason = "Mirror missing after auto-create"
+            }
+            elseif ($lastSyncErrorType -eq "mirror_name_conflict" -or $lastSyncErrorType -eq "mirror_conflict" -or ($lastSyncError -and ($lastSyncError -match "already exists" -or $lastSyncError -match "name already exists" -or $lastSyncError -match "repository already exists"))) {
+                $reason = "Mirror name collision"
+            }
+            elseif ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -ne $true) {
+                $reason = "Mirror not found"
+            }
+
+            Write-Message -message "| $mirrorLink | $upstreamLink | $reason |" -logToSummary $true
         }
         
         Write-Message -message "" -logToSummary $true
@@ -4489,8 +4515,8 @@ function ShowOverallDatasetStatistics {
     }
     
     Write-Message -message "_Note: **Repositories without mirrors** cannot be synced. This includes:_" -logToSummary $true
-    Write-Message -message "- _**Confirmed No Mirror**: Repositories where the mirror repository was checked and found to not exist (e.g., upstream deleted, mirror never created, or mirror was deleted)_" -logToSummary $true
-    Write-Message -message "- _**Not Yet Checked**: Repositories that haven't been processed by the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml) yet_" -logToSummary $true
+    Write-Message -message "- _**Confirmed No Mirror**: Repositories where a mirror is still missing after an auto-create attempt (for example the upstream was deleted or mirror creation failed)_" -logToSummary $true
+    Write-Message -message "- _**Not Yet Checked**: Repositories that haven't been processed by the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml) yet, so the auto-create step has not been run_" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "_💡 To increase the number of repositories with known mirror status, focus on the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml), which processes repositories hourly to check their mirror status._" -logToSummary $true
     Write-Message -message "" -logToSummary $true
