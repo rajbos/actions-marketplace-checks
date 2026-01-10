@@ -201,6 +201,9 @@ function UpdateForkedReposChunk {
                     $existingFork | Add-Member -Name lastSyncError -Value $createErrorMessage -MemberType NoteProperty -Force
                     $existingFork | Add-Member -Name lastSyncErrorType -Value "mirror_create_failed" -MemberType NoteProperty -Force
                     $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+
+                    # Enqueue for automated retry processing
+                    Enqueue-MirrorRetry -MirrorName $existingFork.name -ErrorMessage $createErrorMessage -ErrorType "mirror_create_failed"
                 }
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
