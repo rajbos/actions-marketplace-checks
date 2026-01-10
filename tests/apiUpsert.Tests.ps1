@@ -166,6 +166,33 @@ Describe "API Upsert Script" {
             $countScript | Should -Match 'apiUrl\.length'
             $countScript | Should -Match 'functionKey\.length'
         }
+
+        It "Should calculate delta statistics in upload-to-api.js" {
+            $uploadScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" -Raw
+            $uploadScript | Should -Match 'actionsNeedingUpdates'
+            $uploadScript | Should -Match 'actionsUpToDate'
+            $uploadScript | Should -Match 'actionsInApiNotInStatus'
+        }
+
+        It "Should output delta stats with markers in upload-to-api.js" {
+            $uploadScript = Get-Content "$PSScriptRoot/../.github/workflows/node-scripts/src/upload-to-api.js" -Raw
+            $uploadScript | Should -Match '__DELTA_STATS_START__'
+            $uploadScript | Should -Match '__DELTA_STATS_END__'
+        }
+
+        It "Should parse delta stats in PowerShell script" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match '\$deltaStats'
+            $scriptContent | Should -Match '__DELTA_STATS_START__'
+            $scriptContent | Should -Match '__DELTA_STATS_END__'
+        }
+
+        It "Should display reconciliation status in summary" {
+            $scriptContent = Get-Content "$PSScriptRoot/../.github/workflows/api-upsert.ps1" -Raw
+            $scriptContent | Should -Match 'Reconciliation Status'
+            $scriptContent | Should -Match 'Actions needing updates'
+            $scriptContent | Should -Match 'repoInfo\.updated_at'
+        }
     }
 
     Context "Workflow file exists and valid" {
