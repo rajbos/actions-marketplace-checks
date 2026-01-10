@@ -464,6 +464,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
     concurrency:
       group: repo-state-updates
       cancel-in-progress: false
@@ -588,6 +589,109 @@ jobs:
           Write-Message -message "" -logToSummary $true
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
+      - name: Show job durations
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## Job Duration Summary" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Get job information for current workflow run
+          $runId = "${{ github.run_id }}"
+          $repo = "${{ github.repository }}"
+          
+          try {
+              # Fetch jobs for this workflow run
+              $jobsUrl = "repos/$repo/actions/runs/$runId/jobs?per_page=100"
+              $jobs = ApiCall -method "GET" -url $jobsUrl -access_token $env:GH_TOKEN
+              
+              if ($null -eq $jobs -or $null -eq $jobs.jobs) {
+                  Write-Host "No job information available"
+                  return
+              }
+              
+              # Filter for fork-repos and repo-info jobs
+              $forkJobs = $jobs.jobs | Where-Object { $_.name -like "Fork repos (chunk*" } | Sort-Object { 
+                  if ($_.name -match 'chunk (\d+)') { [int]$matches[1] } else { 0 }
+              }
+              $repoInfoJobs = $jobs.jobs | Where-Object { $_.name -like "Get repo info (chunk*" } | Sort-Object { 
+                  if ($_.name -match 'chunk (\d+)') { [int]$matches[1] } else { 0 }
+              }
+              
+              # Display fork-repos jobs
+              if ($forkJobs.Count -gt 0) {
+                  Write-Message -message "### Fork Repos Jobs" -logToSummary $true
+                  Write-Message -message "" -logToSummary $true
+                  Write-Message -message "| Chunk | Status | Duration |" -logToSummary $true
+                  Write-Message -message "|-------|--------|----------|" -logToSummary $true
+                  
+                  foreach ($job in $forkJobs) {
+                      $chunkId = if ($job.name -match 'chunk (\d+)') { $matches[1] } else { "?" }
+                      $status = $job.conclusion
+                      if ([string]::IsNullOrEmpty($status)) {
+                          $status = $job.status
+                      }
+                      
+                      # Calculate duration
+                      $duration = "N/A"
+                      if ($null -ne $job.started_at -and $null -ne $job.completed_at) {
+                          $startTime = [DateTime]::Parse($job.started_at)
+                          $endTime = [DateTime]::Parse($job.completed_at)
+                          $durationSpan = $endTime - $startTime
+                          
+                          $minutes = [math]::Floor($durationSpan.TotalMinutes)
+                          $seconds = $durationSpan.Seconds
+                          $duration = "$($minutes)m $($seconds)s"
+                      }
+                      
+                      Write-Message -message "| $chunkId | $status | $duration |" -logToSummary $true
+                  }
+                  
+                  Write-Message -message "" -logToSummary $true
+              }
+              
+              # Display repo-info jobs
+              if ($repoInfoJobs.Count -gt 0) {
+                  Write-Message -message "### Repo Info Jobs" -logToSummary $true
+                  Write-Message -message "" -logToSummary $true
+                  Write-Message -message "| Chunk | Status | Duration |" -logToSummary $true
+                  Write-Message -message "|-------|--------|----------|" -logToSummary $true
+                  
+                  foreach ($job in $repoInfoJobs) {
+                      $chunkId = if ($job.name -match 'chunk (\d+)') { $matches[1] } else { "?" }
+                      $status = $job.conclusion
+                      if ([string]::IsNullOrEmpty($status)) {
+                          $status = $job.status
+                      }
+                      
+                      # Calculate duration
+                      $duration = "N/A"
+                      if ($null -ne $job.started_at -and $null -ne $job.completed_at) {
+                          $startTime = [DateTime]::Parse($job.started_at)
+                          $endTime = [DateTime]::Parse($job.completed_at)
+                          $durationSpan = $endTime - $startTime
+                          
+                          $minutes = [math]::Floor($durationSpan.TotalMinutes)
+                          $seconds = $durationSpan.Seconds
+                          $duration = "$($minutes)m $($seconds)s"
+                      }
+                      
+                      Write-Message -message "| $chunkId | $status | $duration |" -logToSummary $true
+                  }
+                  
+                  Write-Message -message "" -logToSummary $true
+              }
+              
+              Write-Message -message "✓ Job duration summary complete" -logToSummary $true
+          }
+          catch {
+              Write-Host "Failed to fetch job information: $($_.Exception.Message)"
+              Write-Message -message "⚠️ Unable to retrieve job duration information" -logToSummary $true
+          }
 
       - name: Show overall statistics
         shell: pwsh
