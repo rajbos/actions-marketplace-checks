@@ -4301,7 +4301,9 @@ function Show-ConsolidatedChunkSummary {
             
             $totalSynced += $chunkSummary.synced
             $totalUpToDate += $chunkSummary.upToDate
-            $totalMirrorsCreated += (if ($chunkSummary.PSObject.Properties["mirrorsCreated"]) { $chunkSummary.mirrorsCreated } else { 0 })
+            if ($chunkSummary.PSObject.Properties["mirrorsCreated"]) {
+                $totalMirrorsCreated += $chunkSummary.mirrorsCreated
+            }
             $totalConflicts += $chunkSummary.conflicts
             $totalUpstreamNotFound += $chunkSummary.upstreamNotFound
             $totalFailed += $chunkSummary.failed
