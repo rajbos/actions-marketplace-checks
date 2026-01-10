@@ -1162,74 +1162,68 @@ function ApiCall {
             $usedAllAppsWaitPlan = $false
             if ($waitForRateLimit) {
                 $organization = $env:APP_ORGANIZATION
-                $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                $bestBeforeWait = Select-BestGitHubAppTokenForOrganization -organization $organization -triedAppIds $triedAppIds
 
-                if ($null -ne $bestBeforeWait) {
-                    if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
-                        # Check if we've already tried this app ID
-                        $alreadyTriedThisApp = $triedAppIds.Contains($bestBeforeWait.AppId)
-                        
-                        if ($alreadyTriedThisApp) {
-                            # We've cycled through all apps - get the overview to check wait times
-                            $overview = Get-GitHubAppRateLimitOverview -organization $organization
-                            $totalApps = ($overview | Measure-Object).Count
-                            $triedApps = $triedAppIds.Count
+                if ($null -eq $bestBeforeWait) {
+                    # All apps have been tried or no apps available - get the overview to check wait times
+                    $overview = Get-GitHubAppRateLimitOverview -organization $organization
+                    $totalApps = ($overview | Measure-Object).Count
+                    $triedApps = $triedAppIds.Count
+                    
+                    Write-Host "All available apps have been tried. Cycled through [$triedApps] of [$totalApps] available apps."
                             
-                            Write-Host "Already tried app id [$($bestBeforeWait.AppId)]. Cycled through [$triedApps] of [$totalApps] available apps."
-                            
-                            # Find the shortest wait time across all apps
-                            $shortestWait = ($overview | Measure-Object -Property WaitSeconds -Minimum).Minimum
-                            if ($null -ne $shortestWait -and $shortestWait -gt 0) {
-                                if ($shortestWait -gt 1200) {
-                                    # All apps need to wait > 20 minutes, stop gracefully
-                                    $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                                    Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $shortestWait -continueAt $bestBeforeWait.ContinueAt -errorType $formatType
-                                    $message = "Cycled through all [$totalApps] GitHub Apps. Shortest wait time is [$shortestWait] seconds (>20 minutes). Stopping execution gracefully."
-                                    Write-Message -message $message -logToSummary $true
-                                    Write-Warning $message
-                                    $global:RateLimitExceeded = $true
-                                    return $null
-                                } else {
-                                    # Wait for the shortest reset period, then continue (not switching apps anymore)
-                                    # Find the app with the shortest wait time
-                                    $appWithShortestWait = $overview | Sort-Object -Property WaitSeconds | Select-Object -First 1
-                                    $waitDisplay = Format-WaitTime -totalSeconds $shortestWait
-                                    $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                                    Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $shortestWait -continueAt $appWithShortestWait.ContinueAt -errorType $formatType
-                                    $message = "Cycled through all [$totalApps] GitHub Apps. Waiting [$shortestWait] seconds ($waitDisplay) for rate limit reset."
-                                    Write-Message -message $message -logToSummary $true
-                                    Write-Host $message
-                                    Start-Sleep -Seconds $shortestWait
-                                    # Clear tried apps after waiting - give all apps a fresh chance after reset
-                                    $triedAppIds.Clear()
-                                    Write-Host "Reset tried apps tracking after waiting for rate limit reset"
-                                }
-                            }
-                            # Don't switch to another app - we've tried them all
-                            # Fall through to normal error handling below
-                        } else {
-                            # Mark this app as tried
-                            $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
-                            
+                    
+                    # Find the shortest wait time across all apps
+                    $shortestWait = ($overview | Measure-Object -Property WaitSeconds -Minimum).Minimum
+                    if ($null -ne $shortestWait -and $shortestWait -gt 0) {
+                        if ($shortestWait -gt 1200) {
+                            # All apps need to wait > 20 minutes, stop gracefully
                             $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                            Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
-                            # Persist the new token globally so subsequent calls
-                            # that don't explicitly pass access_token pick up the
-                            # rotated app token instead of the exhausted one.
-                            $env:GITHUB_TOKEN = $bestBeforeWait.Token
-                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                            $appWithShortestWait = $overview | Sort-Object -Property WaitSeconds | Select-Object -First 1
+                            Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $shortestWait -continueAt $appWithShortestWait.ContinueAt -errorType $formatType
+                            $message = "Cycled through all [$totalApps] GitHub Apps. Shortest wait time is [$shortestWait] seconds (>20 minutes). Stopping execution gracefully."
+                            Write-Message -message $message -logToSummary $true
+                            Write-Warning $message
+                            $global:RateLimitExceeded = $true
+                            return $null
+                        } else {
+                            # Wait for the shortest reset period, then continue (not switching apps anymore)
+                            # Find the app with the shortest wait time
+                            $appWithShortestWait = $overview | Sort-Object -Property WaitSeconds | Select-Object -First 1
+                            $waitDisplay = Format-WaitTime -totalSeconds $shortestWait
+                            $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
+                            Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $shortestWait -continueAt $appWithShortestWait.ContinueAt -errorType $formatType
+                            $message = "Cycled through all [$totalApps] GitHub Apps. Waiting [$shortestWait] seconds ($waitDisplay) for rate limit reset."
+                            Write-Message -message $message -logToSummary $true
+                            Write-Host $message
+                            Start-Sleep -Seconds $shortestWait
+                            # Clear tried apps after waiting - give all apps a fresh chance after reset
+                            $triedAppIds.Clear()
+                            Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                         }
                     }
-
-                    # All apps are currently exhausted; prefer the earliest reset
-                    # across all apps instead of the current token's reset time.
-                    if ($bestBeforeWait.WaitSeconds -gt 0) {
-                        $waitSeconds = [double]$bestBeforeWait.WaitSeconds
-                        $continueAt = $bestBeforeWait.ContinueAt
-                        $usedAllAppsWaitPlan = $true
-                        $waitDisplay = Format-WaitTime -totalSeconds $waitSeconds
-                        Write-Message -message "Using earliest reset across all GitHub Apps: waiting [$waitSeconds] seconds ($waitDisplay) until [$continueAt] before retrying" -logToSummary $true
-                    }
+                    # Don't switch to another app - we've tried them all
+                    # Fall through to normal error handling below
+                } elseif ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
+                    # Found an app with remaining quota that we haven't tried yet
+                    # Mark this app as tried
+                    $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
+                    
+                    $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
+                    Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
+                    # Persist the new token globally so subsequent calls
+                    # that don't explicitly pass access_token pick up the
+                    # rotated app token instead of the exhausted one.
+                    $env:GITHUB_TOKEN = $bestBeforeWait.Token
+                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                } elseif ($null -ne $bestBeforeWait -and $bestBeforeWait.WaitSeconds -gt 0) {
+                    # All untried apps are currently exhausted; prefer the earliest reset
+                    # across remaining untried apps instead of the current token's reset time.
+                    $waitSeconds = [double]$bestBeforeWait.WaitSeconds
+                    $continueAt = $bestBeforeWait.ContinueAt
+                    $usedAllAppsWaitPlan = $true
+                    $waitDisplay = Format-WaitTime -totalSeconds $waitSeconds
+                    Write-Message -message "Using earliest reset across remaining untried GitHub Apps: waiting [$waitSeconds] seconds ($waitDisplay) until [$continueAt] before retrying" -logToSummary $true
                 }
             }
 
@@ -1914,13 +1908,23 @@ function Get-GitHubAppRateLimitOverview {
 function Select-BestGitHubAppTokenForOrganization {
     Param (
         [string] $organization = $env:APP_ORGANIZATION,
-        [int] $minMinutesUntilExpiration = 15
+        [int] $minMinutesUntilExpiration = 15,
+        [System.Collections.Generic.HashSet[string]] $triedAppIds = $null
     )
 
     $overview = Get-GitHubAppRateLimitOverview -organization $organization
 
     if ($null -eq $overview -or $overview.Count -eq 0) {
         return $null
+    }
+
+    # Filter out apps that have already been tried (to prevent endless cycling)
+    if ($null -ne $triedAppIds -and $triedAppIds.Count -gt 0) {
+        $overview = $overview | Where-Object { -not $triedAppIds.Contains($_.AppId) }
+        if ($null -eq $overview -or $overview.Count -eq 0) {
+            # All apps have been tried - return null to signal we've exhausted all options
+            return $null
+        }
     }
 
     # Filter out tokens that will expire within the minimum threshold
