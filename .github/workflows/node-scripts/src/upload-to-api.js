@@ -212,7 +212,7 @@ function trimReleaseInfoToLatest(actionData, maxReleases) {
 
 /**
  * Checks if an action needs to be updated based on repoInfo.updated_at comparison.
- * 
+ *
  * @param {object|null} existingAction - The action from API storage (or null if not exists)
  * @param {object} candidateAction - The action from status.json
  * @returns {boolean} - true if the action needs to be created or updated, false if up-to-date
@@ -237,6 +237,16 @@ function needsUpdate(existingAction, candidateAction) {
   
   // If either side is missing updated_at, assume it needs update
   return true;
+}
+
+/**
+ * Checks if an action has the required fields (owner and name).
+ *
+ * @param {object} action - The action object to validate
+ * @returns {boolean} - true if the action has both owner and name, false otherwise
+ */
+function isValidAction(action) {
+  return !!(action && action.owner && action.name);
 }
 
 async function uploadActions() {
@@ -492,7 +502,7 @@ async function uploadActions() {
   
   // Count actions from status.json that need updates
   for (const action of actions) {
-    if (!action.owner || !action.name) {
+    if (!isValidAction(action)) {
       continue;
     }
     const key = action.owner + '/' + action.name;
@@ -554,5 +564,6 @@ module.exports = {
   compareTagStringsDesc,
   trimTagInfoToLatest,
   trimReleaseInfoToLatest,
-  needsUpdate
+  needsUpdate,
+  isValidAction
 };
