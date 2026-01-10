@@ -124,6 +124,37 @@ Describe "Status JSON Schema Validation" {
             $result.Valid | Should -Be $true
             $result.Errors.Count | Should -Be 0
         }
+        
+        It "Should validate Docker action with containerScan field" {
+            $action = @{
+                owner = "testowner"
+                name = "testowner_testaction"
+                forkFound = $true
+                actionType = @{
+                    actionType = "Docker"
+                    fileFound = "action.yml"
+                    actionDockerType = "Dockerfile"
+                    dockerBaseImage = "ubuntu:22.04"
+                    dockerfileHasCustomCode = $true
+                    containerScan = @{
+                        critical = 2
+                        high = 5
+                        lastScanned = "2025-01-10T16:00:00.000Z"
+                        scanError = $null
+                    }
+                }
+                repoInfo = @{
+                    updated_at = "2023-04-01T09:28:31Z"
+                    archived = $false
+                    disabled = $false
+                    latest_release_published_at = "2023-02-28T09:26:50Z"
+                }
+            }
+            
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+        }
     }
     
     Context "Test-ActionSchema function with warnings" {
@@ -188,6 +219,63 @@ Describe "Status JSON Schema Validation" {
             $result = Test-ActionSchema -action $action -index 0
             $result.Warnings -join " " | Should -Match "repoInfo.updated_at has unexpected format"
         }
+        
+        It "Should warn when containerScan missing critical field" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                forkFound = $true
+                actionType = @{
+                    actionType = "Docker"
+                    actionDockerType = "Dockerfile"
+                    containerScan = @{
+                        high = 5
+                        lastScanned = "2025-01-10T16:00:00.000Z"
+                    }
+                }
+            }
+            
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "containerScan missing 'critical' field"
+        }
+        
+        It "Should warn when containerScan missing high field" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                forkFound = $true
+                actionType = @{
+                    actionType = "Docker"
+                    actionDockerType = "Dockerfile"
+                    containerScan = @{
+                        critical = 2
+                        lastScanned = "2025-01-10T16:00:00.000Z"
+                    }
+                }
+            }
+            
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "containerScan missing 'high' field"
+        }
+        
+        It "Should warn when containerScan missing lastScanned field" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                forkFound = $true
+                actionType = @{
+                    actionType = "Docker"
+                    actionDockerType = "Dockerfile"
+                    containerScan = @{
+                        critical = 2
+                        high = 5
+                    }
+                }
+            }
+            
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "containerScan missing 'lastScanned' field"
+        }
     }
     
     Context "Test-ActionSchema function with errors" {
@@ -214,6 +302,23 @@ Describe "Status JSON Schema Validation" {
             $result = Test-ActionSchema -action $action -index 0
             $result.Valid | Should -Be $false
             $result.Errors -join " " | Should -Match "dependents should be object"
+        }
+        
+        It "Should error when containerScan is not an object" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                forkFound = $true
+                actionType = @{
+                    actionType = "Docker"
+                    actionDockerType = "Dockerfile"
+                    containerScan = "invalid"
+                }
+            }
+            
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "containerScan should be object"
         }
     }
     
