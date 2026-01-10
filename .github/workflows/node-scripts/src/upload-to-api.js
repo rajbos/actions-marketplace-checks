@@ -496,6 +496,7 @@ async function uploadActions() {
   let actionsNeedingUpdates = 0;
   let actionsInApiNotInStatus = 0;
   let actionsUpToDate = 0;
+  let totalValidActions = 0;
   
   // Build statusKeys set once for efficient lookup
   const statusKeys = new Set();
@@ -505,6 +506,7 @@ async function uploadActions() {
     if (!isValidAction(action)) {
       continue;
     }
+    totalValidActions++;
     const key = action.owner + '/' + action.name;
     statusKeys.add(key);
     
@@ -535,7 +537,7 @@ async function uploadActions() {
   // Output delta statistics for reconciliation tracking
   console.log('__DELTA_STATS_START__');
   console.log(JSON.stringify({
-    totalInStatusJson: actions.length,
+    totalInStatusJson: totalValidActions,
     totalInApi: existingIndex.size,
     actionsNeedingUpdates: actionsNeedingUpdates,
     actionsUpToDate: actionsUpToDate,
