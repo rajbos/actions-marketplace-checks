@@ -57,7 +57,7 @@ class StatusJsonSchema {
     [object] $repoSize  # Can be int or null
     
     # Action type information (typically present but can have varied content)
-    [object] $actionType  # Hashtable with fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage
+    [object] $actionType  # Hashtable with fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage, dockerfileHasCustomCode, containerScan
     
     # Repository information (typically present)
     [object] $repoInfo  # Hashtable with disabled, archived, updated_at, latest_release_published_at
@@ -131,8 +131,27 @@ function Test-ActionSchema {
     # Validate actionType structure if present
     if ($null -ne $action.actionType) {
         if ($action.actionType -is [hashtable] -or $action.actionType -is [PSCustomObject]) {
-            # Expected fields: fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage (optional)
+            # Expected fields: fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage, dockerfileHasCustomCode, containerScan (all optional)
             # These are all optional as content varies
+            
+            # Validate containerScan structure if present (for Docker actions)
+            if ($null -ne $action.actionType.containerScan) {
+                if ($action.actionType.containerScan -is [hashtable] -or $action.actionType.containerScan -is [PSCustomObject]) {
+                    # Check for expected nested fields
+                    if ($null -eq $action.actionType.containerScan.critical) {
+                        $warnings += "Object ${index} ($($action.name)): actionType.containerScan missing 'critical' field"
+                    }
+                    if ($null -eq $action.actionType.containerScan.high) {
+                        $warnings += "Object ${index} ($($action.name)): actionType.containerScan missing 'high' field"
+                    }
+                    if ($null -eq $action.actionType.containerScan.lastScanned) {
+                        $warnings += "Object ${index} ($($action.name)): actionType.containerScan missing 'lastScanned' field"
+                    }
+                }
+                else {
+                    $errors += "Object ${index} ($($action.name)): actionType.containerScan should be object, found: $($action.actionType.containerScan.GetType().Name)"
+                }
+            }
         }
         elseif ($action.actionType -isnot [string]) {
             $warnings += "Object ${index} ($($action.name)): actionType should be object or string, found: $($action.actionType.GetType().Name)"

@@ -11,7 +11,24 @@ Information being loaded (see the [report workflow](.github/workflows/report.yml
 |Declaration of the Action|action.yml, action.yaml, Dockerfile|
 |Docker image setup|Dockerfile in repo or remote image url (e.g. Docker hub, GitHub Container Registry, etc.|
 |Security alerts|Fork the Action and enabling Dependabot (works only for Node actions), then read back the security alerts|
+|Container vulnerabilities|Trivy scan results for Docker-based actions with Dockerfiles, showing Critical and High severity vulnerabilities|
 |Funding information|Checks for FUNDING.yml file in .github folder, parses it to count funding platforms|
+
+## Container Security Scanning
+
+For Docker-based actions that use a Dockerfile (not remote images), the system automatically runs [Trivy](https://trivy.dev/) security scans to detect vulnerabilities. The scan results are stored in the `actionType.containerScan` field in status.json with the following information:
+
+- **critical**: Count of critical severity vulnerabilities
+- **high**: Count of high severity vulnerabilities  
+- **lastScanned**: Timestamp of when the scan was performed
+- **scanError**: Error message if the scan failed (null on success)
+
+Scans are performed:
+- When a Docker action is first processed
+- When the last scan is older than 7 days
+- Only for actions with Dockerfiles (not remote Docker images)
+
+The scanning uses Trivy's config/filesystem mode to analyze the Dockerfile without building the image, making it lightweight and efficient for processing thousands of actions.
 
 ## Cleanup of Invalid Repos
 
