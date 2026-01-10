@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^pwsh -NoLogo -Command \"Invoke-Pester -Output Normal\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

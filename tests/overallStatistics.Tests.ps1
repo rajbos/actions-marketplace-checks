@@ -232,7 +232,7 @@ Describe 'ShowOverallDatasetStatistics' {
         
         # Check that table headers are present
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -eq "| Mirror | Upstream |" 
+            $message -eq "| Mirror | Upstream | Reason |" 
         }
         
         # Check that at least one repo link is created
