@@ -1240,6 +1240,42 @@ function ApiCall {
                     Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
                 }
                 Start-Sleep -Milliseconds ($waitSeconds * 1000)
+
+                # After waiting, re-check rate limit status before retrying
+                Write-Host "Wait completed, rechecking rate limit status before retry..."
+                $organization = $env:APP_ORGANIZATION
+                $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                
+                if ($null -ne $bestAfterWait) {
+                    if ($bestAfterWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                        Write-Host "Rate limit recovered: GitHub App id [$($bestAfterWait.AppId)] now has [$($bestAfterWait.Remaining)] remaining requests"
+                        # Update to use the token with available quota
+                        $access_token = $bestAfterWait.Token
+                        $env:GITHUB_TOKEN = $bestAfterWait.Token
+                    }
+                    else {
+                        # Still no quota available
+                        $additionalWait = $bestAfterWait.WaitSeconds
+                        if ($additionalWait -gt 0) {
+                            $additionalWaitDisplay = Format-WaitTime -totalSeconds $additionalWait
+                            Write-Host "Rate limit not yet recovered. Need to wait an additional [$additionalWait] seconds ($additionalWaitDisplay) until [$($bestAfterWait.ContinueAt)]"
+                            # Check if total wait would exceed limits
+                            if ($additionalWait -gt 1200) {
+                                $message = "Total wait time would exceed 20 minutes. Stopping to prevent excessive delays."
+                                Write-Message -message $message -logToSummary $true
+                                $global:RateLimitExceeded = $true
+                                return $null
+                            }
+                            # Wait additional time
+                            Start-Sleep -Milliseconds ($additionalWait * 1000)
+                            # After additional wait, use the best available token
+                            if (-not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                                $access_token = $bestAfterWait.Token
+                                $env:GITHUB_TOKEN = $bestAfterWait.Token
+                            }
+                        }
+                    }
+                }
             }
 
             # Only retry if we're configured to wait for rate limits
