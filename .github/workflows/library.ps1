@@ -19,7 +19,6 @@ Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 . "$PSScriptRoot/github-app-token-manager.ps1"
 
 $script:GitHubAppTokenManagerInstance = $null
-$script:HasLoggedRateLimitAppSwitch = $false
 
 function Get-GitHubAppTokenManagerInstance {
     if ($null -ne $script:GitHubAppTokenManagerInstance) {
@@ -1162,10 +1161,7 @@ function ApiCall {
                 if ($null -ne $bestBeforeWait) {
                     if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
                         $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                        if (-not $script:HasLoggedRateLimitAppSwitch) {
-                            Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
-                            $script:HasLoggedRateLimitAppSwitch = $true
-                        }
+                        Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
                         # Persist the new token globally so subsequent calls
                         # that don't explicitly pass access_token pick up the
                         # rotated app token instead of the exhausted one.
