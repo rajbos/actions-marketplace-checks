@@ -928,6 +928,7 @@ function ApiCall {
         $rateLimitUsed = $result.Headers["X-Ratelimit-Used"]
         
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         # Check for token expiration before processing rate limits
         # GitHub App tokens expire after 1 hour, and we want to switch before that happens
@@ -975,6 +976,8 @@ function ApiCall {
         }
         
 >>>>>>> dde059095 (Add token expiration checking to prevent long-running job failures)
+=======
+>>>>>>> 9a0a69353 (Fix: Use token creation response for expiration, not non-existent header)
         if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
             # convert rateLimitReset from epoch to ms
             $rateLimitResetInt = [int]$rateLimitReset[0]
@@ -1834,6 +1837,7 @@ function Get-GitHubAppRateLimitOverview {
                 $continueAt = $rateInfo.ContinueAt
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 # Get token expiration time from the token info response
                 # GitHub App tokens include 'expires_at' in the token creation response
                 $expirationTime = $null
@@ -1845,22 +1849,22 @@ function Get-GitHubAppRateLimitOverview {
                         Write-Debug "Failed to parse token expiration time for app id [$appId]: $($_.Exception.Message)"
 =======
                 # Extract token expiration time from response headers
+=======
+                # Get token expiration time from the token info response
+                # GitHub App tokens include 'expires_at' in the token creation response
+>>>>>>> 9a0a69353 (Fix: Use token creation response for expiration, not non-existent header)
                 $expirationTime = $null
-                $expirationHeader = $null
-                if ($result.Headers.ContainsKey('GitHub-Authentication-Token-Expiration')) {
-                    $expirationHeader = $result.Headers['GitHub-Authentication-Token-Expiration']
-                }
-                elseif ($result.Headers.ContainsKey('github-authentication-token-expiration')) {
-                    $expirationHeader = $result.Headers['github-authentication-token-expiration']
-                }
-                
-                if ($null -ne $expirationHeader) {
+                if ($null -ne $tokenInfo.expiresAt -and -not [string]::IsNullOrWhiteSpace($tokenInfo.expiresAt)) {
                     try {
-                        $expirationTime = [DateTimeOffset]::Parse($expirationHeader[0], [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
+                        $expirationTime = [DateTimeOffset]::Parse($tokenInfo.expiresAt, [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
                     }
                     catch {
+<<<<<<< HEAD
                         Write-Debug "Failed to parse token expiration header for app id [$appId]: $($_.Exception.Message)"
 >>>>>>> dde059095 (Add token expiration checking to prevent long-running job failures)
+=======
+                        Write-Debug "Failed to parse token expiration time for app id [$appId]: $($_.Exception.Message)"
+>>>>>>> 9a0a69353 (Fix: Use token creation response for expiration, not non-existent header)
                     }
                 }
 
