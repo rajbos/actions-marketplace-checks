@@ -2,7 +2,8 @@ Param (
   $actions,
   $numberOfReposToDo = 10,
   $access_token = $env:GITHUB_TOKEN,
-  $access_token_destination = $env:GITHUB_TOKEN
+  $access_token_destination = $env:GITHUB_TOKEN,
+  $actionNamesToProcess = $null  # Optional: Array of specific action names (fork names) to process
 )
 
 . $PSScriptRoot/library.ps1
@@ -844,7 +845,8 @@ function GetInfo {
         $existingForks,
         [Alias('access_token')]
         $accessToken,
-        $startTime
+        $startTime,
+        $filterActionNames = $null  # Optional: Array of specific action names to process
     )
 
     # Initialize error tracking
@@ -868,10 +870,18 @@ function GetInfo {
         ReposSkipped = 0
     }
 
+    # Filter existingForks if filterActionNames is provided
+    $forksToProcess = $existingForks
+    if ($null -ne $filterActionNames -and $filterActionNames.Count -gt 0) {
+        Write-Host "Filtering to process only [$($filterActionNames.Count)] specific actions from chunk"
+        $forksToProcess = $existingForks | Where-Object { $filterActionNames -contains $_.name }
+        Write-Host "Filtered to [$($forksToProcess.Count)] forks to process"
+    }
+
     # get information from the action files
-    $i = $existingForks.Count
-    $max = $existingForks.Count + ($numberOfReposToDo * 1)
-    foreach ($action in $existingForks) {
+    $i = $forksToProcess.Count
+    $max = $forksToProcess.Count + ($numberOfReposToDo * 1)
+    foreach ($action in $forksToProcess) {
         $script:processMetrics.TotalReposExamined++
         # Reset flag for each repo to track if this specific repo gets updates
         $repoHadUpdates = $false
@@ -1446,16 +1456,26 @@ function GetMoreInfo {
         $existingForks,
         [Alias('access_token')]
         $accessToken,
-        $startTime
+        $startTime,
+        $filterActionNames = $null  # Optional: Array of specific action names to process
     )
-    # get repo information
-    $i = $existingForks.Length
-    $max = $existingForks.Length + ($numberOfReposToDo * 1)
     
-    # Track starting counts for metrics
-    $startingRepoInfo = $($existingForks | Where-Object {$null -ne $_.repoInfo}).Length
-    $startingTagInfo = $($existingForks | Where-Object {$null -ne $_.tagInfo}).Length
-    $startingReleaseInfo = $($existingForks | Where-Object {$null -ne $_.releaseInfo}).Length
+    # Filter existingForks if filterActionNames is provided
+    $forksToProcess = $existingForks
+    if ($null -ne $filterActionNames -and $filterActionNames.Count -gt 0) {
+        Write-Host "Filtering GetMoreInfo to process only [$($filterActionNames.Count)] specific actions from chunk"
+        $forksToProcess = $existingForks | Where-Object { $filterActionNames -contains $_.name }
+        Write-Host "Filtered to [$($forksToProcess.Count)] forks to process"
+    }
+    
+    # get repo information
+    $i = $forksToProcess.Length
+    $max = $forksToProcess.Length + ($numberOfReposToDo * 1)
+    
+    # Track starting counts for metrics - use forksToProcess instead of existingForks
+    $startingRepoInfo = $($forksToProcess | Where-Object {$null -ne $_.repoInfo}).Length
+    $startingTagInfo = $($forksToProcess | Where-Object {$null -ne $_.tagInfo}).Length
+    $startingReleaseInfo = $($forksToProcess | Where-Object {$null -ne $_.releaseInfo}).Length
     
     # Initialize tracking for GetMoreInfo
     # Note: GetMoreInfo uses memberAdded/memberUpdate variables to track changes
@@ -1474,7 +1494,7 @@ function GetMoreInfo {
     # store the timestamp
     $startTime = Get-Date
     try {
-        foreach ($action in $existingForks) {
+        foreach ($action in $forksToProcess) {
             $script:moreInfoMetrics.TotalReposExamined++
 
             # Check if we are nearing the 50-minute mark
@@ -1867,7 +1887,9 @@ function Run {
 
         [Parameter(Mandatory=$true)]
         [Alias('access_token_destination')]
-        $accessTokenDestination
+        $accessTokenDestination,
+        
+        $filterActionNames = $null  # Optional: Array of specific action names to process
     )
 
     $startTime = Get-Date
@@ -1880,7 +1902,7 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $accessTokenDestination
 
-    $existingForks = GetInfo -existingForks $existingForks -accessToken $accessToken -startTime $startTime
+    $existingForks = GetInfo -existingForks $existingForks -accessToken $accessToken -startTime $startTime -filterActionNames $filterActionNames
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
 
@@ -1892,14 +1914,14 @@ function Run {
     Write-Host ""
     Write-Host ""
     Write-Host ""
-    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -accessToken $accessTokenDestination -startTime $startTime
+    ($actions, $existingForks) = GetMoreInfo -existingForks $existingForks -accessToken $accessTokenDestination -startTime $startTime -filterActionNames $filterActionNames
     SaveStatus -existingForks $existingForks
 
     GetRateLimitInfo -access_token $accessToken -access_token_destination $accessTokenDestination -waitForRateLimit $false
 }
 
 # main call
-Run -actions $actions -accessToken $accessToken -accessTokenDestination $accessTokenDestination
+Run -actions $actions -accessToken $accessToken -accessTokenDestination $accessTokenDestination -filterActionNames $actionNamesToProcess
 
 # Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
 exit 0
