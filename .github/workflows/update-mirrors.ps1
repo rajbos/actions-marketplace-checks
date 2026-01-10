@@ -25,6 +25,7 @@ function UpdateForkedRepos {
     $conflicts = 0
     $upstreamNotFound = 0
     $skipped = 0
+    $mirrorsCreated = 0
 
     foreach ($existingFork in $existingForks) {
 
@@ -139,6 +140,7 @@ function UpdateForkedRepos {
                 }
 
                 if ($createResult) {
+                    $mirrorsCreated++
                     # Mark mirrorFound true and retry one sync
                     if ($existingFork -is [hashtable]) { $existingFork["mirrorFound"] = $true } else { $existingFork.mirrorFound = $true }
                     Write-Host "Created mirror [$forkOrg/$($existingFork.name)], retrying sync"
@@ -228,6 +230,7 @@ function UpdateForkedRepos {
     Write-Message -message "|--------|------:|" -logToSummary $true
     Write-Message -message "| ✅ Synced | $synced |" -logToSummary $true
     Write-Message -message "| ✓ Up to Date | $upToDate |" -logToSummary $true
+    Write-Message -message "| 🆕 Mirrors Created | $mirrorsCreated |" -logToSummary $true
     Write-Message -message "| ⚠️ Conflicts | $conflicts |" -logToSummary $true
     Write-Message -message "| ❌ Upstream Not Found | $upstreamNotFound |" -logToSummary $true
     Write-Message -message "| ❌ Failed | $failed |" -logToSummary $true
