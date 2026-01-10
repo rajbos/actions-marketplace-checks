@@ -1291,8 +1291,8 @@ function Invoke-TrivyScan {
         Scans a Docker-based action for vulnerabilities using Trivy
     
     .DESCRIPTION
-        Downloads the Dockerfile from the repository, builds it in a temporary directory,
-        and runs Trivy to scan for Critical and High severity vulnerabilities
+        Downloads the Dockerfile from the repository and runs Trivy in config mode
+        to scan for Critical and High severity vulnerabilities without building the image
     
     .OUTPUTS
         Hashtable with:
@@ -1329,16 +1329,17 @@ function Invoke-TrivyScan {
         $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
         if (-not $trivyPath) {
             Write-Host "Installing Trivy..."
-            # Install Trivy on Ubuntu
-            $installCmd = @"
-sudo apt-get update -qq && \
-sudo apt-get install -y wget apt-transport-https gnupg lsb-release && \
-wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg && \
-echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb `$(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list && \
-sudo apt-get update -qq && \
-sudo apt-get install -y trivy
-"@
-            Invoke-Expression $installCmd
+            # Install Trivy on Ubuntu using the install script method (faster and more reliable)
+            $installCmd = "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.48.0"
+            Invoke-Expression $installCmd 2>&1 | Out-Null
+            
+            # Verify installation
+            $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+            if (-not $trivyPath) {
+                Write-Host "Failed to install Trivy for [$owner/$repo]"
+                $result.scanError = "Trivy installation failed"
+                return $result
+            }
         }
 
         # Create a temporary directory for the scan
@@ -1372,33 +1373,39 @@ sudo apt-get install -y trivy
             $dockerfilePath = Join-Path $tempDir "Dockerfile"
             $dockerFileContent | Out-File -FilePath $dockerfilePath -Encoding UTF8
 
-            # Build a unique image name
-            $imageName = "trivy-scan-$($owner.ToLower())-$($repo.ToLower()):$(Get-Random)"
-
-            # Build the Docker image
-            Write-Host "Building Docker image for [$owner/$repo]..."
-            $buildOutput = docker build -t $imageName $tempDir 2>&1
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to build Docker image for [$owner/$repo]: $buildOutput"
-                $result.scanError = "Docker build failed"
-                return $result
-            }
-
-            # Run Trivy scan
-            Write-Host "Scanning image with Trivy for [$owner/$repo]..."
-            $scanOutput = trivy image --severity CRITICAL,HIGH --format json --quiet $imageName 2>&1
+            # Run Trivy in config mode to scan the Dockerfile without building
+            Write-Host "Scanning Dockerfile with Trivy for [$owner/$repo]..."
+            $scanOutput = trivy config --severity CRITICAL,HIGH --format json --quiet $dockerfilePath 2>&1
             
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "Trivy scan failed for [$owner/$repo]: $scanOutput"
-                $result.scanError = "Trivy scan failed"
+                Write-Host "Trivy config scan failed for [$owner/$repo], trying filesystem scan..."
+                # Fallback to fs scan which might work better for some cases
+                $scanOutput = trivy fs --severity CRITICAL,HIGH --format json --quiet $dockerfilePath 2>&1
+                
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Trivy scan failed for [$owner/$repo]: $scanOutput"
+                    $result.scanError = "Trivy scan failed"
+                    return $result
+                }
             }
-            else {
-                # Parse Trivy JSON output
-                try {
-                    $scanResults = $scanOutput | ConvertFrom-Json
-                    
-                    # Count vulnerabilities by severity
+            
+            # Parse Trivy JSON output
+            try {
+                $scanResults = $scanOutput | ConvertFrom-Json
+                
+                # Count vulnerabilities by severity
+                if ($scanResults.Results) {
                     foreach ($target in $scanResults.Results) {
+                        if ($target.Misconfigurations) {
+                            foreach ($vuln in $target.Misconfigurations) {
+                                if ($vuln.Severity -eq "CRITICAL") {
+                                    $result.critical++
+                                }
+                                elseif ($vuln.Severity -eq "HIGH") {
+                                    $result.high++
+                                }
+                            }
+                        }
                         if ($target.Vulnerabilities) {
                             foreach ($vuln in $target.Vulnerabilities) {
                                 if ($vuln.Severity -eq "CRITICAL") {
@@ -1410,17 +1417,14 @@ sudo apt-get install -y trivy
                             }
                         }
                     }
-                    
-                    Write-Host "Trivy scan completed for [$owner/$repo]: Critical=$($result.critical), High=$($result.high)"
                 }
-                catch {
-                    Write-Host "Failed to parse Trivy output for [$owner/$repo]: $($_.Exception.Message)"
-                    $result.scanError = "Failed to parse Trivy output"
-                }
+                
+                Write-Host "Trivy scan completed for [$owner/$repo]: Critical=$($result.critical), High=$($result.high)"
             }
-
-            # Clean up Docker image
-            docker rmi $imageName -f 2>&1 | Out-Null
+            catch {
+                Write-Host "Failed to parse Trivy output for [$owner/$repo]: $($_.Exception.Message)"
+                $result.scanError = "Failed to parse Trivy output"
+            }
         }
         finally {
             # Clean up temporary directory
