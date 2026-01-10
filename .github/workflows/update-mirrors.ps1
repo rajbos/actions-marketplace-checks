@@ -184,8 +184,11 @@ function UpdateForkedRepos {
                         $existingFork | Add-Member -Name lastSyncErrorType -Value "mirror_create_failed" -MemberType NoteProperty -Force
                         $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
                     }
+<<<<<<< HEAD
                     # Enqueue for automated retry processing
                     Enqueue-MirrorRetry -MirrorName $existingFork.name -ErrorMessage $createErrorMessage -ErrorType "mirror_create_failed"
+=======
+>>>>>>> bcba54884 (Show mirror errors)
                     $failed++
                 }
             }

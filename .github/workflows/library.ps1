@@ -4607,8 +4607,6 @@ function ShowOverallDatasetStatistics {
         Write-Message -message "" -logToSummary $true
         Write-Message -message "| Mirror | Upstream | Reason |" -logToSummary $true
         Write-Message -message "|--------|----------|--------|" -logToSummary $true
-        Write-Message -message "| Mirror | Upstream | Reason |" -logToSummary $true
-        Write-Message -message "|--------|----------|--------|" -logToSummary $true
         
         foreach ($repo in $top10ReposWithoutMirrors) {
             $repoName = $repo.name
@@ -4626,23 +4624,23 @@ function ShowOverallDatasetStatistics {
                 }
             }
             
-            # Derive a human-readable reason for missing mirror
-            $lastSyncError = $repo.PSObject.Properties["lastSyncError"] ? $repo.lastSyncError : $null
-            $lastSyncErrorType = $repo.PSObject.Properties["lastSyncErrorType"] ? $repo.lastSyncErrorType : $null
-            $upstreamAvailable = $repo.PSObject.Properties["upstreamAvailable"] ? $repo.upstreamAvailable : $null
+            # Determine a human-readable reason for why the mirror is missing
+            $lastSyncError = if ($repo.PSObject.Properties["lastSyncError"]) { $repo.lastSyncError } else { $null }
+            $lastSyncErrorType = if ($repo.PSObject.Properties["lastSyncErrorType"]) { $repo.lastSyncErrorType } else { $null }
+            $upstreamAvailable = if ($repo.PSObject.Properties["upstreamAvailable"]) { $repo.upstreamAvailable } else { $null }
 
             $reason = "Not yet checked"
             if ($upstreamAvailable -eq $false -or $lastSyncErrorType -eq "upstream_not_found") {
-                $reason = "Upstream missing or renamed"
+                $reason = "Upstream missing/renamed"
             }
-            elseif ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -eq $false) {
-                $reason = "Mirror missing after auto-create"
+            elseif ($lastSyncErrorType -eq "mirror_create_failed") {
+                $reason = "Mirror creation failed"
             }
-            elseif ($lastSyncErrorType -eq "mirror_name_conflict" -or $lastSyncErrorType -eq "mirror_conflict" -or ($lastSyncError -and ($lastSyncError -match "already exists" -or $lastSyncError -match "name already exists" -or $lastSyncError -match "repository already exists"))) {
+            elseif ($lastSyncErrorType -eq "mirror_not_found" -or ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -eq $false)) {
+                $reason = "Mirror missing after check"
+            }
+            elseif ($lastSyncErrorType -eq "mirror_conflict" -or ($lastSyncError -and ($lastSyncError -match "already exists" -or $lastSyncError -match "name already exists" -or $lastSyncError -match "repository already exists"))) {
                 $reason = "Mirror name collision"
-            }
-            elseif ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -ne $true) {
-                $reason = "Mirror not found"
             }
 
             Write-Message -message "| $mirrorLink | $upstreamLink | $reason |" -logToSummary $true
