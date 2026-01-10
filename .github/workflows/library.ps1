@@ -1905,6 +1905,41 @@ function Get-GitHubAppRateLimitOverview {
     return ,$results
 }
 
+<#
+.SYNOPSIS
+Selects the best GitHub App token for an organization based on rate limits and token expiration.
+
+.DESCRIPTION
+Analyzes all configured GitHub App tokens for an organization and selects the best one to use
+based on remaining rate limit quota, token expiration time, and previously tried apps.
+Returns null if all apps have been tried or no suitable token is available.
+
+.PARAMETER organization
+The GitHub organization to get tokens for. Defaults to $env:APP_ORGANIZATION.
+
+.PARAMETER minMinutesUntilExpiration
+Minimum minutes until token expiration to consider the token valid. Tokens expiring sooner 
+will be filtered out. Defaults to 15 minutes.
+
+.PARAMETER triedAppIds
+Optional HashSet of app IDs that have already been tried in the current rate limit cycle.
+Apps in this set will be filtered out to prevent endless cycling through the same apps.
+Returns null when all apps have been tried.
+
+.OUTPUTS
+Returns an object with Token, AppId, Remaining, WaitSeconds, and ContinueAt properties,
+or null if no suitable token is available or all apps have been tried.
+
+.EXAMPLE
+$best = Select-BestGitHubAppTokenForOrganization -organization "my-org"
+# Returns the app with highest remaining quota
+
+.EXAMPLE
+$triedApps = New-Object 'System.Collections.Generic.HashSet[string]'
+$triedApps.Add("123") | Out-Null
+$best = Select-BestGitHubAppTokenForOrganization -organization "my-org" -triedAppIds $triedApps
+# Returns the best app that hasn't been tried yet (excluding app 123)
+#>
 function Select-BestGitHubAppTokenForOrganization {
     Param (
         [string] $organization = $env:APP_ORGANIZATION,
