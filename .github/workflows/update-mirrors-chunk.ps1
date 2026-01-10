@@ -145,6 +145,7 @@ function UpdateForkedReposChunk {
                 Write-Warning "$i/$($forksToProcess.Count) Mirror repository not found [$($existingFork.name)] - attempting to create mirror and retry"
                 # Attempt to create the missing mirror if upstream exists
                 $createResult = $false
+                $createErrorMessage = $null
                 try {
                     # Source functions.ps1 to get ForkActionRepo function
                     if (-not (Get-Command ForkActionRepo -ErrorAction SilentlyContinue)) {
@@ -153,7 +154,8 @@ function UpdateForkedReposChunk {
                     $createResult = ForkActionRepo -owner $upstreamOwner -repo $upstreamRepo
                 }
                 catch {
-                    Write-Warning "Error while creating mirror [$upstreamOwner/$upstreamRepo]: $($_.Exception.Message)"
+                    $createErrorMessage = $_.Exception.Message
+                    Write-Warning "Error while creating mirror [$upstreamOwner/$upstreamRepo]: $createErrorMessage"
                     $createResult = $false
                 }
 
@@ -184,16 +186,21 @@ function UpdateForkedReposChunk {
                     }
                 }
                 else {
-                    Write-Warning "Could not create mirror for [$upstreamOwner/$upstreamRepo]; marking mirrorFound as false"
+                    $createErrorMessage = if ($createErrorMessage) { $createErrorMessage } else { $result.message }
+                    Write-Warning "Could not create mirror for [$upstreamOwner/$upstreamRepo]; marking mirrorFound as false. Error: $createErrorMessage"
                     $existingFork.mirrorFound = $false
                     $failed++
                     
                     # Add to failed repos list
                     $failedReposList += @{
                         name = $existingFork.name
-                        errorType = $errorType
-                        errorMessage = $result.message
+                        errorType = "mirror_create_failed"
+                        errorMessage = $createErrorMessage
                     }
+
+                    $existingFork | Add-Member -Name lastSyncError -Value $createErrorMessage -MemberType NoteProperty -Force
+                    $existingFork | Add-Member -Name lastSyncErrorType -Value "mirror_create_failed" -MemberType NoteProperty -Force
+                    $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
                 }
             }
             elseif ($errorType -eq "merge_conflict" -or $result.message -like "*Merge conflict*") {
