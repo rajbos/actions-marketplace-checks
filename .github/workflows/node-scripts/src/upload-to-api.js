@@ -213,7 +213,7 @@ function trimReleaseInfoToLatest(actionData, maxReleases) {
 /**
  * Checks if an action needs to be updated based on repoInfo.updated_at comparison.
  * 
- * @param {object} existingAction - The action from API storage (or null if not exists)
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
  * @param {object} candidateAction - The action from status.json
  * @returns {boolean} - true if the action needs to be created or updated, false if up-to-date
  */
@@ -233,13 +233,10 @@ function needsUpdate(existingAction, candidateAction) {
       // If date comparison fails, assume it needs update to be safe
       return true;
     }
-  } else if (!existingAction.repoInfo || !existingAction.repoInfo.updated_at ||
-             !candidateAction.repoInfo || !candidateAction.repoInfo.updated_at) {
-    // If either side is missing updated_at, assume it needs update
-    return true;
   }
   
-  return false;
+  // If either side is missing updated_at, assume it needs update
+  return true;
 }
 
 async function uploadActions() {
