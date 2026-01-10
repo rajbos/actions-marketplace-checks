@@ -927,57 +927,6 @@ function ApiCall {
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
         $rateLimitUsed = $result.Headers["X-Ratelimit-Used"]
         
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        # Check for token expiration before processing rate limits
-        # GitHub App tokens expire after 1 hour, and we want to switch before that happens
-        $tokenExpirationHeader = $null
-        if ($result.Headers.ContainsKey('GitHub-Authentication-Token-Expiration')) {
-            $tokenExpirationHeader = $result.Headers['GitHub-Authentication-Token-Expiration']
-        }
-        elseif ($result.Headers.ContainsKey('github-authentication-token-expiration')) {
-            $tokenExpirationHeader = $result.Headers['github-authentication-token-expiration']
-        }
-        
-        if ($null -ne $tokenExpirationHeader -and $waitForRateLimit) {
-            try {
-                $expirationTime = [DateTimeOffset]::Parse($tokenExpirationHeader[0], [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
-                $timeUntilExpiration = $expirationTime - [DateTime]::UtcNow
-                $minutesUntilExpiration = $timeUntilExpiration.TotalMinutes
-                
-                # If token will expire within 15 minutes, try to switch to another app
-                if ($minutesUntilExpiration -le 15) {
-                    $organization = $env:APP_ORGANIZATION
-                    if (-not [string]::IsNullOrWhiteSpace($organization)) {
-                        Write-Host "Token will expire in [$([Math]::Round($minutesUntilExpiration, 1))] minutes, attempting to switch to another GitHub App"
-                        $bestToken = Select-BestGitHubAppTokenForOrganization -organization $organization -minMinutesUntilExpiration 15
-                        
-                        if ($null -ne $bestToken -and -not [string]::IsNullOrWhiteSpace($bestToken.Token) -and $bestToken.Token -ne $access_token) {
-                            $expiresInDisplay = if ($null -ne $bestToken.MinutesUntilExpiration) { "$([Math]::Round($bestToken.MinutesUntilExpiration, 1))m" } else { "N/A" }
-                            Write-Host "Switched to GitHub App id [$($bestToken.AppId)] with [$($bestToken.Remaining)] remaining requests (expires in: $expiresInDisplay)"
-                            $env:GITHUB_TOKEN = $bestToken.Token
-                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
-                        }
-                        elseif ($null -eq $bestToken) {
-                            # No viable token available (all are expiring soon or exhausted)
-                            $message = "No GitHub App tokens available with >15 minutes until expiration and available quota. Stopping execution gracefully."
-                            Write-Message -message $message -logToSummary $true
-                            Write-Warning $message
-                            $global:RateLimitExceeded = $true
-                            return $null
-                        }
-                    }
-                }
-            }
-            catch {
-                Write-Debug "Failed to parse token expiration header in ApiCall: $($_.Exception.Message)"
-            }
-        }
-        
->>>>>>> dde059095 (Add token expiration checking to prevent long-running job failures)
-=======
->>>>>>> 9a0a69353 (Fix: Use token creation response for expiration, not non-existent header)
         if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
             # convert rateLimitReset from epoch to ms
             $rateLimitResetInt = [int]$rateLimitReset[0]
@@ -1836,8 +1785,6 @@ function Get-GitHubAppRateLimitOverview {
                 $waitSeconds = [double]$rateInfo.WaitSeconds
                 $continueAt = $rateInfo.ContinueAt
 
-<<<<<<< HEAD
-<<<<<<< HEAD
                 # Get token expiration time from the token info response
                 # GitHub App tokens include 'expires_at' in the token creation response
                 $expirationTime = $null
@@ -1847,24 +1794,6 @@ function Get-GitHubAppRateLimitOverview {
                     }
                     catch {
                         Write-Debug "Failed to parse token expiration time for app id [$appId]: $($_.Exception.Message)"
-=======
-                # Extract token expiration time from response headers
-=======
-                # Get token expiration time from the token info response
-                # GitHub App tokens include 'expires_at' in the token creation response
->>>>>>> 9a0a69353 (Fix: Use token creation response for expiration, not non-existent header)
-                $expirationTime = $null
-                if ($null -ne $tokenInfo.expiresAt -and -not [string]::IsNullOrWhiteSpace($tokenInfo.expiresAt)) {
-                    try {
-                        $expirationTime = [DateTimeOffset]::Parse($tokenInfo.expiresAt, [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
-                    }
-                    catch {
-<<<<<<< HEAD
-                        Write-Debug "Failed to parse token expiration header for app id [$appId]: $($_.Exception.Message)"
->>>>>>> dde059095 (Add token expiration checking to prevent long-running job failures)
-=======
-                        Write-Debug "Failed to parse token expiration time for app id [$appId]: $($_.Exception.Message)"
->>>>>>> 9a0a69353 (Fix: Use token creation response for expiration, not non-existent header)
                     }
                 }
 
