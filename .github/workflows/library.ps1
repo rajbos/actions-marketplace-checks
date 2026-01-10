@@ -1200,7 +1200,9 @@ function ApiCall {
                                     Write-Message -message $message -logToSummary $true
                                     Write-Host $message
                                     Start-Sleep -Seconds $shortestWait
-                                    # After waiting, continue with normal error handling (will not switch apps again due to triedAppIds)
+                                    # Clear tried apps after waiting - give all apps a fresh chance after reset
+                                    $triedAppIds.Clear()
+                                    Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                                 }
                             }
                             # Don't switch to another app - we've tried them all
