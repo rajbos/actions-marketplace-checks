@@ -207,34 +207,60 @@ try {
     Write-Message -message "| ⏭️ Skipped (not updated) | $skippedNotUpdatedCount |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
+    # Calculate and display processing summary
+    $totalProcessed = $successCount + $failCount + $skippedNotUpdatedCount
+    $totalInStatusJson = $status.Count
+    if ($totalProcessed -lt $totalInStatusJson) {
+      $notProcessed = $totalInStatusJson - $totalProcessed
+      Write-Message -message "> **Note:** Started with $(DisplayIntWithDots $totalInStatusJson) actions. Processed $(DisplayIntWithDots $totalProcessed) actions ($successCount successful uploads + $skippedNotUpdatedCount skipped). Stopped after reaching the upload limit of $numberOfRepos successful uploads. $(DisplayIntWithDots $notProcessed) actions were not checked." -logToSummary $true
+      Write-Message -message "" -logToSummary $true
+    }
+    
     # Check if all uploads failed
     if ($allUploadsFailed) {
       Write-Message -message "⚠️ **All uploads failed!**" -logToSummary $true
       Write-Message -message "" -logToSummary $true
     }
     
-    # Show details
+    # Show details - group by status and limit to top 10 per status
     Write-Message -message "<details>" -logToSummary $true
     Write-Message -message "<summary>Details</summary>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
-    foreach ($result in $results) {
-      if ($result.success) {
-        # Skip logging per-action lines for repos that were skipped because
-        # they were not updated since the last upload; they are counted in
-        # the summary table but are not interesting at the detail level.
-        if ($result.skippedNotUpdated) {
-          continue
+    # Group results by status
+    $createdActions = @($results | Where-Object { $_.success -and $_.created })
+    $updatedActions = @($results | Where-Object { $_.success -and $_.updated })
+    $noChangeActions = @($results | Where-Object { $_.success -and -not $_.created -and -not $_.updated -and -not $_.skippedNotUpdated })
+    $failedActions = @($results | Where-Object { -not $_.success })
+    
+    # Helper function to display action list with limit
+    $displayActionGroup = {
+      param($actions, $statusEmoji, $statusLabel, $limit = 10)
+      if ($actions.Count -eq 0) { return }
+      
+      $displayCount = [Math]::Min($actions.Count, $limit)
+      $remaining = $actions.Count - $displayCount
+      
+      Write-Message -message "**$statusEmoji $statusLabel** (first $displayCount of $($actions.Count))" -logToSummary $true
+      Write-Message -message "" -logToSummary $true
+      
+      for ($i = 0; $i -lt $displayCount; $i++) {
+        $action = $actions[$i]
+        if ($statusLabel -eq "Failed") {
+          Write-Message -message "- ❌ ``$($action.action)`` - $($action.error)" -logToSummary $true
+        } else {
+          Write-Message -message "- ✅ ``$($action.action)``" -logToSummary $true
         }
-
-        $status = if ($result.created) { "created" } elseif ($result.updated) { "updated" } else { "no change" }
-        Write-Message -message "- ✅ ``$($result.action)`` - $status" -logToSummary $true
-      } else {
-        Write-Message -message "- ❌ ``$($result.action)`` - $($result.error)" -logToSummary $true
       }
+      Write-Message -message "" -logToSummary $true
     }
     
-    Write-Message -message "" -logToSummary $true
+    # Display each group (top 10 only)
+    & $displayActionGroup $createdActions "🆕" "Created"
+    & $displayActionGroup $updatedActions "📝" "Updated"
+    & $displayActionGroup $noChangeActions "⏭️" "No Change"
+    & $displayActionGroup $failedActions "❌" "Failed"
+    
     Write-Message -message "</details>" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
