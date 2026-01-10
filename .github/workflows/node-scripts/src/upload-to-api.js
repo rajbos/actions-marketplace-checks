@@ -210,6 +210,38 @@ function trimReleaseInfoToLatest(actionData, maxReleases) {
   actionData.releaseInfo = selected;
 }
 
+/**
+ * Checks if an action needs to be updated based on repoInfo.updated_at comparison.
+ * 
+ * @param {object} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the action needs to be created or updated, false if up-to-date
+ */
+function needsUpdate(existingAction, candidateAction) {
+  if (!existingAction) {
+    // Action is in status.json but not in API - needs to be created
+    return true;
+  }
+  
+  if (existingAction.repoInfo && existingAction.repoInfo.updated_at &&
+      candidateAction.repoInfo && candidateAction.repoInfo.updated_at) {
+    try {
+      const existingUpdated = new Date(existingAction.repoInfo.updated_at).toISOString();
+      const candidateUpdated = new Date(candidateAction.repoInfo.updated_at).toISOString();
+      return existingUpdated !== candidateUpdated;
+    } catch (dateError) {
+      // If date comparison fails, assume it needs update to be safe
+      return true;
+    }
+  } else if (!existingAction.repoInfo || !existingAction.repoInfo.updated_at ||
+             !candidateAction.repoInfo || !candidateAction.repoInfo.updated_at) {
+    // If either side is missing updated_at, assume it needs update
+    return true;
+  }
+  
+  return false;
+}
+
 async function uploadActions() {
   const apiUrl = process.argv[2];
   const functionKey = process.argv[3];
@@ -380,24 +412,9 @@ async function uploadActions() {
     try {
       console.log('Uploading: [' + key + ']');
 
-      // Check if this action exists already and whether the last updated
-      // timestamp matches; if so, skip uploading it.
+      // Check if this action needs to be updated based on repoInfo.updated_at
       const existing = existingIndex.get(key);
-      let skippedNotUpdated = false;
-      if (existing && existing.repoInfo && existing.repoInfo.updated_at &&
-          actionData.repoInfo && actionData.repoInfo.updated_at) {
-        try {
-          const existingUpdated = new Date(existing.repoInfo.updated_at).toISOString();
-          const candidateUpdated = new Date(actionData.repoInfo.updated_at).toISOString();
-          if (existingUpdated === candidateUpdated) {
-            skippedNotUpdated = true;
-          }
-        } catch (dateError) {
-          console.error('  ⚠️ Date comparison failed for [' + key + ']: ' + dateError.message);
-        }
-      }
-
-      if (skippedNotUpdated) {
+      if (!needsUpdate(existing, actionData)) {
         skippedNotUpdatedCount++;
         console.log('  ↷ Skipped - not updated since last upload');
         continue;
@@ -473,37 +490,19 @@ async function uploadActions() {
   let actionsInApiNotInStatus = 0;
   let actionsUpToDate = 0;
   
+  // Build statusKeys set once for efficient lookup
+  const statusKeys = new Set();
+  
   // Count actions from status.json that need updates
   for (const action of actions) {
     if (!action.owner || !action.name) {
       continue;
     }
     const key = action.owner + '/' + action.name;
+    statusKeys.add(key);
+    
     const existing = existingIndex.get(key);
-    
-    let needsUpdate = false;
-    if (!existing) {
-      // Action is in status.json but not in API - needs to be created
-      needsUpdate = true;
-    } else if (existing.repoInfo && existing.repoInfo.updated_at &&
-               action.repoInfo && action.repoInfo.updated_at) {
-      try {
-        const existingUpdated = new Date(existing.repoInfo.updated_at).toISOString();
-        const candidateUpdated = new Date(action.repoInfo.updated_at).toISOString();
-        if (existingUpdated !== candidateUpdated) {
-          needsUpdate = true;
-        }
-      } catch (dateError) {
-        // If date comparison fails, assume it needs update to be safe
-        needsUpdate = true;
-      }
-    } else if (!existing.repoInfo || !existing.repoInfo.updated_at ||
-               !action.repoInfo || !action.repoInfo.updated_at) {
-      // If either side is missing updated_at, assume it needs update
-      needsUpdate = true;
-    }
-    
-    if (needsUpdate) {
+    if (needsUpdate(existing, action)) {
       actionsNeedingUpdates++;
     } else {
       actionsUpToDate++;
@@ -511,12 +510,6 @@ async function uploadActions() {
   }
   
   // Count actions in API that are not in status.json (orphaned)
-  const statusKeys = new Set();
-  for (const action of actions) {
-    if (action.owner && action.name) {
-      statusKeys.add(action.owner + '/' + action.name);
-    }
-  }
   for (const key of existingIndex.keys()) {
     if (!statusKeys.has(key)) {
       actionsInApiNotInStatus++;
@@ -563,5 +556,6 @@ module.exports = {
   parseSemverLike,
   compareTagStringsDesc,
   trimTagInfoToLatest,
-  trimReleaseInfoToLatest
+  trimReleaseInfoToLatest,
+  needsUpdate
 };
