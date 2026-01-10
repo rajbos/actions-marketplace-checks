@@ -4607,6 +4607,8 @@ function ShowOverallDatasetStatistics {
         Write-Message -message "" -logToSummary $true
         Write-Message -message "| Mirror | Upstream | Reason |" -logToSummary $true
         Write-Message -message "|--------|----------|--------|" -logToSummary $true
+        Write-Message -message "| Mirror | Upstream | Reason |" -logToSummary $true
+        Write-Message -message "|--------|----------|--------|" -logToSummary $true
         
         foreach ($repo in $top10ReposWithoutMirrors) {
             $repoName = $repo.name
