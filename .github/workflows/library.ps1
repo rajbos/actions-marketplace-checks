@@ -926,6 +926,52 @@ function ApiCall {
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
         $rateLimitUsed = $result.Headers["X-Ratelimit-Used"]
+        
+        # Check for token expiration before processing rate limits
+        # GitHub App tokens expire after 1 hour, and we want to switch before that happens
+        $tokenExpirationHeader = $null
+        if ($result.Headers.ContainsKey('GitHub-Authentication-Token-Expiration')) {
+            $tokenExpirationHeader = $result.Headers['GitHub-Authentication-Token-Expiration']
+        }
+        elseif ($result.Headers.ContainsKey('github-authentication-token-expiration')) {
+            $tokenExpirationHeader = $result.Headers['github-authentication-token-expiration']
+        }
+        
+        if ($null -ne $tokenExpirationHeader -and $waitForRateLimit) {
+            try {
+                $expirationTime = [DateTimeOffset]::Parse($tokenExpirationHeader[0], [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
+                $timeUntilExpiration = $expirationTime - [DateTime]::UtcNow
+                $minutesUntilExpiration = $timeUntilExpiration.TotalMinutes
+                
+                # If token will expire within 15 minutes, try to switch to another app
+                if ($minutesUntilExpiration -le 15) {
+                    $organization = $env:APP_ORGANIZATION
+                    if (-not [string]::IsNullOrWhiteSpace($organization)) {
+                        Write-Host "Token will expire in [$([Math]::Round($minutesUntilExpiration, 1))] minutes, attempting to switch to another GitHub App"
+                        $bestToken = Select-BestGitHubAppTokenForOrganization -organization $organization -minMinutesUntilExpiration 15
+                        
+                        if ($null -ne $bestToken -and -not [string]::IsNullOrWhiteSpace($bestToken.Token) -and $bestToken.Token -ne $access_token) {
+                            $expiresInDisplay = if ($null -ne $bestToken.MinutesUntilExpiration) { "$([Math]::Round($bestToken.MinutesUntilExpiration, 1))m" } else { "N/A" }
+                            Write-Host "Switched to GitHub App id [$($bestToken.AppId)] with [$($bestToken.Remaining)] remaining requests (expires in: $expiresInDisplay)"
+                            $env:GITHUB_TOKEN = $bestToken.Token
+                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount
+                        }
+                        elseif ($null -eq $bestToken) {
+                            # No viable token available (all are expiring soon or exhausted)
+                            $message = "No GitHub App tokens available with >15 minutes until expiration and available quota. Stopping execution gracefully."
+                            Write-Message -message $message -logToSummary $true
+                            Write-Warning $message
+                            $global:RateLimitExceeded = $true
+                            return $null
+                        }
+                    }
+                }
+            }
+            catch {
+                Write-Debug "Failed to parse token expiration header in ApiCall: $($_.Exception.Message)"
+            }
+        }
+        
         if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
             # convert rateLimitReset from epoch to ms
             $rateLimitResetInt = [int]$rateLimitReset[0]
@@ -1534,14 +1580,34 @@ function Write-GitHubAppRateLimitOverview {
     }
 
     if ($null -ne $appOverview -and $appOverview.Count -gt 0) {
-        Write-Message -message "| # | App Id | Remaining | Used | Wait Time | Continue At (UTC) |" -logToSummary $true
-        Write-Message -message "|---:|-------:|----------:|-----:|-----------|-------------------|" -logToSummary $true
+        Write-Message -message "| # | App Id | Remaining | Used | Wait Time | Continue At (UTC) | Token Expires In |" -logToSummary $true
+        Write-Message -message "|---:|-------:|----------:|-----:|-----------|-------------------|------------------|" -logToSummary $true
 
         $index = 1
         foreach ($app in $appOverview) {
             $appWaitSeconds = if ($null -ne $app.WaitSeconds) { [double]$app.WaitSeconds } else { 0 }
             $appWaitTime = Format-WaitTime -totalSeconds $appWaitSeconds
-            Write-Message -message "| $index | $($app.AppId) | $(DisplayIntWithDots $app.Remaining) | $(DisplayIntWithDots $app.Used) | $appWaitTime | $($app.ContinueAt) |" -logToSummary $true
+            
+            # Format expiration time
+            $expirationDisplay = "N/A"
+            if ($null -ne $app.MinutesUntilExpiration) {
+                if ($app.MinutesUntilExpiration -le 0) {
+                    $expirationDisplay = "⚠️ Expired"
+                }
+                elseif ($app.MinutesUntilExpiration -lt 15) {
+                    $expirationDisplay = "⚠️ $($app.MinutesUntilExpiration)m"
+                }
+                elseif ($app.MinutesUntilExpiration -lt 60) {
+                    $expirationDisplay = "$($app.MinutesUntilExpiration)m"
+                }
+                else {
+                    $hours = [Math]::Floor($app.MinutesUntilExpiration / 60)
+                    $minutes = [Math]::Round($app.MinutesUntilExpiration % 60)
+                    $expirationDisplay = "${hours}h ${minutes}m"
+                }
+            }
+            
+            Write-Message -message "| $index | $($app.AppId) | $(DisplayIntWithDots $app.Remaining) | $(DisplayIntWithDots $app.Used) | $appWaitTime | $($app.ContinueAt) | $expirationDisplay |" -logToSummary $true
             $index++
         }
 
@@ -1667,6 +1733,32 @@ function Get-GitHubAppRateLimitOverview {
                 $waitSeconds = [double]$rateInfo.WaitSeconds
                 $continueAt = $rateInfo.ContinueAt
 
+                # Extract token expiration time from response headers
+                $expirationTime = $null
+                $expirationHeader = $null
+                if ($result.Headers.ContainsKey('GitHub-Authentication-Token-Expiration')) {
+                    $expirationHeader = $result.Headers['GitHub-Authentication-Token-Expiration']
+                }
+                elseif ($result.Headers.ContainsKey('github-authentication-token-expiration')) {
+                    $expirationHeader = $result.Headers['github-authentication-token-expiration']
+                }
+                
+                if ($null -ne $expirationHeader) {
+                    try {
+                        $expirationTime = [DateTimeOffset]::Parse($expirationHeader[0], [System.Globalization.CultureInfo]::InvariantCulture).UtcDateTime
+                    }
+                    catch {
+                        Write-Debug "Failed to parse token expiration header for app id [$appId]: $($_.Exception.Message)"
+                    }
+                }
+
+                # Calculate minutes until expiration
+                $minutesUntilExpiration = $null
+                if ($null -ne $expirationTime) {
+                    $timeRemaining = $expirationTime - [DateTime]::UtcNow
+                    $minutesUntilExpiration = [Math]::Round($timeRemaining.TotalMinutes, 1)
+                }
+
                 $results += [pscustomobject]@{
                     AppId = $appId
                     Token = $token
@@ -1674,6 +1766,8 @@ function Get-GitHubAppRateLimitOverview {
                     Used = $used
                     WaitSeconds = $waitSeconds
                     ContinueAt = $continueAt
+                    ExpirationTime = $expirationTime
+                    MinutesUntilExpiration = $minutesUntilExpiration
                 }
             }
             catch {
@@ -1690,7 +1784,8 @@ function Get-GitHubAppRateLimitOverview {
 
 function Select-BestGitHubAppTokenForOrganization {
     Param (
-        [string] $organization = $env:APP_ORGANIZATION
+        [string] $organization = $env:APP_ORGANIZATION,
+        [int] $minMinutesUntilExpiration = 15
     )
 
     $overview = Get-GitHubAppRateLimitOverview -organization $organization
@@ -1699,9 +1794,34 @@ function Select-BestGitHubAppTokenForOrganization {
         return $null
     }
 
-    $withRemaining = $overview | Where-Object { $_.Remaining -gt 0 }
+    # Filter out tokens that will expire within the minimum threshold
+    $nonExpiringTokens = $overview | Where-Object { 
+        $null -eq $_.MinutesUntilExpiration -or $_.MinutesUntilExpiration -gt $minMinutesUntilExpiration
+    }
+
+    # First, try to find a non-expiring token with remaining quota
+    $withRemaining = $nonExpiringTokens | Where-Object { $_.Remaining -gt 0 }
     if ($withRemaining -and $withRemaining.Count -gt 0) {
-        return $withRemaining | Sort-Object -Property Remaining -Descending | Select-Object -First 1
+        # Sort by remaining quota (highest first), then by minutes until expiration (longest first)
+        return $withRemaining | Sort-Object -Property @(
+            @{ Expression = { $_.Remaining }; Descending = $true },
+            @{ Expression = { if ($null -ne $_.MinutesUntilExpiration) { $_.MinutesUntilExpiration } else { [double]::MaxValue } }; Descending = $true }
+        ) | Select-Object -First 1
+    }
+
+    # If no tokens have remaining quota, check if any non-expiring tokens will reset soon
+    if ($nonExpiringTokens -and $nonExpiringTokens.Count -gt 0) {
+        # Return the one that will become available soonest
+        return $nonExpiringTokens | Sort-Object -Property WaitSeconds | Select-Object -First 1
+    }
+
+    # All tokens are either exhausted or about to expire
+    # Check if there are any tokens at all (even expiring ones)
+    $anyTokenWithQuota = $overview | Where-Object { $_.Remaining -gt 0 }
+    if ($anyTokenWithQuota -and $anyTokenWithQuota.Count -gt 0) {
+        # We have tokens with quota but they're all expiring soon
+        # Return null to signal that we should stop gracefully
+        return $null
     }
 
     # All apps are currently exhausted; return the one that will
