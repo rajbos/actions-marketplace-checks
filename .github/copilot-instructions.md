@@ -96,10 +96,15 @@ When making changes to inline PowerShell scripts in workflow YAML files, ensure 
 
 1. **Rate Limiting**: Always go through `ApiCall`, which already handles primary and secondary limits: it rotates across configured GitHub App tokens, backs off exponentially (caps long waits >20 minutes by stopping), and treats secondary limits with larger initial sleeps. Use `GetRateLimitInfo` for visibility; do not add ad-hoc sleeps/retries elsewhere.
 2. **GitHub App Tokens**: Workflows set `APP_ID`, `APP_ID_2`, `APP_ID_3`, `APP_ORGANIZATION`, `APPLICATION_PRIVATE_KEY`, `APPLICATION_PRIVATE_KEY_2`, and `APPLICATION_PRIVATE_KEY_3`. Token acquisition should go through the GitHub App token manager (`Get-GitHubAppTokenManagerInstance` / `New-GitHubAppTokenManagerFromEnvironment`).
-3. **Large Dataset**: The project processes ~29,000 actions per run
-4. **Fork Organization**: Uses `actions-marketplace-validations` org
-5. **Workflow Duration**: Analyze workflow typically runs 45-60 minutes (varies based on data size and API rate limits)
-6. **JSON Depth**: Be aware of JSON serialization depth limits
+3. **Token Expiration Management**: GitHub App tokens expire after 1 hour. The system automatically:
+   - Checks token expiration time alongside rate limit checks
+   - Switches to another app when a token will expire within 15 minutes
+   - Stops execution gracefully if no tokens are available with >15 minutes remaining
+   - This prevents long-running jobs (like repoInfo.yml) from failing mid-execution
+4. **Large Dataset**: The project processes ~29,000 actions per run
+5. **Fork Organization**: Uses `actions-marketplace-validations` org
+6. **Workflow Duration**: Analyze workflow typically runs 45-60 minutes (varies based on data size and API rate limits)
+7. **JSON Depth**: Be aware of JSON serialization depth limits
 
 ## Security
 
