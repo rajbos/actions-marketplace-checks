@@ -121,13 +121,14 @@ function ProcessRepoInfoChunk {
     
     try {
         # Call repoInfo.ps1 for this chunk
-        # It will read from status.json and process the forks
+        # Pass the actionNamesToProcess so it only processes this chunk's forks
         # Skip secret scan summary as it will be shown in consolidate job
         & "$PSScriptRoot/repoInfo.ps1" `
             -actions $allActions `
             -numberOfReposToDo $forksToProcess.Count `
             -access_token $accessToken `
             -access_token_destination $accessToken `
+            -actionNamesToProcess $actionNamesToProcess `
             -skipSecretScanSummary
         
         # Check if rate limit was exceeded during processing
