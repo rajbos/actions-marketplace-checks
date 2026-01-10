@@ -1285,6 +1285,162 @@ function EnableSecretScanning {
     return $patchResult
 }
 
+function Invoke-TrivyScan {
+    <#
+    .SYNOPSIS
+        Scans a Docker-based action for vulnerabilities using Trivy
+    
+    .DESCRIPTION
+        Downloads the Dockerfile from the repository and runs Trivy in config mode
+        to scan for Critical and High severity vulnerabilities without building the image
+    
+    .OUTPUTS
+        Hashtable with:
+        - critical: Count of critical severity vulnerabilities
+        - high: Count of high severity vulnerabilities
+        - lastScanned: Timestamp of the scan
+        - scanError: Error message if scan failed
+    #>
+    param (
+        [string] $owner,
+        [string] $repo,
+        $actionType,
+        [Alias('access_token')]
+        $accessToken
+    )
+
+    $result = @{
+        critical = 0
+        high = 0
+        lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+        scanError = $null
+    }
+
+    # Only scan Docker actions with Dockerfiles (not remote images)
+    if ($actionType.actionDockerType -ne "Dockerfile") {
+        Write-Debug "Skipping Trivy scan for [$owner/$repo] - not a Dockerfile-based action (type: $($actionType.actionDockerType))"
+        return $null
+    }
+
+    Write-Host "Running Trivy scan for Docker action [$owner/$repo]"
+
+    try {
+        # Check if Trivy is installed
+        $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+        if (-not $trivyPath) {
+            Write-Host "Installing Trivy..."
+            # Install Trivy on Ubuntu using the install script method (faster and more reliable)
+            $installCmd = "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.48.0"
+            Invoke-Expression $installCmd 2>&1 | Out-Null
+            
+            # Verify installation
+            $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+            if (-not $trivyPath) {
+                Write-Host "Failed to install Trivy for [$owner/$repo]"
+                $result.scanError = "Trivy installation failed"
+                return $result
+            }
+        }
+
+        # Create a temporary directory for the scan
+        $tempDir = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-scan-$owner-$repo-$(Get-Random)"
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+
+        try {
+            # Download the Dockerfile
+            $url = "/repos/$owner/$repo/contents/Dockerfile"
+            $repoUrl = "https://github.com/$owner/$repo"
+            $contextInfo = "Repository: $repoUrl, File: Dockerfile"
+            
+            try {
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo
+            }
+            catch {
+                # Try lowercase filename
+                $url = "/repos/$owner/$repo/contents/dockerfile"
+                $contextInfo = "Repository: $repoUrl, File: dockerfile"
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo
+            }
+
+            if (-not $dockerFile -or -not $dockerFile.download_url) {
+                Write-Host "Could not retrieve Dockerfile for [$owner/$repo]"
+                $result.scanError = "Dockerfile not found"
+                return $result
+            }
+
+            # Download Dockerfile content
+            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo
+            $dockerfilePath = Join-Path $tempDir "Dockerfile"
+            $dockerFileContent | Out-File -FilePath $dockerfilePath -Encoding UTF8
+
+            # Run Trivy in config mode to scan the Dockerfile without building
+            Write-Host "Scanning Dockerfile with Trivy for [$owner/$repo]..."
+            $scanOutput = trivy config --severity CRITICAL,HIGH --format json --quiet $dockerfilePath 2>&1
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "Trivy config scan failed for [$owner/$repo], trying filesystem scan..."
+                # Fallback to fs scan which might work better for some cases
+                $scanOutput = trivy fs --severity CRITICAL,HIGH --format json --quiet $dockerfilePath 2>&1
+                
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "Trivy scan failed for [$owner/$repo]: $scanOutput"
+                    $result.scanError = "Trivy scan failed"
+                    return $result
+                }
+            }
+            
+            # Parse Trivy JSON output
+            try {
+                $scanResults = $scanOutput | ConvertFrom-Json
+                
+                # Count vulnerabilities by severity
+                if ($scanResults.Results) {
+                    foreach ($target in $scanResults.Results) {
+                        if ($target.Misconfigurations) {
+                            foreach ($vuln in $target.Misconfigurations) {
+                                if ($vuln.Severity -eq "CRITICAL") {
+                                    $result.critical++
+                                }
+                                elseif ($vuln.Severity -eq "HIGH") {
+                                    $result.high++
+                                }
+                            }
+                        }
+                        if ($target.Vulnerabilities) {
+                            foreach ($vuln in $target.Vulnerabilities) {
+                                if ($vuln.Severity -eq "CRITICAL") {
+                                    $result.critical++
+                                }
+                                elseif ($vuln.Severity -eq "HIGH") {
+                                    $result.high++
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Write-Host "Trivy scan completed for [$owner/$repo]: Critical=$($result.critical), High=$($result.high)"
+            }
+            catch {
+                Write-Host "Failed to parse Trivy output for [$owner/$repo]: $($_.Exception.Message)"
+                $result.scanError = "Failed to parse Trivy output"
+            }
+        }
+        finally {
+            # Clean up temporary directory
+            if (Test-Path $tempDir) {
+                Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+    catch {
+        Write-Host "Error during Trivy scan for [$owner/$repo]: $($_.Exception.Message)"
+        $result.scanError = $_.Exception.Message
+    }
+
+    return $result
+}
+
 function GetMoreInfo {
     param (
         $existingForks,
@@ -1528,6 +1684,50 @@ function GetMoreInfo {
                         }
                     }
                     catch {
+                        # continue with next one
+                    }
+                }
+
+                # Run Trivy container scan for Docker actions with Dockerfiles
+                $hasContainerScanField = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+                $needsContainerScan = $false
+                
+                # Check if scan is needed (missing or older than 7 days)
+                if (!$hasContainerScanField) {
+                    $needsContainerScan = $true
+                }
+                elseif ($null -ne $action.actionType.containerScan.lastScanned) {
+                    try {
+                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned)
+                        $daysSinceLastScan = ((Get-Date) - $lastScanned).Days
+                        if ($daysSinceLastScan -gt 7) {
+                            $needsContainerScan = $true
+                        }
+                    }
+                    catch {
+                        # If we can't parse the date, re-scan
+                        $needsContainerScan = $true
+                    }
+                }
+                
+                if ($needsContainerScan -and $action.actionType.actionDockerType -eq "Dockerfile") {
+                    Write-Host "$i/$max - Running Trivy container scan for [$($owner)/$($repo)]"
+                    try {
+                        $scanResult = Invoke-TrivyScan -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
+                        
+                        if ($null -ne $scanResult) {
+                            if (!$hasContainerScanField) {
+                                Write-Host "Adding container scan information with critical:[$($scanResult.critical)], high:[$($scanResult.high)] for [$($action.owner)/$($action.name))]"
+                                $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
+                            }
+                            else {
+                                Write-Host "Updating container scan information with critical:[$($scanResult.critical)], high:[$($scanResult.high)] for [$($owner)/$($repo))]"
+                                $action.actionType.containerScan = $scanResult
+                            }
+                        }
+                    }
+                    catch {
+                        Write-Host "Error running Trivy scan for [$owner/$repo]: $($_.Exception.Message)"
                         # continue with next one
                     }
                 }
