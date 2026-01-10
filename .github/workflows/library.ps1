@@ -1470,6 +1470,102 @@ function Format-WaitTime {
     }
 }
 
+#region Mirror Retry Queue Helpers
+
+function Get-RetryQueuePath {
+    Param (
+        [string] $QueuePath
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($QueuePath)) {
+        return (Resolve-Path -Path $QueuePath).Path
+    }
+
+    # Default to repo root retry-queue.json (library lives in .github/workflows)
+    $rootPath = Resolve-Path -Path (Join-Path $PSScriptRoot "..") | ForEach-Object { $_.ProviderPath }
+    return Join-Path $rootPath "retry-queue.json"
+}
+
+function Load-RetryQueue {
+    Param (
+        [string] $QueuePath
+    )
+
+    $path = Get-RetryQueuePath -QueuePath $QueuePath
+    if (-not (Test-Path $path)) {
+        return @()
+    }
+
+    try {
+        $json = Get-Content -Path $path -Raw
+        if ([string]::IsNullOrWhiteSpace($json)) { return @() }
+        return $json | ConvertFrom-Json
+    }
+    catch {
+        Write-Warning "Failed to load retry queue from [$path]: $($_.Exception.Message)"
+        return @()
+    }
+}
+
+function Save-RetryQueue {
+    Param (
+        $Queue,
+        [string] $QueuePath
+    )
+
+    $path = Get-RetryQueuePath -QueuePath $QueuePath
+    try {
+        $json = ConvertTo-Json -InputObject $Queue -Depth 6
+        $tmpPath = "$path.tmp"
+        [System.IO.File]::WriteAllText($tmpPath, $json, [System.Text.Encoding]::UTF8)
+        Move-Item -Path $tmpPath -Destination $path -Force
+        return $true
+    }
+    catch {
+        Write-Warning "Failed to save retry queue to [$path]: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+function Enqueue-MirrorRetry {
+    Param (
+        [Parameter(Mandatory = $true)][string] $MirrorName,
+        [string] $ErrorMessage,
+        [string] $ErrorType = "mirror_create_failed",
+        [string] $QueuePath
+    )
+
+    $queue = @() + (Load-RetryQueue -QueuePath $QueuePath)
+    $existing = $queue | Where-Object { $_.name -eq $MirrorName }
+    $now = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+
+    if ($existing) {
+        foreach ($item in $existing) {
+            $item.errorMessage = $ErrorMessage
+            $item.errorType = $ErrorType
+            $item.attempts = if ($item.attempts) { $item.attempts + 1 } else { 1 }
+            $item.lastAttempt = $now
+            $nextWaitMinutes = [math]::Min(180, [math]::Pow(2, [double]$item.attempts))
+            $item.nextAttempt = (Get-Date).AddMinutes($nextWaitMinutes).ToString("yyyy-MM-ddTHH:mm:ssZ")
+        }
+    }
+    else {
+        $queue += [pscustomobject]@{
+            name        = $MirrorName
+            errorMessage = $ErrorMessage
+            errorType    = $ErrorType
+            attempts     = 1
+            firstSeen    = $now
+            lastAttempt  = $now
+            nextAttempt  = (Get-Date).AddMinutes(5).ToString("yyyy-MM-ddTHH:mm:ssZ")
+        }
+    }
+
+    Save-RetryQueue -Queue $queue -QueuePath $QueuePath | Out-Null
+}
+
+#endregion
+
 function Format-RateLimitComparisonTable {
     Param (
         $rateEntries,

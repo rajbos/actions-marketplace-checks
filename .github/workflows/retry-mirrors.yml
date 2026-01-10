@@ -1,0 +1,49 @@
+name: Retry mirror creation failures
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # nightly
+  workflow_dispatch:
+    inputs:
+      maxItems:
+        description: "Maximum queue items to process"
+        required: false
+        default: "10"
+
+permissions:
+  contents: read
+
+jobs:
+  retry-mirrors:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run mirror retry processor
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_ID_2: ${{ secrets.APP_ID_2 }}
+          APP_ID_3: ${{ secrets.APP_ID_3 }}
+          APP_ORGANIZATION: ${{ secrets.APP_ORGANIZATION }}
+          APPLICATION_PRIVATE_KEY: ${{ secrets.APPLICATION_PRIVATE_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.APPLICATION_PRIVATE_KEY_2 }}
+          APPLICATION_PRIVATE_KEY_3: ${{ secrets.APPLICATION_PRIVATE_KEY_3 }}
+        run: |
+          pwsh -NoLogo -File .github/workflows/update-mirrors-retry.ps1 -maxItems ${{ github.event.inputs.maxItems || 10 }}
+
+      - name: Upload retry queue artifact
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retry-queue
+          path: ./retry-queue.json
+
+      - name: Upload step summary
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-summary
+          path: ${{ env.GITHUB_STEP_SUMMARY }}
