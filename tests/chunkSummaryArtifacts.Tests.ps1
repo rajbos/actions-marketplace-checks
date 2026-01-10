@@ -28,6 +28,7 @@ Describe "Chunk Summary Artifact Functions" {
                 -chunkId 0 `
                 -synced 3 `
                 -upToDate 147 `
+                -mirrorsCreated 2 `
                 -conflicts 0 `
                 -upstreamNotFound 0 `
                 -failed 0 `
@@ -43,6 +44,7 @@ Describe "Chunk Summary Artifact Functions" {
             $saved.chunkId | Should -Be 0
             $saved.synced | Should -Be 3
             $saved.upToDate | Should -Be 147
+            $saved.mirrorsCreated | Should -Be 2
             $saved.conflicts | Should -Be 0
             $saved.upstreamNotFound | Should -Be 0
             $saved.failed | Should -Be 0
@@ -57,6 +59,7 @@ Describe "Chunk Summary Artifact Functions" {
                 -chunkId 1 `
                 -synced 0 `
                 -upToDate 0 `
+                -mirrorsCreated 0 `
                 -conflicts 0 `
                 -upstreamNotFound 0 `
                 -failed 0 `
@@ -70,6 +73,7 @@ Describe "Chunk Summary Artifact Functions" {
             # Verify all values are zero
             $saved = Get-Content $outputPath | ConvertFrom-Json
             $saved.synced | Should -Be 0
+            $saved.mirrorsCreated | Should -Be 0
             $saved.totalProcessed | Should -Be 0
         }
         
@@ -78,7 +82,7 @@ Describe "Chunk Summary Artifact Functions" {
             # The default path would be relative to the current directory at execution time
             $outputPath = Join-Path $script:testDir "chunk-summary-5.json"
             
-            $result = Save-ChunkSummary -chunkId 5 -synced 10 -upToDate 20 -totalProcessed 30 -outputPath $outputPath
+            $result = Save-ChunkSummary -chunkId 5 -synced 10 -upToDate 20 -mirrorsCreated 1 -totalProcessed 30 -outputPath $outputPath
             
             $result | Should -Be $true
             Test-Path $outputPath | Should -Be $true
@@ -86,6 +90,7 @@ Describe "Chunk Summary Artifact Functions" {
             $saved = Get-Content $outputPath | ConvertFrom-Json
             $saved.chunkId | Should -Be 5
             $saved.synced | Should -Be 10
+            $saved.mirrorsCreated | Should -Be 1
             
             # Verify the filename follows the expected pattern
             (Split-Path $outputPath -Leaf) | Should -Match "chunk-summary-\d+\.json"
@@ -112,6 +117,7 @@ Describe "Chunk Summary Artifact Functions" {
                 chunkId = 0
                 synced = 3
                 upToDate = 147
+                mirrorsCreated = 2
                 conflicts = 0
                 upstreamNotFound = 0
                 failed = 0
@@ -123,6 +129,7 @@ Describe "Chunk Summary Artifact Functions" {
                 chunkId = 1
                 synced = 5
                 upToDate = 143
+                mirrorsCreated = 1
                 conflicts = 1
                 upstreamNotFound = 0
                 failed = 1
@@ -142,6 +149,7 @@ Describe "Chunk Summary Artifact Functions" {
             # Verify aggregated totals
             $result.synced | Should -Be 8
             $result.upToDate | Should -Be 290
+            $result.mirrorsCreated | Should -Be 3
             $result.conflicts | Should -Be 1
             $result.upstreamNotFound | Should -Be 0
             $result.failed | Should -Be 1
@@ -156,6 +164,7 @@ Describe "Chunk Summary Artifact Functions" {
             $result | Should -Not -BeNullOrEmpty
             $result.synced | Should -Be 0
             $result.upToDate | Should -Be 0
+            $result.mirrorsCreated | Should -Be 0
             $result.totalProcessed | Should -Be 0
         }
         
@@ -171,6 +180,7 @@ Describe "Chunk Summary Artifact Functions" {
                 chunkId = 0
                 synced = 10
                 upToDate = 20
+                mirrorsCreated = 1
                 conflicts = 1
                 upstreamNotFound = 2
                 failed = 3
@@ -186,6 +196,7 @@ Describe "Chunk Summary Artifact Functions" {
             # Should match input exactly
             $result.synced | Should -Be 10
             $result.upToDate | Should -Be 20
+            $result.mirrorsCreated | Should -Be 1
             $result.conflicts | Should -Be 1
             $result.upstreamNotFound | Should -Be 2
             $result.failed | Should -Be 3
@@ -198,6 +209,7 @@ Describe "Chunk Summary Artifact Functions" {
                 chunkId = 0
                 synced = 5
                 upToDate = 10
+                mirrorsCreated = 0
                 conflicts = 0
                 upstreamNotFound = 0
                 failed = 0
@@ -247,6 +259,7 @@ Describe "Chunk Summary Artifact Functions" {
                 chunkId = 0
                 synced = 3
                 upToDate = 147
+                mirrorsCreated = 1
                 conflicts = 1
                 upstreamNotFound = 1
                 failed = 1
@@ -259,6 +272,7 @@ Describe "Chunk Summary Artifact Functions" {
                 chunkId = 1
                 synced = 5
                 upToDate = 143
+                mirrorsCreated = 1
                 conflicts = 0
                 upstreamNotFound = 0
                 failed = 1
@@ -307,6 +321,7 @@ Describe "Chunk Summary Artifact Functions" {
                     chunkId = 0
                     synced = 0
                     upToDate = 0
+                    mirrorsCreated = 0
                     conflicts = 1
                     upstreamNotFound = 1
                     failed = 2
@@ -351,6 +366,7 @@ Describe "Chunk Summary Artifact Functions" {
             $testStats = @{
                 synced = 3
                 upToDate = 147
+                mirrorsCreated = 2
                 conflicts = 0
                 upstreamNotFound = 0
                 failed = 0
@@ -393,6 +409,7 @@ Describe "Chunk Summary Artifact Functions" {
                     -chunkId 0 `
                     -synced 3 `
                     -upToDate 145 `
+                    -mirrorsCreated 1 `
                     -conflicts 0 `
                     -upstreamNotFound 1 `
                     -failed 1 `

@@ -19,7 +19,6 @@ Write-Host "secretScanningAlertsFile location: [$secretScanningAlertsFile]"
 . "$PSScriptRoot/github-app-token-manager.ps1"
 
 $script:GitHubAppTokenManagerInstance = $null
-$script:HasLoggedRateLimitAppSwitch = $false
 
 function Get-GitHubAppTokenManagerInstance {
     if ($null -ne $script:GitHubAppTokenManagerInstance) {
@@ -1162,10 +1161,7 @@ function ApiCall {
                 if ($null -ne $bestBeforeWait) {
                     if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
                         $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
-                        if (-not $script:HasLoggedRateLimitAppSwitch) {
-                            Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
-                            $script:HasLoggedRateLimitAppSwitch = $true
-                        }
+                        Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
                         # Persist the new token globally so subsequent calls
                         # that don't explicitly pass access_token pick up the
                         # rotated app token instead of the exhausted one.
@@ -1240,6 +1236,42 @@ function ApiCall {
                     Write-Host "Rate limit hit, waiting for [$waitSeconds] seconds before continuing"
                 }
                 Start-Sleep -Milliseconds ($waitSeconds * 1000)
+
+                # After waiting, re-check rate limit status before retrying
+                Write-Host "Wait completed, rechecking rate limit status before retry..."
+                $organization = $env:APP_ORGANIZATION
+                $bestAfterWait = Select-BestGitHubAppTokenForOrganization -organization $organization
+                
+                if ($null -ne $bestAfterWait) {
+                    if ($bestAfterWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                        Write-Host "Rate limit recovered: GitHub App id [$($bestAfterWait.AppId)] now has [$($bestAfterWait.Remaining)] remaining requests"
+                        # Update to use the token with available quota
+                        $access_token = $bestAfterWait.Token
+                        $env:GITHUB_TOKEN = $bestAfterWait.Token
+                    }
+                    else {
+                        # Still no quota available
+                        $additionalWait = $bestAfterWait.WaitSeconds
+                        if ($additionalWait -gt 0) {
+                            $additionalWaitDisplay = Format-WaitTime -totalSeconds $additionalWait
+                            Write-Host "Rate limit not yet recovered. Need to wait an additional [$additionalWait] seconds ($additionalWaitDisplay) until [$($bestAfterWait.ContinueAt)]"
+                            # Check if total wait would exceed limits
+                            if ($additionalWait -gt 1200) {
+                                $message = "Total wait time would exceed 20 minutes. Stopping to prevent excessive delays."
+                                Write-Message -message $message -logToSummary $true
+                                $global:RateLimitExceeded = $true
+                                return $null
+                            }
+                            # Wait additional time
+                            Start-Sleep -Milliseconds ($additionalWait * 1000)
+                            # After additional wait, use the best available token
+                            if (-not [string]::IsNullOrWhiteSpace($bestAfterWait.Token)) {
+                                $access_token = $bestAfterWait.Token
+                                $env:GITHUB_TOKEN = $bestAfterWait.Token
+                            }
+                        }
+                    }
+                }
             }
 
             # Only retry if we're configured to wait for rate limits
@@ -4168,6 +4200,7 @@ function Save-ChunkSummary {
         [int] $chunkId,
         [int] $synced = 0,
         [int] $upToDate = 0,
+        [int] $mirrorsCreated = 0,
         [int] $conflicts = 0,
         [int] $upstreamNotFound = 0,
         [int] $failed = 0,
@@ -4181,6 +4214,7 @@ function Save-ChunkSummary {
         chunkId = $chunkId
         synced = $synced
         upToDate = $upToDate
+        mirrorsCreated = $mirrorsCreated
         conflicts = $conflicts
         upstreamNotFound = $upstreamNotFound
         failed = $failed
@@ -4224,6 +4258,7 @@ function Show-ConsolidatedChunkSummary {
     # Initialize totals
     $totalSynced = 0
     $totalUpToDate = 0
+    $totalMirrorsCreated = 0
     $totalConflicts = 0
     $totalUpstreamNotFound = 0
     $totalFailed = 0
@@ -4240,6 +4275,7 @@ function Show-ConsolidatedChunkSummary {
         return @{
             synced = $totalSynced
             upToDate = $totalUpToDate
+            mirrorsCreated = $totalMirrorsCreated
             conflicts = $totalConflicts
             upstreamNotFound = $totalUpstreamNotFound
             failed = $totalFailed
@@ -4265,6 +4301,9 @@ function Show-ConsolidatedChunkSummary {
             
             $totalSynced += $chunkSummary.synced
             $totalUpToDate += $chunkSummary.upToDate
+            if ($chunkSummary.PSObject.Properties["mirrorsCreated"]) {
+                $totalMirrorsCreated += $chunkSummary.mirrorsCreated
+            }
             $totalConflicts += $chunkSummary.conflicts
             $totalUpstreamNotFound += $chunkSummary.upstreamNotFound
             $totalFailed += $chunkSummary.failed
@@ -4305,6 +4344,7 @@ function Show-ConsolidatedChunkSummary {
     Write-Message -message "|--------|------:|" -logToSummary $true
     Write-Message -message "| ✅ Synced | $(DisplayIntWithDots $totalSynced) |" -logToSummary $true
     Write-Message -message "| ✓ Up to Date | $(DisplayIntWithDots $totalUpToDate) |" -logToSummary $true
+    Write-Message -message "| 🆕 Mirrors Created | $(DisplayIntWithDots $totalMirrorsCreated) |" -logToSummary $true
     Write-Message -message "| ⚠️ Conflicts | $(DisplayIntWithDots $totalConflicts) |" -logToSummary $true
     Write-Message -message "| ❌ Upstream Not Found | $(DisplayIntWithDots $totalUpstreamNotFound) |" -logToSummary $true
     Write-Message -message "| ❌ Failed | $(DisplayIntWithDots $totalFailed) |" -logToSummary $true
@@ -4372,6 +4412,7 @@ function Show-ConsolidatedChunkSummary {
     return @{
         synced = $totalSynced
         upToDate = $totalUpToDate
+        mirrorsCreated = $totalMirrorsCreated
         conflicts = $totalConflicts
         upstreamNotFound = $totalUpstreamNotFound
         failed = $totalFailed
@@ -4645,8 +4686,8 @@ function ShowOverallDatasetStatistics {
     }
     
     Write-Message -message "_Note: **Repositories without mirrors** cannot be synced. This includes:_" -logToSummary $true
-    Write-Message -message "- _**Confirmed No Mirror**: Repositories where the mirror repository was checked and found to not exist (e.g., upstream deleted, mirror never created, or mirror was deleted)_" -logToSummary $true
-    Write-Message -message "- _**Not Yet Checked**: Repositories that haven't been processed by the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml) yet_" -logToSummary $true
+    Write-Message -message "- _**Confirmed No Mirror**: Repositories where a mirror is still missing after an auto-create attempt (for example the upstream was deleted or mirror creation failed)_" -logToSummary $true
+    Write-Message -message "- _**Not Yet Checked**: Repositories that haven't been processed by the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml) yet, so the auto-create step has not been run_" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "_💡 To increase the number of repositories with known mirror status, focus on the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml), which processes repositories hourly to check their mirror status._" -logToSummary $true
     Write-Message -message "" -logToSummary $true
