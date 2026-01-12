@@ -10,6 +10,11 @@ Param (
 )
 
 . $PSScriptRoot/library.ps1
+
+# Reset tried apps tracking at the start of chunk processing
+# This ensures each chunk starts with a clean slate for app rotation
+Reset-TriedGitHubApps
+
 if ($appPrivateKeys.Count -gt 0 -and $appIds.Count -gt 0) {
     if ([string]::IsNullOrWhiteSpace($appOrganization)) {
         throw "APP_ORGANIZATION must be provided when using GitHub App credentials"
