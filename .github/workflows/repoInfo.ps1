@@ -1009,7 +1009,7 @@ function GetInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             if ($repo -ne "" -and $owner -ne "") {
             $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner
-            if ("" -ne $dependents) {
+            if ("" -ne $dependentsNumber) {
                     $dependents = @{
                         dependents = $dependentsNumber
                         dependentsLastUpdated = Get-Date
@@ -1028,7 +1028,7 @@ function GetInfo {
                 # update the dependents info
                 ($owner, $repo) = GetOrgActionInfo($action.name)
                 $dependentsNumber = GetDependentsForRepo -repo $repo -owner $owner
-                if ("" -ne $dependents) {
+                if ("" -ne $dependentsNumber) {
                     $action.dependents.dependents = $dependentsNumber
                     $action.dependents.dependentsLastUpdated = Get-Date
                     $i++ | Out-Null
