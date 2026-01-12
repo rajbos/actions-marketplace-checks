@@ -384,7 +384,8 @@ jobs:
           Write-Host "Uploading up to 100 actions to API storage..."
 
           # Call the API upsert function
-          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos 100
+          $numberOfRepos = 100
+          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos $numberOfRepos
 
           # Report results in step summary
           if ($result.error) {

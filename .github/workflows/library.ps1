@@ -4924,9 +4924,20 @@ function Invoke-ApiUpsert {
     }
 
     # Filter repos that have the necessary data for the API
+    # Sort by updated_at if available, handling cases where repoInfo or updated_at might be missing
     $validRepos = $status |
         Where-Object { $_.name -and $_.owner } |
-        Sort-Object -Property @{ Expression = { $_.repoInfo.updated_at }; Descending = $true }
+        Sort-Object -Property @{ 
+            Expression = { 
+                if ($_.PSObject.Properties["repoInfo"] -and $_.repoInfo.PSObject.Properties["updated_at"]) {
+                    $_.repoInfo.updated_at
+                } else {
+                    # Put repos without updated_at at the end
+                    [DateTime]::MinValue
+                }
+            }
+            Descending = $true
+        }
 
     if ($validRepos.Count -eq 0) {
         Write-Warning "No valid repos found with required fields (name and owner)"
@@ -4942,7 +4953,8 @@ function Invoke-ApiUpsert {
 
     Write-Host "Found [$($validRepos.Count)] valid repos to consider for upload"
 
-    # Path to the Node.js upload script
+    # Path to the Node.js upload script - construct relative to library script location
+    # PSScriptRoot points to .github/workflows/ where this library.ps1 is located
     $nodeScriptPath = Join-Path $PSScriptRoot "node-scripts/src/upload-to-api.js"
 
     if (-not (Test-Path $nodeScriptPath)) {
@@ -5003,17 +5015,35 @@ function Invoke-ApiUpsert {
         # Parse results from output
         if ($output -match '(?s)__RESULTS_JSON_START__(.*?)__RESULTS_JSON_END__') {
             $resultsJson = $matches[1].Trim()
-            $results = $resultsJson | ConvertFrom-Json
+            try {
+                $results = $resultsJson | ConvertFrom-Json
+            } catch {
+                Write-Warning "Failed to parse results JSON: $($_.Exception.Message)"
+                return @{
+                    successCount = 0
+                    failCount = 0
+                    createdCount = 0
+                    updatedCount = 0
+                    skippedCount = 0
+                    error = "Failed to parse results JSON: $($_.Exception.Message)"
+                }
+            }
             
             # Calculate statistics
             $successCount = ($results | Where-Object { $_.success -eq $true }).Count
             $failCount = ($results | Where-Object { $_.success -eq $false }).Count
             $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
             $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
-            $skippedCount = if ($skipStats -and $null -ne $skipStats.skippedNotUpdatedCount) {
-                [int]$skipStats.skippedNotUpdatedCount
-            } else {
-                0
+            
+            # Safely convert skipped count to int
+            $skippedCount = 0
+            if ($skipStats -and $skipStats.PSObject.Properties["skippedNotUpdatedCount"]) {
+                try {
+                    $skippedCount = [System.Convert]::ToInt32($skipStats.skippedNotUpdatedCount)
+                } catch {
+                    Write-Warning "Failed to convert skippedNotUpdatedCount to int: $($_.Exception.Message)"
+                    $skippedCount = 0
+                }
             }
 
             Write-Host "Upload complete - Success: $successCount, Failed: $failCount, Created: $createdCount, Updated: $updatedCount, Skipped: $skippedCount"
