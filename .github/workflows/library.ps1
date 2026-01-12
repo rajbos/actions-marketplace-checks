@@ -956,6 +956,7 @@ function ApiCall {
                             if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
                                 # Mark this app as tried
                                 $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
+                                Write-Host "Marked app id [$($bestBeforeWait.AppId)] as tried. Tried apps so far: $($triedAppIds -join ', ')"
                                 
                                 if ($bestBeforeWait.Token -ne $access_token) {
                                     Write-Host "Rate limit remaining is 0 for current token, switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests"
@@ -1216,6 +1217,7 @@ function ApiCall {
                     # Found an app with remaining quota that we haven't tried yet
                     # Mark this app as tried
                     $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
+                    Write-Host "Marked app id [$($bestBeforeWait.AppId)] as tried. Tried apps so far: $($triedAppIds -join ', ')"
                     
                     $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
                     Write-Host "Rate limit ($formatType) encountered with remaining [$remaining], switching to GitHub App id [$($bestBeforeWait.AppId)] with [$($bestBeforeWait.Remaining)] remaining requests instead of waiting [$waitSeconds] seconds"
@@ -1970,7 +1972,17 @@ function Select-BestGitHubAppTokenForOrganization {
 
     # Filter out apps that have already been tried (to prevent endless cycling)
     if ($null -ne $triedAppIds -and $triedAppIds.Count -gt 0) {
+        Write-Host "Filtering apps - Already tried app IDs: $($triedAppIds -join ', ')"
+        Write-Host "Available apps before filtering: $($overview.AppId -join ', ')"
+        
         $overview = $overview | Where-Object { -not $triedAppIds.Contains($_.AppId) }
+        
+        if ($null -ne $overview -and $overview.Count -gt 0) {
+            Write-Host "Available apps after filtering: $($overview.AppId -join ', ')"
+        } else {
+            Write-Host "No apps available after filtering - all have been tried"
+        }
+        
         if ($null -eq $overview -or $overview.Count -eq 0) {
             # All apps have been tried - return null to signal we've exhausted all options
             return $null
