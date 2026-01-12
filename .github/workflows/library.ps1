@@ -2,6 +2,10 @@
 # Global flag to track if rate limit was exceeded (20+ minute wait)
 $global:RateLimitExceeded = $false
 
+# Script-scoped HashSet to track which GitHub Apps have been tried in this execution
+# This persists across all API calls in the current script, preventing endless cycling
+$script:TriedGitHubAppIds = New-Object 'System.Collections.Generic.HashSet[string]'
+
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
@@ -33,6 +37,25 @@ function Get-GitHubAppTokenManagerInstance {
     }
 
     return $script:GitHubAppTokenManagerInstance
+}
+
+<#
+.SYNOPSIS
+Resets the tracking of tried GitHub Apps for rate limiting.
+
+.DESCRIPTION
+Clears the script-scoped HashSet that tracks which GitHub Apps have been tried
+for rate limit rotation. This should be called at the start of each chunk processing
+to ensure apps get a fresh chance.
+
+.EXAMPLE
+Reset-TriedGitHubApps
+#>
+function Reset-TriedGitHubApps {
+    if ($null -ne $script:TriedGitHubAppIds) {
+        $script:TriedGitHubAppIds.Clear()
+        Write-Host "Reset tried GitHub Apps tracking"
+    }
 }
 
 # Blob file names in the 'status' subfolder
@@ -823,10 +846,9 @@ function ApiCall {
         [System.Collections.Generic.HashSet[string]] $triedAppIds = $null
     )
     
-    # Initialize triedAppIds HashSet if null (first call)
-    if ($null -eq $triedAppIds) {
-        $triedAppIds = New-Object 'System.Collections.Generic.HashSet[string]'
-    }
+    # Use the script-scoped HashSet to track tried apps across all API calls
+    # This ensures we don't cycle through the same apps repeatedly across different sync operations
+    $triedAppIds = $script:TriedGitHubAppIds
     
     # Check if we've exceeded the maximum number of retries
     if ($retryCount -gt $maxRetries) {
