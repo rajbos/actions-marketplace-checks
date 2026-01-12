@@ -530,6 +530,71 @@ jobs:
 
           Invoke-GitHubAppRateLimitCheckForConfiguredApps
 
+      - name: Setup Node.js for API updates
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devops-actions'
+
+      - name: Install npm package for API updates
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+        run: |
+          npm install @devops-actions/actions-marketplace-client
+
+      - name: Update API storage with consolidated data
+        if: always()
+        shell: pwsh
+        env:
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## API Storage Update" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Check if API credentials are available
+          if ([string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_URL) -or [string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_TOKEN)) {
+            Write-Message -message "⚠️ API credentials not available - skipping API update" -logToSummary $true
+            exit 0
+          }
+
+          # Load the merged status
+          try {
+            $jsonContent = Get-Content status.json -Raw
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''
+            $status = $jsonContent | ConvertFrom-Json
+          } catch {
+            Write-Message -message "❌ Failed to load status.json: $($_.Exception.Message)" -logToSummary $true
+            exit 0
+          }
+
+          Write-Host "Uploading up to 100 actions to API storage..."
+
+          # Call the API upsert function
+          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos 100
+
+          # Report results in step summary
+          if ($result.error) {
+            Write-Message -message "⚠️ API update encountered an error: $($result.error)" -logToSummary $true
+          } else {
+            $totalUpdates = $result.createdCount + $result.updatedCount
+            Write-Message -message "| Status | Count |" -logToSummary $true
+            Write-Message -message "|--------|------:|" -logToSummary $true
+            Write-Message -message "| ✅ Successful | $($result.successCount) |" -logToSummary $true
+            Write-Message -message "| ❌ Failed | $($result.failCount) |" -logToSummary $true
+            Write-Message -message "| 🆕 Created | $($result.createdCount) |" -logToSummary $true
+            Write-Message -message "| 📝 Updated | $($result.updatedCount) |" -logToSummary $true
+            Write-Message -message "| ⏭️ Skipped | $($result.skippedCount) |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "✓ Total updates to API: **$totalUpdates** (created + updated)" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+
       - name: Upload status.json to blob storage
         if: always()
         shell: pwsh

@@ -4841,3 +4841,217 @@ function ShowOverallDatasetStatistics {
     Write-Message -message "| 🆕 Repos Never Checked | $(DisplayIntWithDots $reposNeverSynced) | ${percentNeverSynced}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
 }
+
+<#
+.SYNOPSIS
+Uploads actions data to the Alternative Marketplace API using the Node.js client library.
+
+.DESCRIPTION
+This function is a reusable wrapper around the upload-to-api.js Node.js script.
+It handles uploading action data from status.json to the API, similar to the
+api-upsert.yml workflow but designed for use in consolidate jobs.
+
+.PARAMETER status
+The status array containing action data to upload. This is typically the merged
+status.json data after consolidation.
+
+.PARAMETER apiUrl
+The Azure Function URL for the API endpoint.
+
+.PARAMETER functionKey
+The Azure Function authentication key.
+
+.PARAMETER numberOfRepos
+The maximum number of repos to upload. Defaults to 100 to avoid long-running operations.
+
+.OUTPUTS
+Returns a hashtable with upload statistics:
+- successCount: Number of successful uploads
+- failCount: Number of failed uploads
+- createdCount: Number of actions created
+- updatedCount: Number of actions updated
+- skippedCount: Number of actions skipped (not updated)
+#>
+function Invoke-ApiUpsert {
+    Param (
+        [Parameter(Mandatory = $true)]
+        $status,
+        [Parameter(Mandatory = $true)]
+        [string]$apiUrl,
+        [Parameter(Mandatory = $true)]
+        [string]$functionKey,
+        [Parameter(Mandatory = $false)]
+        [int]$numberOfRepos = 100
+    )
+
+    Write-Host "Invoke-ApiUpsert: Starting API upload process"
+
+    # Validate inputs
+    if (-not $status -or $status.Count -eq 0) {
+        Write-Warning "No status data provided to Invoke-ApiUpsert"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = "No status data provided"
+        }
+    }
+
+    if (-not $apiUrl -or $apiUrl.Length -eq 0) {
+        Write-Warning "API URL not provided"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = "API URL not provided"
+        }
+    }
+
+    if (-not $functionKey -or $functionKey.Length -eq 0) {
+        Write-Warning "Function key not provided"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = "Function key not provided"
+        }
+    }
+
+    # Filter repos that have the necessary data for the API
+    $validRepos = $status |
+        Where-Object { $_.name -and $_.owner } |
+        Sort-Object -Property @{ Expression = { $_.repoInfo.updated_at }; Descending = $true }
+
+    if ($validRepos.Count -eq 0) {
+        Write-Warning "No valid repos found with required fields (name and owner)"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = "No valid repos found"
+        }
+    }
+
+    Write-Host "Found [$($validRepos.Count)] valid repos to consider for upload"
+
+    # Path to the Node.js upload script
+    $nodeScriptPath = Join-Path $PSScriptRoot "node-scripts/src/upload-to-api.js"
+
+    if (-not (Test-Path $nodeScriptPath)) {
+        Write-Warning "Node.js script not found at [$nodeScriptPath]"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = "Node.js script not found"
+        }
+    }
+
+    # Write repos to a temp JSON file
+    $actionsJsonPath = Join-Path $PWD "temp-api-actions-data.json"
+    try {
+        $validRepos | ConvertTo-Json -Depth 10 | Set-Content -Path $actionsJsonPath -Force
+    }
+    catch {
+        Write-Warning "Failed to write temp JSON file: $($_.Exception.Message)"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = "Failed to write temp JSON file: $($_.Exception.Message)"
+        }
+    }
+
+    try {
+        # Check if Node.js is available
+        $nodeVersion = node --version 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Node.js is not installed or not in PATH"
+        }
+        Write-Host "Using Node.js version: [$nodeVersion]"
+
+        # Run the Node.js script
+        Write-Host "Calling Node.js upload script with up to [$numberOfRepos] uploads..."
+        $output = node $nodeScriptPath $apiUrl $functionKey $actionsJsonPath $numberOfRepos 2>&1 | Out-String
+        
+        Write-Host "Node.js output:"
+        Write-Host $output
+
+        # Parse skip statistics
+        $skipStats = $null
+        if ($output -match '(?s)__SKIP_STATS_START__(.*?)__SKIP_STATS_END__') {
+            $skipJson = $matches[1].Trim()
+            try {
+                $skipStats = $skipJson | ConvertFrom-Json
+            } catch {
+                Write-Warning "Failed to parse skip stats: $($_.Exception.Message)"
+            }
+        }
+
+        # Parse results from output
+        if ($output -match '(?s)__RESULTS_JSON_START__(.*?)__RESULTS_JSON_END__') {
+            $resultsJson = $matches[1].Trim()
+            $results = $resultsJson | ConvertFrom-Json
+            
+            # Calculate statistics
+            $successCount = ($results | Where-Object { $_.success -eq $true }).Count
+            $failCount = ($results | Where-Object { $_.success -eq $false }).Count
+            $createdCount = ($results | Where-Object { $_.created -eq $true }).Count
+            $updatedCount = ($results | Where-Object { $_.updated -eq $true }).Count
+            $skippedCount = if ($skipStats -and $null -ne $skipStats.skippedNotUpdatedCount) {
+                [int]$skipStats.skippedNotUpdatedCount
+            } else {
+                0
+            }
+
+            Write-Host "Upload complete - Success: $successCount, Failed: $failCount, Created: $createdCount, Updated: $updatedCount, Skipped: $skippedCount"
+
+            return @{
+                successCount = $successCount
+                failCount = $failCount
+                createdCount = $createdCount
+                updatedCount = $updatedCount
+                skippedCount = $skippedCount
+            }
+        } else {
+            Write-Warning "Could not parse results from Node.js output"
+            return @{
+                successCount = 0
+                failCount = 0
+                createdCount = 0
+                updatedCount = 0
+                skippedCount = 0
+                error = "Could not parse results from Node.js output"
+            }
+        }
+    }
+    catch {
+        Write-Warning "Failed to upload actions: $($_.Exception.Message)"
+        return @{
+            successCount = 0
+            failCount = 0
+            createdCount = 0
+            updatedCount = 0
+            skippedCount = 0
+            error = $_.Exception.Message
+        }
+    }
+    finally {
+        # Clean up temporary file
+        if (Test-Path $actionsJsonPath) {
+            Remove-Item $actionsJsonPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
