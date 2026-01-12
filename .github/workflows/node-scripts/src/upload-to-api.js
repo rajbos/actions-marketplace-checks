@@ -210,6 +210,45 @@ function trimReleaseInfoToLatest(actionData, maxReleases) {
   actionData.releaseInfo = selected;
 }
 
+/**
+ * Checks if an action needs to be updated based on repoInfo.updated_at comparison.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the action needs to be created or updated, false if up-to-date
+ */
+function needsUpdate(existingAction, candidateAction) {
+  if (!existingAction) {
+    // Action is in status.json but not in API - needs to be created
+    return true;
+  }
+  
+  if (existingAction.repoInfo && existingAction.repoInfo.updated_at &&
+      candidateAction.repoInfo && candidateAction.repoInfo.updated_at) {
+    try {
+      const existingUpdated = new Date(existingAction.repoInfo.updated_at).toISOString();
+      const candidateUpdated = new Date(candidateAction.repoInfo.updated_at).toISOString();
+      return existingUpdated !== candidateUpdated;
+    } catch (dateError) {
+      // If date comparison fails, assume it needs update to be safe
+      return true;
+    }
+  }
+  
+  // If either side is missing updated_at, assume it needs update
+  return true;
+}
+
+/**
+ * Checks if an action has the required fields (owner and name).
+ *
+ * @param {object} action - The action object to validate
+ * @returns {boolean} - true if the action has both owner and name, false otherwise
+ */
+function isValidAction(action) {
+  return !!(action && action.owner && action.name);
+}
+
 async function uploadActions() {
   const apiUrl = process.argv[2];
   const functionKey = process.argv[3];
@@ -380,24 +419,9 @@ async function uploadActions() {
     try {
       console.log('Uploading: [' + key + ']');
 
-      // Check if this action exists already and whether the last updated
-      // timestamp matches; if so, skip uploading it.
+      // Check if this action needs to be updated based on repoInfo.updated_at
       const existing = existingIndex.get(key);
-      let skippedNotUpdated = false;
-      if (existing && existing.repoInfo && existing.repoInfo.updated_at &&
-          actionData.repoInfo && actionData.repoInfo.updated_at) {
-        try {
-          const existingUpdated = new Date(existing.repoInfo.updated_at).toISOString();
-          const candidateUpdated = new Date(actionData.repoInfo.updated_at).toISOString();
-          if (existingUpdated === candidateUpdated) {
-            skippedNotUpdated = true;
-          }
-        } catch (dateError) {
-          console.error('  ⚠️ Date comparison failed for [' + key + ']: ' + dateError.message);
-        }
-      }
-
-      if (skippedNotUpdated) {
+      if (!needsUpdate(existing, actionData)) {
         skippedNotUpdatedCount++;
         console.log('  ↷ Skipped - not updated since last upload');
         continue;
@@ -467,6 +491,40 @@ async function uploadActions() {
     }
   }
   
+  // Calculate delta: how many actions in the full list would need updates
+  // based on the same updated_at comparison criteria.
+  let actionsNeedingUpdates = 0;
+  let actionsInApiNotInStatus = 0;
+  let actionsUpToDate = 0;
+  let totalValidActions = 0;
+  
+  // Build statusKeys set once for efficient lookup
+  const statusKeys = new Set();
+  
+  // Count actions from status.json that need updates
+  for (const action of actions) {
+    if (!isValidAction(action)) {
+      continue;
+    }
+    totalValidActions++;
+    const key = action.owner + '/' + action.name;
+    statusKeys.add(key);
+    
+    const existing = existingIndex.get(key);
+    if (needsUpdate(existing, action)) {
+      actionsNeedingUpdates++;
+    } else {
+      actionsUpToDate++;
+    }
+  }
+  
+  // Count actions in API that are not in status.json (orphaned)
+  for (const key of existingIndex.keys()) {
+    if (!statusKeys.has(key)) {
+      actionsInApiNotInStatus++;
+    }
+  }
+  
   // Output skip statistics separately so the PowerShell wrapper can show
   // the total number of skipped (not updated) actions without including
   // each skipped item in the detailed results JSON.
@@ -475,6 +533,17 @@ async function uploadActions() {
     skippedNotUpdatedCount: skippedNotUpdatedCount
   }, null, 2));
   console.log('__SKIP_STATS_END__');
+  
+  // Output delta statistics for reconciliation tracking
+  console.log('__DELTA_STATS_START__');
+  console.log(JSON.stringify({
+    totalInStatusJson: totalValidActions,
+    totalInApi: existingIndex.size,
+    actionsNeedingUpdates: actionsNeedingUpdates,
+    actionsUpToDate: actionsUpToDate,
+    actionsInApiNotInStatus: actionsInApiNotInStatus
+  }, null, 2));
+  console.log('__DELTA_STATS_END__');
 
   // Output results as JSON for PowerShell to parse
   console.log('__RESULTS_JSON_START__');
@@ -496,5 +565,7 @@ module.exports = {
   parseSemverLike,
   compareTagStringsDesc,
   trimTagInfoToLatest,
-  trimReleaseInfoToLatest
+  trimReleaseInfoToLatest,
+  needsUpdate,
+  isValidAction
 };
