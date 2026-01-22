@@ -181,6 +181,20 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v6
+        id: checkout
+        continue-on-error: true
+      
+      - name: Retry checkout on failure
+        if: steps.checkout.outcome == 'failure'
+        shell: pwsh
+        run: |
+          Write-Host "Initial checkout failed, retrying with exponential backoff..."
+          . ./.github/workflows/library.ps1
+          $success = Retry-GitCheckout -repositoryPath "." -maxRetries 3 -initialDelaySeconds 15
+          if (-not $success) {
+            Write-Error "Failed to checkout repository after retries"
+            exit 1
+          }
 
       - name: Download status.json from blob storage
         shell: pwsh
