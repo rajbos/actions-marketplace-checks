@@ -1,0 +1,252 @@
+# Fetch Copilot Memories from Repositories
+# Checks configured repositories for GitHub Copilot memories and creates an issue if memories are found
+
+name: Fetch Copilot Memories
+
+on:
+  workflow_dispatch:
+    inputs:
+      repositories:
+        description: 'Comma-separated list of repositories to check (owner/repo format)'
+        required: false
+        type: string
+        default: ''
+
+  schedule:
+    # Run daily at 8:00 AM UTC
+    - cron: '0 8 * * *'
+
+permissions:
+  contents: read
+  issues: write
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  fetch-memories:
+    name: Fetch Copilot Memories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Prepare repository list
+        id: prepare
+        shell: pwsh
+        env:
+          INPUT_REPOS: ${{ inputs.repositories }}
+          VAR_REPOS: ${{ vars.COPILOT_MEMORY_REPOSITORIES }}
+        run: |
+          # Determine which repositories to check
+          # Priority: workflow input > vars configuration > default
+          $repoList = @()
+          
+          if (-not [string]::IsNullOrWhiteSpace($env:INPUT_REPOS)) {
+            Write-Host "Using repositories from workflow input"
+            $repoList = $env:INPUT_REPOS -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+          }
+          elseif (-not [string]::IsNullOrWhiteSpace($env:VAR_REPOS)) {
+            Write-Host "Using repositories from VARS.COPILOT_MEMORY_REPOSITORIES"
+            $repoList = $env:VAR_REPOS -split ',' | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+          }
+          else {
+            Write-Host "No repositories configured. Using default: ${{ github.repository }}"
+            $repoList = @("${{ github.repository }}")
+          }
+          
+          Write-Host "Repositories to check: $($repoList.Count)"
+          foreach ($repo in $repoList) {
+            Write-Host "  - $repo"
+          }
+          
+          # Save as JSON array for PowerShell
+          $repoListJson = $repoList | ConvertTo-Json -Compress
+          Set-Content -Path "repo-list.json" -Value $repoListJson
+          
+          Write-Host ""
+          Write-Host "Repository list saved to repo-list.json"
+
+      - name: Fetch Copilot memories
+        id: fetch
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_MEMORY_PAT }}
+        run: |
+          # Load repository list
+          $repositories = Get-Content -Path "repo-list.json" | ConvertFrom-Json
+          
+          # Validate token
+          if ([string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN)) {
+            Write-Error "GITHUB_TOKEN (COPILOT_MEMORY_PAT) is not set. Please configure secrets.COPILOT_MEMORY_PAT with a PAT that has repo scope."
+            exit 1
+          }
+          
+          Write-Host "Token configured (length: $($env:GITHUB_TOKEN.Length))"
+          Write-Host ""
+          
+          # Run the memory fetcher script
+          ./.github/workflows/copilot-memories.ps1 `
+            -repositories $repositories `
+            -githubToken $env:GITHUB_TOKEN `
+            -limit 20
+
+      - name: Create issue if memories found
+        if: steps.fetch.outputs.has_memories == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAGGED_USER: ${{ vars.COPILOT_MEMORY_TAGGED_USER }}
+        run: |
+          # Load results
+          $results = Get-Content -Path "copilot-memories-results.json" | ConvertFrom-Json
+          
+          # Filter to repos with memories
+          $reposWithMemories = $results | Where-Object { $_.success -and $_.memoriesCount -gt 0 }
+          
+          if ($reposWithMemories.Count -eq 0) {
+            Write-Host "No memories found, skipping issue creation"
+            exit 0
+          }
+          
+          # Prepare issue body
+          $issueTitle = "Copilot Memories Found - $(Get-Date -Format 'yyyy-MM-dd')"
+          
+          $issueBody = @"
+          ## Copilot Memories Detected
+          
+          GitHub Copilot has stored memories for the following repositories:
+          
+          "@ + "`n"
+          
+          foreach ($result in $reposWithMemories) {
+            $issueBody += "### 📝 [$($result.repository)](https://github.com/$($result.repository))`n"
+            $issueBody += "- **Memories found**: $($result.memoriesCount)`n"
+            $issueBody += "`n"
+            
+            # Add memory details if available
+            if ($result.memories -and $result.memories.Count -gt 0) {
+              $issueBody += "**Recent memories**:`n"
+              $displayCount = [Math]::Min($result.memoriesCount, 5)
+              for ($i = 0; $i -lt $displayCount; $i++) {
+                $memory = $result.memories[$i]
+                if ($memory.fact) {
+                  $issueBody += "- $($memory.fact)`n"
+                }
+                elseif ($memory.content) {
+                  $issueBody += "- $($memory.content)`n"
+                }
+                elseif ($memory) {
+                  $issueBody += "- $memory`n"
+                }
+              }
+              
+              if ($result.memoriesCount -gt $displayCount) {
+                $remaining = $result.memoriesCount - $displayCount
+                $issueBody += "- ... and $remaining more`n"
+              }
+            }
+            
+            $issueBody += "`n"
+          }
+          
+          $issueBody += @"
+          ---
+          
+          **Action Required**: Review these memories to ensure they don't contain sensitive information.
+          
+          "@ + "`n"
+          
+          # Add user mention if configured
+          if (-not [string]::IsNullOrWhiteSpace($env:TAGGED_USER)) {
+            $username = $env:TAGGED_USER.TrimStart('@')
+            $issueBody += "cc @$username`n`n"
+          }
+          
+          $issueBody += @"
+          **Summary**:
+          - Total repositories checked: $($results.Count)
+          - Repositories with memories: $($reposWithMemories.Count)
+          - Total memories found: $(($reposWithMemories | Measure-Object -Property memoriesCount -Sum).Sum)
+          
+          Generated by workflow run: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          "@
+          
+          # Save to file
+          Set-Content -Path "issue-body.md" -Value $issueBody
+          
+          Write-Host "Creating issue with title: $issueTitle"
+          Write-Host ""
+          Write-Host "Issue body:"
+          Write-Host $issueBody
+          Write-Host ""
+          
+          # Create issue using gh CLI
+          gh issue create `
+            --title "$issueTitle" `
+            --body-file "issue-body.md" `
+            --label "copilot-memories" `
+            --repo "${{ github.repository }}"
+          
+          Write-Host ""
+          Write-Host "Issue created successfully!"
+
+      - name: Upload results as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-memories-results
+          path: copilot-memories-results.json
+          retention-days: 30
+
+      - name: Report summary
+        if: always()
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+          
+          if (Test-Path "copilot-memories-results.json") {
+            $results = Get-Content -Path "copilot-memories-results.json" | ConvertFrom-Json
+            
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "## Copilot Memories Check Results" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            
+            $successCount = ($results | Where-Object { $_.success }).Count
+            $failedCount = ($results | Where-Object { -not $_.success }).Count
+            $totalMemories = ($results | Where-Object { $_.success } | Measure-Object -Property memoriesCount -Sum).Sum
+            $reposWithMemories = $results | Where-Object { $_.success -and $_.memoriesCount -gt 0 }
+            
+            Write-Message -message "| Metric | Value |" -logToSummary $true
+            Write-Message -message "|--------|-------|" -logToSummary $true
+            Write-Message -message "| Repositories checked | $($results.Count) |" -logToSummary $true
+            Write-Message -message "| Successful checks | $successCount |" -logToSummary $true
+            Write-Message -message "| Failed checks | $failedCount |" -logToSummary $true
+            Write-Message -message "| Repositories with memories | $($reposWithMemories.Count) |" -logToSummary $true
+            Write-Message -message "| Total memories found | $totalMemories |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            
+            if ($reposWithMemories.Count -gt 0) {
+              Write-Message -message "### 📝 Repositories with Memories" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              foreach ($result in $reposWithMemories) {
+                Write-Message -message "- **$($result.repository)**: $($result.memoriesCount) memories" -logToSummary $true
+              }
+              Write-Message -message "" -logToSummary $true
+            }
+            
+            if ($failedCount -gt 0) {
+              Write-Message -message "### ⚠️ Failed Checks" -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+              $failedRepos = $results | Where-Object { -not $_.success }
+              foreach ($result in $failedRepos) {
+                Write-Message -message "- **$($result.repository)**: $($result.error)" -logToSummary $true
+              }
+            }
+          }
+          else {
+            Write-Message -message "## Copilot Memories Check" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "⚠️ No results file found. Check may have failed early." -logToSummary $true
+          }
