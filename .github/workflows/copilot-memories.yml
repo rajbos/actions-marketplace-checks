@@ -193,7 +193,7 @@ jobs:
           Write-Host "Issue created successfully!"
 
       - name: Upload results as artifact
-        if: always()
+        if: always() && steps.fetch.conclusion != 'cancelled'
         uses: actions/upload-artifact@v4
         with:
           name: copilot-memories-results

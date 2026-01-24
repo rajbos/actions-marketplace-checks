@@ -167,11 +167,14 @@ Describe "Copilot Memories Script Tests" {
     Context "Script Syntax Validation" {
         It "Script should have valid PowerShell syntax" {
             $errors = $null
-            $null = [System.Management.Automation.PSParser]::Tokenize(
-                (Get-Content $script:scriptPath -Raw), 
+            $tokens = $null
+            $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+                $script:scriptPath,
+                [ref]$tokens,
                 [ref]$errors
             )
             $errors.Count | Should -Be 0
+            $ast | Should -Not -BeNullOrEmpty
         }
     }
 }
