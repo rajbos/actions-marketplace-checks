@@ -2,14 +2,6 @@
 
 Goal: Run checks on actions in the marketplace: I have a private datasource of all actions found in the public marketplace that is created and used by my [GitHub Actions Marketplace news](https://devops-actions.github.io/github-actions-marketplace-news/) website, that blogs out updated and new actions (RSS feed available).
 
-## 🔍 Workflow Investigation (January 2026)
-
-If you're experiencing workflow timeouts or rate limit issues, see:
-- **[INVESTIGATION_SUMMARY.md](./INVESTIGATION_SUMMARY.md)** - Start here for overview and solutions
-- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Quick reference for debugging live issues
-
-The investigation identified 5 critical patterns and proposes solutions to improve success rates from 28% to 91%. 
-
 Information being loaded (see the [report workflow](.github/workflows/report.yml)) for all actions in that dataset:
 
 |Information|Description|
