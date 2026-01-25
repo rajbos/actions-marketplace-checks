@@ -21,7 +21,7 @@ on:
         default: 'github,actions,advanced-security,dependabot'
 
 env:
-  DEFAULT_ORGS: 'github,actions,advanced-security,dependabot'
+  DEFAULT_ORGS: 'github,actions,advanced-security,dependabot,mona-actions'
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ORGANIZATION: actions-marketplace-validations

@@ -10,7 +10,8 @@ on:
       - .github/workflows/library.ps1
 
   schedule:
-    - cron: '*/15 * * * *'
+   # run every hour, as a run takes around 30 mins now
+    - cron: '12 */1 * * *'
 
   workflow_dispatch:
     inputs:
