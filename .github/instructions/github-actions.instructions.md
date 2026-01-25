@@ -59,9 +59,13 @@ applyTo: ".github/workflows/**"
 - Prefer minimal, clear logging; avoid leaking secrets.
 
 ## Testing
+- **ALWAYS run Pester tests when making any changes to PowerShell scripts** (`.ps1` files in `.github/workflows/` or tests).
 - Use Pester tests under `tests/`:
 	- `Invoke-Pester -Output Detailed` for CI/local validation.
+	- `Invoke-Pester -Path tests/specificTest.Tests.ps1 -Output Detailed` to run a specific test file.
 - Import required functions in `BeforeAll`; use `Describe`/`It` blocks.
+- **Test failures in CI must be fixed before merging** - never ignore failing tests.
+- Update tests if the function behavior or output format has changed intentionally.
 
 ## Safety & Security
 - Never commit secrets; use GitHub Secrets.

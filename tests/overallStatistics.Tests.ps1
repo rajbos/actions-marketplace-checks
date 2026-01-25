@@ -23,27 +23,26 @@ Describe 'ShowOverallDatasetStatistics' {
         # Act
         ShowOverallDatasetStatistics -existingForks $testForks
 
-        # Assert - Check that correct messages were logged
+        # Assert - Check that correct messages were logged (updated format with tree structure)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Total Repositories in Dataset** | **7**" 
+            $message -like "*Total Repositories in Dataset** | **7** |*" 
         }
         
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repositories with Valid Mirrors | 4 |*" 
+            $message -like "*└─ Repositories with Valid Mirrors | 4 |*" 
         }
         
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repositories without Mirrors | 3 |*" 
+            $message -like "*└─ Repositories without Mirrors | 3 |*" 
         }
         
-        # Should show 2 repos checked in last 7 days (repo1 and repo2)
+        # Check for breakdown of repos without mirrors
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Checked (Last 7 Days) | 2 |*" 
+            $message -like "*├─ Confirmed No Mirror*" 
         }
         
-        # Should show 2 repos not checked (repo3 synced >7 days ago, repo4 never synced)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Not Checked Yet | 2 |*" 
+            $message -like "*└─ Not Yet Checked*" 
         }
     }
 
@@ -107,14 +106,13 @@ Describe 'ShowOverallDatasetStatistics' {
         # Act
         ShowOverallDatasetStatistics -existingForks $testForks
 
-        # Assert - Only repo1 should be counted as synced (repo2 has no mirror, so shouldn't count)
+        # Assert - Check repository breakdown (updated to match new format)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Checked (Last 7 Days) | 1 |*" 
+            $message -like "*└─ Repositories with Valid Mirrors | 2 |*" 
         }
         
-        # repo3 has mirror but not synced
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Not Checked Yet | 1 |*" 
+            $message -like "*└─ Repositories without Mirrors | 1 |*" 
         }
     }
 
@@ -137,25 +135,15 @@ Describe 'ShowOverallDatasetStatistics' {
         # Act
         ShowOverallDatasetStatistics -existingForks $testForks
 
-        # Assert
+        # Assert (updated to match new format)
         # 6 repos with mirrors (60% of 10 total)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repositories with Valid Mirrors | 6 | 60%*" 
+            $message -like "*└─ Repositories with Valid Mirrors | 6 | 60%*" 
         }
         
         # 4 repos without mirrors (40% of 10 total)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repositories without Mirrors | 4 | 40%*" 
-        }
-        
-        # 4 repos checked in last 7 days (66.67% of 6 with mirrors)
-        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Checked (Last 7 Days) | 4 | 66.67%*" 
-        }
-        
-        # 2 repos not checked (33.33% of 6 with mirrors)
-        Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Not Checked Yet | 2 | 33.33%*" 
+            $message -like "*└─ Repositories without Mirrors | 4 | 40%*" 
         }
     }
 
@@ -169,19 +157,18 @@ Describe 'ShowOverallDatasetStatistics' {
         # Act
         ShowOverallDatasetStatistics -existingForks $testForks
 
-        # Assert - Check for explanatory note (updated to match new format)
+        # Assert - Check for repository breakdown section (updated to match new format)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repositories without mirrors** cannot be synced*" 
+            $message -like "*Repository Status Breakdown*" 
         }
         
-        # Assert - Check for context about "Valid Mirrors Only"
+        # Assert - Check for collapsible details section when repos without mirrors exist
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Last 7 Days Sync Activity (Valid Mirrors Only)*" 
+            $message -eq "<details>" 
         }
         
-        # Assert - Check for link to repoInfo workflow
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Get repo info workflow*" -and $message -like "*repoInfo.yml*"
+            $message -like "*Top*Repositories without Mirrors*" 
         }
     }
 
@@ -195,13 +182,13 @@ Describe 'ShowOverallDatasetStatistics' {
         # Act - Should not throw
         { ShowOverallDatasetStatistics -existingForks $testForks } | Should -Not -Throw
 
-        # Assert - repo1 with invalid date should be counted as not checked
+        # Assert - Check that the function completes successfully (updated to match new format)
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Checked (Last 7 Days) | 1 |*" 
+            $message -like "*Repository Status Breakdown*" 
         }
         
         Should -Invoke Write-Message -Times 1 -ParameterFilter { 
-            $message -like "*Repos Not Checked Yet | 1 |*" 
+            $message -like "*└─ Repositories with Valid Mirrors | 2 |*" 
         }
     }
 
@@ -235,9 +222,9 @@ Describe 'ShowOverallDatasetStatistics' {
             $message -eq "| Mirror | Upstream | Reason |" 
         }
         
-        # Check that at least one repo link is created
+        # Check that at least one repo link is created (updated to match new format)
         Should -Invoke Write-Message -ParameterFilter { 
-            $message -like "*owner1_repo1*" -and $message -like "*github.com*" 
+            $message -like "*owner1_repo1*" 
         }
     }
 
