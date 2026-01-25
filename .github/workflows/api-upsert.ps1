@@ -101,7 +101,7 @@ if ($validRepos.Count -eq 0) {
   exit 0
 }
 
-Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos to consider for upload" -logToSummary $true
+Write-Message -message "Found $(DisplayIntWithDots $validRepos.Count) valid repos in status.json to consider for upload" -logToSummary $true
 Write-Message -message "" -logToSummary $true
 
 # Path to the external Node.js script (use src implementation directly)
@@ -207,6 +207,10 @@ try {
 
       Write-Message -message "Indexed $existingCountDisplay existing actions from API in [$durationDisplay]" -logToSummary $true
       Write-Message -message "" -logToSummary $true
+      Write-Message -message "> ℹ️ **Note:** The count of existing actions in the API (above) may differ from valid repos in status.json because:" -logToSummary $true
+      Write-Message -message "> - The API may contain actions not in status.json (orphaned)" -logToSummary $true
+      Write-Message -message "> - status.json may contain repos not yet uploaded to the API" -logToSummary $true
+      Write-Message -message "" -logToSummary $true
     }
 
     Write-Message -message "| Status | Count |" -logToSummary $true
@@ -220,10 +224,10 @@ try {
     
     # Calculate and display processing summary
     $totalProcessed = $successCount + $failCount + $skippedNotUpdatedCount
-    $totalInStatusJson = $status.Count
-    if ($totalProcessed -lt $totalInStatusJson) {
-      $notProcessed = $totalInStatusJson - $totalProcessed
-      Write-Message -message "> **Note:** Started with $(DisplayIntWithDots $totalInStatusJson) actions. Processed $(DisplayIntWithDots $totalProcessed) actions ($successCount successful uploads + $skippedNotUpdatedCount skipped). Stopped after reaching the upload limit of $numberOfRepos successful uploads. $(DisplayIntWithDots $notProcessed) actions were not checked." -logToSummary $true
+    $validReposCount = $validRepos.Count
+    if ($totalProcessed -lt $validReposCount) {
+      $notProcessed = $validReposCount - $totalProcessed
+      Write-Message -message "> **Note:** Started with $(DisplayIntWithDots $validReposCount) valid repos from status.json. Processed $(DisplayIntWithDots $totalProcessed) repos ($successCount successful uploads + $skippedNotUpdatedCount skipped). Stopped after reaching the upload limit of $numberOfRepos successful uploads. $(DisplayIntWithDots $notProcessed) repos were not checked." -logToSummary $true
       Write-Message -message "" -logToSummary $true
     }
     
