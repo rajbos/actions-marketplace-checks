@@ -227,7 +227,10 @@ try {
     $validReposCount = $validRepos.Count
     if ($totalProcessed -lt $validReposCount) {
       $notProcessed = $validReposCount - $totalProcessed
-      Write-Message -message "> **Note:** Started with $(DisplayIntWithDots $validReposCount) valid repos from status.json. Processed $(DisplayIntWithDots $totalProcessed) repos ($successCount successful uploads + $skippedNotUpdatedCount skipped). Stopped after reaching the upload limit of $numberOfRepos successful uploads. $(DisplayIntWithDots $notProcessed) repos were not checked." -logToSummary $true
+      Write-Message -message "> **Processing Summary:**" -logToSummary $true
+      Write-Message -message "> - Started with: $(DisplayIntWithDots $validReposCount) valid repos from status.json" -logToSummary $true
+      Write-Message -message "> - Processed: $(DisplayIntWithDots $totalProcessed) repos ($successCount successful uploads + $skippedNotUpdatedCount skipped)" -logToSummary $true
+      Write-Message -message "> - Not checked: $(DisplayIntWithDots $notProcessed) repos (stopped after reaching upload limit of $numberOfRepos)" -logToSummary $true
       Write-Message -message "" -logToSummary $true
     }
     
