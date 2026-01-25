@@ -866,6 +866,49 @@ function ApiCall {
         throw "No access token available for API call. Please ensure ACCESS_TOKEN or AUTOMATION_APP_KEY secrets are properly configured."
     }
     
+    # PROACTIVE TOKEN EXPIRATION CHECK
+    # Check if current token will expire soon and proactively rotate to a fresh one
+    # This prevents failures when tokens expire during long rate limit waits
+    $organization = $env:APP_ORGANIZATION
+    if (-not [string]::IsNullOrWhiteSpace($organization)) {
+        $overview = Get-GitHubAppRateLimitOverview -organization $organization
+        if ($null -ne $overview -and $overview.Count -gt 0) {
+            # Find the token that matches our current access_token (if it's a GitHub App token)
+            $currentTokenInfo = $overview | Where-Object { $_.Token -eq $access_token } | Select-Object -First 1
+            
+            if ($null -ne $currentTokenInfo -and $null -ne $currentTokenInfo.MinutesUntilExpiration) {
+                $minMinutes = $currentTokenInfo.MinutesUntilExpiration
+                
+                # If current token will expire within 15 minutes, proactively switch to a fresher token
+                if ($minMinutes -le 15) {
+                    Write-Host "⚠️ Current token (app $($currentTokenInfo.AppId)) will expire in $minMinutes minutes - proactively rotating to fresh token"
+                    
+                    # Try to find a better token with more time remaining
+                    $betterToken = Select-BestGitHubAppTokenForOrganization -organization $organization -minMinutesUntilExpiration 15 -triedAppIds $triedAppIds
+                    
+                    if ($null -ne $betterToken -and $betterToken.Token -ne $access_token) {
+                        # Mark the current token as tried so we don't come back to it
+                        if ($null -ne $currentTokenInfo.AppId) {
+                            $triedAppIds.Add($currentTokenInfo.AppId) | Out-Null
+                        }
+                        
+                        Write-Host "✓ Switched to GitHub App id [$($betterToken.AppId)] with $($betterToken.MinutesUntilExpiration) minutes until expiration"
+                        $env:GITHUB_TOKEN = $betterToken.Token
+                        # Retry the API call with the fresh token
+                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $betterToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                    } elseif ($null -eq $betterToken) {
+                        # All tokens are expiring soon or exhausted - stop gracefully
+                        $message = "⚠️ All available GitHub App tokens will expire within 15 minutes. Stopping gracefully to prevent mid-execution failures."
+                        Write-Message -message $message -logToSummary $true
+                        Write-Warning $message
+                        $global:RateLimitExceeded = $true
+                        return $null
+                    }
+                }
+            }
+        }
+    }
+    
     $headers = @{
         Authorization = GetBasicAuthenticationHeader -access_token $access_token
     }
@@ -953,6 +996,20 @@ function ApiCall {
         $rateLimitRemaining = $result.Headers["X-RateLimit-Remaining"]
         $rateLimitReset = $result.Headers["X-RateLimit-Reset"]
         $rateLimitUsed = $result.Headers["X-Ratelimit-Used"]
+        
+        # EARLY WARNING SYSTEM: Alert when rate limit drops below threshold
+        if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 1000) {
+            $remaining = $rateLimitRemaining[0]
+            $used = if ($rateLimitUsed) { $rateLimitUsed[0] } else { "unknown" }
+            
+            if ($remaining -lt 100) {
+                Write-Warning "🔴 CRITICAL: Rate limit critically low - only $remaining requests remaining (used: $used)"
+            } elseif ($remaining -lt 500) {
+                Write-Warning "⚠️ WARNING: Rate limit below 500 - $remaining requests remaining (used: $used)"
+            } elseif ($remaining -lt 1000) {
+                Write-Host "⚡ NOTICE: Rate limit below 1000 - $remaining requests remaining (used: $used)"
+            }
+        }
         
         if ($rateLimitRemaining -And $rateLimitRemaining[0] -lt 100) {
             # convert rateLimitReset from epoch to ms
@@ -4784,60 +4841,127 @@ function ShowOverallDatasetStatistics {
         
         foreach ($repo in $top10ReposWithoutMirrors) {
             $repoName = $repo.name
-            
-            # Create clickable GitHub link for the mirror (using the configured fork organization)
-            $mirrorLink = "[$repoName](https://github.com/$forkOrg/$repoName)"
-            
-            # Parse the mirror name to extract upstream owner and repo
-            # Only parse if the name contains an underscore (proper format: owner_repo)
-            $upstreamLink = "N/A"
-            if ($repoName -match '_') {
-                ($upstreamOwner, $upstreamRepo) = GetOrgActionInfo -forkedOwnerRepo $repoName
-                if (-not [string]::IsNullOrEmpty($upstreamOwner) -and -not [string]::IsNullOrEmpty($upstreamRepo)) {
-                    $upstreamLink = "[$upstreamOwner/$upstreamRepo](https://github.com/$upstreamOwner/$upstreamRepo)"
-                }
+            $upstreamUrl = if ($null -ne $repo.RepoUrl) { 
+                "[$($repo.RepoUrl)](https://github.com/$($repo.RepoUrl))"
+            } else {
+                "N/A"
+            }
+            $reason = if ($repo.mirrorFound -eq $false) {
+                "Mirror not created"
+            } elseif ($repo.forkFound -eq $false) {
+                "Upstream not found"
+            } else {
+                "Not checked yet"
             }
             
-            # Determine a human-readable reason for why the mirror is missing
-            $lastSyncError = if ($repo.PSObject.Properties["lastSyncError"]) { $repo.lastSyncError } else { $null }
-            $lastSyncErrorType = if ($repo.PSObject.Properties["lastSyncErrorType"]) { $repo.lastSyncErrorType } else { $null }
-            $upstreamAvailable = if ($repo.PSObject.Properties["upstreamAvailable"]) { $repo.upstreamAvailable } else { $null }
-
-            $reason = "Not yet checked"
-            if ($upstreamAvailable -eq $false -or $lastSyncErrorType -eq "upstream_not_found") {
-                $reason = "Upstream missing/renamed"
-            }
-            elseif ($lastSyncErrorType -eq "mirror_create_failed") {
-                $reason = "Mirror creation failed"
-            }
-            elseif ($lastSyncErrorType -eq "mirror_not_found" -or ($repo.PSObject.Properties["mirrorFound"] -and $repo.mirrorFound -eq $false)) {
-                $reason = "Mirror missing after check"
-            }
-            elseif ($lastSyncErrorType -eq "mirror_conflict" -or ($lastSyncError -and ($lastSyncError -match "already exists" -or $lastSyncError -match "name already exists" -or $lastSyncError -match "repository already exists"))) {
-                $reason = "Mirror name collision"
-            }
-
-            Write-Message -message "| $mirrorLink | $upstreamLink | $reason |" -logToSummary $true
+            Write-Message -message "| $repoName | $upstreamUrl | $reason |" -logToSummary $true
         }
         
         Write-Message -message "" -logToSummary $true
         Write-Message -message "</details>" -logToSummary $true
         Write-Message -message "" -logToSummary $true
     }
+}
+
+<#
+.SYNOPSIS
+Retries a Git checkout operation with exponential backoff on failure.
+
+.DESCRIPTION
+Handles transient Git operation failures (like HTTP 500 errors) by retrying
+with exponential backoff. Particularly useful for workflow checkout steps
+that occasionally fail due to GitHub infrastructure issues.
+
+.PARAMETER repositoryPath
+The path where the repository should be checked out. Defaults to current directory.
+
+.PARAMETER ref
+The git ref (branch, tag, or commit SHA) to checkout. Defaults to main branch.
+
+.PARAMETER maxRetries
+Maximum number of retry attempts. Defaults to 3.
+
+.PARAMETER initialDelaySeconds
+Initial delay in seconds before first retry. Defaults to 10.
+
+.EXAMPLE
+Retry-GitCheckout -repositoryPath "." -ref "main"
+# Checks out main branch with retry logic
+
+.EXAMPLE
+Retry-GitCheckout -maxRetries 5 -initialDelaySeconds 20
+# Checks out with custom retry settings
+
+.OUTPUTS
+Returns $true if checkout succeeded, $false if all retries exhausted.
+#>
+function Retry-GitCheckout {
+    Param (
+        [string] $repositoryPath = ".",
+        [string] $ref = "",
+        [int] $maxRetries = 3,
+        [int] $initialDelaySeconds = 10
+    )
     
-    Write-Message -message "_Note: **Repositories without mirrors** cannot be synced. This includes:_" -logToSummary $true
-    Write-Message -message "- _**Confirmed No Mirror**: Repositories where a mirror is still missing after an auto-create attempt (for example the upstream was deleted or mirror creation failed)_" -logToSummary $true
-    Write-Message -message "- _**Not Yet Checked**: Repositories that haven't been processed by the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml) yet, so the auto-create step has not been run_" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "_💡 To increase the number of repositories with known mirror status, focus on the [Get repo info workflow](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/repoInfo.yml), which processes repositories hourly to check their mirror status._" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "#### Last 7 Days Sync Activity (Valid Mirrors Only)" -logToSummary $true
-    Write-Message -message "_The following statistics are for the **$(DisplayIntWithDots $reposWithMirrors) repositories with valid mirrors** only:_" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
-    Write-Message -message "| Metric | Count | Percentage |" -logToSummary $true
-    Write-Message -message "|--------|------:|-----------:|" -logToSummary $true
-    Write-Message -message "| ✅ Repos Checked (Last 7 Days) | $(DisplayIntWithDots $reposSyncedLast7Days) | ${percentChecked}% |" -logToSummary $true
-    Write-Message -message "| ⏳ Repos Not Checked Yet | $(DisplayIntWithDots $reposNotChecked) | ${percentRemaining}% |" -logToSummary $true
-    Write-Message -message "| 🆕 Repos Never Checked | $(DisplayIntWithDots $reposNeverSynced) | ${percentNeverSynced}% |" -logToSummary $true
-    Write-Message -message "" -logToSummary $true
+    $attempt = 0
+    $delay = $initialDelaySeconds
+    $success = $false
+    
+    while ($attempt -le $maxRetries -and -not $success) {
+        $attempt++
+        
+        try {
+            if ($attempt -gt 1) {
+                Write-Host "⚠️ Retry attempt $attempt of $maxRetries after waiting $delay seconds..."
+                Start-Sleep -Seconds $delay
+            }
+            
+            # Attempt git fetch/checkout
+            Write-Host "Attempting git operations in $repositoryPath..."
+            
+            if (-not (Test-Path "$repositoryPath/.git")) {
+                Write-Error "Not a git repository: $repositoryPath"
+                return $false
+            }
+            
+            Push-Location $repositoryPath
+            try {
+                # Fetch latest changes
+                $fetchResult = git fetch origin 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Git fetch failed with exit code $LASTEXITCODE : $fetchResult"
+                }
+                
+                # Checkout the ref if specified
+                if (-not [string]::IsNullOrWhiteSpace($ref)) {
+                    $checkoutResult = git checkout $ref 2>&1
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Git checkout failed with exit code $LASTEXITCODE : $checkoutResult"
+                    }
+                }
+                
+                Write-Host "✓ Git operations completed successfully"
+                $success = $true
+            }
+            finally {
+                Pop-Location
+            }
+        }
+        catch {
+            $errorMessage = $_.Exception.Message
+            Write-Warning "Git operation failed (attempt $attempt/$maxRetries): $errorMessage"
+            
+            if ($attempt -le $maxRetries) {
+                # Exponential backoff with jitter
+                $jitter = Get-Random -Minimum 0 -Maximum 5
+                $delay = [Math]::Min($delay * 2 + $jitter, 120)  # Cap at 2 minutes
+            }
+            else {
+                Write-Error "❌ All $maxRetries retry attempts exhausted for git operations in $repositoryPath"
+                return $false
+            }
+        }
+    }
+    
+    return $success
 }
