@@ -229,8 +229,16 @@ try {
       $notProcessed = $validReposCount - $totalProcessed
       Write-Message -message "> **Processing Summary:**" -logToSummary $true
       Write-Message -message "> - Started with: $(DisplayIntWithDots $validReposCount) valid repos from status.json" -logToSummary $true
-      Write-Message -message "> - Processed: $(DisplayIntWithDots $totalProcessed) repos ($successCount successful uploads + $skippedNotUpdatedCount skipped)" -logToSummary $true
-      Write-Message -message "> - Not checked: $(DisplayIntWithDots $notProcessed) repos (stopped after reaching upload limit of $numberOfRepos)" -logToSummary $true
+      
+      # Build processed message including all components
+      $processedDetails = "$successCount successful"
+      if ($failCount -gt 0) {
+        $processedDetails += " + $failCount failed"
+      }
+      $processedDetails += " + $skippedNotUpdatedCount skipped"
+      
+      Write-Message -message "> - Processed: $(DisplayIntWithDots $totalProcessed) repos ($processedDetails)" -logToSummary $true
+      Write-Message -message "> - Not checked: $(DisplayIntWithDots $notProcessed) repos (stopped after $numberOfRepos successful uploads)" -logToSummary $true
       Write-Message -message "" -logToSummary $true
     }
     
