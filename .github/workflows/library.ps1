@@ -1168,7 +1168,6 @@ function ApiCall {
     }
     catch
     {
-        $messageData
         try {
             $messageData = $_.ErrorDetails.Message | ConvertFrom-Json
         }
