@@ -1176,6 +1176,9 @@ function ApiCall {
             $messageData = $_.ErrorDetails.Message
         }
 
+        # DEBUG: Log parameter values to help diagnose error handling
+        Write-Debug "ApiCall catch block - hideFailedCall: [$hideFailedCall], returnErrorInfo: [$returnErrorInfo], url: [$url]"
+
         if ($messageData.message -eq "was submitted too quickly") {
             # If we're calling the rate_limit endpoint itself, don't retry - just return null
             if ($url.Contains("rate_limit")) {
@@ -1462,6 +1465,8 @@ function ApiCall {
                     $message = $messageData.message
                 }
                 
+                Write-Debug "ApiCall returning error info - StatusCode: [$statusCode], Message: [$message], hideFailedCall: [$hideFailedCall]"
+                
                 return @{
                     Error = $true
                     StatusCode = $statusCode
@@ -1491,6 +1496,11 @@ function ApiCall {
                 }
 
                 throw
+            }
+            else {
+                # hideFailedCall is true, so silently return null instead of throwing
+                Write-Debug "ApiCall suppressing error due to hideFailedCall=true for url: [$url]"
+                return $null
             }
         }
     }
