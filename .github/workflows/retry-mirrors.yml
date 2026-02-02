@@ -20,7 +20,7 @@ jobs:
       actions: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run mirror retry processor
         env:
@@ -36,14 +36,14 @@ jobs:
 
       - name: Upload retry queue artifact
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: retry-queue
           path: ./retry-queue.json
 
       - name: Upload step summary
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: step-summary
           path: ${{ env.GITHUB_STEP_SUMMARY }}
