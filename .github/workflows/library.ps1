@@ -1085,8 +1085,23 @@ function ApiCall {
                                     Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                                 }
                             } else {
-                                # Some app has quota but hasn't been tried - this shouldn't happen
-                                # Use the wait from best untried app as fallback
+                                # Some app has quota but hasn't been tried yet - OR the rate limit reset occurred
+                                # for previously tried apps while we were switching between them.
+                                # Check if any of the apps with quota were previously marked as tried.
+                                $triedAppsWithQuota = $appsWithQuota | Where-Object { $triedAppIds.Contains($_.AppId) }
+                                
+                                if ($null -ne $triedAppsWithQuota -and $triedAppsWithQuota.Count -gt 0) {
+                                    # Rate limit has reset for previously tried apps!
+                                    # Clear the tried apps set and immediately retry to use the app with quota.
+                                    Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available. Clearing tried apps and retrying immediately."
+                                    $triedAppIds.Clear()
+                                    Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                    
+                                    # Retry immediately with cleared tried apps - don't wait
+                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                }
+                                
+                                # Untried app with quota exists - use the wait from best untried app as fallback
                                 $waitSecondsAllApps = [math]::Round([double]$bestBeforeWait.WaitSeconds)
                                 if ($waitSecondsAllApps -gt 1200) {
                                     Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $waitSecondsAllApps -continueAt $bestBeforeWait.ContinueAt -errorType "Exceeded"
@@ -1386,8 +1401,23 @@ function ApiCall {
                             }
                         }
                     } else {
-                        # Some app has quota but hasn't been tried yet - use the wait from best untried app
-                        # This shouldn't happen because Select-BestGitHubAppTokenForOrganization should have returned that app
+                        # Some app has quota but hasn't been tried yet - OR the rate limit reset occurred
+                        # for previously tried apps while we were switching between them.
+                        # Check if any of the apps with quota were previously marked as tried.
+                        $triedAppsWithQuota = $appsWithQuota | Where-Object { $triedAppIds.Contains($_.AppId) }
+                        
+                        if ($null -ne $triedAppsWithQuota -and $triedAppsWithQuota.Count -gt 0) {
+                            # Rate limit has reset for previously tried apps!
+                            # Clear the tried apps set and immediately retry to use the app with quota.
+                            Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available. Clearing tried apps and retrying immediately."
+                            $triedAppIds.Clear()
+                            Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                            
+                            # Retry immediately with cleared tried apps - don't wait
+                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                        }
+                        
+                        # Untried app with quota exists - use the wait from best untried app
                         $waitSeconds = [double]$bestBeforeWait.WaitSeconds
                         $continueAt = $bestBeforeWait.ContinueAt
                         $usedAllAppsWaitPlan = $true
