@@ -17,7 +17,7 @@ on:
       - .github/workflows/node-scripts/src/*.js
 
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '15 */6 * * *'
 
 jobs:
   upload-to-api:
