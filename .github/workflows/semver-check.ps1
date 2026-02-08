@@ -147,6 +147,7 @@ function Test-ActionSemver {
     
     try {
         # Get a fresh token for this action to avoid rate limit exhaustion
+        # The token manager will try different GitHub Apps in round-robin fashion
         $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
         if (-not $tokenResult -or -not $tokenResult.Token) {
             $result.Error = "Failed to get GitHub token"
@@ -187,6 +188,10 @@ function Test-ActionSemver {
             $result.Error = "No result returned from Test-GitHubActionVersioning"
             Write-Host "Warning: No result returned"
         }
+        
+        # Move to next app for the next action to distribute load across GitHub Apps
+        $tokenManager.MoveToNextApp()
+        
     } catch {
         $errorMessage = $_.Exception.Message
         $result.Error = $errorMessage
@@ -195,6 +200,9 @@ function Test-ActionSemver {
         if ($errorMessage -match "rate limit exceeded|HTTP 403") {
             $result.RateLimited = $true
             Write-Host "Rate limit error: $errorMessage"
+            
+            # Move to next app after rate limit to try a different app for next action
+            $tokenManager.MoveToNextApp()
         } else {
             Write-Host "Error: $errorMessage"
         }
