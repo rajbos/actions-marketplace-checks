@@ -341,6 +341,7 @@ jobs:
           Invoke-GitHubAppRateLimitCheckForConfiguredApps
 
       - name: Setup Node.js for API updates
+        if: always()
         uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -348,6 +349,7 @@ jobs:
           scope: '@devops-actions'
 
       - name: Install npm package for API updates
+        if: always()
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
         run: |
