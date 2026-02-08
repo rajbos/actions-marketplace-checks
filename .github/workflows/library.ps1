@@ -129,8 +129,9 @@ function Test-RateLimitResetIsValid {
         }
     }
     
-    # Reset appears valid - increment counter to track consecutive reset/clear cycles
-    # This counter will be reset to 0 when an app switch is successful
+    # Both checks passed - reset appears valid
+    # Increment counter to track consecutive reset/clear cycles
+    # This counter will be reset to 0 when marking a new app as tried or after an actual wait
     $script:ConsecutiveResetDetections++
     return $true
 }
