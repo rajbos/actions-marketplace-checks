@@ -125,7 +125,7 @@ function Test-ActionSemver {
         [Parameter(Mandatory = $true)]
         $action,
         [Parameter(Mandatory = $true)]
-        [string]$token
+        $tokenManager
     )
     
     $repository = "$($action.owner)/$($action.name)"
@@ -142,9 +142,20 @@ function Test-ActionSemver {
         Issues = @()
         Output = ""
         Error = $null
+        RateLimited = $false
     }
     
     try {
+        # Get a fresh token for this action to avoid rate limit exhaustion
+        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+        if (-not $tokenResult -or -not $tokenResult.Token) {
+            $result.Error = "Failed to get GitHub token"
+            Write-Host "Error: Failed to get GitHub token"
+            return $result
+        }
+        
+        $token = $tokenResult.Token
+        
         # Run the semver check with PassThru to get detailed results
         Write-Host "Running Test-GitHubActionVersioning for $repository..."
         
@@ -177,8 +188,16 @@ function Test-ActionSemver {
             Write-Host "Warning: No result returned"
         }
     } catch {
-        $result.Error = $_.Exception.Message
-        Write-Host "Error: $($result.Error)"
+        $errorMessage = $_.Exception.Message
+        $result.Error = $errorMessage
+        
+        # Check if this is a rate limit error
+        if ($errorMessage -match "rate limit exceeded|HTTP 403") {
+            $result.RateLimited = $true
+            Write-Host "Rate limit error: $errorMessage"
+        } else {
+            Write-Host "Error: $errorMessage"
+        }
     }
     
     return $result
@@ -201,7 +220,8 @@ function Write-SummaryReport {
     Write-Message -message "- **Total Actions Checked**: $($results.Count)" -logToSummary $true
     Write-Message -message "- **Actions Without Issues**: $(($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)" -logToSummary $true
     Write-Message -message "- **Actions With Issues**: $(($results | Where-Object { $_.Issues.Count -gt 0 }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions With Errors**: $(($results | Where-Object { $_.Error }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Errors**: $(($results | Where-Object { $_.Error -and -not $_.RateLimited }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions Rate Limited**: $(($results | Where-Object { $_.RateLimited }).Count)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Actions without issues
@@ -237,8 +257,21 @@ function Write-SummaryReport {
         }
     }
     
-    # Actions with errors
-    $actionsWithErrors = $results | Where-Object { $_.Error }
+    # Actions with rate limit errors
+    $rateLimitedActions = $results | Where-Object { $_.RateLimited }
+    if ($rateLimitedActions.Count -gt 0) {
+        Write-Message -message "## 🚦 Actions Rate Limited" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        Write-Message -message "_These actions could not be checked due to GitHub API rate limits. They will be checked in the next run._" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        foreach ($action in $rateLimitedActions) {
+            Write-Message -message "- **$($action.Repository)**: $($action.Error)" -logToSummary $true
+        }
+        Write-Message -message "" -logToSummary $true
+    }
+    
+    # Actions with other errors
+    $actionsWithErrors = $results | Where-Object { $_.Error -and -not $_.RateLimited }
     if ($actionsWithErrors.Count -gt 0) {
         Write-Message -message "## ❌ Actions With Errors" -logToSummary $true
         Write-Message -message "" -logToSummary $true
@@ -293,29 +326,22 @@ try {
         exit 1
     }
     
-    # Get GitHub token
-    Write-Host "Getting GitHub token..."
+    # Get GitHub App token manager (we'll get fresh tokens for each action)
+    Write-Host "Initializing GitHub App token manager..."
     $tokenManager = Get-GitHubAppTokenManagerInstance
     if ($null -eq $tokenManager) {
         Write-Error "Failed to initialize GitHub App token manager"
         exit 1
     }
     
-    $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
-    if (-not $tokenResult -or -not $tokenResult.Token) {
-        Write-Error "Failed to get GitHub token"
-        exit 1
-    }
-    
-    $token = $tokenResult.Token
-    Write-Host "Token acquired successfully (length: $($token.Length))"
+    Write-Host "Token manager initialized successfully"
     
     # Run semver checks for each action
     Write-Host ""
     Write-Host "Starting semver checks for $($topActions.Count) actions..."
     
     foreach ($action in $topActions) {
-        $checkResult = Test-ActionSemver -action $action -token $token
+        $checkResult = Test-ActionSemver -action $action -tokenManager $tokenManager
         $script:results += $checkResult
     }
     
