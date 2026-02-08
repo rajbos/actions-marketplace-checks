@@ -12,9 +12,15 @@ on:
 
   schedule:
      #- cron: '*/60 * * * *'
-     - cron: '20 */1 * * *'
+     # Run at minute 50 to avoid overlap with Analyze (minute 5) and Update Mirrors (minute 35)
+     - cron: '50 */1 * * *'
 
   workflow_dispatch:
+
+# Prevent concurrent runs of this workflow to reduce rate limit pressure
+concurrency:
+  group: repo-info-workflow
+  cancel-in-progress: false
 
 env:
   numberOfReposToDo: 100 
