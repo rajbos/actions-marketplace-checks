@@ -74,6 +74,7 @@ This repository includes several automated workflows:
 - **[Generate Report](.github/workflows/report.yml)**: Generates reports on action types, versions, and security status (runs daily)
 - **[Environment State Documentation](.github/workflows/environment-state.yml)**: Documents the current state of the environment including coverage, freshness, and health metrics (runs daily at 10 AM UTC)
 - **[Validate Status JSON Schema](.github/workflows/validate-status-schema.yml)**: Validates the schema of status.json to detect changes in data structure (runs every Friday at 9 AM UTC)
+- **[Semver Check](.github/workflows/semver-check.yml)**: Validates semantic versioning compliance for top GitHub Actions using the GitHubActionVersioning module (runs weekly on Mondays at 9 AM UTC)
 
 ### Status JSON Schema Validation
 
@@ -99,6 +100,32 @@ Tests for the validation functionality are located in `tests/validateStatusSchem
 ```powershell
 Invoke-Pester -Path ./tests/validateStatusSchema.Tests.ps1
 ```
+
+### Semver Check
+
+The Semver Check workflow validates semantic versioning compliance for the top GitHub Actions in the marketplace using the [GitHubActionVersioning module](https://github.com/jessehouwing/actions-semver-checker). This workflow:
+
+1. **Selects Top Actions**: Identifies the top 5 most recently updated actions, prioritizing verified organizations (actions, github, microsoft, azure, docker)
+2. **Installs GitHubActionVersioning**: Downloads and installs the PowerShell module for semver validation
+3. **Runs Validation**: Executes `Test-GitHubActionVersioning` for each selected action
+4. **Generates Report**: Creates a detailed summary showing:
+   - Actions without issues (all checks passed)
+   - Actions with issues (semver violations, warnings)
+   - Actions with errors (validation failures)
+5. **Uploads Results**: Saves validation results as a JSON artifact for further analysis
+
+The workflow runs automatically every Monday at 9 AM UTC and can also be triggered manually.
+
+#### Running the Semver Check
+
+To run the semver check manually:
+
+1. Go to the Actions tab in the repository
+2. Select "Semver Check" workflow
+3. Click "Run workflow"
+4. Optionally, specify the number of actions to check (default: 5)
+
+The workflow will generate a summary report in the GitHub Actions step summary showing which actions passed validation and which have issues that need attention.
 
 ### Mirror Sync Behavior
 
