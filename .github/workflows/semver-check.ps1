@@ -1,13 +1,9 @@
 Param (
     [Parameter(Mandatory = $false)]
-    [int]$topActionsCount = 5,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$logSummary = ""
+    [int]$topActionsCount = 5
 )
 
 Write-Host "Starting semver check workflow"
-Write-Host "Log summary path: [$logSummary]"
 
 . $PSScriptRoot/library.ps1
 
@@ -175,69 +171,65 @@ function Test-ActionSemver {
 function Write-SummaryReport {
     Param (
         [Parameter(Mandatory = $true)]
-        $results,
-        [Parameter(Mandatory = $true)]
-        [string]$summaryFile
+        $results
     )
     
     Write-Host ""
-    Write-Host "Writing summary report to: $summaryFile"
+    Write-Host "Writing summary report to GITHUB_STEP_SUMMARY"
     
-    $summary = @"
-# Semver Checker Results
-
-## Summary
-
-- **Total Actions Checked**: $($results.Count)
-- **Actions Without Issues**: $(($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)
-- **Actions With Issues**: $(($results | Where-Object { $_.Issues.Count -gt 0 }).Count)
-- **Actions With Errors**: $(($results | Where-Object { $_.Error }).Count)
-
-"@
+    # Summary header
+    Write-Message -message "# Semver Checker Results" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "## Summary" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "- **Total Actions Checked**: $($results.Count)" -logToSummary $true
+    Write-Message -message "- **Actions Without Issues**: $(($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Issues**: $(($results | Where-Object { $_.Issues.Count -gt 0 }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Errors**: $(($results | Where-Object { $_.Error }).Count)" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
     
     # Actions without issues
     $cleanActions = $results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }
     if ($cleanActions.Count -gt 0) {
-        $summary += "`n## ✅ Actions Without Issues`n`n"
+        Write-Message -message "## ✅ Actions Without Issues" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
         foreach ($action in $cleanActions) {
-            $summary += "- **$($action.Repository)**: All semver checks passed`n"
+            Write-Message -message "- **$($action.Repository)**: All semver checks passed" -logToSummary $true
         }
+        Write-Message -message "" -logToSummary $true
     }
     
     # Actions with issues
     $actionsWithIssues = $results | Where-Object { $_.Issues.Count -gt 0 }
     if ($actionsWithIssues.Count -gt 0) {
-        $summary += "`n## ⚠️ Actions With Issues`n`n"
+        Write-Message -message "## ⚠️ Actions With Issues" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
         foreach ($action in $actionsWithIssues) {
-            $summary += "### $($action.Repository)`n`n"
-            $summary += "**Status**: $($action.Output)`n`n"
+            Write-Message -message "### $($action.Repository)" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "**Status**: $($action.Output)" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
             
             if ($action.Issues.Count -gt 0) {
-                $summary += "**Issues**:`n"
+                Write-Message -message "**Issues**:" -logToSummary $true
                 foreach ($issue in $action.Issues) {
                     $icon = if ($issue.Severity -eq "error") { "❌" } else { "⚠️" }
-                    $summary += "- $icon **$($issue.Severity)**: $($issue.Message) [Status: $($issue.Status)]`n"
+                    Write-Message -message "- $icon **$($issue.Severity)**: $($issue.Message) [Status: $($issue.Status)]" -logToSummary $true
                 }
             }
-            $summary += "`n"
+            Write-Message -message "" -logToSummary $true
         }
     }
     
     # Actions with errors
     $actionsWithErrors = $results | Where-Object { $_.Error }
     if ($actionsWithErrors.Count -gt 0) {
-        $summary += "`n## ❌ Actions With Errors`n`n"
+        Write-Message -message "## ❌ Actions With Errors" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
         foreach ($action in $actionsWithErrors) {
-            $summary += "- **$($action.Repository)**: $($action.Error)`n"
+            Write-Message -message "- **$($action.Repository)**: $($action.Error)" -logToSummary $true
         }
     }
-    
-    # Write to summary file
-    $summary | Out-File -FilePath $summaryFile -Encoding utf8
-    
-    # Also write to console
-    Write-Host ""
-    Write-Host $summary
 }
 
 function Save-ResultsAsJson {
@@ -315,11 +307,7 @@ try {
     Save-ResultsAsJson -results $script:results
     
     # Write summary report
-    if ($logSummary) {
-        Write-SummaryReport -results $script:results -summaryFile $logSummary
-    } else {
-        Write-Host "No summary file specified, skipping summary report"
-    }
+    Write-SummaryReport -results $script:results
     
     Write-Host ""
     Write-Host "Semver check workflow completed successfully"

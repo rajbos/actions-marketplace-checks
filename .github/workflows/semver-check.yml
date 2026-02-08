@@ -50,9 +50,7 @@ jobs:
         run: |
           $topActionsCount = if ($env:TOP_ACTIONS_COUNT) { [int]$env:TOP_ACTIONS_COUNT } else { 5 }
           
-          ./.github/workflows/semver-check.ps1 `
-            -topActionsCount $topActionsCount `
-            -logSummary "$($env:GITHUB_STEP_SUMMARY)"
+          ./.github/workflows/semver-check.ps1 -topActionsCount $topActionsCount
         env:
           TOP_ACTIONS_COUNT: ${{ github.event.inputs.topActionsCount || '5' }}
 
