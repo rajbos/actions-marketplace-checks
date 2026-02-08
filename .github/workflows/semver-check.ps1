@@ -103,7 +103,8 @@ function Install-SemverCheckerModule {
             return $false
         }
         
-        $modulePath = Join-Path $tempDir "module/GitHubActionVersioning.psd1"
+        # Module files are in the root of the repository, not in a subdirectory
+        $modulePath = Join-Path $tempDir "GitHubActionVersioning.psd1"
         if (Test-Path $modulePath) {
             Write-Host "Importing module from: $modulePath"
             Import-Module $modulePath -Force
