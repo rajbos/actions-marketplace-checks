@@ -76,6 +76,11 @@ Prevents false positive rate limit reset detection by checking if:
 1. We would immediately select the same app that was just tried (loop detection)
 2. We've had too many consecutive reset detections (protection against infinite loops)
 
+This function increments a counter when a valid reset is detected. The counter is reset to 0
+by the caller after successfully clearing tried apps and switching to a different app.
+If the counter reaches 3, it indicates we're in a loop (valid resets that immediately
+fail again), and we should stop clearing tried apps.
+
 .PARAMETER triedAppsWithQuota
 Array of apps with quota that were previously tried
 
@@ -101,9 +106,12 @@ function Test-RateLimitResetIsValid {
         [string] $organization
     )
     
-    # Check 1: Prevent infinite loops - if we've had 3+ consecutive reset detections, something is wrong
+    # Check 1: Prevent infinite loops - if we've had 3+ consecutive reset and clear cycles, something is wrong
+    # This counter is incremented when we detect a valid reset and return true, but gets reset to 0
+    # when we successfully switch to a different app. If it reaches 3, we're likely in a loop where
+    # resets appear valid but immediately fail again.
     if ($script:ConsecutiveResetDetections -ge 3) {
-        Write-Host "⚠️ Warning: Detected $($script:ConsecutiveResetDetections) consecutive rate limit resets. This may indicate a false positive loop (e.g., Installation vs Core API rate limits). Skipping reset detection to prevent infinite loop."
+        Write-Host "⚠️ Warning: Detected $($script:ConsecutiveResetDetections) consecutive rate limit reset and clear cycles. This may indicate a persistent issue. Skipping reset detection to prevent infinite loop."
         return $false
     }
     
@@ -121,7 +129,8 @@ function Test-RateLimitResetIsValid {
         }
     }
     
-    # Reset is valid
+    # Reset appears valid - increment counter to track consecutive reset/clear cycles
+    # This counter will be reset to 0 when an app switch is successful
     $script:ConsecutiveResetDetections++
     return $true
 }
@@ -1104,7 +1113,8 @@ function ApiCall {
                                 # Mark this app as tried and track it as the last attempted
                                 $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
                                 $script:LastAttemptedAppId = $bestBeforeWait.AppId
-                                # Reset consecutive reset counter when we successfully switch apps
+                                # Reset consecutive reset counter - we're about to try this app
+                                # If it succeeds, the counter stays at 0; if it fails, it will be incremented
                                 $script:ConsecutiveResetDetections = 0
                                 Write-Host "Marked app id [$($bestBeforeWait.AppId)] as tried. Tried apps so far: $($triedAppIds -join ', ')"
                                 
@@ -1468,7 +1478,8 @@ function ApiCall {
                     # Mark this app as tried and track it as the last attempted
                     $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
                     $script:LastAttemptedAppId = $bestBeforeWait.AppId
-                    # Reset consecutive reset counter when we successfully switch apps
+                    # Reset consecutive reset counter - we're about to try this app
+                    # If it succeeds, the counter stays at 0; if it fails, it will be incremented
                     $script:ConsecutiveResetDetections = 0
                     Write-Host "Marked app id [$($bestBeforeWait.AppId)] as tried. Tried apps so far: $($triedAppIds -join ', ')"
                     

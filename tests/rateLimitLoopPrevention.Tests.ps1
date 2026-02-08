@@ -207,10 +207,13 @@ Describe "Rate Limit Loop Prevention" {
             $triedAppsWithQuota = $appsWithQuota | Where-Object { $script:TriedGitHubAppIds.Contains($_.AppId) }
             
             # Now a different app (264650) would be selected because it has higher quota
+            $script:ConsecutiveResetDetections = 0
             $isValidReset = Test-RateLimitResetIsValid -triedAppsWithQuota $triedAppsWithQuota -triedAppIds $script:TriedGitHubAppIds -organization "test-org"
             
             # Should be TRUE - we would select a different app
             $isValidReset | Should -Be $true
+            # Counter should be incremented when reset is valid
+            $script:ConsecutiveResetDetections | Should -Be 1
         }
         
         It "Should reset tracking variables when clearing tried apps after wait" {
