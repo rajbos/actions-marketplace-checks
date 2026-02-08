@@ -1181,10 +1181,11 @@ function ApiCall {
                                     
                                     if ($isValidReset) {
                                         # Valid reset - clear tried apps and retry
+                                        # Note: ConsecutiveResetDetections was incremented by Test-RateLimitResetIsValid
+                                        # We don't reset it here; it will be reset after a successful wait or when marking a new app as tried
                                         $triedAppIds.Clear()
                                         $script:LastAttemptedAppId = $null
-                                        $script:ConsecutiveResetDetections = 0
-                                        Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                        Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                         
                                         # Retry immediately with cleared tried apps - don't wait
                                         return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
@@ -1460,10 +1461,11 @@ function ApiCall {
                             
                             if ($isValidReset) {
                                 # Valid reset - clear tried apps and retry
+                                # Note: ConsecutiveResetDetections was incremented by Test-RateLimitResetIsValid
+                                # We don't reset it here; it will be reset after a successful wait or when marking a new app as tried
                                 $triedAppIds.Clear()
                                 $script:LastAttemptedAppId = $null
-                                $script:ConsecutiveResetDetections = 0
-                                Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                 
                                 # Retry immediately with cleared tried apps - don't wait
                                 return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
@@ -1545,10 +1547,11 @@ function ApiCall {
                             
                             if ($isValidReset) {
                                 # Valid reset - clear tried apps and retry
+                                # Note: ConsecutiveResetDetections was incremented by Test-RateLimitResetIsValid
+                                # We don't reset it here; it will be reset after a successful wait or when marking a new app as tried
                                 $triedAppIds.Clear()
                                 $script:LastAttemptedAppId = $null
-                                $script:ConsecutiveResetDetections = 0
-                                Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                 
                                 # Retry immediately with cleared tried apps - don't wait
                                 return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
