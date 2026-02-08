@@ -74,10 +74,22 @@ function Install-SemverCheckerModule {
         return $true
     }
     
-    # NOTE: The GitHubActionVersioning module is not available in PowerShell Gallery.
-    # According to the module's README (https://github.com/jessehouwing/actions-semver-checker/blob/main/module/README.md),
-    # the only installation method is "From Local Files" by importing the .psd1 file directly.
-    # Therefore, we must clone the repository to access the module files in the /module directory.
+    # Try to install from PowerShell Gallery first (reported to be available at version 2.0.2)
+    # Reference: https://www.powershellgallery.com/packages/GitHubActionVersioning/2.0.2
+    Write-Host "Attempting to install from PowerShell Gallery..."
+    try {
+        Install-Module -Name GitHubActionVersioning -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+        Import-Module GitHubActionVersioning -Force -ErrorAction Stop
+        Write-Host "✓ Module installed successfully from PowerShell Gallery"
+        return $true
+    } catch {
+        Write-Host "PowerShell Gallery installation failed: $($_.Exception.Message)"
+        Write-Host "Falling back to cloning from GitHub repository..."
+    }
+    
+    # Fallback: Clone the repository if PowerShell Gallery installation fails
+    # The module's README documents "From Local Files" as an installation method
+    # Reference: https://github.com/jessehouwing/actions-semver-checker/blob/main/module/README.md
     $tempDir = "/tmp/semver-checker-module"
     if (Test-Path $tempDir) {
         Remove-Item -Path $tempDir -Recurse -Force
