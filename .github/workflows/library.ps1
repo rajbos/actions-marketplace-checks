@@ -6,6 +6,13 @@ $global:RateLimitExceeded = $false
 # This persists across all API calls in the current script, preventing endless cycling
 $script:TriedGitHubAppIds = New-Object 'System.Collections.Generic.HashSet[string]'
 
+# Track the last app that was attempted to prevent immediate re-selection of the same app
+# This prevents infinite loops when Installation and Core API rate limits are different
+$script:LastAttemptedAppId = $null
+
+# Track consecutive rate limit reset detections to prevent infinite loops
+$script:ConsecutiveResetDetections = 0
+
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
@@ -54,8 +61,69 @@ Reset-TriedGitHubApps
 function Reset-TriedGitHubApps {
     if ($null -ne $script:TriedGitHubAppIds) {
         $script:TriedGitHubAppIds.Clear()
+        $script:LastAttemptedAppId = $null
+        $script:ConsecutiveResetDetections = 0
         Write-Host "Reset tried GitHub Apps tracking"
     }
+}
+
+<#
+.SYNOPSIS
+Tests if a detected rate limit reset is valid or a false positive.
+
+.DESCRIPTION
+Prevents false positive rate limit reset detection by checking if:
+1. We would immediately select the same app that was just tried (loop detection)
+2. We've had too many consecutive reset detections (protection against infinite loops)
+
+.PARAMETER triedAppsWithQuota
+Array of apps with quota that were previously tried
+
+.PARAMETER triedAppIds
+HashSet of app IDs that have been tried
+
+.PARAMETER organization
+Organization name for selecting next best app
+
+.OUTPUTS
+Returns $true if the reset is valid, $false if it's likely a false positive
+
+.EXAMPLE
+$isValid = Test-RateLimitResetIsValid -triedAppsWithQuota $apps -triedAppIds $tried -organization "my-org"
+#>
+function Test-RateLimitResetIsValid {
+    Param (
+        [Parameter(Mandatory=$true)]
+        $triedAppsWithQuota,
+        [Parameter(Mandatory=$true)]
+        [System.Collections.Generic.HashSet[string]] $triedAppIds,
+        [Parameter(Mandatory=$true)]
+        [string] $organization
+    )
+    
+    # Check 1: Prevent infinite loops - if we've had 3+ consecutive reset detections, something is wrong
+    if ($script:ConsecutiveResetDetections -ge 3) {
+        Write-Host "⚠️ Warning: Detected $($script:ConsecutiveResetDetections) consecutive rate limit resets. This may indicate a false positive loop (e.g., Installation vs Core API rate limits). Skipping reset detection to prevent infinite loop."
+        return $false
+    }
+    
+    # Check 2: Loop detection - would we immediately select the same app we just tried?
+    if ($null -ne $script:LastAttemptedAppId -and $script:LastAttemptedAppId -ne "") {
+        # Temporarily clear tried apps to simulate what would happen if we cleared them
+        $tempTriedApps = New-Object 'System.Collections.Generic.HashSet[string]'
+        
+        # Get what the best app would be with cleared tried apps
+        $wouldSelectApp = Select-BestGitHubAppTokenForOrganization -organization $organization -triedAppIds $tempTriedApps
+        
+        if ($null -ne $wouldSelectApp -and $wouldSelectApp.AppId -eq $script:LastAttemptedAppId) {
+            Write-Host "⚠️ Warning: Rate limit reset detected, but clearing tried apps would immediately re-select app [$($script:LastAttemptedAppId)] which was just attempted. This is likely a false positive (different rate limit types: Installation vs Core API). Not clearing tried apps to prevent infinite loop."
+            return $false
+        }
+    }
+    
+    # Reset is valid
+    $script:ConsecutiveResetDetections++
+    return $true
 }
 
 # Blob file names in the 'status' subfolder
@@ -1033,8 +1101,11 @@ function ApiCall {
 
                         if ($null -ne $bestBeforeWait) {
                             if ($bestBeforeWait.Remaining -gt 0 -and -not [string]::IsNullOrWhiteSpace($bestBeforeWait.Token)) {
-                                # Mark this app as tried
+                                # Mark this app as tried and track it as the last attempted
                                 $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
+                                $script:LastAttemptedAppId = $bestBeforeWait.AppId
+                                # Reset consecutive reset counter when we successfully switch apps
+                                $script:ConsecutiveResetDetections = 0
                                 Write-Host "Marked app id [$($bestBeforeWait.AppId)] as tried. Tried apps so far: $($triedAppIds -join ', ')"
                                 
                                 if ($bestBeforeWait.Token -ne $access_token) {
@@ -1082,6 +1153,8 @@ function ApiCall {
                                     Start-Sleep -Seconds $shortestWaitAllApps
                                     # Clear tried apps after waiting - give all apps a fresh chance after reset
                                     $triedAppIds.Clear()
+                                    $script:LastAttemptedAppId = $null
+                                    $script:ConsecutiveResetDetections = 0
                                     Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                                 }
                             } else {
@@ -1091,14 +1164,24 @@ function ApiCall {
                                 $triedAppsWithQuota = $appsWithQuota | Where-Object { $triedAppIds.Contains($_.AppId) }
                                 
                                 if ($null -ne $triedAppsWithQuota -and $triedAppsWithQuota.Count -gt 0) {
-                                    # Rate limit has reset for previously tried apps!
-                                    # Clear the tried apps set and immediately retry to use the app with quota.
-                                    Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available. Clearing tried apps and retrying immediately."
-                                    $triedAppIds.Clear()
-                                    Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                    # Potential rate limit reset detected - validate it's not a false positive
+                                    Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available."
                                     
-                                    # Retry immediately with cleared tried apps - don't wait
-                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                    $isValidReset = Test-RateLimitResetIsValid -triedAppsWithQuota $triedAppsWithQuota -triedAppIds $triedAppIds -organization $organization
+                                    
+                                    if ($isValidReset) {
+                                        # Valid reset - clear tried apps and retry
+                                        $triedAppIds.Clear()
+                                        $script:LastAttemptedAppId = $null
+                                        $script:ConsecutiveResetDetections = 0
+                                        Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                        
+                                        # Retry immediately with cleared tried apps - don't wait
+                                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                    } else {
+                                        # False positive - don't clear tried apps, continue with normal flow
+                                        Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
+                                    }
                                 }
                                 
                                 # Untried app with quota exists - use the wait from best untried app as fallback
@@ -1118,6 +1201,8 @@ function ApiCall {
                                     Start-Sleep -Seconds $waitSecondsAllApps
                                     # Clear tried apps after waiting - give all apps a fresh chance after reset
                                     $triedAppIds.Clear()
+                                    $script:LastAttemptedAppId = $null
+                                    $script:ConsecutiveResetDetections = 0
                                     Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                                 }
                             }
@@ -1341,6 +1426,8 @@ function ApiCall {
                             Start-Sleep -Seconds $shortestWait
                             # Clear tried apps after waiting - give all apps a fresh chance after reset
                             $triedAppIds.Clear()
+                            $script:LastAttemptedAppId = $null
+                            $script:ConsecutiveResetDetections = 0
                             Write-Host "Reset tried apps tracking after waiting for rate limit reset"
                         }
                     }
@@ -1356,20 +1443,33 @@ function ApiCall {
                         $triedAppsWithQuota = $appsWithQuota | Where-Object { $triedAppIds.Contains($_.AppId) }
                         
                         if ($null -ne $triedAppsWithQuota -and $triedAppsWithQuota.Count -gt 0) {
-                            # Rate limit has reset for previously tried apps!
-                            # Clear the tried apps set and immediately retry to use the app with quota.
-                            Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available. Clearing tried apps and retrying immediately."
-                            $triedAppIds.Clear()
-                            Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                            # Potential rate limit reset detected - validate it's not a false positive
+                            Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available."
                             
-                            # Retry immediately with cleared tried apps - don't wait
-                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                            $isValidReset = Test-RateLimitResetIsValid -triedAppsWithQuota $triedAppsWithQuota -triedAppIds $triedAppIds -organization $organization
+                            
+                            if ($isValidReset) {
+                                # Valid reset - clear tried apps and retry
+                                $triedAppIds.Clear()
+                                $script:LastAttemptedAppId = $null
+                                $script:ConsecutiveResetDetections = 0
+                                Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                
+                                # Retry immediately with cleared tried apps - don't wait
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                            } else {
+                                # False positive - don't clear tried apps, continue with normal flow
+                                Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
+                            }
                         }
                     }
                     
                     # No reset detected - proceed with switching to the untried app
-                    # Mark this app as tried
+                    # Mark this app as tried and track it as the last attempted
                     $triedAppIds.Add($bestBeforeWait.AppId) | Out-Null
+                    $script:LastAttemptedAppId = $bestBeforeWait.AppId
+                    # Reset consecutive reset counter when we successfully switch apps
+                    $script:ConsecutiveResetDetections = 0
                     Write-Host "Marked app id [$($bestBeforeWait.AppId)] as tried. Tried apps so far: $($triedAppIds -join ', ')"
                     
                     $formatType = if ($isInstallationRateLimit) { "Installation" } else { "Exceeded" }
@@ -1427,14 +1527,24 @@ function ApiCall {
                         $triedAppsWithQuota = $appsWithQuota | Where-Object { $triedAppIds.Contains($_.AppId) }
                         
                         if ($null -ne $triedAppsWithQuota -and $triedAppsWithQuota.Count -gt 0) {
-                            # Rate limit has reset for previously tried apps!
-                            # Clear the tried apps set and immediately retry to use the app with quota.
-                            Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available. Clearing tried apps and retrying immediately."
-                            $triedAppIds.Clear()
-                            Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                            # Potential rate limit reset detected - validate it's not a false positive
+                            Write-Host "Detected rate limit reset: previously tried app(s) [$($triedAppsWithQuota.AppId -join ', ')] now have quota available."
                             
-                            # Retry immediately with cleared tried apps - don't wait
-                            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                            $isValidReset = Test-RateLimitResetIsValid -triedAppsWithQuota $triedAppsWithQuota -triedAppIds $triedAppIds -organization $organization
+                            
+                            if ($isValidReset) {
+                                # Valid reset - clear tried apps and retry
+                                $triedAppIds.Clear()
+                                $script:LastAttemptedAppId = $null
+                                $script:ConsecutiveResetDetections = 0
+                                Write-Host "Cleared tried apps tracking after detecting rate limit reset"
+                                
+                                # Retry immediately with cleared tried apps - don't wait
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                            } else {
+                                # False positive - don't clear tried apps, continue with normal flow
+                                Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
+                            }
                         }
                         
                         # Untried app with quota exists - use the wait from best untried app
@@ -1505,6 +1615,8 @@ function ApiCall {
 
                 # After waiting, clear tried apps to give all apps a fresh chance
                 $triedAppIds.Clear()
+                $script:LastAttemptedAppId = $null
+                $script:ConsecutiveResetDetections = 0
                 Write-Host "Reset tried apps tracking after waiting for installation rate limit"
 
                 # After waiting, re-check rate limit status before retrying
