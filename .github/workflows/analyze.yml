@@ -15,7 +15,8 @@ on:
 
   schedule:
      #- cron: '*/60 * * * *'
-     - cron: '1 */1 * * *'
+     # Run at minute 5 to avoid overlap with Update Mirrors (minute 35) and Get repo info (minute 50)
+     - cron: '5 */1 * * *'
 
   workflow_dispatch:
     inputs:
@@ -24,13 +25,19 @@ on:
         required: false
         default: '250'
       numberOfChunks:
-        description: 'Number of parallel chunks (default: 4)'
+        description: 'Number of parallel chunks (default: 10)'
         required: false
-        default: '25'
+        default: '10'
+
+# Prevent concurrent runs of this workflow to reduce rate limit pressure
+concurrency:
+  group: analyze-workflow
+  cancel-in-progress: false
   
 env:
   numberOfReposRepoInfo: 250
-  numberOfChunks: 25
+  # Reduced from 25 to 10 to decrease rate limit pressure when running concurrently with other workflows
+  numberOfChunks: 10
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}

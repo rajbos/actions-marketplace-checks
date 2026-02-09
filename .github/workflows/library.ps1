@@ -1796,6 +1796,14 @@ function SplitUrl {
             if ($segments.Length -ge 2) {
                 $owner = $segments[0]
                 $repo = $segments[1]
+                
+                # Clean up duplicate owner prefix in repo name (e.g., "github_safe-settings" -> "safe-settings")
+                if ($repo.StartsWith("$($owner)_")) {
+                    $repo = $repo.Substring($owner.Length + 1)
+                } elseif ($repo.StartsWith("$($owner)-")) {
+                    $repo = $repo.Substring($owner.Length + 1)
+                }
+                
                 return $owner, $repo
             }
         } else {
@@ -1804,6 +1812,14 @@ function SplitUrl {
             if ($urlParts.Length -ge 2) {
                 $owner = $urlParts[0]
                 $repo = $urlParts[1]
+                
+                # Clean up duplicate owner prefix in repo name (e.g., "github_safe-settings" -> "safe-settings")
+                if ($repo.StartsWith("$($owner)_")) {
+                    $repo = $repo.Substring($owner.Length + 1)
+                } elseif ($repo.StartsWith("$($owner)-")) {
+                    $repo = $repo.Substring($owner.Length + 1)
+                }
+                
                 return $owner, $repo
             }
         }
@@ -1813,6 +1829,14 @@ function SplitUrl {
         if ($urlParts.Length -ge 2) {
             $repo = $urlParts[-1]
             $owner = $urlParts[-2]
+            
+            # Clean up duplicate owner prefix in repo name
+            if ($repo.StartsWith("$($owner)_")) {
+                $repo = $repo.Substring($owner.Length + 1)
+            } elseif ($repo.StartsWith("$($owner)-")) {
+                $repo = $repo.Substring($owner.Length + 1)
+            }
+            
             return $owner, $repo
         }
     }
@@ -1836,13 +1860,16 @@ function GetOrgActionInfo {
     )
 
     if ($null -ne $forkedOwnerRepo -And $forkedOwnerRepo -ne "") {
-        $forkedOwnerRepoParts = $forkedOwnerRepo.Split('_')
-        $owner = $forkedOwnerRepoParts[0]
-        $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
-        # Convert underscores back to slashes in repo name (reverses the sanitization from GetForkedRepoName)
-        $repo = $repo -replace '_', '/'
+        # Check if the string contains at least one underscore
+        if ($forkedOwnerRepo.Contains('_')) {
+            $forkedOwnerRepoParts = $forkedOwnerRepo.Split('_')
+            $owner = $forkedOwnerRepoParts[0]
+            $repo = $forkedOwnerRepo.Substring($owner.Length + 1)
+            # Convert underscores back to slashes in repo name (reverses the sanitization from GetForkedRepoName)
+            $repo = $repo -replace '_', '/'
 
-        return $owner, $repo
+            return $owner, $repo
+        }
     }
 
     return "", ""

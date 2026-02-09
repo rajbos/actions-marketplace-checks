@@ -731,9 +731,9 @@ function GetMostUsedActionsList {
 
     foreach ($item in $top10All)
     {
-        $splitted = $item.name.Split("_")
+        ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $item.name
         $displayValue = ConvertCommasToDots -numberString $item.dependents?.dependents
-        LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue |"
+        LogMessage "| $owner/$repo | $displayValue |"
     }
     
     LogMessage ""
@@ -753,13 +753,13 @@ function GetMostUsedActionsList {
 
     foreach ($item in $top10ExcludingActionsOrg)
     {
-        $splitted = $item.name.Split("_")
+        ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $item.name
         $lastUpdated = "N/A"
         if ($item.repoInfo -and $item.repoInfo.updated_at) {
             $lastUpdated = $item.repoInfo.updated_at.ToString("yyyy-MM-dd")
         }
         $displayValue = ConvertCommasToDots -numberString $item.dependents?.dependents
-        LogMessage "| $($splitted[0])/$($splitted[1]) | $displayValue | $lastUpdated |"
+        LogMessage "| $owner/$repo | $displayValue | $lastUpdated |"
     }
     LogMessage ""
     LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"

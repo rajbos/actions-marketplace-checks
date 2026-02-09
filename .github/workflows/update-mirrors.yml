@@ -10,8 +10,9 @@ on:
       - .github/workflows/library.ps1
 
   schedule:
-   # run every hour, as a run takes around 30 mins now
-    - cron: '12 */1 * * *'
+   # Run at minute 35 to avoid overlap with Analyze (minute 5) and Get repo info (minute 50)
+   # Run takes around 30 mins now
+    - cron: '35 */1 * * *'
 
   workflow_dispatch:
     inputs:
@@ -23,6 +24,11 @@ on:
         description: 'Number of parallel chunks (default: 4)'
         required: false
         default: '4'
+
+# Prevent concurrent runs of this workflow to reduce rate limit pressure
+concurrency:
+  group: update-mirrors-workflow
+  cancel-in-progress: false
 
 env:
   numberOfReposToDo: 300
