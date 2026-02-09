@@ -1,0 +1,63 @@
+name: Semver Check top Actions
+
+on:
+  push:
+    paths:
+      - .github/workflows/semver-check.yml
+      - .github/workflows/semver-check.ps1
+
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+  workflow_dispatch:
+    inputs:
+      topActionsCount:
+        description: 'Number of top actions to check'
+        required: false
+        default: '5'
+
+env:
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
+  APP_ORGANIZATION: actions-marketplace-validations
+
+jobs:
+  semver-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Run semver checks
+        shell: pwsh
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
+          APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
+          TOP_ACTIONS_COUNT: ${{ github.event.inputs.topActionsCount || '5' }}
+        run: |
+          $topActionsCount = if ($env:TOP_ACTIONS_COUNT) { [int]$env:TOP_ACTIONS_COUNT } else { 5 }
+          
+          ./.github/workflows/semver-check.ps1 -topActionsCount $topActionsCount
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: semver-check-results
+          path: semver-check-results.json
