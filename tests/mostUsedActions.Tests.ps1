@@ -39,8 +39,8 @@ BeforeAll {
 
         foreach ($item in $top10All)
         {
-            $splitted = $item.name.Split("_")
-            LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) |"
+            ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $item.name
+            LogMessage "| $owner/$repo | $($item.dependents?.dependents) |"
         }
         
         LogMessage ""
@@ -60,12 +60,12 @@ BeforeAll {
 
         foreach ($item in $top10ExcludingActionsOrg)
         {
-            $splitted = $item.name.Split("_")
+            ($owner, $repo) = GetOrgActionInfo -forkedOwnerRepo $item.name
             $lastUpdated = "N/A"
             if ($item.repoInfo -and $item.repoInfo.updated_at) {
                 $lastUpdated = $item.repoInfo.updated_at.ToString("yyyy-MM-dd")
             }
-            LogMessage "| $($splitted[0])/$($splitted[1]) | $($item.dependents?.dependents) | $lastUpdated |"
+            LogMessage "| $owner/$repo | $($item.dependents?.dependents) | $lastUpdated |"
         }
     }
 }
