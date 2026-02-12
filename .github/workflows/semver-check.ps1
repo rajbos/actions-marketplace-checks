@@ -269,10 +269,7 @@ function Get-IssueType {
     } elseif ($message -match "invalid|incorrect") {
         return "Invalid"
     } else {
-        # Return first 30 characters of message as fallback
-        if ($message.Length -gt 30) {
-            return $message.Substring(0, 30) + "..."
-        }
+        # Return the full message as-is for unrecognized patterns
         return $message
     }
 }
@@ -304,9 +301,9 @@ function Write-SummaryReport {
         Write-Message -message "## Issue Summary by Repository" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         
-        # Create table header
-        Write-Message -message "| Repository | Total Issues | Issue Types | Fixed | Failed | Unfixable |" -logToSummary $true
-        Write-Message -message "|------------|-------------|-------------|-------|--------|-----------|" -logToSummary $true
+        # Create simple table header
+        Write-Message -message "| Repository | Total Issues | Issue Types |" -logToSummary $true
+        Write-Message -message "|------------|-------------|-------------|" -logToSummary $true
         
         # Process each action with issues
         foreach ($action in $actionsWithIssues) {
@@ -330,22 +327,8 @@ function Write-SummaryReport {
                 }
             }) -join ", "
             
-            # Extract counts from output if available
-            $fixedCount = 0
-            $failedCount = 0
-            $unfixableCount = 0
-            if ($action.Output -match 'Fixed: (\d+)') {
-                $fixedCount = [int]$Matches[1]
-            }
-            if ($action.Output -match 'Failed: (\d+)') {
-                $failedCount = [int]$Matches[1]
-            }
-            if ($action.Output -match 'Unfixable: (\d+)') {
-                $unfixableCount = [int]$Matches[1]
-            }
-            
             $totalIssues = $action.Issues.Count
-            Write-Message -message "| $($action.Repository) | $totalIssues | $issueTypesFormatted | $fixedCount | $failedCount | $unfixableCount |" -logToSummary $true
+            Write-Message -message "| $($action.Repository) | $totalIssues | $issueTypesFormatted |" -logToSummary $true
         }
         Write-Message -message "" -logToSummary $true
     }

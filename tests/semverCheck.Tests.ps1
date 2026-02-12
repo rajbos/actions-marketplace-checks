@@ -97,9 +97,9 @@ Describe "semver-check summary report" {
         
         $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
         
-        # Verify table header exists with new "Issue Types" column
+        # Verify table header exists with simplified columns
         $summaryContent | Should -Match "## Issue Summary by Repository"
-        $summaryContent | Should -Match "\| Repository \| Total Issues \| Issue Types \| Fixed \| Failed \| Unfixable \|"
+        $summaryContent | Should -Match "\| Repository \| Total Issues \| Issue Types \|"
         
         # Verify table row for actions/checkout includes issue types
         $summaryContent | Should -Match "\| actions/checkout \| 2 \|"
