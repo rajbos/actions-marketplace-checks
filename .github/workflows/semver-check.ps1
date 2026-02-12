@@ -57,7 +57,15 @@ function Select-TopActions {
     
     Write-Host "Selected $($topActions.Count) actions for semver checking:"
     foreach ($action in $topActions) {
-        Write-Host "  - $($action.owner)/$($action.name)"
+        # Parse mirror name to show actual upstream repo name
+        # Use SplitUrl which handles duplicate prefixes
+        $fullPath = "$($action.owner)/$($action.name)"
+        $upstreamOwner, $upstreamRepo = SplitUrl -url $fullPath
+        if ([string]::IsNullOrEmpty($upstreamOwner) -or [string]::IsNullOrEmpty($upstreamRepo)) {
+            Write-Host "  - $($action.owner)/$($action.name)"
+        } else {
+            Write-Host "  - $upstreamOwner/$upstreamRepo"
+        }
     }
     
     return $topActions
@@ -128,7 +136,20 @@ function Test-ActionSemver {
         $tokenManager
     )
     
-    $repository = "$($action.owner)/$($action.name)"
+    # Parse the mirror repo name to get the actual upstream repo name
+    # The action.name field contains the mirror name (e.g., "github_docs")
+    # Construct the full path and use SplitUrl to parse it correctly
+    # SplitUrl handles duplicate prefixes like "github/github_docs" -> "github/docs"
+    $fullPath = "$($action.owner)/$($action.name)"
+    $upstreamOwner, $upstreamRepo = SplitUrl -url $fullPath
+    
+    # If parsing failed, fall back to original values
+    if ([string]::IsNullOrEmpty($upstreamOwner) -or [string]::IsNullOrEmpty($upstreamRepo)) {
+        $upstreamOwner = $action.owner
+        $upstreamRepo = $action.name
+    }
+    
+    $repository = "$upstreamOwner/$upstreamRepo"
     Write-Host ""
     Write-Host "====================================="
     Write-Host "Testing: $repository"
@@ -136,8 +157,8 @@ function Test-ActionSemver {
     
     $result = @{
         Repository = $repository
-        Owner = $action.owner
-        Name = $action.name
+        Owner = $upstreamOwner
+        Name = $upstreamRepo
         Success = $false
         Issues = @()
         Output = ""
