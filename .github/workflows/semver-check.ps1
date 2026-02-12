@@ -189,7 +189,7 @@ function Test-ActionSemver {
         $checkResult = Test-GitHubActionVersioning `
             -Repository $repository `
             -Token $token `
-            -CheckMinorVersion $false `
+            -CheckMinorVersion `
             -PassThru `
             -ErrorAction SilentlyContinue `
             -WarningAction SilentlyContinue
