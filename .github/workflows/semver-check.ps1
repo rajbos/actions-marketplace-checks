@@ -319,9 +319,14 @@ function Write-SummaryReport {
         $percentWithoutIssues = [math]::Round(($reposWithoutIssues / $totalRepos) * 100, 2)
         $percentWithMoreThan5 = [math]::Round(($reposWithMoreThan5Issues / $totalRepos) * 100, 2)
         
-        Write-Message -message "| Repos with issues | $reposWithIssues | $percentWithIssues% |" -logToSummary $true
-        Write-Message -message "| Repos without issues | $reposWithoutIssues | $percentWithoutIssues% |" -logToSummary $true
-        Write-Message -message "| Repos with more than 5 issues | $reposWithMoreThan5Issues | $percentWithMoreThan5% |" -logToSummary $true
+        # Format percentages - remove trailing zeros and decimal point if whole number
+        $percentWithIssuesFormatted = if ($percentWithIssues -eq [math]::Floor($percentWithIssues)) { [int]$percentWithIssues } else { $percentWithIssues }
+        $percentWithoutIssuesFormatted = if ($percentWithoutIssues -eq [math]::Floor($percentWithoutIssues)) { [int]$percentWithoutIssues } else { $percentWithoutIssues }
+        $percentWithMoreThan5Formatted = if ($percentWithMoreThan5 -eq [math]::Floor($percentWithMoreThan5)) { [int]$percentWithMoreThan5 } else { $percentWithMoreThan5 }
+        
+        Write-Message -message "| Repos with issues | $reposWithIssues | $percentWithIssuesFormatted% |" -logToSummary $true
+        Write-Message -message "| Repos without issues | $reposWithoutIssues | $percentWithoutIssuesFormatted% |" -logToSummary $true
+        Write-Message -message "| Repos with more than 5 issues | $reposWithMoreThan5Issues | $percentWithMoreThan5Formatted% |" -logToSummary $true
     } else {
         Write-Message -message "| Repos with issues | 0 | 0% |" -logToSummary $true
         Write-Message -message "| Repos without issues | 0 | 0% |" -logToSummary $true
