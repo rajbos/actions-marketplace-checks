@@ -238,6 +238,42 @@ function Test-ActionSemver {
     return $result
 }
 
+function Get-IssueType {
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$message
+    )
+    
+    # Extract short issue type from message
+    # Order matters - check more specific patterns first
+    if ($message -match "not immutable|immutability") {
+        return "Not Immutable"
+    } elseif ($message -match "tag.*(is\s+)?missing|missing.*tag|(major|minor|patch)\s+version\s+tag\s+missing") {
+        # Captures "Tag v1 is missing", "Major version tag missing", etc.
+        if ($message -match "major") {
+            return "Missing MAJ Tag"
+        } elseif ($message -match "minor") {
+            return "Missing MIN Tag"
+        } elseif ($message -match "patch") {
+            return "Missing PAT Tag"
+        }
+        return "Missing Tag"
+    } elseif ($message -match "incorrect\s+SHA|SHA\s+mismatch") {
+        return "Incorrect SHA"
+    } elseif ($message -match "may\s+be\s+outdated|outdated") {
+        return "Outdated"
+    } elseif ($message -match "inconsistent\s+format|format\s+could\s+be\s+improved|bad\s+format") {
+        return "Format Issue"
+    } elseif ($message -match "not\s+found") {
+        return "Not Found"
+    } elseif ($message -match "invalid|incorrect") {
+        return "Invalid"
+    } else {
+        # Return the full message as-is for unrecognized patterns
+        return $message
+    }
+}
+
 function Write-SummaryReport {
     Param (
         [Parameter(Mandatory = $true)]
@@ -253,11 +289,49 @@ function Write-SummaryReport {
     Write-Message -message "## Summary" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "- **Total Actions Checked**: $($results.Count)" -logToSummary $true
-    Write-Message -message "- **Actions Without Issues**: $(($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions With Issues**: $(($results | Where-Object { $_.Issues.Count -gt 0 }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions With Errors**: $(($results | Where-Object { $_.Error -and -not $_.RateLimited }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions Rate Limited**: $(($results | Where-Object { $_.RateLimited }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions Without Issues**: $(@($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Issues**: $(@($results | Where-Object { $_.Issues.Count -gt 0 }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Errors**: $(@($results | Where-Object { $_.Error -and -not $_.RateLimited }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions Rate Limited**: $(@($results | Where-Object { $_.RateLimited }).Count)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+    
+    # Build issue counters table
+    $actionsWithIssues = $results | Where-Object { $_.Issues.Count -gt 0 }
+    if ($actionsWithIssues.Count -gt 0) {
+        Write-Message -message "## Issue Summary by Repository" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        
+        # Create simple table header
+        Write-Message -message "| Repository | Total Issues | Issue Types |" -logToSummary $true
+        Write-Message -message "|------------|-------------|-------------|" -logToSummary $true
+        
+        # Process each action with issues
+        foreach ($action in $actionsWithIssues) {
+            # Collect unique issue types
+            $issueTypes = @{}
+            foreach ($issue in $action.Issues) {
+                $type = Get-IssueType -message $issue.Message
+                if ($issueTypes.ContainsKey($type)) {
+                    $issueTypes[$type]++
+                } else {
+                    $issueTypes[$type] = 1
+                }
+            }
+            
+            # Format issue types with counts
+            $issueTypesFormatted = ($issueTypes.GetEnumerator() | ForEach-Object {
+                if ($_.Value -gt 1) {
+                    "$($_.Key) ($($_.Value))"
+                } else {
+                    $_.Key
+                }
+            }) -join ", "
+            
+            $totalIssues = $action.Issues.Count
+            Write-Message -message "| $($action.Repository) | $totalIssues | $issueTypesFormatted |" -logToSummary $true
+        }
+        Write-Message -message "" -logToSummary $true
+    }
     
     # Actions without issues
     $cleanActions = $results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }
@@ -270,13 +344,13 @@ function Write-SummaryReport {
         Write-Message -message "" -logToSummary $true
     }
     
-    # Actions with issues
-    $actionsWithIssues = $results | Where-Object { $_.Issues.Count -gt 0 }
+    # Actions with issues - detailed view
     if ($actionsWithIssues.Count -gt 0) {
-        Write-Message -message "## ⚠️ Actions With Issues" -logToSummary $true
+        Write-Message -message "## ⚠️ Detailed Issue Information" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         foreach ($action in $actionsWithIssues) {
-            Write-Message -message "### $($action.Repository)" -logToSummary $true
+            Write-Message -message "<details>" -logToSummary $true
+            Write-Message -message "<summary><b>$($action.Repository)</b> - $($action.Issues.Count) issue(s)</summary>" -logToSummary $true
             Write-Message -message "" -logToSummary $true
             Write-Message -message "**Status**: $($action.Output)" -logToSummary $true
             Write-Message -message "" -logToSummary $true
@@ -288,6 +362,8 @@ function Write-SummaryReport {
                     Write-Message -message "- $icon **$($issue.Severity)**: $($issue.Message) [Status: $($issue.Status)]" -logToSummary $true
                 }
             }
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "</details>" -logToSummary $true
             Write-Message -message "" -logToSummary $true
         }
     }
