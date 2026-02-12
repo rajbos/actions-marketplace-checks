@@ -80,6 +80,7 @@ Describe "semver-check summary report" {
                 Output = "Return Code: 1, Fixed: 5, Failed: 1, Unfixable: 1"
                 Error = $null
                 RateLimited = $false
+                Dependents = "1,234"
             }
             @{
                 Repository = "actions/setup-node"
@@ -90,6 +91,7 @@ Describe "semver-check summary report" {
                 Output = "Return Code: 0, Fixed: 0, Failed: 0, Unfixable: 0"
                 Error = $null
                 RateLimited = $false
+                Dependents = "5,678"
             }
         )
         
@@ -97,14 +99,21 @@ Describe "semver-check summary report" {
         
         $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
         
-        # Verify table header exists with simplified columns
-        $summaryContent | Should -Match "## Issue Summary by Repository"
-        $summaryContent | Should -Match "\| Repository \| Total Issues \| Issue Types \|"
+        # Verify overall statistics table exists
+        $summaryContent | Should -Match "## Overall Statistics"
+        $summaryContent | Should -Match "Repos with issues"
+        $summaryContent | Should -Match "Repos without issues"
+        $summaryContent | Should -Match "Repos with more than 5 issues"
         
-        # Verify table row for actions/checkout includes issue types
+        # Verify table header exists with simplified columns including Dependents
+        $summaryContent | Should -Match "## Issue Summary by Repository"
+        $summaryContent | Should -Match "\| Repository \| Total Issues \| Issue Types \| Dependents \|"
+        
+        # Verify table row for actions/checkout includes issue types and dependents
         $summaryContent | Should -Match "\| actions/checkout \| 2 \|"
         $summaryContent | Should -Match "Missing Tag"
         $summaryContent | Should -Match "Outdated"
+        $summaryContent | Should -Match "1,234"
         
         # Verify detailed information is in collapsible section
         $summaryContent | Should -Match "<details>"
@@ -127,12 +136,17 @@ Describe "semver-check summary report" {
                 Output = "Return Code: 0, Fixed: 0, Failed: 0, Unfixable: 0"
                 Error = $null
                 RateLimited = $false
+                Dependents = $null
             }
         )
         
         Write-SummaryReport -results $results
         
         $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
+        
+        # Should have overall statistics table
+        $summaryContent | Should -Match "## Overall Statistics"
+        $summaryContent | Should -Match "Repos without issues \| 1 \| 100%"
         
         # Should not have issue summary table when no issues
         $summaryContent | Should -Not -Match "## Issue Summary by Repository"
@@ -157,6 +171,7 @@ Describe "semver-check summary report" {
                 Output = "Return Code: 1, Fixed: 0, Failed: 2, Unfixable: 1"
                 Error = $null
                 RateLimited = $false
+                Dependents = "N/A"
             }
         )
         
@@ -169,5 +184,80 @@ Describe "semver-check summary report" {
         $summaryContent | Should -Match "Missing MAJ Tag"
         $summaryContent | Should -Match "Missing MIN Tag"
         $summaryContent | Should -Match "Format Issue"
+        $summaryContent | Should -Match "N/A"
+    }
+    
+    It "should calculate overall statistics correctly" {
+        $results = @(
+            @{
+                Repository = "actions/checkout"
+                Owner = "actions"
+                Name = "checkout"
+                Success = $true
+                Issues = @(
+                    @{ Severity = "error"; Message = "Tag v1 is missing"; Status = "failed" }
+                )
+                Output = "Return Code: 1, Fixed: 0, Failed: 1, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "100"
+            }
+            @{
+                Repository = "actions/setup-node"
+                Owner = "actions"
+                Name = "setup-node"
+                Success = $true
+                Issues = @()
+                Output = "Return Code: 0, Fixed: 0, Failed: 0, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "200"
+            }
+            @{
+                Repository = "docker/build-push-action"
+                Owner = "docker"
+                Name = "build-push-action"
+                Success = $true
+                Issues = @(
+                    @{ Severity = "error"; Message = "Tag v1 is missing"; Status = "failed" }
+                    @{ Severity = "error"; Message = "Tag v2 is missing"; Status = "failed" }
+                    @{ Severity = "error"; Message = "Tag v3 is missing"; Status = "failed" }
+                    @{ Severity = "error"; Message = "Tag v4 is missing"; Status = "failed" }
+                    @{ Severity = "error"; Message = "Tag v5 is missing"; Status = "failed" }
+                    @{ Severity = "error"; Message = "Tag v6 is missing"; Status = "failed" }
+                )
+                Output = "Return Code: 1, Fixed: 0, Failed: 6, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "300"
+            }
+            @{
+                Repository = "microsoft/action"
+                Owner = "microsoft"
+                Name = "action"
+                Success = $true
+                Issues = @()
+                Output = "Return Code: 0, Fixed: 0, Failed: 0, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "400"
+            }
+        )
+        
+        Write-SummaryReport -results $results
+        
+        $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
+        
+        # Verify overall statistics table
+        $summaryContent | Should -Match "## Overall Statistics"
+        
+        # 2 repos with issues out of 4 total = 50%
+        $summaryContent | Should -Match "Repos with issues \| 2 \| 50%"
+        
+        # 2 repos without issues out of 4 total = 50%
+        $summaryContent | Should -Match "Repos without issues \| 2 \| 50%"
+        
+        # 1 repo with more than 5 issues out of 4 total = 25%
+        $summaryContent | Should -Match "Repos with more than 5 issues \| 1 \| 25%"
     }
 }
