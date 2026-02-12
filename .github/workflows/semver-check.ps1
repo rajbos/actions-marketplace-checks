@@ -253,11 +253,46 @@ function Write-SummaryReport {
     Write-Message -message "## Summary" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     Write-Message -message "- **Total Actions Checked**: $($results.Count)" -logToSummary $true
-    Write-Message -message "- **Actions Without Issues**: $(($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions With Issues**: $(($results | Where-Object { $_.Issues.Count -gt 0 }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions With Errors**: $(($results | Where-Object { $_.Error -and -not $_.RateLimited }).Count)" -logToSummary $true
-    Write-Message -message "- **Actions Rate Limited**: $(($results | Where-Object { $_.RateLimited }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions Without Issues**: $(@($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Issues**: $(@($results | Where-Object { $_.Issues.Count -gt 0 }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions With Errors**: $(@($results | Where-Object { $_.Error -and -not $_.RateLimited }).Count)" -logToSummary $true
+    Write-Message -message "- **Actions Rate Limited**: $(@($results | Where-Object { $_.RateLimited }).Count)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
+    
+    # Build issue counters table
+    $actionsWithIssues = $results | Where-Object { $_.Issues.Count -gt 0 }
+    if ($actionsWithIssues.Count -gt 0) {
+        Write-Message -message "## Issue Summary by Repository" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        
+        # Create table header
+        Write-Message -message "| Repository | Total Issues | Errors | Warnings | Fixed | Failed | Unfixable |" -logToSummary $true
+        Write-Message -message "|------------|-------------|--------|----------|-------|--------|-----------|" -logToSummary $true
+        
+        # Process each action with issues
+        foreach ($action in $actionsWithIssues) {
+            $errorCount = @($action.Issues | Where-Object { $_.Severity -eq "error" }).Count
+            $warningCount = @($action.Issues | Where-Object { $_.Severity -eq "warning" }).Count
+            
+            # Extract counts from output if available
+            $fixedCount = 0
+            $failedCount = 0
+            $unfixableCount = 0
+            if ($action.Output -match 'Fixed: (\d+)') {
+                $fixedCount = [int]$Matches[1]
+            }
+            if ($action.Output -match 'Failed: (\d+)') {
+                $failedCount = [int]$Matches[1]
+            }
+            if ($action.Output -match 'Unfixable: (\d+)') {
+                $unfixableCount = [int]$Matches[1]
+            }
+            
+            $totalIssues = $action.Issues.Count
+            Write-Message -message "| $($action.Repository) | $totalIssues | $errorCount | $warningCount | $fixedCount | $failedCount | $unfixableCount |" -logToSummary $true
+        }
+        Write-Message -message "" -logToSummary $true
+    }
     
     # Actions without issues
     $cleanActions = $results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }
@@ -270,13 +305,13 @@ function Write-SummaryReport {
         Write-Message -message "" -logToSummary $true
     }
     
-    # Actions with issues
-    $actionsWithIssues = $results | Where-Object { $_.Issues.Count -gt 0 }
+    # Actions with issues - detailed view
     if ($actionsWithIssues.Count -gt 0) {
-        Write-Message -message "## ⚠️ Actions With Issues" -logToSummary $true
+        Write-Message -message "## ⚠️ Detailed Issue Information" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         foreach ($action in $actionsWithIssues) {
-            Write-Message -message "### $($action.Repository)" -logToSummary $true
+            Write-Message -message "<details>" -logToSummary $true
+            Write-Message -message "<summary><b>$($action.Repository)</b> - $($action.Issues.Count) issue(s)</summary>" -logToSummary $true
             Write-Message -message "" -logToSummary $true
             Write-Message -message "**Status**: $($action.Output)" -logToSummary $true
             Write-Message -message "" -logToSummary $true
@@ -288,6 +323,8 @@ function Write-SummaryReport {
                     Write-Message -message "- $icon **$($issue.Severity)**: $($issue.Message) [Status: $($issue.Status)]" -logToSummary $true
                 }
             }
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "</details>" -logToSummary $true
             Write-Message -message "" -logToSummary $true
         }
     }
