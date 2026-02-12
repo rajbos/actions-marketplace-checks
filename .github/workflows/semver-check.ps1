@@ -238,6 +238,45 @@ function Test-ActionSemver {
     return $result
 }
 
+function Get-IssueType {
+    Param (
+        [Parameter(Mandatory = $true)]
+        [string]$message
+    )
+    
+    # Extract short issue type from message
+    # Order matters - check more specific patterns first
+    if ($message -match "not immutable|immutability") {
+        return "Not Immutable"
+    } elseif ($message -match "tag.*(is\s+)?missing|missing.*tag|(major|minor|patch)\s+version\s+tag\s+missing") {
+        # Captures "Tag v1 is missing", "Major version tag missing", etc.
+        if ($message -match "major") {
+            return "Missing MAJ Tag"
+        } elseif ($message -match "minor") {
+            return "Missing MIN Tag"
+        } elseif ($message -match "patch") {
+            return "Missing PAT Tag"
+        }
+        return "Missing Tag"
+    } elseif ($message -match "incorrect\s+SHA|SHA\s+mismatch") {
+        return "Incorrect SHA"
+    } elseif ($message -match "may\s+be\s+outdated|outdated") {
+        return "Outdated"
+    } elseif ($message -match "inconsistent\s+format|format\s+could\s+be\s+improved|bad\s+format") {
+        return "Format Issue"
+    } elseif ($message -match "not\s+found") {
+        return "Not Found"
+    } elseif ($message -match "invalid|incorrect") {
+        return "Invalid"
+    } else {
+        # Return first 30 characters of message as fallback
+        if ($message.Length -gt 30) {
+            return $message.Substring(0, 30) + "..."
+        }
+        return $message
+    }
+}
+
 function Write-SummaryReport {
     Param (
         [Parameter(Mandatory = $true)]
@@ -266,13 +305,30 @@ function Write-SummaryReport {
         Write-Message -message "" -logToSummary $true
         
         # Create table header
-        Write-Message -message "| Repository | Total Issues | Errors | Warnings | Fixed | Failed | Unfixable |" -logToSummary $true
-        Write-Message -message "|------------|-------------|--------|----------|-------|--------|-----------|" -logToSummary $true
+        Write-Message -message "| Repository | Total Issues | Issue Types | Fixed | Failed | Unfixable |" -logToSummary $true
+        Write-Message -message "|------------|-------------|-------------|-------|--------|-----------|" -logToSummary $true
         
         # Process each action with issues
         foreach ($action in $actionsWithIssues) {
-            $errorCount = @($action.Issues | Where-Object { $_.Severity -eq "error" }).Count
-            $warningCount = @($action.Issues | Where-Object { $_.Severity -eq "warning" }).Count
+            # Collect unique issue types
+            $issueTypes = @{}
+            foreach ($issue in $action.Issues) {
+                $type = Get-IssueType -message $issue.Message
+                if ($issueTypes.ContainsKey($type)) {
+                    $issueTypes[$type]++
+                } else {
+                    $issueTypes[$type] = 1
+                }
+            }
+            
+            # Format issue types with counts
+            $issueTypesFormatted = ($issueTypes.GetEnumerator() | ForEach-Object {
+                if ($_.Value -gt 1) {
+                    "$($_.Key) ($($_.Value))"
+                } else {
+                    $_.Key
+                }
+            }) -join ", "
             
             # Extract counts from output if available
             $fixedCount = 0
@@ -289,7 +345,7 @@ function Write-SummaryReport {
             }
             
             $totalIssues = $action.Issues.Count
-            Write-Message -message "| $($action.Repository) | $totalIssues | $errorCount | $warningCount | $fixedCount | $failedCount | $unfixableCount |" -logToSummary $true
+            Write-Message -message "| $($action.Repository) | $totalIssues | $issueTypesFormatted | $fixedCount | $failedCount | $unfixableCount |" -logToSummary $true
         }
         Write-Message -message "" -logToSummary $true
     }

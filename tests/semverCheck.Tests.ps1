@@ -97,12 +97,14 @@ Describe "semver-check summary report" {
         
         $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
         
-        # Verify table header exists
+        # Verify table header exists with new "Issue Types" column
         $summaryContent | Should -Match "## Issue Summary by Repository"
-        $summaryContent | Should -Match "\| Repository \| Total Issues \| Errors \| Warnings \| Fixed \| Failed \| Unfixable \|"
+        $summaryContent | Should -Match "\| Repository \| Total Issues \| Issue Types \| Fixed \| Failed \| Unfixable \|"
         
-        # Verify table row for actions/checkout
-        $summaryContent | Should -Match "\| actions/checkout \| 2 \| 1 \| 1 \| 5 \| 1 \| 1 \|"
+        # Verify table row for actions/checkout includes issue types
+        $summaryContent | Should -Match "\| actions/checkout \| 2 \|"
+        $summaryContent | Should -Match "Missing Tag"
+        $summaryContent | Should -Match "Outdated"
         
         # Verify detailed information is in collapsible section
         $summaryContent | Should -Match "<details>"
@@ -140,7 +142,7 @@ Describe "semver-check summary report" {
         $summaryContent | Should -Match "actions/checkout"
     }
     
-    It "should properly count errors and warnings" {
+    It "should properly categorize issue types" {
         $results = @(
             @{
                 Repository = "docker/build-push-action"
@@ -148,9 +150,9 @@ Describe "semver-check summary report" {
                 Name = "build-push-action"
                 Success = $true
                 Issues = @(
-                    @{ Severity = "error"; Message = "Error 1"; Status = "failed" }
-                    @{ Severity = "error"; Message = "Error 2"; Status = "failed" }
-                    @{ Severity = "warning"; Message = "Warning 1"; Status = "unfixable" }
+                    @{ Severity = "error"; Message = "Major version tag missing"; Status = "failed" }
+                    @{ Severity = "error"; Message = "Minor version tag missing"; Status = "failed" }
+                    @{ Severity = "warning"; Message = "Tag format could be improved"; Status = "unfixable" }
                 )
                 Output = "Return Code: 1, Fixed: 0, Failed: 2, Unfixable: 1"
                 Error = $null
@@ -162,7 +164,10 @@ Describe "semver-check summary report" {
         
         $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
         
-        # Verify counts are correct
-        $summaryContent | Should -Match "\| docker/build-push-action \| 3 \| 2 \| 1 \| 0 \| 2 \| 1 \|"
+        # Verify issue types are extracted and shown
+        $summaryContent | Should -Match "\| docker/build-push-action \| 3 \|"
+        $summaryContent | Should -Match "Missing MAJ Tag"
+        $summaryContent | Should -Match "Missing MIN Tag"
+        $summaryContent | Should -Match "Format Issue"
     }
 }
