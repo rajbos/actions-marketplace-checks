@@ -157,6 +157,7 @@ function Test-ActionSemver {
     
     # Configuration constants
     $maxRetries = 3
+    $baseBackoffSeconds = 30  # Base for exponential backoff: 60s, 120s, 240s
     $maxGraphQLWaitSeconds = 900  # Maximum 15 minutes wait for GraphQL rate limit reset
     $graphQLCriticalThreshold = 100  # Critical threshold for GraphQL remaining requests
     
@@ -314,7 +315,7 @@ function Test-ActionSemver {
                 # Retry logic for rate limit errors
                 if ($retryCount -lt $maxRetries) {
                     $retryCount++
-                    $backoffSeconds = [math]::Pow(2, $retryCount) * 30 # 60s, 120s, 240s
+                    $backoffSeconds = [math]::Pow(2, $retryCount) * $baseBackoffSeconds # 60s, 120s, 240s
                     Write-Host "Retry attempt $retryCount of $maxRetries. Backing off for $backoffSeconds seconds..."
                     Write-Message -message "⏱️ Rate limit hit for $repository. Retry $retryCount/$maxRetries after $(Format-WaitTime -totalSeconds $backoffSeconds)" -logToSummary $true
                     Start-Sleep -Seconds $backoffSeconds

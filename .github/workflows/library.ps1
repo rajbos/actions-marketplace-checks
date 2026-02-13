@@ -2149,18 +2149,11 @@ function Write-GitHubAppRateLimitOverview {
                         $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($app.GraphQLReset).UtcDateTime
                         $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
                         
-                        if ($timeUntilReset.TotalMinutes -lt 1) {
-                            $resetDisplay = "< 1 minute"
-                        } elseif ($timeUntilReset.TotalHours -lt 1) {
-                            $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
+                        # Handle negative values (reset time in the past)
+                        if ($timeUntilReset.TotalSeconds -le 0) {
+                            $resetDisplay = "expired (resets shortly)"
                         } else {
-                            $hours = [math]::Floor($timeUntilReset.TotalHours)
-                            $minutes = [math]::Floor($timeUntilReset.Minutes)
-                            if ($minutes -eq 0) {
-                                $resetDisplay = "$hours hours"
-                            } else {
-                                $resetDisplay = "$hours hours $minutes minutes"
-                            }
+                            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
                         }
                     }
                     
