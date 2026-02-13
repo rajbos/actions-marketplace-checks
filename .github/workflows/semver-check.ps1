@@ -340,12 +340,22 @@ function Write-SummaryReport {
         Write-Message -message "## Issue Summary by Repository" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         
+        # Sort by Dependents column (descending), treating null/N/A as 0 for sorting
+        $actionsWithIssuesSorted = $actionsWithIssues | Sort-Object -Property {
+            if ($null -eq $_.Dependents -or $_.Dependents -eq "N/A") {
+                0
+            } else {
+                # Remove commas and spaces, then convert to int for proper numeric sorting
+                [int]($_.Dependents -replace '[,\s]', '')
+            }
+        } -Descending
+        
         # Create simple table header with Dependents column
         Write-Message -message "| Repository | Total Issues | Issue Types | Dependents |" -logToSummary $true
         Write-Message -message "|------------|-------------|-------------|------------|" -logToSummary $true
         
         # Process each action with issues
-        foreach ($action in $actionsWithIssues) {
+        foreach ($action in $actionsWithIssuesSorted) {
             # Collect unique issue types
             $issueTypes = @{}
             foreach ($issue in $action.Issues) {

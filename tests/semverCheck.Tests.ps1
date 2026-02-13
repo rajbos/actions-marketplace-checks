@@ -260,4 +260,92 @@ Describe "semver-check summary report" {
         # 1 repo with more than 5 issues out of 4 total = 25%
         $summaryContent | Should -Match "Repos with more than 5 issues \| 1 \| 25%"
     }
+    
+    It "should sort Issue Summary table by Dependents column descending" {
+        $results = @(
+            @{
+                Repository = "low-dependents/action"
+                Owner = "low-dependents"
+                Name = "action"
+                Success = $true
+                Issues = @(
+                    @{ Severity = "error"; Message = "Tag v1 is missing"; Status = "failed" }
+                )
+                Output = "Return Code: 1, Fixed: 0, Failed: 1, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "100"
+            }
+            @{
+                Repository = "high-dependents/action"
+                Owner = "high-dependents"
+                Name = "action"
+                Success = $true
+                Issues = @(
+                    @{ Severity = "error"; Message = "Tag v1 is missing"; Status = "failed" }
+                )
+                Output = "Return Code: 1, Fixed: 0, Failed: 1, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "10,000"
+            }
+            @{
+                Repository = "no-dependents/action"
+                Owner = "no-dependents"
+                Name = "action"
+                Success = $true
+                Issues = @(
+                    @{ Severity = "error"; Message = "Tag v1 is missing"; Status = "failed" }
+                )
+                Output = "Return Code: 1, Fixed: 0, Failed: 1, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = $null
+            }
+            @{
+                Repository = "medium-dependents/action"
+                Owner = "medium-dependents"
+                Name = "action"
+                Success = $true
+                Issues = @(
+                    @{ Severity = "error"; Message = "Tag v1 is missing"; Status = "failed" }
+                )
+                Output = "Return Code: 1, Fixed: 0, Failed: 1, Unfixable: 0"
+                Error = $null
+                RateLimited = $false
+                Dependents = "5,000"
+            }
+        )
+        
+        Write-SummaryReport -results $results
+        
+        $summaryContent = Get-Content $env:GITHUB_STEP_SUMMARY -Raw
+        
+        # Extract the Issue Summary table section
+        $issueTableMatch = $summaryContent -match '(?s)## Issue Summary by Repository.*?(?=##|\z)'
+        $issueTableMatch | Should -Be $true
+        
+        # Find the order of repositories in the table
+        $lines = $summaryContent -split "`n"
+        $tableLines = @()
+        $inTable = $false
+        foreach ($line in $lines) {
+            if ($line -match "## Issue Summary by Repository") {
+                $inTable = $true
+                continue
+            }
+            if ($inTable -and $line -match "^## ") {
+                break
+            }
+            if ($inTable -and $line -match "^\| [^-]") {
+                $tableLines += $line
+            }
+        }
+        
+        # Verify the order: highest dependents first (10,000 -> 5,000 -> 100 -> N/A)
+        $tableLines[1] | Should -Match "high-dependents/action.*10,000"
+        $tableLines[2] | Should -Match "medium-dependents/action.*5,000"
+        $tableLines[3] | Should -Match "low-dependents/action.*100"
+        $tableLines[4] | Should -Match "no-dependents/action.*N/A"
+    }
 }
