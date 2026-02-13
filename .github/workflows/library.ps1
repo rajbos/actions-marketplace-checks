@@ -5258,7 +5258,13 @@ function Write-DetailedRateLimitInfo {
             $rate = $rateResponse.rate
             $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rate.reset).UtcDateTime
             $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
-            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            
+            # Handle negative values (reset time in the past)
+            if ($timeUntilReset.TotalSeconds -le 0) {
+                $resetDisplay = "expired (resets shortly)"
+            } else {
+                $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            }
             
             Write-Message -message "**Core API:**" -logToSummary $true
             Write-Message -message "- Limit: $(DisplayIntWithDots $rate.limit)" -logToSummary $true
@@ -5273,7 +5279,13 @@ function Write-DetailedRateLimitInfo {
             $graphql = $rateResponse.resources.graphql
             $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($graphql.reset).UtcDateTime
             $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
-            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            
+            # Handle negative values (reset time in the past)
+            if ($timeUntilReset.TotalSeconds -le 0) {
+                $resetDisplay = "expired (resets shortly)"
+            } else {
+                $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            }
             
             Write-Message -message "**GraphQL API:**" -logToSummary $true
             Write-Message -message "- Limit: $(DisplayIntWithDots $graphql.limit)" -logToSummary $true
@@ -5288,7 +5300,13 @@ function Write-DetailedRateLimitInfo {
             $search = $rateResponse.resources.search
             $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($search.reset).UtcDateTime
             $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
-            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            
+            # Handle negative values (reset time in the past)
+            if ($timeUntilReset.TotalSeconds -le 0) {
+                $resetDisplay = "expired (resets shortly)"
+            } else {
+                $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            }
             
             Write-Message -message "**Search API:**" -logToSummary $true
             Write-Message -message "- Limit: $(DisplayIntWithDots $search.limit)" -logToSummary $true

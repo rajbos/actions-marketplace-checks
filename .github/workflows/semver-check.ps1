@@ -155,6 +155,11 @@ function Test-ActionSemver {
         [int]$waitBetweenReposSeconds = 5
     )
     
+    # Configuration constants
+    $maxRetries = 3
+    $maxGraphQLWaitSeconds = 900  # Maximum 15 minutes wait for GraphQL rate limit reset
+    $graphQLCriticalThreshold = 100  # Critical threshold for GraphQL remaining requests
+    
     # Get the parsed upstream repo name
     $upstreamOwner, $upstreamRepo = Get-UpstreamRepoName -action $action
     
@@ -183,8 +188,7 @@ function Test-ActionSemver {
         Dependents = $dependentsCount
     }
     
-    # Maximum number of retries for rate limit errors
-    $maxRetries = 3
+    # Retry count starts at 0 for initial attempt
     $retryCount = 0
     
     while ($retryCount -le $maxRetries) {
@@ -221,12 +225,12 @@ function Test-ActionSemver {
                     Write-Host "⚠️ Warning: GraphQL API rate limit is low (remaining: $($rateData.resources.graphql.remaining))"
                     Write-Message -message "⚠️ Warning: GraphQL API rate limit is low for $repository (remaining: $($rateData.resources.graphql.remaining))" -logToSummary $true
                     
-                    # If GraphQL rate limit is critically low (< 100), wait for reset
-                    if ($rateData.resources.graphql.remaining -lt 100) {
+                    # If GraphQL rate limit is critically low, wait for reset
+                    if ($rateData.resources.graphql.remaining -lt $graphQLCriticalThreshold) {
                         $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rateData.resources.graphql.reset).UtcDateTime
                         $timeUntilReset = ($resetTime - (Get-Date).ToUniversalTime()).TotalSeconds
                         
-                        if ($timeUntilReset -gt 0 -and $timeUntilReset -lt 900) { # Wait up to 15 minutes
+                        if ($timeUntilReset -gt 0 -and $timeUntilReset -lt $maxGraphQLWaitSeconds) {
                             $waitTime = [math]::Ceiling($timeUntilReset) + 5 # Add 5 seconds buffer
                             Write-Host "GraphQL rate limit critically low. Waiting $waitTime seconds for reset..."
                             Write-Message -message "⏱️ GraphQL rate limit critically low for $repository. Waiting $(Format-WaitTime -totalSeconds $waitTime) for reset..." -logToSummary $true
