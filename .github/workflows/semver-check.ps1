@@ -160,6 +160,13 @@ function Test-ActionSemver {
     Write-Host "Testing: $repository"
     Write-Host "====================================="
     
+    # Extract dependents count if available
+    $dependentsCount = $null
+    if ($action.dependents -and $action.dependents.dependents) {
+        $dependentsCount = $action.dependents.dependents
+        Write-Host "Dependents: $dependentsCount"
+    }
+    
     $result = @{
         Repository = $repository
         Owner = $upstreamOwner
@@ -169,6 +176,7 @@ function Test-ActionSemver {
         Output = ""
         Error = $null
         RateLimited = $false
+        Dependents = $dependentsCount
     }
     
     try {
@@ -295,18 +303,59 @@ function Write-SummaryReport {
     Write-Message -message "- **Actions Rate Limited**: $(@($results | Where-Object { $_.RateLimited }).Count)" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
+    # Add overall statistics table
+    $totalRepos = $results.Count
+    $reposWithoutIssues = @($results | Where-Object { $_.Success -and $_.Issues.Count -eq 0 }).Count
+    $reposWithIssues = @($results | Where-Object { $_.Issues.Count -gt 0 }).Count
+    $reposWithMoreThan5Issues = @($results | Where-Object { $_.Issues.Count -gt 5 }).Count
+    
+    Write-Message -message "## Overall Statistics" -logToSummary $true
+    Write-Message -message "" -logToSummary $true
+    Write-Message -message "| Status | Count | Percentage |" -logToSummary $true
+    Write-Message -message "|--------|-------|------------|" -logToSummary $true
+    
+    if ($totalRepos -gt 0) {
+        $percentWithIssues = [math]::Round(($reposWithIssues / $totalRepos) * 100, 2)
+        $percentWithoutIssues = [math]::Round(($reposWithoutIssues / $totalRepos) * 100, 2)
+        $percentWithMoreThan5 = [math]::Round(($reposWithMoreThan5Issues / $totalRepos) * 100, 2)
+        
+        # Format percentages - remove trailing zeros and decimal point if whole number
+        $percentWithIssuesFormatted = if ($percentWithIssues -eq [math]::Floor($percentWithIssues)) { [int]$percentWithIssues } else { $percentWithIssues }
+        $percentWithoutIssuesFormatted = if ($percentWithoutIssues -eq [math]::Floor($percentWithoutIssues)) { [int]$percentWithoutIssues } else { $percentWithoutIssues }
+        $percentWithMoreThan5Formatted = if ($percentWithMoreThan5 -eq [math]::Floor($percentWithMoreThan5)) { [int]$percentWithMoreThan5 } else { $percentWithMoreThan5 }
+        
+        Write-Message -message "| Repos with issues | $reposWithIssues | $percentWithIssuesFormatted% |" -logToSummary $true
+        Write-Message -message "| Repos without issues | $reposWithoutIssues | $percentWithoutIssuesFormatted% |" -logToSummary $true
+        Write-Message -message "| Repos with more than 5 issues | $reposWithMoreThan5Issues | $percentWithMoreThan5Formatted% |" -logToSummary $true
+    } else {
+        Write-Message -message "| Repos with issues | 0 | 0% |" -logToSummary $true
+        Write-Message -message "| Repos without issues | 0 | 0% |" -logToSummary $true
+        Write-Message -message "| Repos with more than 5 issues | 0 | 0% |" -logToSummary $true
+    }
+    Write-Message -message "" -logToSummary $true
+    
     # Build issue counters table
     $actionsWithIssues = $results | Where-Object { $_.Issues.Count -gt 0 }
     if ($actionsWithIssues.Count -gt 0) {
         Write-Message -message "## Issue Summary by Repository" -logToSummary $true
         Write-Message -message "" -logToSummary $true
         
-        # Create simple table header
-        Write-Message -message "| Repository | Total Issues | Issue Types |" -logToSummary $true
-        Write-Message -message "|------------|-------------|-------------|" -logToSummary $true
+        # Sort by Dependents column (descending), treating null/N/A as 0 for sorting
+        $actionsWithIssuesSorted = $actionsWithIssues | Sort-Object -Property {
+            if ($null -eq $_.Dependents -or $_.Dependents -eq "N/A") {
+                0
+            } else {
+                # Remove commas and spaces, then convert to int for proper numeric sorting
+                [int]($_.Dependents -replace '[,\s]', '')
+            }
+        } -Descending
+        
+        # Create simple table header with Dependents column
+        Write-Message -message "| Repository | Total Issues | Issue Types | Dependents |" -logToSummary $true
+        Write-Message -message "|------------|-------------|-------------|------------|" -logToSummary $true
         
         # Process each action with issues
-        foreach ($action in $actionsWithIssues) {
+        foreach ($action in $actionsWithIssuesSorted) {
             # Collect unique issue types
             $issueTypes = @{}
             foreach ($issue in $action.Issues) {
@@ -327,8 +376,11 @@ function Write-SummaryReport {
                 }
             }) -join ", "
             
+            # Get dependents count if available
+            $dependentsCount = if ($action.Dependents) { $action.Dependents } else { "N/A" }
+            
             $totalIssues = $action.Issues.Count
-            Write-Message -message "| $($action.Repository) | $totalIssues | $issueTypesFormatted |" -logToSummary $true
+            Write-Message -message "| $($action.Repository) | $totalIssues | $issueTypesFormatted | $dependentsCount |" -logToSummary $true
         }
         Write-Message -message "" -logToSummary $true
     }
