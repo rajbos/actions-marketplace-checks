@@ -1,6 +1,8 @@
 Param (
     [Parameter(Mandatory = $false)]
-    [int]$topActionsCount = 5
+    [int]$topActionsCount = 5,
+    [Parameter(Mandatory = $false)]
+    [int]$waitBetweenReposSeconds = 5
 )
 
 Write-Host "Starting semver check workflow"
@@ -148,7 +150,9 @@ function Test-ActionSemver {
         [Parameter(Mandatory = $true)]
         $action,
         [Parameter(Mandatory = $true)]
-        $tokenManager
+        $tokenManager,
+        [Parameter(Mandatory = $false)]
+        [int]$waitBetweenReposSeconds = 5
     )
     
     # Get the parsed upstream repo name
@@ -179,67 +183,154 @@ function Test-ActionSemver {
         Dependents = $dependentsCount
     }
     
-    try {
-        # Get a fresh token for this action to avoid rate limit exhaustion
-        # The token manager will try different GitHub Apps in round-robin fashion
-        $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
-        if (-not $tokenResult -or -not $tokenResult.Token) {
-            $result.Error = "Failed to get GitHub token"
-            Write-Host "Error: Failed to get GitHub token"
-            return $result
-        }
-        
-        $token = $tokenResult.Token
-        
-        # Run the semver check with PassThru to get detailed results
-        Write-Host "Running Test-GitHubActionVersioning for $repository..."
-        
-        $checkResult = Test-GitHubActionVersioning `
-            -Repository $repository `
-            -Token $token `
-            -CheckMinorVersion "none" `
-            -PassThru `
-            -ErrorAction SilentlyContinue `
-            -WarningAction SilentlyContinue
-        
-        if ($checkResult) {
-            $result.Success = ($checkResult.ReturnCode -eq 0)
-            $result.Output = "Return Code: $($checkResult.ReturnCode), Fixed: $($checkResult.FixedCount), Failed: $($checkResult.FailedCount), Unfixable: $($checkResult.UnfixableCount)"
-            
-            # Capture issues
-            if ($checkResult.Issues) {
-                foreach ($issue in $checkResult.Issues) {
-                    $result.Issues += @{
-                        Severity = $issue.Severity
-                        Message = $issue.Message
-                        Status = $issue.Status
-                    }
-                }
+    # Maximum number of retries for rate limit errors
+    $maxRetries = 3
+    $retryCount = 0
+    
+    while ($retryCount -le $maxRetries) {
+        try {
+            # Get a fresh token for this action to avoid rate limit exhaustion
+            # The token manager will try different GitHub Apps in round-robin fashion
+            $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+            if (-not $tokenResult -or -not $tokenResult.Token) {
+                $result.Error = "Failed to get GitHub token"
+                Write-Host "Error: Failed to get GitHub token"
+                return $result
             }
             
-            Write-Host "Result: $($result.Output)"
-            Write-Host "Issues found: $($result.Issues.Count)"
-        } else {
-            $result.Error = "No result returned from Test-GitHubActionVersioning"
-            Write-Host "Warning: No result returned"
-        }
-        
-        # Move to next app for the next action to distribute load across GitHub Apps
-        $tokenManager.MoveToNextApp()
-        
-    } catch {
-        $errorMessage = $_.Exception.Message
-        $result.Error = $errorMessage
-        
-        # Check if this is a rate limit error
-        if ($errorMessage -match "rate limit exceeded|HTTP 403") {
-            $result.RateLimited = $true
-            Write-Host "Rate limit error: $errorMessage"
+            $token = $tokenResult.Token
             
-            # Move to next app after rate limit to try a different app for next action
+            # Check rate limits before making the API call
+            Write-Host "Checking rate limits before processing..."
+            try {
+                $headers = @{
+                    Authorization = GetBasicAuthenticationHeader -access_token $token
+                }
+                $rateUrl = "https://api.github.com/rate_limit"
+                $rateCheck = Invoke-WebRequest -Uri $rateUrl -Headers $headers -Method GET -ErrorAction Stop
+                $rateData = ($rateCheck.Content | ConvertFrom-Json)
+                
+                # Check Core API rate limit
+                if ($null -ne $rateData.rate -and $rateData.rate.remaining -lt 100) {
+                    Write-Host "⚠️ Warning: Core API rate limit is low (remaining: $($rateData.rate.remaining))"
+                    Write-Message -message "⚠️ Warning: Core API rate limit is low for $repository (remaining: $($rateData.rate.remaining))" -logToSummary $true
+                }
+                
+                # Check GraphQL API rate limit
+                if ($null -ne $rateData.resources.graphql -and $rateData.resources.graphql.remaining -lt 500) {
+                    Write-Host "⚠️ Warning: GraphQL API rate limit is low (remaining: $($rateData.resources.graphql.remaining))"
+                    Write-Message -message "⚠️ Warning: GraphQL API rate limit is low for $repository (remaining: $($rateData.resources.graphql.remaining))" -logToSummary $true
+                    
+                    # If GraphQL rate limit is critically low (< 100), wait for reset
+                    if ($rateData.resources.graphql.remaining -lt 100) {
+                        $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rateData.resources.graphql.reset).UtcDateTime
+                        $timeUntilReset = ($resetTime - (Get-Date).ToUniversalTime()).TotalSeconds
+                        
+                        if ($timeUntilReset -gt 0 -and $timeUntilReset -lt 900) { # Wait up to 15 minutes
+                            $waitTime = [math]::Ceiling($timeUntilReset) + 5 # Add 5 seconds buffer
+                            Write-Host "GraphQL rate limit critically low. Waiting $waitTime seconds for reset..."
+                            Write-Message -message "⏱️ GraphQL rate limit critically low for $repository. Waiting $(Format-WaitTime -totalSeconds $waitTime) for reset..." -logToSummary $true
+                            Start-Sleep -Seconds $waitTime
+                            
+                            # Move to next app after waiting
+                            $tokenManager.MoveToNextApp()
+                            continue
+                        }
+                    }
+                }
+            } catch {
+                Write-Host "Warning: Could not check rate limits before processing: $($_.Exception.Message)"
+            }
+            
+            # Run the semver check with PassThru to get detailed results
+            Write-Host "Running Test-GitHubActionVersioning for $repository..."
+            
+            $checkResult = Test-GitHubActionVersioning `
+                -Repository $repository `
+                -Token $token `
+                -CheckMinorVersion "none" `
+                -PassThru `
+                -ErrorAction SilentlyContinue `
+                -WarningAction SilentlyContinue
+            
+            if ($checkResult) {
+                $result.Success = ($checkResult.ReturnCode -eq 0)
+                $result.Output = "Return Code: $($checkResult.ReturnCode), Fixed: $($checkResult.FixedCount), Failed: $($checkResult.FailedCount), Unfixable: $($checkResult.UnfixableCount)"
+                
+                # Capture issues
+                if ($checkResult.Issues) {
+                    foreach ($issue in $checkResult.Issues) {
+                        $result.Issues += @{
+                            Severity = $issue.Severity
+                            Message = $issue.Message
+                            Status = $issue.Status
+                        }
+                    }
+                }
+                
+                Write-Host "Result: $($result.Output)"
+                Write-Host "Issues found: $($result.Issues.Count)"
+            } else {
+                $result.Error = "No result returned from Test-GitHubActionVersioning"
+                Write-Host "Warning: No result returned"
+            }
+            
+            # Move to next app for the next action to distribute load across GitHub Apps
             $tokenManager.MoveToNextApp()
-        } else {
-            Write-Host "Error: $errorMessage"
+            
+            # Add wait time between repo processing to reduce rate limit pressure
+            if ($waitBetweenReposSeconds -gt 0) {
+                Write-Host "Waiting $waitBetweenReposSeconds seconds before next repository..."
+                Start-Sleep -Seconds $waitBetweenReposSeconds
+            }
+            
+            # Success - break out of retry loop
+            break
+            
+        } catch {
+            $errorMessage = $_.Exception.Message
+            $result.Error = $errorMessage
+            
+            # Check if this is a rate limit error
+            if ($errorMessage -match "rate limit exceeded|HTTP 403|429") {
+                $result.RateLimited = $true
+                Write-Host "⚠️ Rate limit error detected: $errorMessage"
+                
+                # Log detailed rate limit info
+                Write-Host "Logging detailed rate limit information..."
+                try {
+                    $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+                    if ($tokenResult -and $tokenResult.Token) {
+                        Write-DetailedRateLimitInfo -access_token $tokenResult.Token -title "Rate Limit Info After Error for $repository"
+                    }
+                } catch {
+                    Write-Host "Could not retrieve detailed rate limit info: $($_.Exception.Message)"
+                }
+                
+                # Retry logic for rate limit errors
+                if ($retryCount -lt $maxRetries) {
+                    $retryCount++
+                    $backoffSeconds = [math]::Pow(2, $retryCount) * 30 # 60s, 120s, 240s
+                    Write-Host "Retry attempt $retryCount of $maxRetries. Backing off for $backoffSeconds seconds..."
+                    Write-Message -message "⏱️ Rate limit hit for $repository. Retry $retryCount/$maxRetries after $(Format-WaitTime -totalSeconds $backoffSeconds)" -logToSummary $true
+                    Start-Sleep -Seconds $backoffSeconds
+                    
+                    # Move to next app before retry
+                    $tokenManager.MoveToNextApp()
+                    continue
+                } else {
+                    Write-Host "Max retries reached for rate limit errors"
+                    Write-Message -message "❌ Max retries reached for $repository due to rate limits" -logToSummary $true
+                    
+                    # Move to next app after exhausting retries
+                    $tokenManager.MoveToNextApp()
+                    break
+                }
+            } else {
+                # Non-rate-limit error - don't retry
+                Write-Host "Error: $errorMessage"
+                break
+            }
         }
     }
     
@@ -502,9 +593,10 @@ try {
     # Run semver checks for each action
     Write-Host ""
     Write-Host "Starting semver checks for $($topActions.Count) actions..."
+    Write-Host "Wait time between repos: $waitBetweenReposSeconds seconds"
     
     foreach ($action in $topActions) {
-        $checkResult = Test-ActionSemver -action $action -tokenManager $tokenManager
+        $checkResult = Test-ActionSemver -action $action -tokenManager $tokenManager -waitBetweenReposSeconds $waitBetweenReposSeconds
         $script:results += $checkResult
     }
     

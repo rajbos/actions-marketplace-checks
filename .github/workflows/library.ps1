@@ -2097,6 +2097,8 @@ function Write-GitHubAppRateLimitOverview {
     }
 
     if ($null -ne $appOverview -and $appOverview.Count -gt 0) {
+        Write-Message -message "#### Core API Rate Limits" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
         Write-Message -message "| # | App Id | Remaining | Used | Wait Time | Continue At (UTC) | Token Expires In |" -logToSummary $true
         Write-Message -message "|---:|-------:|----------:|-----:|-----------|-------------------|------------------|" -logToSummary $true
 
@@ -2129,6 +2131,50 @@ function Write-GitHubAppRateLimitOverview {
         }
 
         Write-Message -message "" -logToSummary $true
+        
+        # Add GraphQL rate limit information if available
+        $hasGraphQL = $appOverview | Where-Object { $null -ne $_.GraphQLRemaining }
+        if ($hasGraphQL.Count -gt 0) {
+            Write-Message -message "#### GraphQL API Rate Limits" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "| # | App Id | Limit | Remaining | Used | Resets In |" -logToSummary $true
+            Write-Message -message "|---:|-------:|------:|----------:|-----:|-----------|" -logToSummary $true
+            
+            $index = 1
+            foreach ($app in $appOverview) {
+                if ($null -ne $app.GraphQLRemaining) {
+                    # Calculate time until reset
+                    $resetDisplay = "N/A"
+                    if ($null -ne $app.GraphQLReset) {
+                        $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($app.GraphQLReset).UtcDateTime
+                        $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+                        
+                        if ($timeUntilReset.TotalMinutes -lt 1) {
+                            $resetDisplay = "< 1 minute"
+                        } elseif ($timeUntilReset.TotalHours -lt 1) {
+                            $resetDisplay = "$([math]::Floor($timeUntilReset.TotalMinutes)) minutes"
+                        } else {
+                            $hours = [math]::Floor($timeUntilReset.TotalHours)
+                            $minutes = [math]::Floor($timeUntilReset.Minutes)
+                            if ($minutes -eq 0) {
+                                $resetDisplay = "$hours hours"
+                            } else {
+                                $resetDisplay = "$hours hours $minutes minutes"
+                            }
+                        }
+                    }
+                    
+                    $graphqlLimit = if ($null -ne $app.GraphQLLimit) { $app.GraphQLLimit } else { "N/A" }
+                    $graphqlRemaining = if ($null -ne $app.GraphQLRemaining) { $app.GraphQLRemaining } else { "N/A" }
+                    $graphqlUsed = if ($null -ne $app.GraphQLUsed) { $app.GraphQLUsed } else { "N/A" }
+                    
+                    Write-Message -message "| $index | $($app.AppId) | $(DisplayIntWithDots $graphqlLimit) | $(DisplayIntWithDots $graphqlRemaining) | $(DisplayIntWithDots $graphqlUsed) | $resetDisplay |" -logToSummary $true
+                }
+                $index++
+            }
+            
+            Write-Message -message "" -logToSummary $true
+        }
     }
 }
 
@@ -2270,6 +2316,18 @@ function Get-GitHubAppRateLimitOverview {
                     $minutesUntilExpiration = [Math]::Round($timeRemaining.TotalMinutes, 1)
                 }
 
+                # Extract GraphQL rate limit info if available
+                $graphqlRemaining = $null
+                $graphqlUsed = $null
+                $graphqlLimit = $null
+                $graphqlReset = $null
+                if ($null -ne $rateResponse.resources -and $null -ne $rateResponse.resources.graphql) {
+                    $graphqlRemaining = $rateResponse.resources.graphql.remaining
+                    $graphqlUsed = $rateResponse.resources.graphql.used
+                    $graphqlLimit = $rateResponse.resources.graphql.limit
+                    $graphqlReset = $rateResponse.resources.graphql.reset
+                }
+
                 $results += [pscustomobject]@{
                     AppId = $appId
                     Token = $token
@@ -2279,6 +2337,10 @@ function Get-GitHubAppRateLimitOverview {
                     ContinueAt = $continueAt
                     ExpirationTime = $expirationTime
                     MinutesUntilExpiration = $minutesUntilExpiration
+                    GraphQLRemaining = $graphqlRemaining
+                    GraphQLUsed = $graphqlUsed
+                    GraphQLLimit = $graphqlLimit
+                    GraphQLReset = $graphqlReset
                 }
             }
             catch {
@@ -5152,6 +5214,92 @@ function ShowOverallDatasetStatistics {
         Write-Message -message "" -logToSummary $true
         Write-Message -message "</details>" -logToSummary $true
         Write-Message -message "" -logToSummary $true
+    }
+}
+
+<#
+    .SYNOPSIS
+    Logs detailed rate limit information for a specific token, including GraphQL limits.
+    
+    .DESCRIPTION
+    Retrieves and logs comprehensive rate limit information from the GitHub API,
+    including both Core API and GraphQL API limits. Useful for debugging rate limit issues.
+    
+    .PARAMETER access_token
+    The GitHub token to check rate limits for
+    
+    .PARAMETER title
+    Optional title for the rate limit info section
+    
+    .EXAMPLE
+    Write-DetailedRateLimitInfo -access_token $token -title "Rate Limit Info After Error"
+#>
+function Write-DetailedRateLimitInfo {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string]$access_token,
+        [string]$title = "Detailed Rate Limit Information"
+    )
+    
+    try {
+        $headers = @{
+            Authorization = GetBasicAuthenticationHeader -access_token $access_token
+        }
+        
+        $rateUrl = "https://api.github.com/rate_limit"
+        $result = Invoke-WebRequest -Uri $rateUrl -Headers $headers -Method GET -ErrorAction Stop
+        $rateResponse = $result.Content | ConvertFrom-Json
+        
+        Write-Message -message "**${title}:**" -logToSummary $true
+        Write-Message -message "" -logToSummary $true
+        
+        # Core API rate limit
+        if ($null -ne $rateResponse.rate) {
+            $rate = $rateResponse.rate
+            $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($rate.reset).UtcDateTime
+            $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            
+            Write-Message -message "**Core API:**" -logToSummary $true
+            Write-Message -message "- Limit: $(DisplayIntWithDots $rate.limit)" -logToSummary $true
+            Write-Message -message "- Used: $(DisplayIntWithDots $rate.used)" -logToSummary $true
+            Write-Message -message "- Remaining: $(DisplayIntWithDots $rate.remaining)" -logToSummary $true
+            Write-Message -message "- Resets in: $resetDisplay" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+        }
+        
+        # GraphQL API rate limit
+        if ($null -ne $rateResponse.resources -and $null -ne $rateResponse.resources.graphql) {
+            $graphql = $rateResponse.resources.graphql
+            $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($graphql.reset).UtcDateTime
+            $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            
+            Write-Message -message "**GraphQL API:**" -logToSummary $true
+            Write-Message -message "- Limit: $(DisplayIntWithDots $graphql.limit)" -logToSummary $true
+            Write-Message -message "- Used: $(DisplayIntWithDots $graphql.used)" -logToSummary $true
+            Write-Message -message "- Remaining: $(DisplayIntWithDots $graphql.remaining)" -logToSummary $true
+            Write-Message -message "- Resets in: $resetDisplay" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+        }
+        
+        # Search API rate limit (for completeness)
+        if ($null -ne $rateResponse.resources -and $null -ne $rateResponse.resources.search) {
+            $search = $rateResponse.resources.search
+            $resetTime = [DateTimeOffset]::FromUnixTimeSeconds($search.reset).UtcDateTime
+            $timeUntilReset = $resetTime - (Get-Date).ToUniversalTime()
+            $resetDisplay = Format-WaitTime -totalSeconds $timeUntilReset.TotalSeconds
+            
+            Write-Message -message "**Search API:**" -logToSummary $true
+            Write-Message -message "- Limit: $(DisplayIntWithDots $search.limit)" -logToSummary $true
+            Write-Message -message "- Used: $(DisplayIntWithDots $search.used)" -logToSummary $true
+            Write-Message -message "- Remaining: $(DisplayIntWithDots $search.remaining)" -logToSummary $true
+            Write-Message -message "- Resets in: $resetDisplay" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+        }
+        
+    } catch {
+        Write-Warning "Failed to retrieve detailed rate limit info: $($_.Exception.Message)"
     }
 }
 
