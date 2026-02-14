@@ -53,8 +53,8 @@ jobs:
           APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
           APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
           APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
-          TOP_ACTIONS_COUNT: ${{ github.event.inputs.topActionsCount || '5' }}
-          WAIT_BETWEEN_REPOS_SECONDS: ${{ github.event.inputs.waitBetweenReposSeconds || '5' }}
+          TOP_ACTIONS_COUNT: ${{ github.event.inputs.topActionsCount || '25' }}
+          WAIT_BETWEEN_REPOS_SECONDS: ${{ github.event.inputs.waitBetweenReposSeconds || '10' }}
         run: |
           $topActionsCount = if ($env:TOP_ACTIONS_COUNT) { [int]$env:TOP_ACTIONS_COUNT } else { 5 }
           $waitBetweenReposSeconds = if ($env:WAIT_BETWEEN_REPOS_SECONDS) { [int]$env:WAIT_BETWEEN_REPOS_SECONDS } else { 5 }
