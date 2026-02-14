@@ -15,11 +15,11 @@ on:
       topActionsCount:
         description: 'Number of top actions to check'
         required: false
-        default: '5'
+        default: '25'
       waitBetweenReposSeconds:
         description: 'Wait time in seconds between processing repositories (to reduce rate limit pressure)'
         required: false
-        default: '25'
+        default: '10'
 
 env:
   APP_ID: ${{ vars.APPLICATION_ID }}
