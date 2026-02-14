@@ -19,7 +19,7 @@ on:
       waitBetweenReposSeconds:
         description: 'Wait time in seconds between processing repositories (to reduce rate limit pressure)'
         required: false
-        default: '5'
+        default: '25'
 
 env:
   APP_ID: ${{ vars.APPLICATION_ID }}
