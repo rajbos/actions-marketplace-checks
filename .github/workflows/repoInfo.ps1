@@ -374,7 +374,7 @@ function GetRepoInfo {
     Write-Host "Loading repository info for [$owner/$repo]"
 
     # Treat 404s as expected (repo deleted or private) without flooding logs
-    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true
+    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
     if ($repoResponse -is [hashtable] -and $repoResponse.Error) {
         $statusCode = $null
         if ($repoResponse.StatusCode) {
@@ -404,7 +404,7 @@ function GetRepoInfo {
     }
 
     $releaseUrl = "/repos/$owner/$repo/releases/latest"
-    $releaseResponse = ApiCall -method GET -url $releaseUrl -hideFailedCall $true -returnErrorInfo $true
+    $releaseResponse = ApiCall -method GET -url $releaseUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
     $latestReleaseDate = $null
     if (-not ($releaseResponse -is [hashtable] -and $releaseResponse.Error)) {
         $latestReleaseDate = $releaseResponse.published_at
@@ -434,7 +434,7 @@ function GetRepoTagInfo {
     }
 
     $url = "repos/$owner/$repo/git/matching-refs/tags"
-    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
 
     if ($response -is [hashtable] -and $response.Error) {
         if ($response.StatusCode -ne 404) {
@@ -479,7 +479,7 @@ function GetRepoReleases {
     }
 
     $url = "repos/$owner/$repo/releases"
-    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
 
     if ($response -is [hashtable] -and $response.Error) {
         if ($response.StatusCode -ne 404) {
@@ -530,12 +530,12 @@ function GetFundingInfo {
 
     try {
         Write-Debug "Checking for FUNDING.yml at [$fundingFileLocation]"
-        $response = ApiCall -method GET -url $fundingFileLocation -hideFailedCall $true
+        $response = ApiCall -method GET -url $fundingFileLocation -hideFailedCall $true -access_token $accessToken
         
         if ($response -and $response.download_url) {
             Write-Message "Found FUNDING.yml for [$owner/$repo] at [$fundingFileLocation]"
             # Download the file content
-            $fundingFileContent = ApiCall -method GET -url $response.download_url -returnErrorInfo $true
+            $fundingFileContent = ApiCall -method GET -url $response.download_url -returnErrorInfo $true -access_token $accessToken
         }
     }
     catch {
@@ -632,20 +632,20 @@ function GetActionType {
     $actionType = ""
     try {
         $url = "/repos/$owner/$repo/contents/action.yml"
-        $response = ApiCall -method GET -url $url -hideFailedCall $true
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
         $fileFound = "action.yml"
     }
     catch {
         Write-Debug "No action.yml, checking for action.yaml"
         try {
             $url = "/repos/$owner/$repo/contents/action.yaml"
-            $response = ApiCall -method GET -url $url -hideFailedCall $true
+            $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
             $fileFound = "action.yaml"
         }
         catch {
             try {
                 $url = "/repos/$owner/$repo/contents/Dockerfile"
-                $response = ApiCall -method GET -url $url -hideFailedCall $true
+                $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
                 $fileFound = "Dockerfile"
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
@@ -655,7 +655,7 @@ function GetActionType {
             catch {
                 try {
                     $url = "/repos/$owner/$repo/contents/dockerfile"
-                    $response = ApiCall -method GET -url $url -hideFailedCall $true
+                    $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
                     $fileFound = "dockerfile"
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
@@ -677,7 +677,7 @@ function GetActionType {
 
     # load the file
     Write-Message "Downloading the action definition file for repo [$owner/$repo] from url [$($response.download_url)]"
-    $fileContent = ApiCall -method GET -url $response.download_url -returnErrorInfo $true
+    $fileContent = ApiCall -method GET -url $response.download_url -returnErrorInfo $true -access_token $accessToken
     
     # Check if ApiCall returned an error
     if (($fileContent -is [hashtable]) -and ($fileContent.ContainsKey('Error'))) {
@@ -799,7 +799,7 @@ function MakeRepoInfoCall {
     # try to load repo info
     $url = "/repos/$forkOrg/$($action.name)"
     try {
-        $response = ApiCall -method GET -url $url -hideFailedCall $true
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
     }
     catch {
         if (Is404Error -errorMessage $errorMsg) {
@@ -975,7 +975,7 @@ function GetInfo {
                 ($owner, $repo) = GetOrgActionInfo($action.name)
                 if ($owner -and $repo) {
                     $upstreamUrl = "/repos/$owner/$repo"
-                    $upstreamResponse = ApiCall -method GET -url $upstreamUrl -hideFailedCall $true
+                    $upstreamResponse = ApiCall -method GET -url $upstreamUrl -hideFailedCall $true -access_token $accessToken
                     if ($null -ne $upstreamResponse -and $null -ne $upstreamResponse.size) {
                         $sizeValue = $upstreamResponse.size
                     }
@@ -1239,10 +1239,10 @@ function GetRepoDockerBaseImage {
         $dockerfilePath = "Dockerfile"
         $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
         try {
-            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo
+            $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo -access_token $accessToken
             $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
             if ($hasValidDownloadUrl) {
-                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo
+                $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo -access_token $accessToken
                 $result.dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
                 $result.hasCustomCode = Test-DockerfileHasCustomCode -dockerFileContent $dockerFileContent
             }
@@ -1257,10 +1257,10 @@ function GetRepoDockerBaseImage {
             $dockerfilePath = "dockerfile"
             $contextInfo = "Repository: $repoUrl, File: $dockerfilePath"
             try {
-                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo -access_token $accessToken
                 $hasValidDownloadUrl = $null -ne $dockerFile -and $null -ne $dockerFile.download_url -and $dockerFile.download_url -ne ""
                 if ($hasValidDownloadUrl) {
-                    $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo
+                    $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo -access_token $accessToken
                     $result.dockerBaseImage = GetDockerBaseImageNameFromContent -dockerFileContent $dockerFileContent
                     $result.hasCustomCode = Test-DockerfileHasCustomCode -dockerFileContent $dockerFileContent
                 }
@@ -1290,7 +1290,7 @@ function EnableSecretScanning {
 
     $url = "/repos/$owner/$repo"
     $body = "{""security_and_analysis"": {""secret_scanning"": {""status"": ""enabled""}}}"
-    $patchResult = ApiCall -method PATCH -url $url -body $body -expected 200
+    $patchResult = ApiCall -method PATCH -url $url -body $body -expected 200 -access_token $accessToken
 
     return $patchResult
 }
@@ -1363,13 +1363,13 @@ function Invoke-TrivyScan {
             $contextInfo = "Repository: $repoUrl, File: Dockerfile"
             
             try {
-                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo -access_token $accessToken
             }
             catch {
                 # Try lowercase filename
                 $url = "/repos/$owner/$repo/contents/dockerfile"
                 $contextInfo = "Repository: $repoUrl, File: dockerfile"
-                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo
+                $dockerFile = ApiCall -method GET -url $url -hideFailedCall $true -contextInfo $contextInfo -access_token $accessToken
             }
 
             if (-not $dockerFile -or -not $dockerFile.download_url) {
@@ -1379,7 +1379,7 @@ function Invoke-TrivyScan {
             }
 
             # Download Dockerfile content
-            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo
+            $dockerFileContent = ApiCall -method GET -url $dockerFile.download_url -contextInfo $contextInfo -access_token $accessToken
             $dockerfilePath = Join-Path $tempDir "Dockerfile"
             $dockerFileContent | Out-File -FilePath $dockerfilePath -Encoding UTF8
 
@@ -1584,7 +1584,7 @@ function GetMoreInfo {
                     # Check if our forked copy exists
                     try {
                         $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
-                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -hideFailedCall $true
+                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -hideFailedCall $true -access_token $accessToken
                         if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
                             Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
                         }
@@ -1610,7 +1610,7 @@ function GetMoreInfo {
             if (!$hasField -or ($null -eq $action.tagInfo)) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $AccessToken -startTime $startTime
+                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                     if (!$hasField) {
                         Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
 
