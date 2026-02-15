@@ -88,3 +88,15 @@ applyTo: ".github/workflows/**"
 	Invoke-ScriptAnalyzer -Path '.github/workflows' -Recurse
 	```
 
+## Report Generation (report.ps1)
+### Count Consistency Rules
+- **ALWAYS use `$actions.Count` as the single source of truth for "total actions"** across all report sections.
+- Subset counts (e.g., actions with repoInfo, actions with actionType) should be clearly labeled as subsets.
+- **ALWAYS use `DisplayIntWithDots` function** for formatting numbers in reports to ensure consistent thousand separators.
+- Key count variables and their meanings:
+	- `$actions.Count`: Total number of actions in the dataset (primary source of truth)
+	- `$global:repoInfo`: Count of actions that have `repoInfo.updated_at` data
+	- `$nodeBasedActions + $dockerBasedActions + $compositeAction + $unknownActionType`: Count of actions with actionType defined
+	- When displaying totals in mermaid diagrams, use `$actions.Count` not the sum of individual categories
+- Clarify subset relationships in section headers (e.g., "With repo info: X of Y total")
+
