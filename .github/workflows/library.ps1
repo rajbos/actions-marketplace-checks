@@ -2521,6 +2521,31 @@ function GetRateLimitInfo {
         [bool]
         $waitForRateLimit = $true
     )
+    
+    # Refresh tokens from token manager if available to avoid using expired tokens
+    # This is especially important for long-running scripts where tokens may have expired
+    $tokenManager = Get-GitHubAppTokenManagerInstance
+    if ($null -ne $tokenManager -and -not [string]::IsNullOrWhiteSpace($env:APP_ORGANIZATION)) {
+        try {
+            $tokenResult = $tokenManager.GetTokenForOrganization($env:APP_ORGANIZATION)
+            if (-not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
+                $access_token = $tokenResult.Token
+                # Also update the destination token if it was originally the same
+                if ([string]::IsNullOrWhiteSpace($access_token_destination) -or $access_token_destination -eq $access_token) {
+                    $access_token_destination = $tokenResult.Token
+                }
+            }
+        }
+        catch {
+            Write-Debug "Failed to refresh token from token manager: $($_.Exception.Message)"
+            # Continue with the original token
+        }
+    }
+    # Fallback to environment token if no explicit token provided
+    elseif ([string]::IsNullOrWhiteSpace($access_token)) {
+        $access_token = $env:GITHUB_TOKEN
+    }
+    
     $url = "rate_limit"
     $response = ApiCall -method GET -url $url -access_token $access_token -waitForRateLimit $waitForRateLimit
 
