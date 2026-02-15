@@ -374,22 +374,33 @@ function ReportInsightsInMarkdown {
     LogMessage "### Overview of action types"
     LogMessage "``````mermaid"
     LogMessage "flowchart LR"
-    # Calculate total from the sum of action types, not reposAnalyzed (which only counts repos with vulnerability data)
-    $totalActions = $nodeBasedActions + $dockerBasedActions + $compositeAction + $unknownActionType
+    # Use $actions.Count as the single source of truth for total actions
+    $totalActions = $actions.Count
+    # Calculate actions with no type info
+    $actionsWithTypeInfo = $nodeBasedActions + $dockerBasedActions + $compositeAction + $unknownActionType
+    $noTypeInfo = $totalActions - $actionsWithTypeInfo
+    
     if ($totalActions -gt 0) {
         $nodePercentage = [math]::Round($nodeBasedActions/$totalActions * 100 , 1)
         $dockerPercentage = [math]::Round($dockerBasedActions/$totalActions * 100 , 1)
         $compositePercentage = [math]::Round($compositeAction/$totalActions * 100 , 1)
         $otherPercentage = [math]::Round($unknownActionType/$totalActions * 100 , 1)
+        $noTypePercentage = [math]::Round($noTypeInfo/$totalActions * 100 , 1)
         LogMessage "  A[$(DisplayIntWithDots($totalActions)) Actions]-->B[$(DisplayIntWithDots($nodeBasedActions)) Node based - $nodePercentage%]"
         LogMessage "  A-->C[$(DisplayIntWithDots($dockerBasedActions)) Docker based - $dockerPercentage%]"
         LogMessage "  A-->D[$(DisplayIntWithDots($compositeAction)) Composite actions - $compositePercentage%]"
-        LogMessage "  A-->E[$unknownActionType Other - $otherPercentage%]"
+        LogMessage "  A-->E[$(DisplayIntWithDots($unknownActionType)) Other - $otherPercentage%]"
+        if ($noTypeInfo -gt 0) {
+            LogMessage "  A-->F[$(DisplayIntWithDots($noTypeInfo)) No type info - $noTypePercentage%]"
+        }
     } else {
         LogMessage "  A[$(DisplayIntWithDots($totalActions)) Actions]-->B[$(DisplayIntWithDots($nodeBasedActions)) Node based]"
         LogMessage "  A-->C[$(DisplayIntWithDots($dockerBasedActions)) Docker based]"
         LogMessage "  A-->D[$(DisplayIntWithDots($compositeAction)) Composite actions]"
         LogMessage "  A-->E[$(DisplayIntWithDots($unknownActionType)) Other]"
+        if ($noTypeInfo -gt 0) {
+            LogMessage "  A-->F[$(DisplayIntWithDots($noTypeInfo)) No type info]"
+        }
     }
     LogMessage "``````"
     LogMessage ""
@@ -539,7 +550,7 @@ function ReportAgeInsights {
     LogMessage "## Repo age"
     LogMessage "How recent where the repos updated? Determined by looking at the last updated date."
     LogMessage ""
-    LogMessage "|Analyzed|Total: $(DisplayIntWithDots($global:repoInfo))|Percentage|"
+    LogMessage "|Analyzed|With repo info: $(DisplayIntWithDots($global:repoInfo)) of $(DisplayIntWithDots($actions.Count)) total|Percentage|"
     LogMessage "|---|---:|---:|"
     $timeSpan = New-TimeSpan -Start ($oldestRepo) -End (Get-Date)
     LogMessage "|Oldest repository             |$(DisplayIntWithDots($timeSpan.Days)) days old||"
@@ -576,7 +587,8 @@ function ReportAgeInsights {
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
         LogMessage "|Description    | Info|"
         LogMessage "|---            | ---:|"
-        LogMessage "|Total (with repo info) | $(DisplayIntWithDots($global:repoInfo))"
+        LogMessage "|Total actions | $(DisplayIntWithDots($actions.Count))|"
+        LogMessage "|Actions with repo info | $(DisplayIntWithDots($global:repoInfo))|"
         LogMessage "|Repos with size info   | $(DisplayIntWithDots($global:countRepoSize))|"
         # percentage of actions that have repo size info
         $sizeCoveragePct = 0
@@ -636,16 +648,16 @@ function ReportFundingInsights {
     LogMessage "``````mermaid"
     LogMessage "%%{init: {'theme':'dark', 'themeVariables': { 'darkMode':'true','primaryColor': '#000000', 'pie1':'#4CAF50', 'pie2':'#686362' }}}%%"
     LogMessage "pie title Actions with Funding Information"
-    LogMessage "    ""With FUNDING.yml: $actionsWithFunding"" : $actionsWithFunding"
-    LogMessage "    ""Without FUNDING.yml: $($totalActions - $actionsWithFunding)"" : $($totalActions - $actionsWithFunding)"
+    LogMessage "    ""With FUNDING.yml: $(DisplayIntWithDots($actionsWithFunding))"" : $actionsWithFunding"
+    LogMessage "    ""Without FUNDING.yml: $(DisplayIntWithDots($totalActions - $actionsWithFunding))"" : $($totalActions - $actionsWithFunding)"
     LogMessage "``````"
     LogMessage ""
     
     LogMessage "|Description|Count|Percentage|"
     LogMessage "|---|---:|---:|"
-    LogMessage "|Total actions|$totalActions||"
-    LogMessage "|Actions with FUNDING.yml|$actionsWithFunding|$percentWithFunding%|"
-    LogMessage "|Actions without FUNDING.yml|$($totalActions - $actionsWithFunding)|$percentWithoutFunding%|"
+    LogMessage "|Total actions|$(DisplayIntWithDots($totalActions))||"
+    LogMessage "|Actions with FUNDING.yml|$(DisplayIntWithDots($actionsWithFunding))|$percentWithFunding%|"
+    LogMessage "|Actions without FUNDING.yml|$(DisplayIntWithDots($totalActions - $actionsWithFunding))|$percentWithoutFunding%|"
     
     if ($actionsWithFunding -gt 0) {
         $avgPlatforms = [math]::Round(($totalPlatforms / $actionsWithFunding), 2)
@@ -701,7 +713,7 @@ function GetOSSFInfo {
     if ($total -gt 0) {
         $percentage = [math]::Round(($ossfInfoCount / $total) * 100, 2)
     }   
-    LogMessage "Found [$DisplayIntWithDots($ossfInfoCount)] actions with OSSF info available for [$DisplayIntWithDots($ossfChecked)] repos out of a [$DisplayIntWithDots($total)] total which is [$($percentage)%]."
+    LogMessage "Found [$(DisplayIntWithDots($ossfInfoCount))] actions with OSSF info available for [$(DisplayIntWithDots($ossfChecked))] repos out of a [$(DisplayIntWithDots($total))] total which is [$($percentage)%]."
     LogMessage ""
     LogMessage "*To improve this coverage, run this workflow: [Get actions that use the OSS Scan action]($(Get-WorkflowUrl 'ossf-scan.yml'))*"
 }
