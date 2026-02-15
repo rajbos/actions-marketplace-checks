@@ -15,7 +15,11 @@ on:
       topActionsCount:
         description: 'Number of top actions to check'
         required: false
-        default: '5'
+        default: '25'
+      waitBetweenReposSeconds:
+        description: 'Wait time in seconds between processing repositories (to reduce rate limit pressure)'
+        required: false
+        default: '10'
 
 env:
   APP_ID: ${{ vars.APPLICATION_ID }}
@@ -49,11 +53,13 @@ jobs:
           APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
           APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
           APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
-          TOP_ACTIONS_COUNT: ${{ github.event.inputs.topActionsCount || '5' }}
+          TOP_ACTIONS_COUNT: ${{ github.event.inputs.topActionsCount || '25' }}
+          WAIT_BETWEEN_REPOS_SECONDS: ${{ github.event.inputs.waitBetweenReposSeconds || '10' }}
         run: |
           $topActionsCount = if ($env:TOP_ACTIONS_COUNT) { [int]$env:TOP_ACTIONS_COUNT } else { 5 }
+          $waitBetweenReposSeconds = if ($env:WAIT_BETWEEN_REPOS_SECONDS) { [int]$env:WAIT_BETWEEN_REPOS_SECONDS } else { 5 }
           
-          ./.github/workflows/semver-check.ps1 -topActionsCount $topActionsCount
+          ./.github/workflows/semver-check.ps1 -topActionsCount $topActionsCount -waitBetweenReposSeconds $waitBetweenReposSeconds
 
       - name: Upload results
         if: always()
