@@ -302,7 +302,7 @@ function VulnerabilityCalculations {
     Write-Host "Summary: "
     LogMessage "## Potentially vulnerable Repos: $(DisplayIntWithDots($repoInformation.vulnerableRepos)) out of $(DisplayIntWithDots($repoInformation.reposAnalyzed)) analyzed repos [Total: $(DisplayIntWithDots($actions.Count))]"
 
-    LogMessage "| Type                  | Count           :| GitHub Count |"
+    LogMessage "| Type                  | Count           | GitHub Count |"
     LogMessage "|---|---|---|"
     LogMessage "| Total high alerts     | $(DisplayIntWithDots($repoInformation.highAlerts))     | $(DisplayIntWithDots($github_RepoInformation.highAlerts)) |"
     LogMessage "| Total critical alerts | $(DisplayIntWithDots($repoInformation.criticalAlerts)) | $(DisplayIntWithDots($github_RepoInformation.criticalAlerts)) |"
@@ -576,7 +576,7 @@ function ReportAgeInsights {
         LogMessage "How big are the repos? Determined by looking at the size of the repo in Mib."
         LogMessage "|Description    | Info|"
         LogMessage "|---            | ---:|"
-        LogMessage "|Total (with repo info) | $(DisplayIntWithDots($global:repoInfo))"
+        LogMessage "|Total (with repo info) | $(DisplayIntWithDots($global:repoInfo))|"
         LogMessage "|Repos with size info   | $(DisplayIntWithDots($global:countRepoSize))|"
         # percentage of actions that have repo size info
         $sizeCoveragePct = 0
