@@ -21,9 +21,9 @@ on:
   workflow_dispatch:
     inputs:
       numberOfReposRepoInfo:
-        description: 'Number of repos for repo info (default: 250)'
+        description: 'Number of repos for repo info (default: 150)'
         required: false
-        default: '250'
+        default: '150'
       numberOfChunks:
         description: 'Number of parallel chunks (default: 10)'
         required: false
@@ -35,7 +35,7 @@ concurrency:
   cancel-in-progress: false
   
 env:
-  numberOfReposRepoInfo: 250
+  numberOfReposRepoInfo: 150
   # Reduced from 25 to 10 to decrease rate limit pressure when running concurrently with other workflows
   numberOfChunks: 10
   APP_ID: ${{ vars.APPLICATION_ID }}
