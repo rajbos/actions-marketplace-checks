@@ -2,7 +2,24 @@
 
 ## Overview
 
-This repository uses **3 GitHub Apps** to manage API rate limits across multiple workflows. Each GitHub App has a rate limit of **12,500 requests per hour** for Core API operations, giving us a theoretical maximum of **37,500 requests/hour** across all apps.
+This repository uses **3 GitHub Apps** to manage API rate limits across multiple workflows. 
+
+### Rate Limits by API Type
+
+Each GitHub App Installation has separate rate limits for different API types:
+
+#### Core REST API
+- **Base Rate**: 5,000 requests/hour per installation
+- **Maximum Rate**: 12,500 requests/hour (with 20+ repos and 20+ users)
+- **Total Capacity**: Up to 37,500 requests/hour across 3 apps
+
+#### GraphQL API  
+- **Base Rate**: 5,000 points/hour per installation
+- **Maximum Rate**: 12,500 points/hour (with 20+ repos and 20+ users)
+- **Note**: GraphQL uses a points-based system where query complexity determines cost
+- **Total Capacity**: Up to 37,500 points/hour across 3 apps
+
+The `actions-marketplace-validations` organization qualifies for the maximum rates due to having 20+ repositories and users.
 
 ## Workflow Scheduling Strategy
 

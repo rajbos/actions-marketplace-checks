@@ -2127,6 +2127,8 @@ function Write-GitHubAppRateLimitOverview {
         if ($hasGraphQL.Count -gt 0) {
             Write-Message -message "#### GraphQL API Rate Limits" -logToSummary $true
             Write-Message -message "" -logToSummary $true
+            Write-Message -message "_Note: GraphQL uses a points-based system. Base: 5,000 points/hour, Maximum: 12,500 points/hour (with 20+ repos/users)_" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
             Write-Message -message "| # | App Id | Limit | Remaining | Used | Resets In |" -logToSummary $true
             Write-Message -message "|---:|-------:|------:|----------:|-----:|-----------|" -logToSummary $true
             
@@ -5296,7 +5298,7 @@ function Write-DetailedRateLimitInfo {
             }
             
             Write-Message -message "**GraphQL API:**" -logToSummary $true
-            Write-Message -message "- Limit: $(DisplayIntWithDots $graphql.limit)" -logToSummary $true
+            Write-Message -message "- Limit: $(DisplayIntWithDots $graphql.limit) points/hour (base: 5,000, max: 12,500)" -logToSummary $true
             Write-Message -message "- Used: $(DisplayIntWithDots $graphql.used)" -logToSummary $true
             Write-Message -message "- Remaining: $(DisplayIntWithDots $graphql.remaining)" -logToSummary $true
             Write-Message -message "- Resets in: $resetDisplay" -logToSummary $true
