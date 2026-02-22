@@ -3724,9 +3724,12 @@ function Test-RepositoryExists {
 function Install-ModuleWithRetry {
     Param (
         [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [string] $ModuleName,
         [string] $Repository = "PSGallery",
+        [ValidateRange(1, [int]::MaxValue)]
         [int] $MaxRetries = 3,
+        [ValidateRange(1, [int]::MaxValue)]
         [int] $InitialDelaySeconds = 5
     )
 
