@@ -3721,6 +3721,39 @@ function Test-RepositoryExists {
     }
 }
 
+function Install-ModuleWithRetry {
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string] $ModuleName,
+        [string] $Repository = "PSGallery",
+        [int] $MaxRetries = 3,
+        [int] $InitialDelaySeconds = 5
+    )
+
+    $attempt = 0
+    $delay = $InitialDelaySeconds
+
+    while ($attempt -lt $MaxRetries) {
+        $attempt++
+        try {
+            Write-Host "Installing module [$ModuleName] from [$Repository] (attempt $attempt/$MaxRetries)..."
+            Install-Module -Name $ModuleName -Repository $Repository -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+            Write-Host "Module [$ModuleName] installed successfully."
+            return
+        }
+        catch {
+            Write-Warning "Attempt $attempt/$MaxRetries to install module [$ModuleName] failed: $($_.Exception.Message)"
+            if ($attempt -lt $MaxRetries) {
+                Write-Host "Retrying in $delay seconds..."
+                Start-Sleep -Seconds $delay
+                $delay = $delay * 2  # Exponential backoff
+            }
+        }
+    }
+
+    throw "Failed to install module [$ModuleName] after $MaxRetries attempts."
+}
+
 function Invoke-GitCommandWithRetry {
     Param (
         [string] $GitCommand,
