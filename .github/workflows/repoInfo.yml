@@ -102,8 +102,9 @@ jobs:
                throw $_
            }
            Write-Host "Found [$($actions.Length)] actions in the datafile"
-           Install-Module -Name PSGraphQL -Repository PSGallery -Scope CurrentUser -Allowclobber -Force
-           Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
+           . "${{ github.workspace }}/.github/workflows/library.ps1"
+           Install-ModuleWithRetry -ModuleName "PSGraphQL"
+           Install-ModuleWithRetry -ModuleName "powershell-yaml"
            # get repo information
            & "${{ github.workspace }}/.github/workflows/repoInfo.ps1" -actions $actions -numberofReposToDo ${{ env.numberOfReposToDo }}
 

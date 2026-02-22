@@ -222,7 +222,8 @@ jobs:
       - name: Install PowerShell modules
         shell: pwsh
         run: |
-          Install-Module -name powershell-yaml -Force -Repository PSGallery -Scope CurrentUser -Allowclobber
+          . ./.github/workflows/library.ps1
+          Install-ModuleWithRetry -ModuleName "powershell-yaml"
 
       - name: Process repo info chunk ${{ matrix.chunk-id }}
         shell: pwsh
