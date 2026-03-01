@@ -104,7 +104,7 @@ jobs:
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
-        uses: devops-actions/load-available-actions@v2.2.0
+        uses: devops-actions/load-available-actions@v2.2.1
         with:
           organization: ${{ matrix.org }}
           PAT: ${{ steps.get_workflow_token.outputs.token }}
