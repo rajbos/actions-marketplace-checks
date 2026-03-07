@@ -2,6 +2,12 @@
 # Global flag to track if rate limit was exceeded (20+ minute wait)
 $global:RateLimitExceeded = $false
 
+# Track when the job started so we can abort instead of waiting if the wait
+# would push us past the 1-hour job runtime limit.
+if ($null -eq $global:JobStartTime) {
+    $global:JobStartTime = [DateTime]::UtcNow
+}
+
 # Script-scoped HashSet to track which GitHub Apps have been tried in this execution
 # This persists across all API calls in the current script, preventing endless cycling
 $script:TriedGitHubAppIds = New-Object 'System.Collections.Generic.HashSet[string]'
@@ -1609,6 +1615,18 @@ function ApiCall {
             # For shorter wait times, only wait if requested
             if ($waitForRateLimit -and $waitSeconds -gt 0) {
                 $waitDisplay = Format-WaitTime -totalSeconds $waitSeconds
+
+                # Check if waiting would push the job past its 1-hour runtime limit.
+                # If so, soft-abort so the next scheduled run can proceed cleanly.
+                if (Test-WouldExceedJobRuntime -waitSeconds $waitSeconds) {
+                    $elapsedMinutes = [int](([DateTime]::UtcNow - $global:JobStartTime).TotalMinutes)
+                    $message = "Rate limit wait of $waitDisplay would exceed the 1-hour job runtime limit (already ${elapsedMinutes} minutes elapsed). Stopping gracefully to allow next scheduled run to proceed."
+                    Write-Message -message $message -logToSummary $true
+                    Write-Warning $message
+                    $global:RateLimitExceeded = $true
+                    return $null
+                }
+
                 if ($isInstallationRateLimit) {
                     Format-RateLimitErrorTable -remaining $remaining -used $used -waitSeconds $waitSeconds -continueAt $continueAt -errorType "Installation"
                     Write-Host "Pausing after installation rate limit error for $waitDisplay"
@@ -1649,6 +1667,15 @@ function ApiCall {
                             if ($additionalWait -gt 1200) {
                                 $message = "Total wait time would exceed 20 minutes. Stopping to prevent excessive delays."
                                 Write-Message -message $message -logToSummary $true
+                                $global:RateLimitExceeded = $true
+                                return $null
+                            }
+                            # Check if additional wait would push the job past the 1-hour runtime limit
+                            if (Test-WouldExceedJobRuntime -waitSeconds $additionalWait) {
+                                $elapsedMinutes = [int](([DateTime]::UtcNow - $global:JobStartTime).TotalMinutes)
+                                $message = "Additional rate limit wait of $additionalWaitDisplay would exceed the 1-hour job runtime limit (already ${elapsedMinutes} minutes elapsed). Stopping gracefully to allow next scheduled run to proceed."
+                                Write-Message -message $message -logToSummary $true
+                                Write-Warning $message
                                 $global:RateLimitExceeded = $true
                                 return $null
                             }
@@ -2632,6 +2659,32 @@ function Invoke-GitHubAppRateLimitCheckForConfiguredApps {
 #>
 function Test-RateLimitExceeded {
     return $global:RateLimitExceeded
+}
+
+function Test-WouldExceedJobRuntime {
+    <#
+    .SYNOPSIS
+    Returns $true if waiting the given number of seconds would push the job past the
+    1-hour runtime limit, so the caller can soft-abort instead of sleeping.
+    .PARAMETER waitSeconds
+    Number of seconds we are considering waiting for.
+    .PARAMETER maxRuntimeMinutes
+    Maximum job runtime in minutes. Defaults to 60.
+    #>
+    Param (
+        [Parameter(Mandatory=$true)]
+        [double]$waitSeconds,
+        [int]$maxRuntimeMinutes = 60
+    )
+
+    if ($null -eq $global:JobStartTime) {
+        return $false
+    }
+
+    $elapsedSeconds = ([DateTime]::UtcNow - $global:JobStartTime).TotalSeconds
+    $remainingSeconds = ($maxRuntimeMinutes * 60) - $elapsedSeconds
+
+    return $waitSeconds -gt $remainingSeconds
 }
 
 function Get-TokenExpirationTime {
