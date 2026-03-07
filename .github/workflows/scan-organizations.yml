@@ -104,7 +104,7 @@ jobs:
 
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
-        uses: devops-actions/load-available-actions@v2.2.0
+        uses: devops-actions/load-available-actions@v2.2.1
         with:
           organization: ${{ matrix.org }}
           PAT: ${{ steps.get_workflow_token.outputs.token }}
@@ -156,7 +156,7 @@ jobs:
           }
 
       - name: Upload artifact for consolidation
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: org-scan-${{ matrix.org }}
           path: ${{ matrix.org }}.json
@@ -278,7 +278,7 @@ jobs:
           Write-Message -message "✓ Consolidation complete and uploaded to blob storage" -logToSummary $true
 
       - name: Upload consolidated artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: consolidated-github-actions
           path: consolidated-github-actions.json

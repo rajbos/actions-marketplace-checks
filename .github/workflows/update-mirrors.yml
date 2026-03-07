@@ -127,7 +127,7 @@ jobs:
           Write-Message -message "✓ Work distribution complete. Starting [$(DisplayIntWithDots $matrixIds.Count)] parallel jobs." -logToSummary $true
 
       - name: Upload chunk files
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: work-chunks
           path: chunk-*.json
@@ -207,7 +207,7 @@ jobs:
 
       - name: Upload partial status for chunk ${{ matrix.chunk-id }}
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: status-partial-${{ matrix.chunk-id }}
           path: status-partial-${{ matrix.chunk-id }}.json
@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload chunk summary for chunk ${{ matrix.chunk-id }}
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: chunk-summary-${{ matrix.chunk-id }}
           path: chunk-summary-${{ matrix.chunk-id }}.json
