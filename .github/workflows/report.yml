@@ -81,12 +81,12 @@ jobs:
             exit 1
           }
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: report
           path: VulnerableRepos-**.txt
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: SecretScanningAlerts
           path: secretScanningAlerts.json
