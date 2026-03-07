@@ -161,13 +161,13 @@ jobs:
           }
 
       - name: Download updated status from previous job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: status-updated
           path: updated-data/
 
       - name: Download updated failedForks from previous job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: failedForks-updated
           path: updated-data/
