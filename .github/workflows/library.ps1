@@ -19,6 +19,14 @@ $script:LastAttemptedAppId = $null
 # Track consecutive rate limit reset detections to prevent infinite loops
 $script:ConsecutiveResetDetections = 0
 
+# Cache for the proactive token expiration check inside ApiCall.
+# Without this, Get-GitHubAppRateLimitOverview creates 3 new installation tokens on every
+# single ApiCall invocation, rapidly exhausting the ~1000/hour installation token creation
+# rate limit and causing the cycling loop seen in failing workflow runs.
+$script:ProactiveCheckOverview = $null
+$script:ProactiveCheckOverviewTime = [DateTime]::MinValue
+$script:ProactiveCheckOverviewTtlSeconds = 120  # refresh at most once per 2 minutes
+
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
@@ -955,7 +963,15 @@ function ApiCall {
     # This prevents failures when tokens expire during long rate limit waits
     $organization = $env:APP_ORGANIZATION
     if (-not [string]::IsNullOrWhiteSpace($organization)) {
-        $overview = Get-GitHubAppRateLimitOverview -organization $organization
+        # Use a cached overview to avoid creating new installation tokens on every ApiCall invocation.
+        # Calling Get-GitHubAppRateLimitOverview uncached would create 3 new tokens per call, rapidly
+        # exhausting the installation token creation rate limit (~1000/hour) during long runs.
+        $proactiveCheckNow = [DateTime]::UtcNow
+        if ($null -eq $script:ProactiveCheckOverview -or ($proactiveCheckNow - $script:ProactiveCheckOverviewTime).TotalSeconds -ge $script:ProactiveCheckOverviewTtlSeconds) {
+            $script:ProactiveCheckOverview = Get-GitHubAppRateLimitOverview -organization $organization
+            $script:ProactiveCheckOverviewTime = $proactiveCheckNow
+        }
+        $overview = $script:ProactiveCheckOverview
         if ($null -ne $overview -and $overview.Count -gt 0) {
             # Find the token that matches our current access_token (if it's a GitHub App token)
             $currentTokenInfo = $overview | Where-Object { $_.Token -eq $access_token } | Select-Object -First 1
@@ -978,6 +994,9 @@ function ApiCall {
                         
                         Write-Host "✓ Switched to GitHub App id [$($betterToken.AppId)] with $($betterToken.MinutesUntilExpiration) minutes until expiration"
                         $env:GITHUB_TOKEN = $betterToken.Token
+                        # Invalidate cache so the next call sees the new token
+                        $script:ProactiveCheckOverview = $null
+                        $script:ProactiveCheckOverviewTime = [DateTime]::MinValue
                         # Retry the API call with the fresh token
                         return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $betterToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
                     } elseif ($null -eq $betterToken) {
@@ -1071,7 +1090,7 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
                     $response += $nextResult
                 }
             }

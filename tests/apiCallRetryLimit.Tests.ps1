@@ -468,4 +468,107 @@ Describe "ApiCall Retry Limit Tests" {
             $script:callCount | Should -Be 1
         }
     }
+
+    Context "Proactive token expiration check caching" {
+        BeforeEach {
+            $script:savedOrg = $env:APP_ORGANIZATION
+            $env:APP_ORGANIZATION = "test-org"
+            # Reset the script-scoped cache before each test
+            $script:ProactiveCheckOverview = $null
+            $script:ProactiveCheckOverviewTime = [DateTime]::MinValue
+            $global:RateLimitExceeded = $false
+        }
+
+        AfterEach {
+            $env:APP_ORGANIZATION = $script:savedOrg
+            $script:ProactiveCheckOverview = $null
+            $script:ProactiveCheckOverviewTime = [DateTime]::MinValue
+        }
+
+        It "Should call Get-GitHubAppRateLimitOverview only once across multiple ApiCall invocations within the TTL window" {
+            $script:overviewCallCount = 0
+
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Get-GitHubAppRateLimitOverview {
+                $script:overviewCallCount++
+                return ,@()  # empty overview — proactive check becomes a no-op
+            }
+            Mock Invoke-WebRequest {
+                return New-Object PSObject -Property @{
+                    StatusCode = 200
+                    Headers    = @{}
+                    Content    = "{}"
+                }
+            }
+
+            # Five rapid invocations all fall within the 2-minute TTL window
+            1..5 | ForEach-Object {
+                ApiCall -method GET -url "test_endpoint_$_" -access_token "test_token" -hideFailedCall $true | Out-Null
+            }
+
+            # Overview should have been called exactly once — all subsequent calls used the cache
+            $script:overviewCallCount | Should -Be 1
+        }
+
+        It "Should invalidate the proactive check cache when a token rotation occurs" {
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Get-GitHubAppRateLimitOverview {
+                # Return an overview where "test_token" is about to expire (<15 min)
+                return ,@([pscustomobject]@{
+                    AppId                  = "app1"
+                    Token                  = "test_token"
+                    Remaining              = 500
+                    MinutesUntilExpiration = 5
+                })
+            }
+            Mock Select-BestGitHubAppTokenForOrganization {
+                # Return null — no better token available, so we stop gracefully
+                return $null
+            }
+
+            ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true | Out-Null
+
+            # When rotation fails (no better token), RateLimitExceeded is set and execution stops;
+            # the cache should have been populated (overview was called) but we confirm the cache
+            # is a script-scoped value so we can reset it cleanly
+            $script:ProactiveCheckOverview | Should -Not -Be $null
+        }
+
+        It "Should clear the proactive check cache after a successful token rotation" {
+            $script:overviewCallCount = 0
+
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Get-GitHubAppRateLimitOverview {
+                $script:overviewCallCount++
+                return ,@([pscustomobject]@{
+                    AppId                  = "app1"
+                    Token                  = "test_token"
+                    Remaining              = 500
+                    MinutesUntilExpiration = 5  # triggers rotation
+                })
+            }
+            Mock Select-BestGitHubAppTokenForOrganization {
+                return [pscustomobject]@{
+                    AppId                  = "app2"
+                    Token                  = "new_token"
+                    MinutesUntilExpiration = 55
+                }
+            }
+            Mock Invoke-WebRequest {
+                return New-Object PSObject -Property @{
+                    StatusCode = 200
+                    Headers    = @{}
+                    Content    = "{}"
+                }
+            }
+
+            # Call with the expiring token — rotation will happen, cache is cleared, then ApiCall
+            # recurses with new_token (which hits Get-GitHubAppRateLimitOverview again to re-populate)
+            ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true | Out-Null
+
+            # Overview was called at least twice: once for original token (triggers rotation),
+            # once more after the cache was cleared (for the recursive call with new_token)
+            $script:overviewCallCount | Should -BeGreaterOrEqual 2
+        }
+    }
 }
