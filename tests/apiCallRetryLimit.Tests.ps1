@@ -118,6 +118,137 @@ Describe "ApiCall Retry Limit Tests" {
             $global:RateLimitExceeded | Should -Be $false
         }
         
+        It "Should preserve hideFailedCall=true through installation rate limit retry so a 404 returns null instead of throwing" {
+            # Regression test: retry calls inside the catch block were missing -hideFailedCall,
+            # causing a 404 after a rate-limit wait to propagate as a throw (exit code 1).
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
+            Mock Start-Sleep { param($Seconds, $Milliseconds) }
+
+            $script:invokeCount = 0
+            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
+
+            Mock Invoke-WebRequest {
+                $script:invokeCount++
+                if ($script:invokeCount -eq 1) {
+                    # First call: installation rate limit
+                    $response = New-Object PSObject -Property @{
+                        Headers = @{
+                            "X-RateLimit-Reset"      = @($futureTimestamp.ToString())
+                            "X-RateLimit-Remaining"  = @("0")
+                            "X-RateLimit-Used"       = @("500")
+                        }
+                        StatusCode = 403
+                    }
+                    $exception = New-Object System.Net.WebException("API rate limit exceeded for installation ID")
+                    $webResponse = New-Object PSObject -Property @{ Headers = $response.Headers }
+                    $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
+                    $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                        $exception, "WebException",
+                        [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
+                    )
+                    $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails('{"message":"API rate limit exceeded for installation ID"}')
+                    throw $errorRecord
+                }
+                # Second call (the retry after the wait): 404 Not Found
+                $notFoundException = New-Object System.Net.WebException("Not Found")
+                $notFoundResponse = New-Object PSObject -Property @{ Headers = @{} }
+                $notFoundException | Add-Member -NotePropertyName Response -NotePropertyValue $notFoundResponse -Force
+                $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                    $notFoundException, "WebException",
+                    [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
+                )
+                $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails('{"message":"Not Found","status":"404"}')
+                throw $errorRecord
+            }
+
+            # Should NOT throw - hideFailedCall must be preserved through the rate-limit retry
+            { $result = ApiCall -method GET -url "repos/wild123/deleted-action" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2 } | Should -Not -Throw
+            $result = ApiCall -method GET -url "repos/wild123/deleted-action" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2
+            $result | Should -Be $null
+        }
+
+        It "Should preserve returnErrorInfo=true through installation rate limit retry so a 404 returns error info instead of throwing" {
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
+            Mock Start-Sleep { param($Seconds, $Milliseconds) }
+
+            $script:invokeCount = 0
+            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
+
+            Mock Invoke-WebRequest {
+                $script:invokeCount++
+                if ($script:invokeCount -eq 1) {
+                    $response = New-Object PSObject -Property @{
+                        Headers = @{
+                            "X-RateLimit-Reset"      = @($futureTimestamp.ToString())
+                            "X-RateLimit-Remaining"  = @("0")
+                            "X-RateLimit-Used"       = @("500")
+                        }
+                        StatusCode = 403
+                    }
+                    $exception = New-Object System.Net.WebException("API rate limit exceeded for installation ID")
+                    $webResponse = New-Object PSObject -Property @{ Headers = $response.Headers }
+                    $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
+                    $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                        $exception, "WebException",
+                        [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
+                    )
+                    $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails('{"message":"API rate limit exceeded for installation ID"}')
+                    throw $errorRecord
+                }
+                $notFoundException = New-Object System.Net.WebException("Not Found")
+                $notFoundResponse = New-Object PSObject -Property @{
+                    Headers = @{}
+                    StatusCode = [System.Net.HttpStatusCode]::NotFound
+                }
+                $notFoundException | Add-Member -NotePropertyName Response -NotePropertyValue $notFoundResponse -Force
+                $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                    $notFoundException, "WebException",
+                    [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
+                )
+                $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails('{"message":"Not Found","status":"404"}')
+                throw $errorRecord
+            }
+
+            { $result = ApiCall -method GET -url "repos/wild123/deleted-action" -access_token "test_token" -returnErrorInfo $true -waitForRateLimit $true -maxRetries 2 } | Should -Not -Throw
+            $result = ApiCall -method GET -url "repos/wild123/deleted-action" -access_token "test_token" -returnErrorInfo $true -waitForRateLimit $true -maxRetries 2
+            $result | Should -Not -Be $null
+            $result.Error | Should -Be $true
+        }
+
+        It "Should preserve hideFailedCall=true through secondary rate limit retry so a 404 returns null" {
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Start-Sleep { param($Seconds, $Milliseconds) }
+
+            $script:invokeCount = 0
+
+            Mock Invoke-WebRequest {
+                $script:invokeCount++
+                if ($script:invokeCount -eq 1) {
+                    $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                        [System.Exception]::new("secondary"), "WebException",
+                        [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
+                    )
+                    $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails('{"message":"You have exceeded a secondary rate limit and have been temporarily blocked"}')
+                    throw $errorRecord
+                }
+                $notFoundException = New-Object System.Net.WebException("Not Found")
+                $notFoundResponse = New-Object PSObject -Property @{ Headers = @{} }
+                $notFoundException | Add-Member -NotePropertyName Response -NotePropertyValue $notFoundResponse -Force
+                $errorRecord = New-Object System.Management.Automation.ErrorRecord(
+                    $notFoundException, "WebException",
+                    [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
+                )
+                $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails('{"message":"Not Found","status":"404"}')
+                throw $errorRecord
+            }
+
+            { $result = ApiCall -method GET -url "repos/wild123/deleted-action" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2 } | Should -Not -Throw
+            $result = ApiCall -method GET -url "repos/wild123/deleted-action" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2
+            $result | Should -Be $null
+        }
+
         It "Should not exceed maxRetries even with rate limit issues" {
             # Track the number of times Invoke-WebRequest is called
             $callCount = 0
