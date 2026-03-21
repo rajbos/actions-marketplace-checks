@@ -1071,7 +1071,7 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo
                     $response += $nextResult
                 }
             }
@@ -1306,7 +1306,7 @@ function ApiCall {
             else {
                 $backOff = $backOff * 2
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount
         }
 
         if ($null -ne $expected) {
@@ -1344,7 +1344,7 @@ function ApiCall {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount
         }
         else {
             if (!$hideFailedCall) {
@@ -1368,7 +1368,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount
         }
 
         $isUserRateLimit = $messageData.message -and $messageData.message.StartsWith("API rate limit exceeded for user ID")
@@ -1700,7 +1700,7 @@ function ApiCall {
                 else {
                     $backOff = $backOff * 2
                 }
-                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount
             }
 
             # When not waiting, return null
