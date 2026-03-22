@@ -8,6 +8,9 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+$appIds = @($appIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$appPrivateKeys = @($appPrivateKeys | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+
 if ($appPrivateKeys.Count -gt 0 -and $appIds.Count -gt 0) {
     if ([string]::IsNullOrWhiteSpace($appOrganization)) {
         throw "APP_ORGANIZATION must be provided when using GitHub App credentials"
