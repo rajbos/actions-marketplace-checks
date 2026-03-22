@@ -24,13 +24,13 @@ jobs:
 
       - name: Run mirror retry processor
         env:
-          APP_ID: ${{ secrets.APP_ID }}
-          APP_ID_2: ${{ secrets.APP_ID_2 }}
-          APP_ID_3: ${{ secrets.APP_ID_3 }}
-          APP_ORGANIZATION: ${{ secrets.APP_ORGANIZATION }}
-          APPLICATION_PRIVATE_KEY: ${{ secrets.APPLICATION_PRIVATE_KEY }}
-          APPLICATION_PRIVATE_KEY_2: ${{ secrets.APPLICATION_PRIVATE_KEY_2 }}
-          APPLICATION_PRIVATE_KEY_3: ${{ secrets.APPLICATION_PRIVATE_KEY_3 }}
+          APP_ID: ${{ vars.APPLICATION_ID }}
+          APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+          APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
+          APP_ORGANIZATION: actions-marketplace-validations
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
+          APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
         run: |
           pwsh -NoLogo -File .github/workflows/update-mirrors-retry.ps1 -maxItems ${{ github.event.inputs.maxItems || 10 }}
 
@@ -41,9 +41,3 @@ jobs:
           name: retry-queue
           path: ./retry-queue.json
 
-      - name: Upload step summary
-        if: success() || failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: step-summary
-          path: ${{ env.GITHUB_STEP_SUMMARY }}
