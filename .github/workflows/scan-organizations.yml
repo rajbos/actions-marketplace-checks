@@ -102,6 +102,11 @@ jobs:
           $tokenResult = $manager.GetTokenForOrganization($env:APP_ORGANIZATION)
           "token=$($tokenResult.Token)" >> $env:GITHUB_OUTPUT
 
+      # Monitor GitHub API usage during this job - version 1.2.0
+      - uses: rajbos-actions/github-api-usage-monitor@c4fab8d4f1b8cc81801ef3322a4c30ee124f7eb2
+        with:
+          token: ${{ steps.get_workflow_token.outputs.token }}
+
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
         uses: devops-actions/load-available-actions@v2.2.1

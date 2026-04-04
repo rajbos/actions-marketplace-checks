@@ -10,7 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-          
+
+      # Monitor GitHub API usage during this job - version 1.2.0
+      - uses: rajbos-actions/github-api-usage-monitor@c4fab8d4f1b8cc81801ef3322a4c30ee124f7eb2
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+
       - shell: pwsh
         name: Run reporting script
         run: |
