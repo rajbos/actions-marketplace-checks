@@ -196,7 +196,7 @@ function Get-RepoPriorityScore {
         else {
             try {
                 $daysSince = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
-                if ($daysSince -gt 7) { $score += 20 }
+                if ($daysSince -gt 14) { $score += 20 }
             }
             catch { $score += 20 }
         }
@@ -1551,7 +1551,7 @@ function GetMoreInfo {
                 else {
                     try {
                         $daysSinceLastFetch = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
-                        if ($daysSinceLastFetch -gt 7) { $repoInfoStale = $true }
+                        if ($daysSinceLastFetch -gt 14) { $repoInfoStale = $true }
                     }
                     catch { $repoInfoStale = $true }
                 }
