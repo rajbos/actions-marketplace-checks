@@ -187,6 +187,20 @@ function Get-RepoPriorityScore {
     if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
         $score += 50
     }
+    elseif ($action.repoInfo) {
+        # Stale repoInfo: lastFetched missing or older than 7 days
+        $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+        if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+            $score += 20
+        }
+        else {
+            try {
+                $daysSince = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                if ($daysSince -gt 7) { $score += 20 }
+            }
+            catch { $score += 20 }
+        }
+    }
     
     $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
     if (!$hasRepoSize) {
@@ -1527,7 +1541,23 @@ function GetMoreInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
 
             $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
+            
+            $repoInfoStale = $false
+            if ($hasField -and $action.repoInfo) {
+                $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+                if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+                    $repoInfoStale = $true
+                }
+                else {
+                    try {
+                        $daysSinceLastFetch = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                        if ($daysSinceLastFetch -gt 7) { $repoInfoStale = $true }
+                    }
+                    catch { $repoInfoStale = $true }
+                }
+            }
+            
+            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoStale) {
                 Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
@@ -1551,6 +1581,7 @@ function GetMoreInfo {
                                 disabled = $repo_disabled
                                 updated_at = $repo_updated_at
                                 latest_release_published_at = $latest_release_published_at
+                                lastFetched = (Get-Date -Format 'o')
                             }
 
                             $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
@@ -1563,6 +1594,7 @@ function GetMoreInfo {
                             $action.repoInfo.disabled = $repo_disabled
                             $action.repoInfo.updated_at = $repo_updated_at
                             $action.repoInfo.latest_release_published_at = $latest_release_published_at
+                            $action.repoInfo.lastFetched = (Get-Date -Format 'o')
                             $memberUpdate++ | Out-Null
                         }
                     }
