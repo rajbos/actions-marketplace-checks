@@ -187,6 +187,20 @@ function Get-RepoPriorityScore {
     if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
         $score += 50
     }
+    elseif ($action.repoInfo) {
+        # Stale repoInfo: lastFetched missing or older than 7 days
+        $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+        if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+            $score += 20
+        }
+        else {
+            try {
+                $daysSince = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                if ($daysSince -gt 14) { $score += 20 }
+            }
+            catch { $score += 20 }
+        }
+    }
     
     $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
     if (!$hasRepoSize) {
@@ -211,20 +225,6 @@ function Get-RepoPriorityScore {
         $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
         if ($daysSinceLastCheck -gt 30) {
             $score += 10
-        }
-    }
-
-    # Stale repoInfo/tagInfo/releaseInfo checks — boost priority when data exists
-    # but was never timestamped or hasn't been refreshed in over 30 days.
-    if ($hasRepoInfo -and $action.repoInfo.updated_at) {
-        $hasCheckedAt = Get-Member -inputobject $action.repoInfo -name "checkedAt" -Membertype Properties
-        if (!$hasCheckedAt -or !$action.repoInfo.checkedAt) {
-            $score += 45  # has repoInfo but no checkedAt — was never refreshed
-        } else {
-            $daysSinceCheck = ((Get-Date) - [datetime]$action.repoInfo.checkedAt).Days
-            if ($daysSinceCheck -gt 30) {
-                $score += 45
-            }
         }
     }
 
@@ -1567,17 +1567,24 @@ function GetMoreInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
 
             $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+            
             $repoInfoStale = $false
-            if ($hasField -and $action.repoInfo.updated_at) {
-                $hasCheckedAt = Get-Member -inputobject $action.repoInfo -name "checkedAt" -Membertype Properties
-                if (!$hasCheckedAt -or !$action.repoInfo.checkedAt) {
-                    $repoInfoStale = $true  # existing data with no timestamp — treat as stale
-                } else {
-                    $repoInfoStale = ((Get-Date) - [datetime]$action.repoInfo.checkedAt).Days -gt 30
+            if ($hasField -and $action.repoInfo) {
+                $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+                if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+                    $repoInfoStale = $true
+                }
+                else {
+                    try {
+                        $daysSinceLastFetch = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                        if ($daysSinceLastFetch -gt 14) { $repoInfoStale = $true }
+                    }
+                    catch { $repoInfoStale = $true }
                 }
             }
+            
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoStale) {
-                Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)], stale: [$repoInfoStale]"
+                Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
@@ -1600,7 +1607,7 @@ function GetMoreInfo {
                                 disabled = $repo_disabled
                                 updated_at = $repo_updated_at
                                 latest_release_published_at = $latest_release_published_at
-                                checkedAt = Get-Date
+                                lastFetched = (Get-Date -Format 'o')
                             }
 
                             $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
@@ -1613,12 +1620,7 @@ function GetMoreInfo {
                             $action.repoInfo.disabled = $repo_disabled
                             $action.repoInfo.updated_at = $repo_updated_at
                             $action.repoInfo.latest_release_published_at = $latest_release_published_at
-                            $checkedAtField = Get-Member -InputObject $action.repoInfo -Name "checkedAt" -MemberType Properties
-                            if (-not $checkedAtField) {
-                                $action.repoInfo | Add-Member -Name checkedAt -Value (Get-Date) -MemberType NoteProperty
-                            } else {
-                                $action.repoInfo.checkedAt = Get-Date
-                            }
+                            $action.repoInfo.lastFetched = (Get-Date -Format 'o')
                             $memberUpdate++ | Out-Null
                         }
                     }

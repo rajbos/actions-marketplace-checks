@@ -30,6 +30,20 @@ BeforeAll {
         if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
             $score += 50
         }
+        elseif ($action.repoInfo) {
+            # Stale repoInfo: lastFetched missing or older than 14 days
+            $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+            if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+                $score += 20
+            }
+            else {
+                try {
+                    $daysSince = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                    if ($daysSince -gt 14) { $score += 20 }
+                }
+                catch { $score += 20 }
+            }
+        }
         
         $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
         if (!$hasRepoSize) {
@@ -54,20 +68,6 @@ BeforeAll {
             $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
             if ($daysSinceLastCheck -gt 30) {
                 $score += 10
-            }
-        }
-
-        # Stale repoInfo/tagInfo/releaseInfo checks — boost priority when data exists
-        # but was never timestamped or hasn't been refreshed in over 30 days.
-        if ($hasRepoInfo -and $action.repoInfo.updated_at) {
-            $hasCheckedAt = Get-Member -inputobject $action.repoInfo -name "checkedAt" -Membertype Properties
-            if (!$hasCheckedAt -or !$action.repoInfo.checkedAt) {
-                $score += 45  # has repoInfo but no checkedAt — was never refreshed
-            } else {
-                $daysSinceCheck = ((Get-Date) - [datetime]$action.repoInfo.checkedAt).Days
-                if ($daysSinceCheck -gt 30) {
-                    $score += 45
-                }
             }
         }
 
@@ -166,7 +166,7 @@ Describe "Get-RepoPriorityScore" {
             }
             repoInfo = [PSCustomObject]@{
                 updated_at = Get-Date
-                checkedAt  = Get-Date
+                lastFetched  = (Get-Date -Format 'o')
             }
             repoSize = 100
             tagInfo = @(@{ tag = "v1.0.0"; sha = "abc" })
@@ -201,7 +201,7 @@ Describe "Get-RepoPriorityScore" {
             }
             repoInfo = [PSCustomObject]@{
                 updated_at = Get-Date
-                checkedAt  = Get-Date
+                lastFetched  = (Get-Date -Format 'o')
             }
             repoSize = 100
             dependents = [PSCustomObject]@{
@@ -233,7 +233,7 @@ Describe "Get-RepoPriorityScore" {
             }
             repoInfo = [PSCustomObject]@{
                 updated_at = Get-Date
-                checkedAt  = Get-Date
+                lastFetched  = (Get-Date -Format 'o')
             }
             repoSize = 100
             dependents = [PSCustomObject]@{
@@ -253,14 +253,14 @@ Describe "Get-RepoPriorityScore" {
         $score | Should -BeLessOrEqual 10
     }
 
-    It "Should add score for repoInfo missing checkedAt (legacy data)" {
-        # Arrange — simulates an action that was populated before checkedAt was introduced
+    It "Should add score for repoInfo missing lastFetched (legacy data)" {
+        # Arrange — simulates an action that was populated before lastFetched was introduced
         $action = [PSCustomObject]@{
             name = "test-action"
             owner = "test-owner"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z" }  # no checkedAt
+            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z" }  # no lastFetched
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
@@ -270,18 +270,18 @@ Describe "Get-RepoPriorityScore" {
         $score = Get-RepoPriorityScore -action $action
 
         # Assert
-        $score | Should -Be 45
+        $score | Should -Be 20
     }
 
-    It "Should add score for repoInfo with stale checkedAt (>30 days old)" {
+    It "Should add score for repoInfo with stale lastFetched (>14 days old)" {
         # Arrange
-        $oldDate = (Get-Date).AddDays(-45)
+        $oldDate = (Get-Date).AddDays(-20) | Get-Date -Format 'o'
         $action = [PSCustomObject]@{
             name = "test-action"
             owner = "test-owner"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z"; checkedAt = $oldDate }
+            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z"; lastFetched = $oldDate }
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
@@ -291,18 +291,18 @@ Describe "Get-RepoPriorityScore" {
         $score = Get-RepoPriorityScore -action $action
 
         # Assert
-        $score | Should -Be 45
+        $score | Should -Be 20
     }
 
-    It "Should not add stale score for repoInfo checked within 30 days" {
+    It "Should not add stale score for repoInfo fetched within 14 days" {
         # Arrange
-        $recentDate = (Get-Date).AddDays(-15)
+        $recentDate = (Get-Date).AddDays(-7) | Get-Date -Format 'o'
         $action = [PSCustomObject]@{
             name = "test-action"
             owner = "test-owner"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z"; checkedAt = $recentDate }
+            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z"; lastFetched = $recentDate }
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
@@ -322,7 +322,7 @@ Describe "Get-RepoPriorityScore" {
             owner = "test-owner"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
             repoSize = 100
             tagInfo = @(@{ tag = "v1.0.0"; sha = "abc" })  # no tagInfoCheckedAt
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
@@ -343,7 +343,7 @@ Describe "Get-RepoPriorityScore" {
             owner = "test-owner"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
             repoSize = 100
             releaseInfo = @(@{ tag_name = "v1.0.0"; target_commitish = "main" })  # no releaseInfoCheckedAt
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
@@ -365,7 +365,7 @@ Describe "Get-RepoPriorityScore" {
             owner = "test-owner"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
             repoSize = 100
             tagInfo = @(@{ tag = "v1.0.0"; sha = "abc" })
             tagInfoCheckedAt = $oldDate
@@ -387,7 +387,7 @@ Describe "Get-PrioritizedReposToProcess" {
     It "Should return repos with highest scores first" {
         # Arrange
         $repos = @(
-            [PSCustomObject]@{ name = "complete-repo"; owner = "test"; mirrorFound = $true; actionType = [PSCustomObject]@{ actionType = "Node" }; repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }; repoSize = 100; dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date } }
+            [PSCustomObject]@{ name = "complete-repo"; owner = "test"; mirrorFound = $true; actionType = [PSCustomObject]@{ actionType = "Node" }; repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }; repoSize = 100; dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date } }
             [PSCustomObject]@{ name = "missing-owner" }
             [PSCustomObject]@{ name = "missing-actionType"; owner = "test"; mirrorFound = $true }
         )
@@ -424,7 +424,7 @@ Describe "Get-PrioritizedReposToProcess" {
             owner = "test"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
             repoSize = 100
             tagInfo = @(@{ tag = "v1.0.0"; sha = "abc" })
             tagInfoCheckedAt = Get-Date
@@ -442,7 +442,7 @@ Describe "Get-PrioritizedReposToProcess" {
             owner = "test"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Docker" }
-            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
             repoSize = 200
             tagInfo = @(@{ tag = "v2.0.0"; sha = "def" })
             tagInfoCheckedAt = Get-Date
@@ -472,7 +472,7 @@ Describe "Get-PrioritizedReposToProcess" {
             owner = "test"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; checkedAt = Get-Date }
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
@@ -482,7 +482,7 @@ Describe "Get-PrioritizedReposToProcess" {
             owner = "test"
             mirrorFound = $true
             actionType = [PSCustomObject]@{ actionType = "Node" }
-            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z" }  # no checkedAt — legacy stale
+            repoInfo = [PSCustomObject]@{ updated_at = "2022-01-01T00:00:00Z" }  # no lastFetched — legacy stale
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }

@@ -369,6 +369,10 @@ function Normalize-ActionDates {
                 $normalized = ConvertTo-NormalizedDateTime -dateValue $action.repoInfo.latest_release_published_at
                 $action.repoInfo.latest_release_published_at = $normalized
             }
+            if ($null -ne $action.repoInfo.lastFetched) {
+                $normalized = ConvertTo-NormalizedDateTime -dateValue $action.repoInfo.lastFetched
+                $action.repoInfo.lastFetched = $normalized
+            }
         }
 
         # Normalize mirrorLastUpdated
