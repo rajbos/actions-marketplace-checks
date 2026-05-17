@@ -213,6 +213,46 @@ function Get-RepoPriorityScore {
             $score += 10
         }
     }
+
+    # Stale repoInfo/tagInfo/releaseInfo checks — boost priority when data exists
+    # but was never timestamped or hasn't been refreshed in over 30 days.
+    if ($hasRepoInfo -and $action.repoInfo.updated_at) {
+        $hasCheckedAt = Get-Member -inputobject $action.repoInfo -name "checkedAt" -Membertype Properties
+        if (!$hasCheckedAt -or !$action.repoInfo.checkedAt) {
+            $score += 45  # has repoInfo but no checkedAt — was never refreshed
+        } else {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.repoInfo.checkedAt).Days
+            if ($daysSinceCheck -gt 30) {
+                $score += 45
+            }
+        }
+    }
+
+    $hasTagInfoCheckedAt = Get-Member -inputobject $action -name "tagInfoCheckedAt" -Membertype Properties
+    $hasTagInfo = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
+    if ($hasTagInfo -and $action.tagInfo) {
+        if (!$hasTagInfoCheckedAt -or !$action.tagInfoCheckedAt) {
+            $score += 15
+        } else {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.tagInfoCheckedAt).Days
+            if ($daysSinceCheck -gt 30) {
+                $score += 15
+            }
+        }
+    }
+
+    $hasReleaseInfoCheckedAt = Get-Member -inputobject $action -name "releaseInfoCheckedAt" -Membertype Properties
+    $hasReleaseInfo = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
+    if ($hasReleaseInfo -and $action.releaseInfo) {
+        if (!$hasReleaseInfoCheckedAt -or !$action.releaseInfoCheckedAt) {
+            $score += 15
+        } else {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.releaseInfoCheckedAt).Days
+            if ($daysSinceCheck -gt 30) {
+                $score += 15
+            }
+        }
+    }
     
     return $score
 }
@@ -1527,8 +1567,17 @@ function GetMoreInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
 
             $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
-                Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            $repoInfoStale = $false
+            if ($hasField -and $action.repoInfo.updated_at) {
+                $hasCheckedAt = Get-Member -inputobject $action.repoInfo -name "checkedAt" -Membertype Properties
+                if (!$hasCheckedAt -or !$action.repoInfo.checkedAt) {
+                    $repoInfoStale = $true  # existing data with no timestamp — treat as stale
+                } else {
+                    $repoInfoStale = ((Get-Date) - [datetime]$action.repoInfo.checkedAt).Days -gt 30
+                }
+            }
+            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoStale) {
+                Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)], stale: [$repoInfoStale]"
                 try {
                     ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                     if ($statusCode -and ($statusCode -eq "NotFound")) {
@@ -1551,6 +1600,7 @@ function GetMoreInfo {
                                 disabled = $repo_disabled
                                 updated_at = $repo_updated_at
                                 latest_release_published_at = $latest_release_published_at
+                                checkedAt = Get-Date
                             }
 
                             $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
@@ -1563,6 +1613,12 @@ function GetMoreInfo {
                             $action.repoInfo.disabled = $repo_disabled
                             $action.repoInfo.updated_at = $repo_updated_at
                             $action.repoInfo.latest_release_published_at = $latest_release_published_at
+                            $checkedAtField = Get-Member -InputObject $action.repoInfo -Name "checkedAt" -MemberType Properties
+                            if (-not $checkedAtField) {
+                                $action.repoInfo | Add-Member -Name checkedAt -Value (Get-Date) -MemberType NoteProperty
+                            } else {
+                                $action.repoInfo.checkedAt = Get-Date
+                            }
                             $memberUpdate++ | Out-Null
                         }
                     }
@@ -1607,7 +1663,16 @@ function GetMoreInfo {
             }
 
             $hasField = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.tagInfo)) {
+            $tagInfoCheckedAtField = Get-Member -inputobject $action -name "tagInfoCheckedAt" -Membertype Properties
+            $tagInfoStale = $false
+            if ($hasField -and $action.tagInfo) {
+                if (!$tagInfoCheckedAtField -or !$action.tagInfoCheckedAt) {
+                    $tagInfoStale = $true  # existing data with no timestamp — treat as stale
+                } else {
+                    $tagInfoStale = ((Get-Date) - [datetime]$action.tagInfoCheckedAt).Days -gt 30
+                }
+            }
+            if (!$hasField -or ($null -eq $action.tagInfo) -or $tagInfoStale) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
@@ -1620,6 +1685,11 @@ function GetMoreInfo {
                     else {
                         #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
                         $action.tagInfo = $tagInfo
+                    }
+                    if (!$tagInfoCheckedAtField) {
+                        $action | Add-Member -Name tagInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty
+                    } else {
+                        $action.tagInfoCheckedAt = Get-Date
                     }
                 }
                 catch {
@@ -1649,7 +1719,16 @@ function GetMoreInfo {
             }
 
             $hasField = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.releaseInfo)) {
+            $releaseInfoCheckedAtField = Get-Member -inputobject $action -name "releaseInfoCheckedAt" -Membertype Properties
+            $releaseInfoStale = $false
+            if ($hasField -and $action.releaseInfo) {
+                if (!$releaseInfoCheckedAtField -or !$action.releaseInfoCheckedAt) {
+                    $releaseInfoStale = $true  # existing data with no timestamp — treat as stale
+                } else {
+                    $releaseInfoStale = ((Get-Date) - [datetime]$action.releaseInfoCheckedAt).Days -gt 30
+                }
+            }
+            if (!$hasField -or ($null -eq $action.releaseInfo) -or $releaseInfoStale) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     $releaseInfo = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
@@ -1662,6 +1741,11 @@ function GetMoreInfo {
                     else {
                         #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
                         $action.releaseInfo = $releaseInfo
+                    }
+                    if (!$releaseInfoCheckedAtField) {
+                        $action | Add-Member -Name releaseInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty
+                    } else {
+                        $action.releaseInfoCheckedAt = Get-Date
                     }
                 }
                 catch {
