@@ -137,8 +137,22 @@ jobs:
               exit 1
           }
 
-          # Limit existing forks for repo info
-          $forksForRepoInfo = $existingForks | Where-Object { $_.forkFound -eq $true } | Select-Object -First $numberOfReposRepoInfo
+          # Limit existing forks for repo info - prioritize repos with oldest (or missing) repoInfo.updated_at so stale data gets refreshed first
+          $forksForRepoInfo = $existingForks | 
+            Where-Object { $_.forkFound -eq $true } |
+            Sort-Object -Property @{
+              Expression = {
+                try {
+                  if ($_.repoInfo -and $_.repoInfo.updated_at) {
+                    [DateTime]::Parse($_.repoInfo.updated_at).Ticks
+                  } else {
+                    0L  # No repoInfo → process first
+                  }
+                } catch { 0L }
+              };
+              Ascending = $true
+            } |
+            Select-Object -First $numberOfReposRepoInfo
           
             # Split the work for repo info
             $chunksRepoInfoRaw = Split-ForksIntoChunks -existingForks $forksForRepoInfo -numberOfChunks $numberOfChunks
