@@ -554,7 +554,9 @@ function Save-ResultsAsJson {
     Write-Host "Results saved successfully"
 }
 
-# Main execution
+# Main execution - skip when this script is dot-sourced (e.g., by tests)
+if ($MyInvocation.InvocationName -eq '.') { return }
+
 try {
     # Load actions from status.json
     Write-Host "Loading status.json..."

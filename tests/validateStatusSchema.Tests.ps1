@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the validation script functions
     . $PSScriptRoot/../.github/workflows/validate-status-schema.ps1 -statusFilePath "$TestDrive/dummy.json" -ErrorAction SilentlyContinue

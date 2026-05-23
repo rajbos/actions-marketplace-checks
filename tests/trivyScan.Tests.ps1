@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Note: We can't directly test Invoke-TrivyScan because it requires:
     # 1. Docker to be installed and running

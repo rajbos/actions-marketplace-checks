@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
@@ -11,34 +9,24 @@ Describe "ApiCall Retry Limit Tests" {
         $global:RateLimitExceeded = $false
     }
     
-    Context "When maximum retries are exceeded" {
-        It "Should stop retrying after maxRetries is reached" {
-            # This test verifies that ApiCall doesn't infinitely recurse
-            # We'll mock GetBasicAuthenticationHeader to avoid actual API calls
+    Context "Should stop retrying after maxRetries is reached" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
-            # Mock GetRateLimitInfo to prevent side effects
             Mock GetRateLimitInfo { }
-            
-            # Create a properly structured exception with response headers
-            # Use a timestamp 30 minutes in the future (1800 seconds)
-            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 1800)
-            
+            $script:futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 1800)
             Mock Invoke-WebRequest {
                 $response = New-Object PSObject -Property @{
                     Headers = @{
-                        "X-RateLimit-Reset" = @($futureTimestamp.ToString())
+                        "X-RateLimit-Reset" = @($script:futureTimestamp.ToString())
                         "X-RateLimit-Remaining" = @("0")
                     }
                     StatusCode = 403
                 }
-                
                 $exception = New-Object System.Net.WebException("API rate limit exceeded for user ID")
                 $webResponse = New-Object PSObject -Property @{
                     Headers = $response.Headers
                 }
                 $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
-                
                 $errorRecord = New-Object System.Management.Automation.ErrorRecord(
                     $exception,
                     "WebException",
@@ -46,53 +34,45 @@ Describe "ApiCall Retry Limit Tests" {
                     $null
                 )
                 $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"API rate limit exceeded for user ID`"}")
-                
                 throw $errorRecord
             }
-            
-            # Call ApiCall with a low maxRetries value
+        }
+
+        It "Should stop retrying after maxRetries is reached" {
             $result = ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 3
-            
-            # Should return null after rate limit is exceeded
-            # Note: The result may be $null or a collection containing $null
             if ($result -is [System.Collections.IEnumerable] -and -not ($result -is [string])) {
-                # If it's a collection, check that it only contains nulls
                 $nonNullItems = $result | Where-Object { $null -ne $_ }
                 $nonNullItems.Count | Should -Be 0
             } else {
                 $result | Should -Be $null
             }
-            
-            # Global flag should be set
             $global:RateLimitExceeded | Should -Be $true
         }
+    }
 
-        It "Should pause when installation rate limit is exceeded" {
+    Context "Should pause when installation rate limit is exceeded" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
             Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
             Mock Start-Sleep { param($Seconds, $Milliseconds) }
-
             $script:invokeCount = 0
-            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
-
+            $script:futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
             Mock Invoke-WebRequest {
                 $script:invokeCount++
                 if ($script:invokeCount -eq 1) {
                     $response = New-Object PSObject -Property @{
                         Headers = @{
-                            "X-RateLimit-Reset" = @($futureTimestamp.ToString())
+                            "X-RateLimit-Reset" = @($script:futureTimestamp.ToString())
                             "X-RateLimit-Remaining" = @("0")
                             "X-RateLimit-Used" = @("500")
                         }
                         StatusCode = 403
                     }
-
                     $exception = New-Object System.Net.WebException("API rate limit exceeded for installation ID")
                     $webResponse = New-Object PSObject -Property @{
                         Headers = $response.Headers
                     }
                     $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
-
                     $errorRecord = New-Object System.Management.Automation.ErrorRecord(
                         $exception,
                         "WebException",
@@ -102,63 +82,55 @@ Describe "ApiCall Retry Limit Tests" {
                     $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"API rate limit exceeded for installation ID`"}")
                     throw $errorRecord
                 }
-
                 return New-Object PSObject -Property @{
                     StatusCode = 200
                     Headers = @{}
                     Content = "{}"
                 }
             }
+        }
 
+        It "Should pause when installation rate limit is exceeded" {
             $result = ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 1
-
             $result | Should -Not -Be $null
             Assert-MockCalled Format-RateLimitErrorTable -Times 1 -ParameterFilter { $errorType -eq "Installation" }
             Assert-MockCalled Start-Sleep -Times 1 -ParameterFilter { $Milliseconds -gt 0 }
             $global:RateLimitExceeded | Should -Be $false
         }
-        
-        It "Should not exceed maxRetries even with rate limit issues" {
-            # Track the number of times Invoke-WebRequest is called
-            $callCount = 0
-            
+    }
+
+    Context "Should not exceed maxRetries even with rate limit issues" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
             Mock Invoke-WebRequest {
                 $script:callCount++
                 throw [System.Exception]::new("was submitted too quickly")
             }
-            
-            # Call with maxRetries=5
-            $result = ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 5
-            
-            # Should stop after hitting the limit
-            $result | Should -Be $null
-            
-            # Should have called Invoke-WebRequest at most maxRetries + 1 times (initial call + retries)
-            $callCount | Should -BeLessOrEqual 6
         }
-        
-        It "Should avoid calling GetRateLimitInfo when calling rate_limit endpoint" {
-            # Track if GetRateLimitInfo was called
-            $getRateLimitInfoCalled = $false
-            
+
+        It "Should not exceed maxRetries even with rate limit issues" {
+            $script:callCount = 0
+            $result = ApiCall -method GET -url "test_endpoint" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 5
+            $result | Should -Be $null
+            $script:callCount | Should -BeLessOrEqual 6
+        }
+    }
+
+    Context "Should avoid calling GetRateLimitInfo when calling rate_limit endpoint" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
             Mock Invoke-WebRequest {
-                $messageData = @{ message = "was submitted too quickly" }
                 throw [System.Exception]::new("was submitted too quickly")
             }
-            
             Mock GetRateLimitInfo {
                 $script:getRateLimitInfoCalled = $true
             }
-            
-            # Call ApiCall with rate_limit URL to verify it doesn't call GetRateLimitInfo
+        }
+
+        It "Should avoid calling GetRateLimitInfo when calling rate_limit endpoint" {
+            $script:getRateLimitInfoCalled = $false
             $result = ApiCall -method GET -url "rate_limit" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2
-            
-            # GetRateLimitInfo should NOT have been called to prevent infinite recursion
-            $getRateLimitInfoCalled | Should -Be $false
+            $script:getRateLimitInfoCalled | Should -Be $false
         }
     }
     
@@ -183,11 +155,8 @@ Describe "ApiCall Retry Limit Tests" {
     }
     
     Context "Retry counter incrementation" {
-        It "Should increment retry counter on each recursive call" {
-            # This is more of a validation that the parameter exists and is used
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
-            # Create a custom exception with response headers for rate limit
             $response = New-Object PSObject -Property @{
                 Headers = @{
                     "X-RateLimit-Reset" = @("9999999999")
@@ -195,29 +164,23 @@ Describe "ApiCall Retry Limit Tests" {
                 }
                 StatusCode = 403
             }
-            
             $exception = New-Object System.Exception("API rate limit exceeded for user ID")
             $exception | Add-Member -NotePropertyName Response -NotePropertyValue $response -Force
-            
             Mock Invoke-WebRequest {
                 throw $exception
             }
-            
-            # Call with very low maxRetries to quickly hit the limit
+        }
+
+        It "Should increment retry counter on each recursive call" {
             $result = ApiCall -method GET -url "test" -access_token "token" -hideFailedCall $true -maxRetries 1 -waitForRateLimit $false
-            
-            # Should return null (hit retry limit or rate limit)
             $result | Should -Be $null
         }
     }
     
-    Context "Rate limit endpoint should not retry on errors" {
-        It "Should not retry rate_limit endpoint on 'was submitted too quickly' error" {
-            # Track the number of times Invoke-WebRequest is called
-            $script:callCount = 0
-            
+    Context "Rate limit endpoint should not retry on 'was submitted too quickly' error" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
+            $script:callCount = 0
             Mock Invoke-WebRequest {
                 $script:callCount++
                 $errorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"was submitted too quickly`"}")
@@ -231,29 +194,24 @@ Describe "ApiCall Retry Limit Tests" {
                 $errorRecord.ErrorDetails = $errorDetails
                 throw $errorRecord
             }
-            
-            # Call with rate_limit URL
+        }
+
+        It "Should not retry rate_limit endpoint on 'was submitted too quickly' error" {
             $result = ApiCall -method GET -url "rate_limit" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true
-            
-            # Should return null immediately without retry
-            # Handle PowerShell's array wrapping behavior
             if ($result -is [System.Collections.IEnumerable] -and -not ($result -is [string])) {
                 $nonNullItems = $result | Where-Object { $null -ne $_ }
                 $nonNullItems.Count | Should -Be 0
             } else {
                 $result | Should -Be $null
             }
-            
-            # Should have only called once (no retries)
             $script:callCount | Should -Be 1
         }
-        
-        It "Should not retry rate_limit endpoint on 'secondary rate limit' error" {
-            # Track the number of times Invoke-WebRequest is called
-            $script:callCount = 0
-            
+    }
+
+    Context "Rate limit endpoint should not retry on 'secondary rate limit' error" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
+            $script:callCount = 0
             Mock Invoke-WebRequest {
                 $script:callCount++
                 $errorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"You have exceeded a secondary rate limit`"}")
@@ -267,49 +225,39 @@ Describe "ApiCall Retry Limit Tests" {
                 $errorRecord.ErrorDetails = $errorDetails
                 throw $errorRecord
             }
-            
-            # Call with rate_limit URL
+        }
+
+        It "Should not retry rate_limit endpoint on 'secondary rate limit' error" {
             $result = ApiCall -method GET -url "rate_limit" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true
-            
-            # Should return null immediately without retry
-            # Handle PowerShell's array wrapping behavior
             if ($result -is [System.Collections.IEnumerable] -and -not ($result -is [string])) {
                 $nonNullItems = $result | Where-Object { $null -ne $_ }
                 $nonNullItems.Count | Should -Be 0
             } else {
                 $result | Should -Be $null
             }
-            
-            # Should have only called once (no retries)
             $script:callCount | Should -Be 1
         }
-        
-        It "Should not retry rate_limit endpoint on 'API rate limit exceeded' error" {
-            # Track the number of times Invoke-WebRequest is called
-            $script:callCount = 0
-            
+    }
+
+    Context "Rate limit endpoint should not retry on 'API rate limit exceeded' error" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
-            
-            # Create a properly structured exception with response headers
-            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 60)
-            
+            $script:callCount = 0
+            $script:futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 60)
             Mock Invoke-WebRequest {
                 $script:callCount++
-                
                 $response = New-Object PSObject -Property @{
                     Headers = @{
-                        "X-RateLimit-Reset" = @($futureTimestamp.ToString())
+                        "X-RateLimit-Reset" = @($script:futureTimestamp.ToString())
                         "X-RateLimit-Remaining" = @("0")
                     }
                     StatusCode = 403
                 }
-                
                 $exception = New-Object System.Net.WebException("API rate limit exceeded for user ID")
                 $webResponse = New-Object PSObject -Property @{
                     Headers = $response.Headers
                 }
                 $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
-                
                 $errorRecord = New-Object System.Management.Automation.ErrorRecord(
                     $exception,
                     "WebException",
@@ -317,23 +265,18 @@ Describe "ApiCall Retry Limit Tests" {
                     $null
                 )
                 $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"API rate limit exceeded for user ID`"}")
-                
                 throw $errorRecord
             }
-            
-            # Call with rate_limit URL
+        }
+
+        It "Should not retry rate_limit endpoint on 'API rate limit exceeded' error" {
             $result = ApiCall -method GET -url "rate_limit" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true
-            
-            # Should return null immediately without retry
-            # Handle PowerShell's array wrapping behavior
             if ($result -is [System.Collections.IEnumerable] -and -not ($result -is [string])) {
                 $nonNullItems = $result | Where-Object { $null -ne $_ }
                 $nonNullItems.Count | Should -Be 0
             } else {
                 $result | Should -Be $null
             }
-            
-            # Should have only called once (no retries)
             $script:callCount | Should -Be 1
         }
     }

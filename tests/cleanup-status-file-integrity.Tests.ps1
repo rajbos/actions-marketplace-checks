@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Load the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1

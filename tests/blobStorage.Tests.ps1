@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
@@ -35,6 +33,10 @@ Describe "Blob Storage Common Functions" {
 }
 
 Describe "Blob Storage Wrapper Functions" {
+    BeforeAll {
+        # Prevent real HTTP calls to Azure Blob Storage during tests
+        Mock Invoke-WebRequest { throw [System.Net.WebException]::new("No connection available") }
+    }
     Context "Get-ActionsJsonFromBlobStorage function" {
         It "Should have function defined" {
             Get-Command Get-ActionsJsonFromBlobStorage -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty

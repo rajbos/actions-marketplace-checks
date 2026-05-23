@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import only the function we need, not the entire script
     # Note: We copy the function definition here rather than sourcing repoInfo.ps1

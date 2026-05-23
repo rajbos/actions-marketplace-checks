@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Duplicate the prioritization functions for testing
     function Get-RepoPriorityScore {
