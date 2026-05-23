@@ -1620,7 +1620,7 @@ function GetMoreInfo {
                             $action.repoInfo.disabled = $repo_disabled
                             $action.repoInfo.updated_at = $repo_updated_at
                             $action.repoInfo.latest_release_published_at = $latest_release_published_at
-                            $action.repoInfo.lastFetched = (Get-Date -Format 'o')
+                            $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
                             $memberUpdate++ | Out-Null
                         }
                     }
