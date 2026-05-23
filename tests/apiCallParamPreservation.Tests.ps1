@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
@@ -11,23 +9,22 @@ Describe "ApiCall Parameter Preservation Through Retries" {
     }
 
     Context "hideFailedCall is preserved after installation rate limit retry" {
-        It "Should not throw when a 404 follows an installation rate limit error and hideFailedCall is true" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
             Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
             Mock Start-Sleep { param($Seconds, $Milliseconds) }
             Mock Select-BestGitHubAppTokenForOrganization { return $null }
             Mock Get-GitHubAppRateLimitOverview { return @() }
-
+        }
+        BeforeEach {
             $script:invokeCount = 0
-            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
-
+            $script:futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
             Mock Invoke-WebRequest {
                 $script:invokeCount++
                 if ($script:invokeCount -eq 1) {
-                    # First call: installation rate limit
                     $webResponse = New-Object PSObject -Property @{
                         Headers = @{
-                            "X-RateLimit-Reset"      = @($futureTimestamp.ToString())
+                            "X-RateLimit-Reset"      = @($script:futureTimestamp.ToString())
                             "X-RateLimit-Remaining"  = @("0")
                             "X-RateLimit-Used"       = @("500")
                         }
@@ -42,7 +39,6 @@ Describe "ApiCall Parameter Preservation Through Retries" {
                     throw $errorRecord
                 }
                 else {
-                    # Second call (retry): 404 Not Found
                     $webResponse = New-Object PSObject -Property @{ Headers = @{} }
                     $exception = New-Object System.Net.WebException("Not Found")
                     $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
@@ -54,53 +50,14 @@ Describe "ApiCall Parameter Preservation Through Retries" {
                     throw $errorRecord
                 }
             }
+        }
 
+        It "Should not throw when a 404 follows an installation rate limit error and hideFailedCall is true" {
             # Should not throw; hideFailedCall must be preserved through the retry
             { ApiCall -method GET -url "repos/some-org/some-repo" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2 } | Should -Not -Throw
         }
 
         It "Should return null (not throw) when a 404 follows an installation rate limit error and hideFailedCall is true" {
-            Mock GetBasicAuthenticationHeader { return "Basic test" }
-            Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
-            Mock Start-Sleep { param($Seconds, $Milliseconds) }
-            Mock Select-BestGitHubAppTokenForOrganization { return $null }
-            Mock Get-GitHubAppRateLimitOverview { return @() }
-
-            $script:invokeCount = 0
-            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
-
-            Mock Invoke-WebRequest {
-                $script:invokeCount++
-                if ($script:invokeCount -eq 1) {
-                    $webResponse = New-Object PSObject -Property @{
-                        Headers = @{
-                            "X-RateLimit-Reset"     = @($futureTimestamp.ToString())
-                            "X-RateLimit-Remaining" = @("0")
-                            "X-RateLimit-Used"      = @("500")
-                        }
-                    }
-                    $exception = New-Object System.Net.WebException("API rate limit exceeded for installation ID")
-                    $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
-                    $errorRecord = New-Object System.Management.Automation.ErrorRecord(
-                        $exception, "WebException",
-                        [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
-                    )
-                    $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"API rate limit exceeded for installation ID`"}")
-                    throw $errorRecord
-                }
-                else {
-                    $webResponse = New-Object PSObject -Property @{ Headers = @{} }
-                    $exception = New-Object System.Net.WebException("Not Found")
-                    $exception | Add-Member -NotePropertyName Response -NotePropertyValue $webResponse -Force
-                    $errorRecord = New-Object System.Management.Automation.ErrorRecord(
-                        $exception, "WebException",
-                        [System.Management.Automation.ErrorCategory]::InvalidOperation, $null
-                    )
-                    $errorRecord.ErrorDetails = New-Object System.Management.Automation.ErrorDetails("{`"message`":`"Not Found`",`"status`":`"404`"}")
-                    throw $errorRecord
-                }
-            }
-
             $result = ApiCall -method GET -url "repos/some-org/some-repo" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2
 
             $result | Should -Be $null
@@ -109,22 +66,20 @@ Describe "ApiCall Parameter Preservation Through Retries" {
     }
 
     Context "returnErrorInfo is preserved after installation rate limit retry" {
-        It "Should return error info (not throw) when a 404 follows an installation rate limit error and returnErrorInfo is true" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
             Mock Format-RateLimitErrorTable { param($remaining, $used, $waitSeconds, $continueAt, $errorType) }
             Mock Start-Sleep { param($Seconds, $Milliseconds) }
             Mock Select-BestGitHubAppTokenForOrganization { return $null }
             Mock Get-GitHubAppRateLimitOverview { return @() }
-
             $script:invokeCount = 0
-            $futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
-
+            $script:futureTimestamp = [int]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() + 30)
             Mock Invoke-WebRequest {
                 $script:invokeCount++
                 if ($script:invokeCount -eq 1) {
                     $webResponse = New-Object PSObject -Property @{
                         Headers = @{
-                            "X-RateLimit-Reset"     = @($futureTimestamp.ToString())
+                            "X-RateLimit-Reset"     = @($script:futureTimestamp.ToString())
                             "X-RateLimit-Remaining" = @("0")
                             "X-RateLimit-Used"      = @("500")
                         }
@@ -139,7 +94,6 @@ Describe "ApiCall Parameter Preservation Through Retries" {
                     throw $errorRecord
                 }
                 else {
-                    # Simulate a 404 response with a proper StatusCode on the exception response
                     $innerWebResponse = New-Object PSObject -Property @{
                         Headers    = @{}
                         StatusCode = [System.Net.HttpStatusCode]::NotFound
@@ -154,7 +108,9 @@ Describe "ApiCall Parameter Preservation Through Retries" {
                     throw $errorRecord
                 }
             }
+        }
 
+        It "Should return error info (not throw) when a 404 follows an installation rate limit error and returnErrorInfo is true" {
             $result = ApiCall -method GET -url "repos/some-org/some-repo" -access_token "test_token" -returnErrorInfo $true -waitForRateLimit $true -maxRetries 2
 
             $result | Should -Not -Be $null
@@ -164,12 +120,10 @@ Describe "ApiCall Parameter Preservation Through Retries" {
     }
 
     Context "hideFailedCall is preserved after secondary rate limit retry" {
-        It "Should not throw when a 404 follows a secondary rate limit error and hideFailedCall is true" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
             Mock Start-Sleep { param($Seconds, $Milliseconds) }
-
             $script:invokeCount = 0
-
             Mock Invoke-WebRequest {
                 $script:invokeCount++
                 if ($script:invokeCount -eq 1) {
@@ -193,19 +147,19 @@ Describe "ApiCall Parameter Preservation Through Retries" {
                     throw $errorRecord
                 }
             }
+        }
 
+        It "Should not throw when a 404 follows a secondary rate limit error and hideFailedCall is true" {
             { ApiCall -method GET -url "repos/some-org/some-repo" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2 } | Should -Not -Throw
         }
     }
 
     Context "hideFailedCall is preserved after 'was submitted too quickly' retry" {
-        It "Should not throw when a 404 follows a 'was submitted too quickly' error and hideFailedCall is true" {
+        BeforeAll {
             Mock GetBasicAuthenticationHeader { return "Basic test" }
             Mock Start-Sleep { param($Seconds, $Milliseconds) }
             Mock GetRateLimitInfo { }
-
             $script:invokeCount = 0
-
             Mock Invoke-WebRequest {
                 $script:invokeCount++
                 if ($script:invokeCount -eq 1) {
@@ -229,7 +183,9 @@ Describe "ApiCall Parameter Preservation Through Retries" {
                     throw $errorRecord
                 }
             }
+        }
 
+        It "Should not throw when a 404 follows a 'was submitted too quickly' error and hideFailedCall is true" {
             { ApiCall -method GET -url "repos/some-org/some-repo" -access_token "test_token" -hideFailedCall $true -waitForRateLimit $true -maxRetries 2 } | Should -Not -Throw
         }
     }

@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the DisplayIntWithDots function from library.ps1
     function DisplayIntWithDots {

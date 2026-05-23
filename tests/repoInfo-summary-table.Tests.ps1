@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Note: We duplicate the Format-RepoInfoSummaryTable function here rather than
     # importing from repoInfo.ps1 because that script has parameters and side effects
