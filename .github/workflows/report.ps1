@@ -480,13 +480,13 @@ function ReportInsightsInMarkdown {
             # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for D and E to use the number from B")
             $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$localDockerFile * 100 , 1)
             $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$localDockerFile * 100 , 1)
-            LogMessage "  B-->D[$DisplayIntWithDots($localDockerfileWithCustomCode) With custom code - $withCodePercentage%]"
-            LogMessage "  B-->E[$DisplayIntWithDots($localDockerfileWithoutCustomCode) Base image only - $withoutCodePercentage%]"
+            LogMessage "  B-->D[$(DisplayIntWithDots($localDockerfileWithCustomCode)) With custom code - $withCodePercentage%]"
+            LogMessage "  B-->E[$(DisplayIntWithDots($localDockerfileWithoutCustomCode)) Base image only - $withoutCodePercentage%]"
             
             # Add unknown category if there are actions without custom code information
             if ($localDockerfileUnknown -gt 0) {
                 $unknownPercentage = [math]::Round($localDockerfileUnknown/$localDockerFile * 100 , 1)
-                LogMessage "  B-->F[$DisplayIntWithDots($localDockerfileUnknown) Unknown - $unknownPercentage%]"
+                LogMessage "  B-->F[$(DisplayIntWithDots($localDockerfileUnknown)) Unknown - $unknownPercentage%]"
             }
         }
     } else {
@@ -503,18 +503,18 @@ function ReportInsightsInMarkdown {
     $totalActionsWithDefinition = $global:actionYmlFile + $global:actionYamlFile + $global:actionDockerFile + $global:actiondDockerFile
     if ($totalActionsWithDefinition -gt 0) {
         $ymlPercentage = [math]::Round($global:actionYmlFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A[$DisplayIntWithDots($totalActionsWithDefinition) actions]-->B[$DisplayIntWithDots($global:actionYmlFile) action.yml - $ymlPercentage%]"
+        LogMessage "  A[$(DisplayIntWithDots($totalActionsWithDefinition)) actions]-->B[$(DisplayIntWithDots($global:actionYmlFile)) action.yml - $ymlPercentage%]"
         $yamlPercentage = [math]::Round($global:actionYamlFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->C[$DisplayIntWithDots($global:actionYamlFile) action.yaml - $yamlPercentage%]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($global:actionYamlFile)) action.yaml - $yamlPercentage%]"
         $DockerPercentage = [math]::Round($global:actionDockerFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->D[$DisplayIntWithDots($global:actionDockerFile) Dockerfile - $DockerPercentage%]"
+        LogMessage "  A-->D[$(DisplayIntWithDots($global:actionDockerFile)) Dockerfile - $DockerPercentage%]"
         $dDockerPercentage = [math]::Round($global:actiondDockerFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->E[$DisplayIntWithDots($global:actiondDockerFile) dockerfile - $dDockerPercentage%]"
+        LogMessage "  A-->E[$(DisplayIntWithDots($global:actiondDockerFile)) dockerfile - $dDockerPercentage%]"
     } else {
-        LogMessage "  A[$DisplayIntWithDots($totalActionsWithDefinition) actions]-->B[$DisplayIntWithDots($global:actionYmlFile) action.yml]"
-        LogMessage "  A-->C[$DisplayIntWithDots($global:actionYamlFile) action.yaml]"
-        LogMessage "  A-->D[$DisplayIntWithDots($global:actionDockerFile) Dockerfile]"
-        LogMessage "  A-->E[$DisplayIntWithDots($global:actiondDockerFile) dockerfile]"
+        LogMessage "  A[$(DisplayIntWithDots($totalActionsWithDefinition)) actions]-->B[$(DisplayIntWithDots($global:actionYmlFile)) action.yml]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($global:actionYamlFile)) action.yaml]"
+        LogMessage "  A-->D[$(DisplayIntWithDots($global:actionDockerFile)) Dockerfile]"
+        LogMessage "  A-->E[$(DisplayIntWithDots($global:actiondDockerFile)) dockerfile]"
     }
     LogMessage "``````"
     LogMessage ""
