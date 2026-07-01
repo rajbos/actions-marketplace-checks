@@ -52,7 +52,7 @@ jobs:
     outputs:
       matrix-repoinfo: ${{ steps.split-work.outputs.matrix-repoinfo }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Get current actions list
         shell: pwsh
@@ -201,7 +201,7 @@ jobs:
     permissions:
       actions: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download status.json from blob storage
         shell: pwsh
@@ -299,7 +299,7 @@ jobs:
       group: repo-state-updates
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download status.json from blob storage
         shell: pwsh
