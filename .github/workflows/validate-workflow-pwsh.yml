@@ -19,7 +19,7 @@ jobs:
     name: Validate all workflows inline PowerShell scripts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Run workflow PowerShell validator
         run: pwsh -NoLogo -File .github/workflows/validate-workflow-pwsh.ps1

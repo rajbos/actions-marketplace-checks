@@ -31,7 +31,7 @@ jobs:
     permissions:
       contents: write  # Required to commit and push changes to status.json
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download status.json from blob storage
         run: |
