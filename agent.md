@@ -178,6 +178,7 @@ This workflow runs daily (and on every PR/push) to validate blob storage access.
 | Secret Name | Description |
 |-------------|-------------|
 | `BLOB_SAS_TOKEN` | Full SAS URL for blob storage (read/write access). Format: `https://{storage}.blob.core.windows.net/{container}/{base-path}?{sas-params}` |
+| `DEVOPS_ACTIONS_PACKAGE_DOWNLOAD` | GitHub **classic** PAT with `read:packages` scope for the `devops-actions` org. Used to install `@devops-actions/actions-marketplace-client` from GitHub Packages during workflow runs. Fine-grained PATs do not support GitHub Packages (GitHub limitation). If this expires, all API-upload workflows will fail with npm 403 errors. See TROUBLESHOOTING.md for regeneration steps. |
 
 Note: do not introduce new secrets without asking for approval first. We use the secrets that are available in the existing workflows.
 

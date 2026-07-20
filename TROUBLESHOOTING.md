@@ -381,6 +381,49 @@ Watch for these patterns in logs:
    ./.github/workflows/get-github-app-token.ps1
    ```
 
+### Pattern: "npm error E403" / "Cannot find module '@devops-actions/actions-marketplace-client'"
+**Symptoms:**
+- Log shows: `npm error 403 Forbidden - GET https://npm.pkg.github.com/@devops-actions/actions-marketplace-client`
+- Error: `Permission permission_denied: The token provided does not match expected scopes.`
+- Downstream: `Error: Cannot find module '@devops-actions/actions-marketplace-client'` in Node.js upload scripts
+- Affected workflows: `api-upsert.yml`, `analyze.yml`, `repoInfo.yml`, `update-mirrors.yml`
+
+**Root Cause:**
+The `DEVOPS_ACTIONS_PACKAGE_DOWNLOAD` secret — a GitHub PAT used to install the private `@devops-actions/actions-marketplace-client` npm package from GitHub Packages — has expired, been revoked, or lost its `read:packages` scope for the `devops-actions` org.
+
+**Where the package lives:**
+- **Source repo**: `devops-actions/alternative-github-actions-marketplace`
+- **Package location**: `src/backend/package.json` — the `@devops-actions/actions-marketplace-client` package
+- **Published to**: `https://npm.pkg.github.com` (GitHub Packages)
+- **Publish workflow**: `.github/workflows/publish-npm.yml` in the source repo
+  - Triggered by: GitHub Release (tag `vX.Y.Z`) or manual `workflow_dispatch`
+  - Uses `secrets.GITHUB_TOKEN` with `packages: write` permission to publish
+
+**Quick Check:**
+```bash
+# Test if the token has valid package access
+echo $NODE_AUTH_TOKEN | gh auth login --with-token
+# Then test:
+npm view @devops-actions/actions-marketplace-client --registry=https://npm.pkg.github.com
+```
+
+**Fix — Regenerate the `DEVOPS_ACTIONS_PACKAGE_DOWNLOAD` secret:**
+1. Go to https://github.com/settings/tokens and create a new **classic PAT** (fine-grained PATs do not support GitHub Packages — this is a GitHub limitation)
+2. Required scope: `read:packages`
+3. Save the token value
+4. Go to: `rajbos/actions-marketplace-checks` → Settings → Secrets and variables → Actions
+5. Update the `DEVOPS_ACTIONS_PACKAGE_DOWNLOAD` secret with the new token value
+
+**Consumer npmrc config (for reference):**
+The workflows use `actions/setup-node@v6` with `registry-url: https://npm.pkg.github.com` and `scope: @devops-actions`, which creates an `.npmrc` equivalent to:
+```
+@devops-actions:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+Where `NODE_AUTH_TOKEN` is overridden at install-time with `${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}`.
+
+---
+
 ### If Specific Workflow Consistently Fails
 
 1. **Check Workflow File Syntax**:
