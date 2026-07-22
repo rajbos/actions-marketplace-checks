@@ -810,6 +810,32 @@ function CheckForInfoUpdateNeeded {
         return $true
     }
 
+    # Re-check the action definition periodically so that changes to the
+    # upstream action (for example a node version bump like node16 -> node24)
+    # get picked up. Without this, once actionType/nodeVersion are set they are
+    # never refreshed and the stored data becomes stale.
+    $recheckAfterDays = 30
+    $hasActionTypeUpdated = $null -ne $action.actionType.actionTypeLastUpdated
+    if (!$hasActionTypeUpdated) {
+        # Legacy record without a timestamp: refresh once to capture the
+        # current state and start tracking when it was last checked.
+        return $true
+    }
+    else {
+        try {
+            $actionTypeUpdated = [datetime]$action.actionType.actionTypeLastUpdated
+            $daysSinceActionTypeUpdate = ((Get-Date) - $actionTypeUpdated).TotalDays
+            if ($daysSinceActionTypeUpdate -gt $recheckAfterDays) {
+                return $true
+            }
+        }
+        catch {
+            # If we cannot parse the stored timestamp, err on the side of
+            # refreshing so we do not keep stale data indefinitely.
+            return $true
+        }
+    }
+
     # Check if we are nearing the 50-minute mark
     $timeSpan = (Get-Date) - $startTime
     if ($timeSpan.TotalMinutes -gt 50) {
@@ -1091,6 +1117,7 @@ function GetInfo {
                     fileFound = $fileFoundResult
                     actionDockerType = $actionDockerTypeResult
                     nodeVersion = $nodeVersion
+                    actionTypeLastUpdated = Get-Date
                 }
 
                 $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
@@ -1107,6 +1134,9 @@ function GetInfo {
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
+                # record when we last determined the actionType so stale data
+                # (for example an outdated node version) gets refreshed later
+                $action.actionType | Add-Member -Name actionTypeLastUpdated -Value (Get-Date) -MemberType NoteProperty -Force
                 $i++ | Out-Null
                 $repoHadUpdates = $true
             }
