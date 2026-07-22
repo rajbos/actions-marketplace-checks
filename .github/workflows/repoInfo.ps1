@@ -810,6 +810,40 @@ function CheckForInfoUpdateNeeded {
         return $true
     }
 
+    # Tie re-parsing of the action definition (action.yml/action.yaml) to the
+    # repository's change date. When the repo has changed since we last parsed
+    # it, the stored properties (actionType, fileFound, actionDockerType,
+    # nodeVersion) may be stale - for example a node version bump like
+    # node16 -> node24 - so we re-parse and refresh everything we can read.
+    $storedRepoUpdatedAt = $action.actionType.repoUpdatedAt
+    if ($null -eq $storedRepoUpdatedAt) {
+        # Legacy record parsed before we tracked the repo change date: refresh
+        # once to capture the current state and establish the baseline.
+        return $true
+    }
+
+    $currentRepoUpdatedAt = $action.mirrorLastUpdated
+    if ($null -ne $currentRepoUpdatedAt) {
+        $repoChanged = $false
+        try {
+            $storedDate = [datetime]$storedRepoUpdatedAt
+            $currentDate = [datetime]$currentRepoUpdatedAt
+            if ($currentDate -gt $storedDate) {
+                $repoChanged = $true
+            }
+        }
+        catch {
+            # Fall back to a string comparison if either value is not a
+            # parseable date; refresh when they differ.
+            if ("$currentRepoUpdatedAt" -ne "$storedRepoUpdatedAt") {
+                $repoChanged = $true
+            }
+        }
+        if ($repoChanged) {
+            return $true
+        }
+    }
+
     # Check if we are nearing the 50-minute mark
     $timeSpan = (Get-Date) - $startTime
     if ($timeSpan.TotalMinutes -gt 50) {
@@ -995,7 +1029,15 @@ function GetInfo {
             }
         }
         else {
-            $action.mirrorLastUpdated = $response.updated_at
+            if ($null -eq $response) {
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -accessToken $accessToken -startTime $startTime
+            }
+            # only refresh the change date when we actually retrieved one; do
+            # not overwrite a known value with null when the call failed. This
+            # keeps the repo change date reliable for action re-parsing.
+            if ($response -and $response.updated_at) {
+                $action.mirrorLastUpdated = $response.updated_at
+            }
         }
 
         # store repo size (only set when we have a valid value)
@@ -1091,6 +1133,8 @@ function GetInfo {
                     fileFound = $fileFoundResult
                     actionDockerType = $actionDockerTypeResult
                     nodeVersion = $nodeVersion
+                    repoUpdatedAt = $action.mirrorLastUpdated
+                    actionTypeLastUpdated = Get-Date
                 }
 
                 $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
@@ -1107,6 +1151,10 @@ function GetInfo {
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
+                # Record the repo change date we parsed against and when we
+                # parsed, so re-parsing is tied to the repo actually changing.
+                $action.actionType | Add-Member -Name repoUpdatedAt -Value $action.mirrorLastUpdated -MemberType NoteProperty -Force
+                $action.actionType | Add-Member -Name actionTypeLastUpdated -Value (Get-Date) -MemberType NoteProperty -Force
                 $i++ | Out-Null
                 $repoHadUpdates = $true
             }
