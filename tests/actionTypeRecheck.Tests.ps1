@@ -28,20 +28,27 @@ BeforeAll {
             return $true
         }
 
-        $recheckAfterDays = 30
-        $hasActionTypeUpdated = $null -ne $action.actionType.actionTypeLastUpdated
-        if (!$hasActionTypeUpdated) {
+        $storedRepoUpdatedAt = $action.actionType.repoUpdatedAt
+        if ($null -eq $storedRepoUpdatedAt) {
             return $true
         }
-        else {
+
+        $currentRepoUpdatedAt = $action.mirrorLastUpdated
+        if ($null -ne $currentRepoUpdatedAt) {
+            $repoChanged = $false
             try {
-                $actionTypeUpdated = [datetime]$action.actionType.actionTypeLastUpdated
-                $daysSinceActionTypeUpdate = ((Get-Date) - $actionTypeUpdated).TotalDays
-                if ($daysSinceActionTypeUpdate -gt $recheckAfterDays) {
-                    return $true
+                $storedDate = [datetime]$storedRepoUpdatedAt
+                $currentDate = [datetime]$currentRepoUpdatedAt
+                if ($currentDate -gt $storedDate) {
+                    $repoChanged = $true
                 }
             }
             catch {
+                if ("$currentRepoUpdatedAt" -ne "$storedRepoUpdatedAt") {
+                    $repoChanged = $true
+                }
+            }
+            if ($repoChanged) {
                 return $true
             }
         }
@@ -57,11 +64,12 @@ BeforeAll {
     }
 }
 
-Describe "CheckForInfoUpdateNeeded node version staleness" {
-    It "requests an update for a legacy Node action without a lastUpdated timestamp" {
+Describe "CheckForInfoUpdateNeeded ties action re-parsing to repo change date" {
+    It "requests an update for a legacy record without a stored repoUpdatedAt" {
         $action = [PSCustomObject]@{
-            name       = "actions/checkout"
-            mirrorFound = $true
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = "2024-01-10T10:00:00Z"
             actionType = [PSCustomObject]@{
                 actionType  = "Node"
                 nodeVersion = "16"
@@ -71,42 +79,60 @@ Describe "CheckForInfoUpdateNeeded node version staleness" {
         $result | Should -Be $true
     }
 
-    It "requests an update when the actionType is older than the recheck window" {
+    It "requests an update when the repo changed since it was last parsed" {
         $action = [PSCustomObject]@{
-            name       = "actions/checkout"
-            mirrorFound = $true
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = "2024-06-01T12:00:00Z"
             actionType = [PSCustomObject]@{
-                actionType            = "Node"
-                nodeVersion           = "16"
-                actionTypeLastUpdated = (Get-Date).AddDays(-31)
+                actionType    = "Node"
+                nodeVersion   = "16"
+                repoUpdatedAt = "2024-01-10T10:00:00Z"
             }
         }
         $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
         $result | Should -Be $true
     }
 
-    It "does not request an update when the actionType was checked recently" {
+    It "does not request an update when the repo is unchanged since last parse" {
         $action = [PSCustomObject]@{
-            name       = "actions/checkout"
-            mirrorFound = $true
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = "2024-01-10T10:00:00Z"
             actionType = [PSCustomObject]@{
-                actionType            = "Node"
-                nodeVersion           = "24"
-                actionTypeLastUpdated = (Get-Date).AddDays(-1)
+                actionType    = "Node"
+                nodeVersion   = "24"
+                repoUpdatedAt = "2024-01-10T10:00:00Z"
             }
         }
         $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
         $result | Should -Be $false
     }
 
-    It "requests an update when the stored timestamp cannot be parsed" {
+    It "does not request an update when the current repo date is missing" {
         $action = [PSCustomObject]@{
-            name       = "actions/checkout"
-            mirrorFound = $true
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = $null
             actionType = [PSCustomObject]@{
-                actionType            = "Node"
-                nodeVersion           = "16"
-                actionTypeLastUpdated = "not-a-date"
+                actionType    = "Node"
+                nodeVersion   = "24"
+                repoUpdatedAt = "2024-01-10T10:00:00Z"
+            }
+        }
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
+        $result | Should -Be $false
+    }
+
+    It "requests an update when dates are unparseable but differ" {
+        $action = [PSCustomObject]@{
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = "changed-marker-b"
+            actionType = [PSCustomObject]@{
+                actionType    = "Node"
+                nodeVersion   = "16"
+                repoUpdatedAt = "changed-marker-a"
             }
         }
         $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)

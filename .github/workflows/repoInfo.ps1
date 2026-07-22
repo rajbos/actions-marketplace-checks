@@ -810,28 +810,36 @@ function CheckForInfoUpdateNeeded {
         return $true
     }
 
-    # Re-check the action definition periodically so that changes to the
-    # upstream action (for example a node version bump like node16 -> node24)
-    # get picked up. Without this, once actionType/nodeVersion are set they are
-    # never refreshed and the stored data becomes stale.
-    $recheckAfterDays = 30
-    $hasActionTypeUpdated = $null -ne $action.actionType.actionTypeLastUpdated
-    if (!$hasActionTypeUpdated) {
-        # Legacy record without a timestamp: refresh once to capture the
-        # current state and start tracking when it was last checked.
+    # Tie re-parsing of the action definition (action.yml/action.yaml) to the
+    # repository's change date. When the repo has changed since we last parsed
+    # it, the stored properties (actionType, fileFound, actionDockerType,
+    # nodeVersion) may be stale - for example a node version bump like
+    # node16 -> node24 - so we re-parse and refresh everything we can read.
+    $storedRepoUpdatedAt = $action.actionType.repoUpdatedAt
+    if ($null -eq $storedRepoUpdatedAt) {
+        # Legacy record parsed before we tracked the repo change date: refresh
+        # once to capture the current state and establish the baseline.
         return $true
     }
-    else {
+
+    $currentRepoUpdatedAt = $action.mirrorLastUpdated
+    if ($null -ne $currentRepoUpdatedAt) {
+        $repoChanged = $false
         try {
-            $actionTypeUpdated = [datetime]$action.actionType.actionTypeLastUpdated
-            $daysSinceActionTypeUpdate = ((Get-Date) - $actionTypeUpdated).TotalDays
-            if ($daysSinceActionTypeUpdate -gt $recheckAfterDays) {
-                return $true
+            $storedDate = [datetime]$storedRepoUpdatedAt
+            $currentDate = [datetime]$currentRepoUpdatedAt
+            if ($currentDate -gt $storedDate) {
+                $repoChanged = $true
             }
         }
         catch {
-            # If we cannot parse the stored timestamp, err on the side of
-            # refreshing so we do not keep stale data indefinitely.
+            # Fall back to a string comparison if either value is not a
+            # parseable date; refresh when they differ.
+            if ("$currentRepoUpdatedAt" -ne "$storedRepoUpdatedAt") {
+                $repoChanged = $true
+            }
+        }
+        if ($repoChanged) {
             return $true
         }
     }
@@ -1021,7 +1029,15 @@ function GetInfo {
             }
         }
         else {
-            $action.mirrorLastUpdated = $response.updated_at
+            if ($null -eq $response) {
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -accessToken $accessToken -startTime $startTime
+            }
+            # only refresh the change date when we actually retrieved one; do
+            # not overwrite a known value with null when the call failed. This
+            # keeps the repo change date reliable for action re-parsing.
+            if ($response -and $response.updated_at) {
+                $action.mirrorLastUpdated = $response.updated_at
+            }
         }
 
         # store repo size (only set when we have a valid value)
@@ -1117,6 +1133,7 @@ function GetInfo {
                     fileFound = $fileFoundResult
                     actionDockerType = $actionDockerTypeResult
                     nodeVersion = $nodeVersion
+                    repoUpdatedAt = $action.mirrorLastUpdated
                     actionTypeLastUpdated = Get-Date
                 }
 
@@ -1134,8 +1151,9 @@ function GetInfo {
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
-                # record when we last determined the actionType so stale data
-                # (for example an outdated node version) gets refreshed later
+                # Record the repo change date we parsed against and when we
+                # parsed, so re-parsing is tied to the repo actually changing.
+                $action.actionType | Add-Member -Name repoUpdatedAt -Value $action.mirrorLastUpdated -MemberType NoteProperty -Force
                 $action.actionType | Add-Member -Name actionTypeLastUpdated -Value (Get-Date) -MemberType NoteProperty -Force
                 $i++ | Out-Null
                 $repoHadUpdates = $true
