@@ -131,7 +131,7 @@ function Test-ActionSchema {
     # Validate actionType structure if present
     if ($null -ne $action.actionType) {
         if ($action.actionType -is [hashtable] -or $action.actionType -is [PSCustomObject]) {
-            # Expected fields: fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage, dockerfileHasCustomCode, containerScan (all optional)
+            # Expected fields: fileFound, actionType, nodeVersion, actionDockerType, dockerImageReference, dockerBaseImage, dockerfileHasCustomCode, containerScan (all optional)
             # These are all optional as content varies
             
             # Validate containerScan structure if present (for Docker actions)
