@@ -178,6 +178,72 @@ jobs:
           Write-Message -message "" -logToSummary $true
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
+      - name: Setup Node.js for API updates
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devops-actions'
+
+      - name: Install npm package for API updates
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+        run: |
+          npm install @devops-actions/actions-marketplace-client
+
+      # Push this run's changes to the API directly, the same way repoInfo.yml
+      # does, instead of waiting on api-upsert.yml's 6-hourly fallback sweep.
+      # numberOfRepos matches the refresh batch size so everything this run
+      # actually changed gets uploaded in the same run.
+      - name: Update API storage with consolidated data
+        if: always()
+        shell: pwsh
+        env:
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## API Storage Update" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          if ([string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_URL) -or [string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_TOKEN)) {
+            Write-Message -message "⚠️ API credentials not available - skipping API update" -logToSummary $true
+            exit 0
+          }
+
+          try {
+            $jsonContent = Get-Content status.json -Raw
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+            $status = $jsonContent | ConvertFrom-Json
+          } catch {
+            Write-Message -message "❌ Failed to load status.json: $($_.Exception.Message)" -logToSummary $true
+            exit 0
+          }
+
+          $numberOfRepos = ${{ env.numberOfReposToDo }}
+          Write-Host "Uploading up to $numberOfRepos actions to API storage..."
+
+          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos $numberOfRepos
+
+          if ($result.error) {
+            Write-Message -message "⚠️ API update encountered an error: $($result.error)" -logToSummary $true
+          } else {
+            $totalUpdates = $result.createdCount + $result.updatedCount
+            Write-Message -message "| Status | Count |" -logToSummary $true
+            Write-Message -message "|--------|------:|" -logToSummary $true
+            Write-Message -message "| ✅ Successful | $($result.successCount) |" -logToSummary $true
+            Write-Message -message "| ❌ Failed | $($result.failCount) |" -logToSummary $true
+            Write-Message -message "| 🆕 Created | $($result.createdCount) |" -logToSummary $true
+            Write-Message -message "| 📝 Updated | $($result.updatedCount) |" -logToSummary $true
+            Write-Message -message "| ⏭️ Skipped | $($result.skippedCount) |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "✓ Total updates to API: **$totalUpdates** (created + updated)" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+
       - name: Upload status.json to blob storage
         if: always()
         shell: pwsh
