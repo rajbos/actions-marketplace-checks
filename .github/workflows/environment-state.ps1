@@ -409,6 +409,7 @@ $dockerActionsTotal = 0
 $dockerWithCompositionInfo = 0
 $dockerLocalDockerfile = 0
 $dockerRemoteImage = 0
+$dockerRemoteImageWithReference = 0
 $dockerLocalWithCustomCode = 0
 $dockerLocalWithoutCustomCode = 0
 $dockerLocalWithCustomCodeInfo = 0
@@ -438,6 +439,9 @@ foreach ($fork in $existingForks) {
             }
             elseif ($fork.actionType.actionDockerType -eq "Image") {
                 $dockerRemoteImage++
+                if ($fork.actionType.dockerImageReference) {
+                    $dockerRemoteImageWithReference++
+                }
             }
         }
     }
@@ -458,6 +462,12 @@ $percentLocalDockerfile = if ($dockerWithCompositionInfo -gt 0) {
 
 $percentRemoteImage = if ($dockerWithCompositionInfo -gt 0) {
     [math]::Round(($dockerRemoteImage / $dockerWithCompositionInfo) * 100, 2)
+} else {
+    0
+}
+
+$percentRemoteImageWithReference = if ($dockerRemoteImage -gt 0) {
+    [math]::Round(($dockerRemoteImageWithReference / $dockerRemoteImage) * 100, 2)
 } else {
     0
 }
@@ -485,6 +495,7 @@ if ($dockerWithCompositionInfo -gt 0) {
     Write-Message -message "|-----------------|------:|-----------:|" -logToSummary $true
     Write-Message -message "| 📦 Local Dockerfile | $(DisplayIntWithDots $dockerLocalDockerfile) | ${percentLocalDockerfile}% |" -logToSummary $true
     Write-Message -message "| 🌐 Remote Image | $(DisplayIntWithDots $dockerRemoteImage) | ${percentRemoteImage}% |" -logToSummary $true
+    Write-Message -message "| 🌐 Remote Image with reference | $(DisplayIntWithDots $dockerRemoteImageWithReference) | ${percentRemoteImageWithReference}% |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     # Show custom code analysis for local Dockerfiles

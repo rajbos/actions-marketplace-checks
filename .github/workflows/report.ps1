@@ -30,6 +30,7 @@ $global:localDockerFile = 0
 $global:remoteDockerfile = 0
 $global:localDockerfileWithCustomCode = 0
 $global:localDockerfileWithoutCustomCode = 0
+$global:remoteDockerfileWithReference = 0
 $global:actionYmlFile = 0
 $global:actionYamlFile = 0
 $global:actionDockerFile = 0
@@ -49,6 +50,8 @@ $global:sumDaysOld = 0
 $global:archived = 0
 # string array to hold all used docker base images:
 $global:dockerBaseImages = @()
+# string array to hold all remote docker image references:
+$global:dockerRemoteImageReferences = @()
 $global:nodeVersions = @()
 $global:maxRepoSize = 0
 $global:sumRepoSize = 0
@@ -118,6 +121,10 @@ function AnalyzeActionInformation {
                 }
                 elseif ($action.actionType.actionDockerType -eq "Image") {
                     $global:remoteDockerfile++
+                    if ($action.actionType.dockerImageReference) {
+                        $global:remoteDockerfileWithReference++
+                        $global:dockerRemoteImageReferences += $action.actionType.dockerImageReference
+                    }
                 }
 
                 if ($action.actionType.dockerBaseImage) {
@@ -525,6 +532,15 @@ function ReportInsightsInMarkdown {
     # summarize the string list dockerBaseImages to count each item
     $dockerBaseImagesGrouped = $global:dockerBaseImages | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
     $dockerBaseImagesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
+        LogMessage "- $($_.Name): $($_.Count)"
+    }
+    LogMessage ""
+
+    LogMessage "## Docker based actions, remote image references: "
+    $dockerRemoteImageReferencesUnique = $dockerRemoteImageReferences | Sort-Object | Get-Unique
+    LogMessage "Found $(DisplayIntWithDots($global:remoteDockerfileWithReference)) remote image actions with $(DisplayIntWithDots($dockerRemoteImageReferencesUnique.Length)) unique image references. The top 10 are listed below."
+    $dockerRemoteImageReferencesGrouped = $global:dockerRemoteImageReferences | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
+    $dockerRemoteImageReferencesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
         LogMessage "- $($_.Name): $($_.Count)"
     }
     LogMessage ""

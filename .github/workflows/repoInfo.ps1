@@ -564,11 +564,11 @@ function GetActionType {
     )
 
     if ($null -eq $owner) {
-        return ("No owner found", "No owner found", "No owner found", $null)
+        return ("No owner found", "No owner found", "No owner found", $null, "")
     }
 
     if ($null -eq $repo) {
-        return ("No repo found", "No repo found", "No repo found", $null)
+        return ("No repo found", "No repo found", "No repo found", $null, "")
     }
 
     # Check if we are nearing the 50-minute mark
@@ -582,6 +582,7 @@ function GetActionType {
     $response = ""
     $fileFound = ""
     $actionType = ""
+    $dockerImageReference = ""
     try {
         $url = "/repos/$owner/$repo/contents/action.yml"
         $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
@@ -602,7 +603,7 @@ function GetActionType {
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
 
-                return ($actionType, $fileFound, $actionDockerType)
+                return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference)
             }
             catch {
                 try {
@@ -612,11 +613,11 @@ function GetActionType {
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
 
-                    return ($actionType, $fileFound, $actionDockerType)
+                    return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference)
                 }
                 catch {
                     Write-Debug "No action.yml or action.yaml or Dockerfile or dockerfile found in repo [$owner/$repo]"
-                    return ("No file found", "No file found", "No file found")
+                    return ("No file found", "No file found", "No file found", $null, $dockerImageReference)
                 }
             }
         }
@@ -624,7 +625,7 @@ function GetActionType {
 
     if ($response.Length -eq 0 -or $response.download_url.Length -eq 0) {
         Write-Debug "No action definition found in repo [$owner/$repo]"
-        return ("No file found", "No file found", "No file found")
+        return ("No file found", "No file found", "No file found", $null, "")
     }
 
     # load the file
@@ -647,7 +648,7 @@ function GetActionType {
             }
         }
         
-        return ("Error downloading file", "No file found", "No file found")
+        return ("Error downloading file", "No file found", "No file found", $null, "")
     }
     
     Write-Debug "response: $($fileContent)"
@@ -658,7 +659,7 @@ function GetActionType {
         Write-Host "Error converting to yaml: $($_.Exception.Message)"
         Write-Host "Yaml content repo [$owner/$repo]:"
         Write-Host $fileContent
-        return "Unknown"
+        return ("Unknown", "No file found", "No file found", $null, "")
     }
 
     # find line that says "
@@ -672,11 +673,13 @@ function GetActionType {
     $actionDockerType = ""
     if ($using -eq "docker") {
         $actionType = "Docker"
-        if ($yaml.runs.image -eq "Dockerfile" -or $yaml.runs.image -eq "./Dockerfile" -or $yaml.runs.image -eq ".\Dockerfile") {
+        $image = $yaml.runs.image
+        if ($image -eq "Dockerfile" -or $image -eq "./Dockerfile" -or $image -eq ".\Dockerfile") {
             $actionDockerType = "Dockerfile"
         }
         else {
             $actionDockerType = "Image"
+            $dockerImageReference = $image
         }
     }
     else {
@@ -692,7 +695,7 @@ function GetActionType {
         }
     }
 
-    return ($actionType, $fileFound, $actionDockerType, $nodeVersion)
+    return ($actionType, $fileFound, $actionDockerType, $nodeVersion, $dockerImageReference)
 }
 
 function CheckForInfoUpdateNeeded {
@@ -1037,7 +1040,7 @@ function GetInfo {
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
-            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion, $dockerImageReference) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
 
             If (!$hasActionTypeField) {
                 $actionType = @{
@@ -1045,6 +1048,7 @@ function GetInfo {
                     fileFound = $fileFoundResult
                     actionDockerType = $actionDockerTypeResult
                     nodeVersion = $nodeVersion
+                    dockerImageReference = $dockerImageReference
                     repoUpdatedAt = $action.mirrorLastUpdated
                     actionTypeLastUpdated = Get-Date
                 }
@@ -1063,6 +1067,7 @@ function GetInfo {
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
+                $action.actionType | Add-Member -Name dockerImageReference -Value $dockerImageReference -MemberType NoteProperty -Force
                 # Record the repo change date we parsed against and when we
                 # parsed, so re-parsing is tied to the repo actually changing.
                 $action.actionType | Add-Member -Name repoUpdatedAt -Value $action.mirrorLastUpdated -MemberType NoteProperty -Force
@@ -1233,6 +1238,11 @@ function GetRepoDockerBaseImage {
         hasCustomCode = $false
     }
     
+    if ($actionType.actionDockerType -eq "Image") {
+        # Remote image actions reference an image in action.yml; there is no repo-local Dockerfile to analyze here.
+        return $result
+    }
+
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
         $repoUrl = "https://github.com/$owner/$repo"
@@ -1719,38 +1729,61 @@ function GetMoreInfo {
                 $hasBaseImageField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
                 $hasCustomCodeField = Get-Member -inputobject $action.actionType -name "dockerfileHasCustomCode" -Membertype Properties
                 
-                # Check if we need to get or update Docker info
-                $needsDockerInfo = (!$hasBaseImageField -or ($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image") -or !$hasCustomCodeField
-                
-                if ($needsDockerInfo) {
-                    Write-Host "$i/$max - Checking Docker information for [$($owner)/$($repo)]. hasBaseImageField: [$hasBaseImageField], hasCustomCodeField: [$hasCustomCodeField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
-                    try {
-                        # search for the docker file in the fork organization, since the original repo might already have seen updates
-                        $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
-                        
-                        if ($dockerInfo.dockerBaseImage -ne "") {
-                            if (!$hasBaseImageField) {
-                                Write-Host "Adding Docker base image information with image:[$($dockerInfo.dockerBaseImage)], hasCustomCode:[$($dockerInfo.hasCustomCode)] for [$($action.owner)/$($action.name))]"
-                                $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerInfo.dockerBaseImage -MemberType NoteProperty
-                                $i++ | Out-Null
-                                $dockerBaseImageInfoAdded++ | Out-Null
-                            }
-                            else {
-                                Write-Host "Updating Docker base image information with image:[$($dockerInfo.dockerBaseImage)] for [$($owner)/$($repo))]"
-                                $action.actionType.dockerBaseImage = $dockerInfo.dockerBaseImage
-                            }
+                if ($action.actionType.actionDockerType -eq "Image") {
+                    # Remote Docker image actions do not have a repo-local Dockerfile to analyze.
+                    # Annotate the image reference and record that there is no base image/custom-code info.
+                    $imageRef = $action.actionType.dockerImageReference
+                    Write-Host "$i/$max - Docker action [$($owner)/$($repo)] uses remote image [$imageRef]; skipping Dockerfile analysis"
+
+                    if (!$hasBaseImageField) {
+                        $action.actionType | Add-Member -Name dockerBaseImage -Value $null -MemberType NoteProperty
+                        $i++ | Out-Null
+                    }
+                    else {
+                        $action.actionType.dockerBaseImage = $null
+                    }
+
+                    if (!$hasCustomCodeField) {
+                        $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $null -MemberType NoteProperty
+                    }
+                    else {
+                        $action.actionType.dockerfileHasCustomCode = $null
+                    }
+                }
+                elseif ($action.actionType.actionDockerType -eq "Dockerfile") {
+                    # Check if we need to get or update Dockerfile-based Docker info
+                    $needsDockerInfo = !$hasBaseImageField -or ($null -eq $action.actionType.dockerBaseImage) -or !$hasCustomCodeField
+                    
+                    if ($needsDockerInfo) {
+                        Write-Host "$i/$max - Checking Docker information for [$($owner)/$($repo)]. hasBaseImageField: [$hasBaseImageField], hasCustomCodeField: [$hasCustomCodeField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
+                        try {
+                            # search for the docker file in the fork organization, since the original repo might already have seen updates
+                            $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
                             
-                            # Add or update hasCustomCode field
-                            if (!$hasCustomCodeField) {
-                                $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $dockerInfo.hasCustomCode -MemberType NoteProperty
-                            }
-                            else {
-                                $action.actionType.dockerfileHasCustomCode = $dockerInfo.hasCustomCode
+                            if ($dockerInfo.dockerBaseImage -ne "") {
+                                if (!$hasBaseImageField) {
+                                    Write-Host "Adding Docker base image information with image:[$($dockerInfo.dockerBaseImage)], hasCustomCode:[$($dockerInfo.hasCustomCode)] for [$($action.owner)/$($action.name))]"
+                                    $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerInfo.dockerBaseImage -MemberType NoteProperty
+                                    $i++ | Out-Null
+                                    $dockerBaseImageInfoAdded++ | Out-Null
+                                }
+                                else {
+                                    Write-Host "Updating Docker base image information with image:[$($dockerInfo.dockerBaseImage)] for [$($owner)/$($repo))]"
+                                    $action.actionType.dockerBaseImage = $dockerInfo.dockerBaseImage
+                                }
+                                
+                                # Add or update hasCustomCode field
+                                if (!$hasCustomCodeField) {
+                                    $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $dockerInfo.hasCustomCode -MemberType NoteProperty
+                                }
+                                else {
+                                    $action.actionType.dockerfileHasCustomCode = $dockerInfo.hasCustomCode
+                                }
                             }
                         }
-                    }
-                    catch {
-                        # continue with next one
+                        catch {
+                            # continue with next one
+                        }
                     }
                 }
 
