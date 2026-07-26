@@ -1329,13 +1329,6 @@ function Invoke-TrivyScan {
         $accessToken
     )
 
-    $result = @{
-        critical = 0
-        high = 0
-        lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
-        scanError = $null
-    }
-
     # Only scan Docker actions with Dockerfiles (not remote images)
     if ($actionType.actionDockerType -ne "Dockerfile") {
         Write-Debug "Skipping Trivy scan for [$owner/$repo] - not a Dockerfile-based action (type: $($actionType.actionDockerType))"
@@ -1357,8 +1350,7 @@ function Invoke-TrivyScan {
             $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
             if (-not $trivyPath) {
                 Write-Host "Failed to install Trivy for [$owner/$repo]"
-                $result.scanError = "Trivy installation failed"
-                return $result
+                return $null
             }
         }
 
@@ -1384,8 +1376,7 @@ function Invoke-TrivyScan {
 
             if (-not $dockerFile -or -not $dockerFile.download_url) {
                 Write-Host "Could not retrieve Dockerfile for [$owner/$repo]"
-                $result.scanError = "Dockerfile not found"
-                return $result
+                return $null
             }
 
             # Download Dockerfile content
@@ -1404,8 +1395,7 @@ function Invoke-TrivyScan {
                 
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "Trivy scan failed for [$owner/$repo]: $scanOutput"
-                    $result.scanError = "Trivy scan failed"
-                    return $result
+                    return $null
                 }
             }
             
@@ -1413,6 +1403,13 @@ function Invoke-TrivyScan {
             try {
                 $scanResults = $scanOutput | ConvertFrom-Json
                 
+                $result = @{
+                    critical = 0
+                    high = 0
+                    lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                    scanError = $null
+                }
+
                 # Count vulnerabilities by severity
                 if ($scanResults.Results) {
                     foreach ($target in $scanResults.Results) {
@@ -1440,10 +1437,11 @@ function Invoke-TrivyScan {
                 }
                 
                 Write-Host "Trivy scan completed for [$owner/$repo]: Critical=$($result.critical), High=$($result.high)"
+                return $result
             }
             catch {
                 Write-Host "Failed to parse Trivy output for [$owner/$repo]: $($_.Exception.Message)"
-                $result.scanError = "Failed to parse Trivy output"
+                return $null
             }
         }
         finally {
@@ -1455,10 +1453,10 @@ function Invoke-TrivyScan {
     }
     catch {
         Write-Host "Error during Trivy scan for [$owner/$repo]: $($_.Exception.Message)"
-        $result.scanError = $_.Exception.Message
+        return $null
     }
 
-    return $result
+    return $null
 }
 
 function GetMoreInfo {
@@ -1823,6 +1821,9 @@ function GetMoreInfo {
                                 Write-Host "Updating container scan information with critical:[$($scanResult.critical)], high:[$($scanResult.high)] for [$($owner)/$($repo))]"
                                 $action.actionType.containerScan = $scanResult
                             }
+                        }
+                        else {
+                            Write-Host "Trivy scan did not complete for [$($owner)/$($repo)]; result will not be stored and will be retried"
                         }
                     }
                     catch {

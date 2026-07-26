@@ -172,3 +172,67 @@ Describe "Trivy Container Scan Logic" {
         }
     }
 }
+
+Describe "Trivy scan result handling" {
+    It "Should store successful scan results" {
+        # Arrange
+        $action = @{
+            owner = "test-owner"
+            name = "test-repo"
+            actionType = @{
+                actionType = "Docker"
+                actionDockerType = "Dockerfile"
+            }
+        }
+        $scanResult = @{
+            critical = 2
+            high = 5
+            lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+            scanError = $null
+        }
+
+        # Act
+        $hasContainerScanField = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+        if ($null -ne $scanResult) {
+            if (!$hasContainerScanField) {
+                $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
+            }
+            else {
+                $action.actionType.containerScan = $scanResult
+            }
+        }
+
+        # Assert
+        $action.actionType.containerScan.critical | Should -Be 2
+        $action.actionType.containerScan.high | Should -Be 5
+    }
+
+    It "Should not store failed scan results so they can be retried" {
+        # Arrange
+        $action = @{
+            owner = "test-owner"
+            name = "test-repo"
+            actionType = @{
+                actionType = "Docker"
+                actionDockerType = "Dockerfile"
+            }
+        }
+        $scanResult = $null
+
+        # Act
+        $hadContainerScanFieldBefore = $null -ne (Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties)
+        if ($null -ne $scanResult) {
+            $hasContainerScanField = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+            if (!$hasContainerScanField) {
+                $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
+            }
+            else {
+                $action.actionType.containerScan = $scanResult
+            }
+        }
+
+        # Assert
+        $hadContainerScanFieldBefore | Should -Be $false
+        $action.actionType.PSObject.Properties.Name | Should -Not -Contain "containerScan"
+    }
+}
