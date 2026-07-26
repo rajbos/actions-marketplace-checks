@@ -89,6 +89,58 @@ jobs:
             ./.github/workflows/api-upsert.ps1 -status $status -numberOfRepos $env:NUMBER_OF_REPOS -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN
           }
 
+      # The marketplace frontend reads a precomputed snapshot rather than
+      # scanning the actions table on every page load. Rebuilding it here means
+      # the site reflects this run's uploads within a minute, instead of
+      # waiting for the SnapshotWarmup timer.
+      #
+      # Runs even when the upload step failed: a partial upload still changed
+      # the data, and a stale snapshot is worse than a rebuilt one. Never fails
+      # the job — the timer is the backstop.
+      - name: Rebuild marketplace snapshot
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        env:
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          # AZ_FUNCTION_URL is the function app root; routes live under /api
+          # (matching how the client library composes its own URLs).
+          $baseUrl = $env:AZ_FUNCTION_URL.TrimEnd('/')
+          $uri = "$baseUrl/api/actions/snapshot/refresh"
+
+          Write-Host "Triggering snapshot rebuild at [$uri]"
+
+          try {
+            # The rebuild scans the whole table; allow well past the ~60s it
+            # takes today so a slow run does not look like a failure.
+            $response = Invoke-RestMethod -Uri $uri -Method Post `
+              -Headers @{ 'x-functions-key' = $env:AZ_FUNCTION_TOKEN } `
+              -TimeoutSec 300
+
+            Write-Message -message "### Marketplace Snapshot" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "| Metric | Value |" -logToSummary $true
+            Write-Message -message "|--------|-------|" -logToSummary $true
+            Write-Message -message "| Actions in snapshot | $(DisplayIntWithDots $response.count) |" -logToSummary $true
+            Write-Message -message "| Snapshot size | $([Math]::Round($response.bytes / 1MB, 1)) MB |" -logToSummary $true
+            Write-Message -message "| Build time | $([Math]::Round($response.durationMs / 1000, 1)) s |" -logToSummary $true
+            Write-Message -message "| Skipped (unparsable) | $($response.skipped) |" -logToSummary $true
+            Write-Message -message "| Stats cache refreshed | $($response.statsRefreshed) |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+
+            if ($response.statsRefreshed -and $response.statsTotal -ne $response.count) {
+              Write-Message -message "> ⚠️ Stats total ($(DisplayIntWithDots $response.statsTotal)) does not match the snapshot count ($(DisplayIntWithDots $response.count)). The marketplace tiles and grid will disagree." -logToSummary $true
+              Write-Message -message "" -logToSummary $true
+            }
+          } catch {
+            Write-Warning "Snapshot rebuild failed: $($_.Exception.Message)"
+            Write-Message -message "⚠️ Snapshot rebuild failed: $($_.Exception.Message). The SnapshotWarmup timer will retry." -logToSummary $true
+          }
+
       - name: Upload failed actions as artifacts
         if: always()
         uses: actions/upload-artifact@v7
