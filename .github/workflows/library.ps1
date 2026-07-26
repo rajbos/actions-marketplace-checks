@@ -1896,6 +1896,101 @@ function GetOrgActionInfo {
     return "", ""
 }
 
+function GetRepoTagInfo {
+    # Shared with releaseInfo-refresh.ps1 - keep this the single source of truth
+    # for how tag information is fetched so both callers stay consistent.
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
+    $url = "repos/$owner/$repo/git/matching-refs/tags"
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+
+    if ($response -is [hashtable] -and $response.Error) {
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading tags for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return @()
+    }
+
+    if ($null -eq $response) {
+        return @()
+    }
+
+    # Return array of objects with tag name and SHA
+    $response = $response | ForEach-Object {
+        @{
+            tag = SplitUrlLastPart($_.ref)
+            sha = $_.object.sha
+        }
+    }
+
+    return $response
+}
+
+function GetRepoReleases {
+    # Shared with releaseInfo-refresh.ps1 - keep this the single source of truth
+    # for how release information is fetched so both callers stay consistent.
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
+    $url = "repos/$owner/$repo/releases"
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+
+    if ($response -is [hashtable] -and $response.Error) {
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading releases for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return @()
+    }
+
+    if ($null -eq $response) {
+        return @()
+    }
+
+    # Return array of objects with tag name and target_commitish (SHA)
+    # Note: tag_name from releases API is already a direct string, not a URL path
+    $response = $response | ForEach-Object {
+        @{
+            tag_name = $_.tag_name
+            target_commitish = $_.target_commitish
+        }
+    }
+
+    return $response
+}
+
 function SplitUrlLastPart {
     Param (
         $url

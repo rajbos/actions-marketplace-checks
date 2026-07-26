@@ -1,0 +1,258 @@
+# Refresh tagInfo/releaseInfo (the fields "latest version" is computed from)
+# for the actions whose version data is the oldest, regardless of what else
+# is missing on the record. See releaseInfo-refresh.ps1 for the rationale:
+# repoInfo.yml's GetMoreInfo pass has no freshness ordering of its own, so
+# fully-enriched, high-profile actions have no guaranteed refresh cadence.
+# This workflow is deliberately narrow and cheap (one releases list + one
+# tags call per action) so it can process a large batch every hour without
+# competing with repoInfo.yml's broader enrichment work.
+
+name: Refresh release/tag version info
+
+on:
+  push:
+    paths:
+      - .github/workflows/releaseInfo-refresh.yml
+      - .github/workflows/releaseInfo-refresh.ps1
+      - .github/workflows/library.ps1
+
+  schedule:
+     # Run at minute 20 to avoid overlap with Analyze (:05), Update Mirrors (:35),
+     # Dependabot Updates (:40) and Get repo info (:50).
+     - cron: '20 */1 * * *'
+
+  workflow_dispatch:
+    inputs:
+      numberOfReposToDo:
+        description: 'Number of stalest actions to refresh this run'
+        required: false
+        default: '800'
+        type: string
+
+# Prevent concurrent runs of this workflow to reduce rate limit pressure
+concurrency:
+  group: release-info-refresh-workflow
+  cancel-in-progress: false
+
+env:
+  numberOfReposToDo: ${{ github.event.inputs.numberOfReposToDo || '800' }}
+  APP_ID: ${{ vars.APPLICATION_ID }}
+  APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
+  APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
+  APP_ORGANIZATION: actions-marketplace-validations
+
+jobs:
+  refresh-release-info:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - shell: pwsh
+        name: Refresh the stalest tagInfo/releaseInfo entries
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY }}
+          APPLICATION_PRIVATE_KEY_2: ${{ secrets.AUTOMATION_APP_KEY2 }}
+          APPLICATION_PRIVATE_KEY_3: ${{ secrets.AUTOMATION_APP_KEY3 }}
+        run: |
+          . "${{ github.workspace }}/.github/workflows/library.ps1"
+          & "${{ github.workspace }}/.github/workflows/releaseInfo-refresh.ps1" -numberOfReposToDo ${{ env.numberOfReposToDo }}
+
+      - name: Upload updated status.json as artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: status-updated
+          path: status.json
+          retention-days: 1
+
+  upload-changes:
+    name: Consolidate and upload changes to blob storage
+    needs: refresh-release-info
+    if: always()
+    runs-on: ubuntu-latest
+    # Shared with every other workflow that writes status.json to blob storage
+    # (analyze, repoInfo, update-mirrors, dependabot-updates, ossf-scan) so
+    # concurrent runs serialize instead of clobbering each other's changes.
+    concurrency:
+      group: repo-state-updates
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download latest status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download updated status from previous job
+        uses: actions/download-artifact@v8
+        with:
+          name: status-updated
+          path: updated-data/
+
+      - name: Merge changes from processing job
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "# Consolidating Release/Tag Info Refresh Changes" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          try {
+              $jsonContent = Get-Content status.json -Raw
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+              $currentStatus = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse current status.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          Write-Message -message "Loaded current status from blob storage with [$(DisplayIntWithDots $currentStatus.Count)] forks" -logToSummary $true
+
+          $updatedStatusFile = "updated-data/status.json"
+          if (Test-Path $updatedStatusFile) {
+              try {
+                  $updatedContent = Get-Content $updatedStatusFile -Raw
+                  $updatedContent = $updatedContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+                  $updatedStatus = $updatedContent | ConvertFrom-Json
+                  Write-Message -message "Loaded updated status from processing job with [$(DisplayIntWithDots $updatedStatus.Count)] forks" -logToSummary $true
+              } catch {
+                  Write-Error "Failed to parse updated status.json: $($_.Exception.Message)"
+                  exit 1
+              }
+
+              $statusByName = @{}
+              foreach ($item in $currentStatus) {
+                  $statusByName[$item.name] = $item
+              }
+
+              $mergeCount = 0
+              foreach ($updatedFork in $updatedStatus) {
+                  if ($statusByName.ContainsKey($updatedFork.name)) {
+                      $existing = $statusByName[$updatedFork.name]
+                      foreach ($prop in $updatedFork.PSObject.Properties) {
+                          $propName = $prop.Name
+                          $propValue = $prop.Value
+                          $existingProp = $existing.PSObject.Properties[$propName]
+                          if ($existingProp) {
+                              $existingProp.Value = $propValue
+                          } else {
+                              $existing | Add-Member -Name $propName -Value $propValue -MemberType NoteProperty -Force
+                          }
+                      }
+                      $mergeCount++
+                  } else {
+                      $statusByName[$updatedFork.name] = $updatedFork
+                      $mergeCount++
+                  }
+              }
+
+              Write-Message -message "Merged [$(DisplayIntWithDots $mergeCount)] fork updates into current status" -logToSummary $true
+
+              $mergedStatus = $statusByName.Values
+              Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
+              SaveStatus -existingForks $mergedStatus
+          } else {
+              Write-Message -message "No updated status.json found from processing job" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Consolidation complete" -logToSummary $true
+
+      - name: Setup Node.js for API updates
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devops-actions'
+
+      - name: Install npm package for API updates
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+        run: |
+          npm install @devops-actions/actions-marketplace-client
+
+      # Push this run's changes to the API directly, the same way repoInfo.yml
+      # does, instead of waiting on api-upsert.yml's 6-hourly fallback sweep.
+      # numberOfRepos matches the refresh batch size so everything this run
+      # actually changed gets uploaded in the same run.
+      - name: Update API storage with consolidated data
+        if: always()
+        shell: pwsh
+        env:
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## API Storage Update" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          if ([string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_URL) -or [string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_TOKEN)) {
+            Write-Message -message "⚠️ API credentials not available - skipping API update" -logToSummary $true
+            exit 0
+          }
+
+          try {
+            $jsonContent = Get-Content status.json -Raw
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''  # Remove UTF-8 BOM (Unicode)
+            $status = $jsonContent | ConvertFrom-Json
+          } catch {
+            Write-Message -message "❌ Failed to load status.json: $($_.Exception.Message)" -logToSummary $true
+            exit 0
+          }
+
+          $numberOfRepos = ${{ env.numberOfReposToDo }}
+          Write-Host "Uploading up to $numberOfRepos actions to API storage..."
+
+          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos $numberOfRepos
+
+          if ($result.error) {
+            Write-Message -message "⚠️ API update encountered an error: $($result.error)" -logToSummary $true
+          } else {
+            $totalUpdates = $result.createdCount + $result.updatedCount
+            Write-Message -message "| Status | Count |" -logToSummary $true
+            Write-Message -message "|--------|------:|" -logToSummary $true
+            Write-Message -message "| ✅ Successful | $($result.successCount) |" -logToSummary $true
+            Write-Message -message "| ❌ Failed | $($result.failCount) |" -logToSummary $true
+            Write-Message -message "| 🆕 Created | $($result.createdCount) |" -logToSummary $true
+            Write-Message -message "| 📝 Updated | $($result.updatedCount) |" -logToSummary $true
+            Write-Message -message "| ⏭️ Skipped | $($result.skippedCount) |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "✓ Total updates to API: **$totalUpdates** (created + updated)" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+
+      - name: Upload status.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
