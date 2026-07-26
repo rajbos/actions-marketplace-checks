@@ -125,6 +125,15 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
+     - name: Upload Trivy scan failures as artifact
+       if: always()
+       uses: actions/upload-artifact@v7
+       with:
+         name: trivy-scan-failures
+         path: trivy-scan-failures.json
+         retention-days: 7
+         if-no-files-found: ignore
+
   upload-changes:
     name: Consolidate and upload changes to blob storage
     needs: process-repo-info

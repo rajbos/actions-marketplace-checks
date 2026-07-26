@@ -193,7 +193,7 @@ Describe "Trivy scan result handling" {
 
         # Act
         $hasContainerScanField = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
-        if ($null -ne $scanResult) {
+        if ($null -ne $scanResult -and $null -eq $scanResult.scanError) {
             if (!$hasContainerScanField) {
                 $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
             }
@@ -215,14 +215,20 @@ Describe "Trivy scan result handling" {
             actionType = @{
                 actionType = "Docker"
                 actionDockerType = "Dockerfile"
+                fileFound = "action.yml"
             }
         }
-        $scanResult = $null
+        $scanResult = @{
+            critical = 0
+            high = 0
+            lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+            scanError = "Trivy installation failed"
+        }
+        $trivyScanFailures = @()
 
         # Act
-        $hadContainerScanFieldBefore = $null -ne (Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties)
-        if ($null -ne $scanResult) {
-            $hasContainerScanField = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+        $hasContainerScanField = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+        if ($null -ne $scanResult -and $null -eq $scanResult.scanError) {
             if (!$hasContainerScanField) {
                 $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
             }
@@ -230,9 +236,55 @@ Describe "Trivy scan result handling" {
                 $action.actionType.containerScan = $scanResult
             }
         }
+        elseif ($null -ne $scanResult -and $null -ne $scanResult.scanError) {
+            $dockerSource = if ($action.actionType.fileFound) { $action.actionType.fileFound } else { $action.actionType.actionDockerType }
+            $trivyScanFailures += @{
+                ownerRepo = "$($action.owner)/$($action.name)"
+                dockerSource = $dockerSource
+                error = $scanResult.scanError
+                timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+            }
+        }
 
         # Assert
-        $hadContainerScanFieldBefore | Should -Be $false
         $action.actionType.PSObject.Properties.Name | Should -Not -Contain "containerScan"
+        $trivyScanFailures.Count | Should -Be 1
+        $trivyScanFailures[0].ownerRepo | Should -Be "test-owner/test-repo"
+        $trivyScanFailures[0].dockerSource | Should -Be "action.yml"
+        $trivyScanFailures[0].error | Should -Be "Trivy installation failed"
+    }
+}
+
+Describe "Trivy scan failure artifact" {
+    It "Should write failures to JSON file" {
+        # Arrange
+        $tempDir = [System.IO.Path]::GetTempPath()
+        $testFile = Join-Path $tempDir "trivy-scan-failures-test.json"
+        if (Test-Path $testFile) {
+            Remove-Item $testFile -Force
+        }
+
+        $trivyScanFailures = @(
+            @{
+                ownerRepo = "owner/repo"
+                dockerSource = "action.yml"
+                error = "Trivy installation failed"
+                timestamp = "2026-07-26T22:00:00.000Z"
+            }
+        )
+
+        # Act
+        $trivyScanFailures | ConvertTo-Json -Depth 5 | Out-File -FilePath $testFile -Encoding UTF8
+
+        # Assert
+        Test-Path $testFile | Should -Be $true
+        $content = Get-Content $testFile -Raw | ConvertFrom-Json
+        $content.Count | Should -Be 1
+        $content[0].ownerRepo | Should -Be "owner/repo"
+        $content[0].dockerSource | Should -Be "action.yml"
+        $content[0].error | Should -Be "Trivy installation failed"
+
+        # Cleanup
+        Remove-Item $testFile -Force
     }
 }

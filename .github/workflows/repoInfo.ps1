@@ -851,6 +851,7 @@ function GetInfo {
         ActionFile404 = @()
         OtherErrors = @()
     }
+    $script:trivyScanFailures = @()
 
     # Initialize tracking for summary
     $script:processMetrics = @{
@@ -1329,6 +1330,13 @@ function Invoke-TrivyScan {
         $accessToken
     )
 
+    $result = @{
+        critical = 0
+        high = 0
+        lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+        scanError = $null
+    }
+
     # Only scan Docker actions with Dockerfiles (not remote images)
     if ($actionType.actionDockerType -ne "Dockerfile") {
         Write-Debug "Skipping Trivy scan for [$owner/$repo] - not a Dockerfile-based action (type: $($actionType.actionDockerType))"
@@ -1350,7 +1358,8 @@ function Invoke-TrivyScan {
             $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
             if (-not $trivyPath) {
                 Write-Host "Failed to install Trivy for [$owner/$repo]"
-                return $null
+                $result.scanError = "Trivy installation failed"
+                return $result
             }
         }
 
@@ -1376,7 +1385,8 @@ function Invoke-TrivyScan {
 
             if (-not $dockerFile -or -not $dockerFile.download_url) {
                 Write-Host "Could not retrieve Dockerfile for [$owner/$repo]"
-                return $null
+                $result.scanError = "Dockerfile not found"
+                return $result
             }
 
             # Download Dockerfile content
@@ -1395,7 +1405,8 @@ function Invoke-TrivyScan {
                 
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "Trivy scan failed for [$owner/$repo]: $scanOutput"
-                    return $null
+                    $result.scanError = "Trivy scan failed"
+                    return $result
                 }
             }
             
@@ -1403,13 +1414,6 @@ function Invoke-TrivyScan {
             try {
                 $scanResults = $scanOutput | ConvertFrom-Json
                 
-                $result = @{
-                    critical = 0
-                    high = 0
-                    lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
-                    scanError = $null
-                }
-
                 # Count vulnerabilities by severity
                 if ($scanResults.Results) {
                     foreach ($target in $scanResults.Results) {
@@ -1437,11 +1441,10 @@ function Invoke-TrivyScan {
                 }
                 
                 Write-Host "Trivy scan completed for [$owner/$repo]: Critical=$($result.critical), High=$($result.high)"
-                return $result
             }
             catch {
                 Write-Host "Failed to parse Trivy output for [$owner/$repo]: $($_.Exception.Message)"
-                return $null
+                $result.scanError = "Failed to parse Trivy output"
             }
         }
         finally {
@@ -1453,10 +1456,10 @@ function Invoke-TrivyScan {
     }
     catch {
         Write-Host "Error during Trivy scan for [$owner/$repo]: $($_.Exception.Message)"
-        return $null
+        $result.scanError = $_.Exception.Message
     }
 
-    return $null
+    return $result
 }
 
 function GetMoreInfo {
@@ -1812,7 +1815,7 @@ function GetMoreInfo {
                     try {
                         $scanResult = Invoke-TrivyScan -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
                         
-                        if ($null -ne $scanResult) {
+                        if ($null -ne $scanResult -and $null -eq $scanResult.scanError) {
                             if (!$hasContainerScanField) {
                                 Write-Host "Adding container scan information with critical:[$($scanResult.critical)], high:[$($scanResult.high)] for [$($action.owner)/$($action.name))]"
                                 $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
@@ -1822,12 +1825,26 @@ function GetMoreInfo {
                                 $action.actionType.containerScan = $scanResult
                             }
                         }
-                        else {
-                            Write-Host "Trivy scan did not complete for [$($owner)/$($repo)]; result will not be stored and will be retried"
+                        elseif ($null -ne $scanResult -and $null -ne $scanResult.scanError) {
+                            Write-Host "Trivy scan failed for [$($owner)/$($repo)]: $($scanResult.scanError); result will not be stored and will be retried"
+                            $dockerSource = if ($action.actionType.fileFound) { $action.actionType.fileFound } else { $action.actionType.actionDockerType }
+                            $script:trivyScanFailures += @{
+                                ownerRepo = "$owner/$repo"
+                                dockerSource = $dockerSource
+                                error = $scanResult.scanError
+                                timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            }
                         }
                     }
                     catch {
                         Write-Host "Error running Trivy scan for [$owner/$repo]: $($_.Exception.Message)"
+                        $dockerSource = if ($action.actionType.fileFound) { $action.actionType.fileFound } else { $action.actionType.actionDockerType }
+                        $script:trivyScanFailures += @{
+                            ownerRepo = "$owner/$repo"
+                            dockerSource = $dockerSource
+                            error = $_.Exception.Message
+                            timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                        }
                         # continue with next one
                     }
                 }
@@ -1951,6 +1968,28 @@ function GetMoreInfo {
         $stepSummaryOutput += "`n</details>`n"
         
         Write-Message -message $stepSummaryOutput -logToSummary $true
+    }
+
+    # Write Trivy scan failures to a file for artifact upload
+    $trivyFailuresFile = "trivy-scan-failures.json"
+    if ($null -ne $script:trivyScanFailures -and $script:trivyScanFailures.Count -gt 0) {
+        try {
+            $script:trivyScanFailures | ConvertTo-Json -Depth 5 | Out-File -FilePath $trivyFailuresFile -Encoding UTF8
+            Write-Host "Wrote [$($script:trivyScanFailures.Count)] Trivy scan failures to [$trivyFailuresFile]"
+        }
+        catch {
+            Write-Host "Error writing Trivy scan failures to [$trivyFailuresFile]: $($_.Exception.Message)"
+        }
+    }
+    else {
+        # Ensure an empty file exists so the artifact upload step has a predictable file
+        try {
+            "[]" | Out-File -FilePath $trivyFailuresFile -Encoding UTF8
+            Write-Host "No Trivy scan failures; wrote empty array to [$trivyFailuresFile]"
+        }
+        catch {
+            Write-Host "Error writing empty Trivy scan failures file [$trivyFailuresFile]: $($_.Exception.Message)"
+        }
     }
 
     #return ($actions, $existingForks) ? where does this $actions come from?
