@@ -125,14 +125,46 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
-     - name: Upload Trivy scan failures as artifact
-       if: always()
-       uses: actions/upload-artifact@v7
-       with:
-         name: trivy-scan-failures
-         path: trivy-scan-failures.json
-         retention-days: 7
-         if-no-files-found: ignore
+      - name: Summarize Trivy scan failures
+        if: always()
+        shell: pwsh
+        run: |
+          $failuresFile = "trivy-scan-failures.json"
+          if (-not (Test-Path $failuresFile)) {
+            Write-Host "No Trivy scan failures file found at [$failuresFile]"
+            exit 0
+          }
+
+          $content = Get-Content $failuresFile -Raw
+          $failures = $content | ConvertFrom-Json
+          $count = if ($failures -is [array]) { $failures.Count } else { 0 }
+
+          $summary = "## Trivy scan failures`n`n"
+          $summary += "Total failures: $count`n`n"
+          if ($count -gt 0) {
+            $summary += "| owner/repo | docker source | error |`n"
+            $summary += "|------------|---------------|-------|`n"
+            $failures | Select-Object -First 5 | ForEach-Object {
+              $summary += "| $($_.ownerRepo) | $($_.dockerSource) | $($_.error) |`n"
+            }
+            if ($count -gt 5) {
+              $summary += "`n... and $($count - 5) more. See the `trivy-scan-failures` artifact for the full list.`n"
+            }
+          }
+          else {
+            $summary += "No Trivy scan failures recorded in this run.`n"
+          }
+
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Upload Trivy scan failures as artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-scan-failures
+          path: trivy-scan-failures.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   upload-changes:
     name: Consolidate and upload changes to blob storage
