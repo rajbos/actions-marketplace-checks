@@ -385,6 +385,7 @@ async function uploadActions() {
     // Add optional fields if they exist in the schema
     // Based on status.json schema documented in validate-status-schema.ps1:
     // - actionType (object/string)
+    // - description (string)
     // - repoInfo (object)
     // - tagInfo, releaseInfo (version information)
     // - forkFound, mirrorLastUpdated, repoSize
@@ -393,6 +394,7 @@ async function uploadActions() {
     // - dependents, verified
     
     if (action.actionType) actionData.actionType = action.actionType;
+    if (action.description) actionData.description = action.description;
     if (action.repoInfo) actionData.repoInfo = action.repoInfo;
     if (action.tagInfo) actionData.tagInfo = action.tagInfo;
     if (action.releaseInfo) actionData.releaseInfo = action.releaseInfo;

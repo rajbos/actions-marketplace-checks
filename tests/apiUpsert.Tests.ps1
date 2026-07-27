@@ -99,8 +99,12 @@ Describe "API Upsert Script" {
             $nodeScript | Should -Match 'action\.actionType'
             $nodeScript | Should -Match 'action\.repoInfo'
             $nodeScript | Should -Match 'action\.vulnerabilityStatus'
+            # description is a documented top-level field in the marketplace
+            # API's Action Data Schema (src/backend/README.md in the
+            # alternative-github-actions-marketplace repo) - repoInfo.ps1 now
+            # extracts it from action.yml, so it's no longer an invented field.
+            $nodeScript | Should -Match 'action\.description'
             # Ensure it doesn't use invented fields
-            $nodeScript | Should -Not -Match 'actionData\.description'
             $nodeScript | Should -Not -Match 'actionData\.icon'
             $nodeScript | Should -Not -Match 'actionData\.color'
         }

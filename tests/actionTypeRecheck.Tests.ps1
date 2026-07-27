@@ -6,6 +6,7 @@ BeforeAll {
             $action,
             $hasActionTypeField,
             $hasNodeVersionField,
+            $hasDescriptionField,
             $startTime
         )
 
@@ -25,6 +26,11 @@ BeforeAll {
 
         # check nodeVersion field missing for Node actionType
         if (("Node" -eq $action.actionType.actionType) -and !$hasNodeVersionField) {
+            return $true
+        }
+
+        # check description field missing entirely - backfill once
+        if (!$hasDescriptionField) {
             return $true
         }
 
@@ -75,7 +81,7 @@ Describe "CheckForInfoUpdateNeeded ties action re-parsing to repo change date" {
                 nodeVersion = "16"
             }
         }
-        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $true -startTime (Get-Date)
         $result | Should -Be $true
     }
 
@@ -90,7 +96,7 @@ Describe "CheckForInfoUpdateNeeded ties action re-parsing to repo change date" {
                 repoUpdatedAt = "2024-01-10T10:00:00Z"
             }
         }
-        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $true -startTime (Get-Date)
         $result | Should -Be $true
     }
 
@@ -105,7 +111,7 @@ Describe "CheckForInfoUpdateNeeded ties action re-parsing to repo change date" {
                 repoUpdatedAt = "2024-01-10T10:00:00Z"
             }
         }
-        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $true -startTime (Get-Date)
         $result | Should -Be $false
     }
 
@@ -120,7 +126,7 @@ Describe "CheckForInfoUpdateNeeded ties action re-parsing to repo change date" {
                 repoUpdatedAt = "2024-01-10T10:00:00Z"
             }
         }
-        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $true -startTime (Get-Date)
         $result | Should -Be $false
     }
 
@@ -135,7 +141,40 @@ Describe "CheckForInfoUpdateNeeded ties action re-parsing to repo change date" {
                 repoUpdatedAt = "changed-marker-a"
             }
         }
-        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -startTime (Get-Date)
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $true -startTime (Get-Date)
         $result | Should -Be $true
+    }
+}
+
+Describe "CheckForInfoUpdateNeeded backfills a missing description field" {
+    It "requests an update for a record that has never had a description property" {
+        $action = [PSCustomObject]@{
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = "2024-01-10T10:00:00Z"
+            actionType = [PSCustomObject]@{
+                actionType    = "Node"
+                nodeVersion   = "24"
+                repoUpdatedAt = "2024-01-10T10:00:00Z"
+            }
+        }
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $false -startTime (Get-Date)
+        $result | Should -Be $true
+    }
+
+    It "does not request an update when description is already present, even as null" {
+        $action = [PSCustomObject]@{
+            name              = "actions/checkout"
+            mirrorFound       = $true
+            mirrorLastUpdated = "2024-01-10T10:00:00Z"
+            description       = $null
+            actionType = [PSCustomObject]@{
+                actionType    = "Node"
+                nodeVersion   = "24"
+                repoUpdatedAt = "2024-01-10T10:00:00Z"
+            }
+        }
+        $result = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $true -hasNodeVersionField $true -hasDescriptionField $true -startTime (Get-Date)
+        $result | Should -Be $false
     }
 }

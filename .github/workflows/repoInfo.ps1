@@ -564,11 +564,11 @@ function GetActionType {
     )
 
     if ($null -eq $owner) {
-        return ("No owner found", "No owner found", "No owner found", $null, "")
+        return ("No owner found", "No owner found", "No owner found", $null, "", $null)
     }
 
     if ($null -eq $repo) {
-        return ("No repo found", "No repo found", "No repo found", $null, "")
+        return ("No repo found", "No repo found", "No repo found", $null, "", $null)
     }
 
     # Check if we are nearing the 50-minute mark
@@ -603,7 +603,7 @@ function GetActionType {
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
 
-                return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference)
+                return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference, $null)
             }
             catch {
                 try {
@@ -613,11 +613,11 @@ function GetActionType {
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
 
-                    return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference)
+                    return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference, $null)
                 }
                 catch {
                     Write-Debug "No action.yml or action.yaml or Dockerfile or dockerfile found in repo [$owner/$repo]"
-                    return ("No file found", "No file found", "No file found", $null, $dockerImageReference)
+                    return ("No file found", "No file found", "No file found", $null, $dockerImageReference, $null)
                 }
             }
         }
@@ -625,7 +625,7 @@ function GetActionType {
 
     if ($response.Length -eq 0 -or $response.download_url.Length -eq 0) {
         Write-Debug "No action definition found in repo [$owner/$repo]"
-        return ("No file found", "No file found", "No file found", $null, "")
+        return ("No file found", "No file found", "No file found", $null, "", $null)
     }
 
     # load the file
@@ -648,9 +648,9 @@ function GetActionType {
             }
         }
         
-        return ("Error downloading file", "No file found", "No file found", $null, "")
+        return ("Error downloading file", "No file found", "No file found", $null, "", $null)
     }
-    
+
     Write-Debug "response: $($fileContent)"
     try {
         $yaml = ConvertFrom-Yaml $fileContent
@@ -659,7 +659,14 @@ function GetActionType {
         Write-Host "Error converting to yaml: $($_.Exception.Message)"
         Write-Host "Yaml content repo [$owner/$repo]:"
         Write-Host $fileContent
-        return ("Unknown", "No file found", "No file found", $null, "")
+        return ("Unknown", "No file found", "No file found", $null, "", $null)
+    }
+
+    # The marketplace's free-text search matches on this, so it's worth
+    # carrying even though nothing else in this repo reads it today.
+    $description = $null
+    if ($yaml.description -is [string] -and $yaml.description.Trim().Length -gt 0) {
+        $description = $yaml.description.Trim()
     }
 
     # find line that says "
@@ -695,7 +702,7 @@ function GetActionType {
         }
     }
 
-    return ($actionType, $fileFound, $actionDockerType, $nodeVersion, $dockerImageReference)
+    return ($actionType, $fileFound, $actionDockerType, $nodeVersion, $dockerImageReference, $description)
 }
 
 function CheckForInfoUpdateNeeded {
@@ -703,6 +710,7 @@ function CheckForInfoUpdateNeeded {
         $action,
         $hasActionTypeField,
         $hasNodeVersionField,
+        $hasDescriptionField,
         $startTime
     )
 
@@ -722,6 +730,15 @@ function CheckForInfoUpdateNeeded {
 
     # check nodeVersion field missing for Node actionType
     if (("Node" -eq $action.actionType.actionType) -and !$hasNodeVersionField) {
+        return $true
+    }
+
+    # check description field missing entirely - backfill once, the same way
+    # nodeVersion was backfilled above. Records parsed before this field
+    # existed never got a `description` property (not even a null one), so
+    # this only fires once per record: the parse below always adds the
+    # property, even when the action.yml has no description to report.
+    if (!$hasDescriptionField) {
         return $true
     }
 
@@ -1037,11 +1054,12 @@ function GetInfo {
 
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
         $hasNodeVersionField = $null -ne $action.actionType.nodeVersion
-        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField -startTime $startTime
+        $hasDescriptionField = $null -ne (Get-Member -inputobject $action -name "description" -Membertype Properties)
+        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField -hasDescriptionField $hasDescriptionField -startTime $startTime
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
-            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion, $dockerImageReference) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion, $dockerImageReference, $descriptionResult) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
 
             If (!$hasActionTypeField) {
                 $actionType = @{
@@ -1077,6 +1095,16 @@ function GetInfo {
                 $repoHadUpdates = $true
             }
 
+            # description is a top-level field (matching the marketplace API's
+            # schema), not nested under actionType. Always (re)written, even to
+            # $null, so hasDescriptionField is true afterward and this record
+            # is not re-parsed on every future run just to re-check it.
+            if (!$hasDescriptionField) {
+                $action | Add-Member -Name description -Value $descriptionResult -MemberType NoteProperty
+            }
+            else {
+                $action.description = $descriptionResult
+            }
         }
 
         # store funding information
