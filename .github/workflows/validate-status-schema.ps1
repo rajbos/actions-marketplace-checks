@@ -58,7 +58,10 @@ class StatusJsonSchema {
     
     # Action type information (typically present but can have varied content)
     [object] $actionType  # Hashtable with fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage, dockerfileHasCustomCode, containerScan
-    
+
+    # Short blurb from the action's action.yml (optional, null when not found or not yet parsed)
+    [object] $description
+
     # Repository information (typically present)
     [object] $repoInfo  # Hashtable with disabled, archived, updated_at, latest_release_published_at
     
