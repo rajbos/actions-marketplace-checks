@@ -110,12 +110,19 @@ jobs:
           path: updated-data/
 
       - name: Merge changes from processing job
+        id: merge
         shell: pwsh
         run: |
           . ./.github/workflows/library.ps1
 
           Write-Message -message "# Consolidating Description Backfill Changes" -logToSummary $true
           Write-Message -message "" -logToSummary $true
+
+          # Tracks whether we actually merged any updated forks - stays $false
+          # when the processing job produced no output (e.g. it failed before
+          # writing any descriptions), so the API upload step can skip itself
+          # instead of always spending an upload call for nothing.
+          $hasChanges = $false
 
           # Load current status from blob storage
           try {
@@ -180,14 +187,19 @@ jobs:
               $mergedStatus = $statusByName.Values
               Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
               SaveStatus -existingForks $mergedStatus
+
+              $hasChanges = $mergeCount -gt 0
           } else {
-              Write-Message -message "No updated status.json found from processing job" -logToSummary $true
+              Write-Message -message "No updated status.json found from processing job - nothing to merge (the processing job likely failed before producing output)" -logToSummary $true
           }
 
           Write-Message -message "" -logToSummary $true
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
+          "has-changes=$($hasChanges.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Setup Node.js for API updates
+        if: steps.merge.outputs.has-changes == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -195,13 +207,14 @@ jobs:
           scope: '@devops-actions'
 
       - name: Install npm package for API updates
+        if: steps.merge.outputs.has-changes == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
         run: |
           npm install @devops-actions/actions-marketplace-client
 
       - name: Update API storage with consolidated data
-        if: always()
+        if: always() && steps.merge.outputs.has-changes == 'true'
         shell: pwsh
         env:
           AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
