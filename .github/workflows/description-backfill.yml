@@ -1,0 +1,266 @@
+# Dedicated backfill for the `description` field on existing action records.
+#
+# Split out from repoInfo.yml/repoInfo.ps1 because that pipeline shares its 3
+# GitHub Apps and a per-run update budget with 3 other hourly workflows, which
+# left description backfill starved of both API calls and time budget (see
+# https://github.com/rajbos/actions-marketplace-checks/pull/244 for the
+# extraction logic this reuses, and .github/RATE_LIMIT_ARCHITECTURE.md for the
+# rate limit background).
+#
+# This workflow runs on its own dedicated 4th GitHub App/rate-limit pool
+# (APPLICATION_ID_4 / AUTOMATION_APP_KEY4, installed on the same
+# actions-marketplace-validations org) so it never contends with the other
+# hourly workflows, and only fetches the single already-known
+# action.yml/action.yaml file per repo instead of re-probing from scratch.
+
+name: Description backfill
+
+on:
+  push:
+    paths:
+      - .github/workflows/description-backfill.yml
+      - .github/workflows/description-backfill.ps1
+
+  schedule:
+     # Runs every 6 hours, offset from the other hourly workflows
+     # (analyze :05, releaseInfo-refresh :20, update-mirrors :35, repoInfo :50)
+     # so it never starts in the same minute as any of them.
+     - cron: '15 */6 * * *'
+
+  workflow_dispatch:
+
+# Prevent concurrent runs of this workflow - it's a single long-running job.
+concurrency:
+  group: description-backfill-workflow
+  cancel-in-progress: false
+
+env:
+  # Isolated 4th GitHub App - deliberately NOT setting APP_ID_2/APP_ID_3 here
+  # so this workflow can never fall back to (and contend for) the other 3
+  # apps used by analyze/releaseInfo-refresh/update-mirrors/repoInfo.
+  APP_ID: ${{ vars.APPLICATION_ID_4 }}
+  APP_ORGANIZATION: actions-marketplace-validations
+
+jobs:
+  process-description-backfill:
+    runs-on: ubuntu-latest
+    # Hard backstop below GitHub-hosted runners' 6 hour job cap. The script's
+    # own ~340 minute internal guard should always stop it before this fires;
+    # this is only a safety net if that guard is ever bypassed.
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - shell: pwsh
+        name: Backfill descriptions
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY4 }}
+        run: |
+          . "${{ github.workspace }}/.github/workflows/library.ps1"
+          Install-ModuleWithRetry -ModuleName "powershell-yaml"
+          & "${{ github.workspace }}/.github/workflows/description-backfill.ps1"
+
+      - name: Upload updated status.json as artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: status-updated
+          path: status.json
+          retention-days: 1
+
+  upload-changes:
+    name: Consolidate and upload changes to blob storage
+    needs: process-description-backfill
+    if: always()
+    runs-on: ubuntu-latest
+    concurrency:
+      group: repo-state-updates
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download latest status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download updated status from previous job
+        uses: actions/download-artifact@v8
+        with:
+          name: status-updated
+          path: updated-data/
+
+      - name: Merge changes from processing job
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "# Consolidating Description Backfill Changes" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Load current status from blob storage
+          try {
+              $jsonContent = Get-Content status.json -Raw
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
+              $currentStatus = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse current status.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          Write-Message -message "Loaded current status from blob storage with [$(DisplayIntWithDots $currentStatus.Count)] forks" -logToSummary $true
+
+          # Load updated status from processing job
+          $updatedStatusFile = "updated-data/status.json"
+          if (Test-Path $updatedStatusFile) {
+              try {
+                  $updatedContent = Get-Content $updatedStatusFile -Raw
+                  $updatedContent = $updatedContent -replace '^\uFEFF', ''
+                  $updatedStatus = $updatedContent | ConvertFrom-Json
+                  Write-Message -message "Loaded updated status from processing job with [$(DisplayIntWithDots $updatedStatus.Count)] forks" -logToSummary $true
+              } catch {
+                  Write-Error "Failed to parse updated status.json: $($_.Exception.Message)"
+                  exit 1
+              }
+
+              # Create hashtable for fast lookup
+              $statusByName = @{}
+              foreach ($item in $currentStatus) {
+                  $statusByName[$item.name] = $item
+              }
+
+              # Merge updates - copy all properties from updated forks
+              $mergeCount = 0
+              foreach ($updatedFork in $updatedStatus) {
+                  if ($statusByName.ContainsKey($updatedFork.name)) {
+                      # Update existing entry - copy all properties from updated fork
+                      $existing = $statusByName[$updatedFork.name]
+
+                      foreach ($prop in $updatedFork.PSObject.Properties) {
+                          $propName = $prop.Name
+                          $propValue = $prop.Value
+
+                          $existingProp = $existing.PSObject.Properties[$propName]
+                          if ($existingProp) {
+                              $existingProp.Value = $propValue
+                          } else {
+                              $existing | Add-Member -Name $propName -Value $propValue -MemberType NoteProperty -Force
+                          }
+                      }
+                      $mergeCount++
+                  } else {
+                      # Add new entry
+                      $statusByName[$updatedFork.name] = $updatedFork
+                      $mergeCount++
+                  }
+              }
+
+              Write-Message -message "Merged [$(DisplayIntWithDots $mergeCount)] fork updates into current status" -logToSummary $true
+
+              # Convert back to array and save
+              $mergedStatus = $statusByName.Values
+              Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
+              SaveStatus -existingForks $mergedStatus
+          } else {
+              Write-Message -message "No updated status.json found from processing job" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Consolidation complete" -logToSummary $true
+
+      - name: Setup Node.js for API updates
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devops-actions'
+
+      - name: Install npm package for API updates
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+        run: |
+          npm install @devops-actions/actions-marketplace-client
+
+      - name: Update API storage with consolidated data
+        if: always()
+        shell: pwsh
+        env:
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## API Storage Update" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          if ([string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_URL) -or [string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_TOKEN)) {
+            Write-Message -message "⚠️ API credentials not available - skipping API update" -logToSummary $true
+            exit 0
+          }
+
+          try {
+            $jsonContent = Get-Content status.json -Raw
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''
+            $status = $jsonContent | ConvertFrom-Json
+          } catch {
+            Write-Message -message "❌ Failed to load status.json: $($_.Exception.Message)" -logToSummary $true
+            exit 0
+          }
+
+          # A single backfill run can update far more than the usual 100
+          # records per hourly run, so push a much larger batch here to avoid
+          # newly-found descriptions sitting unpublished for days behind the
+          # other workflows' smaller per-run caps.
+          $numberOfRepos = 10000
+          Write-Host "Uploading up to $numberOfRepos actions to API storage..."
+          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos $numberOfRepos
+
+          if ($result.error) {
+            Write-Message -message "⚠️ API update encountered an error: $($result.error)" -logToSummary $true
+          } else {
+            $totalUpdates = $result.createdCount + $result.updatedCount
+            Write-Message -message "| Status | Count |" -logToSummary $true
+            Write-Message -message "|--------|------:|" -logToSummary $true
+            Write-Message -message "| ✅ Successful | $($result.successCount) |" -logToSummary $true
+            Write-Message -message "| ❌ Failed | $($result.failCount) |" -logToSummary $true
+            Write-Message -message "| 🆕 Created | $($result.createdCount) |" -logToSummary $true
+            Write-Message -message "| 📝 Updated | $($result.updatedCount) |" -logToSummary $true
+            Write-Message -message "| ⏭️ Skipped | $($result.skippedCount) |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "✓ Total updates to API: **$totalUpdates** (created + updated)" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+
+      - name: Upload status.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
