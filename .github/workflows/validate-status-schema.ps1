@@ -55,6 +55,7 @@ class StatusJsonSchema {
     [object] $forkFound  # Can be boolean or null
     [object] $mirrorLastUpdated  # Can be string (datetime) or null
     [object] $repoSize  # Can be int or null
+    [object] $mirrorCommitSha  # Can be string (git SHA) or null; set after a successful mirror sync
     
     # Action type information (typically present but can have varied content)
     [object] $actionType  # Hashtable with fileFound, actionType, nodeVersion, actionDockerType, dockerBaseImage, dockerfileHasCustomCode, containerScan

@@ -3716,46 +3716,60 @@ function Get-RepositoryDefaultBranchCommit {
     Param (
         [string] $owner,
         [string] $repo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        # Optional: if the default branch is already known (e.g. from a prior repo-info
+        # call), pass it here to skip the initial GET /repos/{owner}/{repo} call.
+        [string] $knownDefaultBranch = $null
     )
-    
+
     # Get the latest commit SHA from the default branch of a repository using the GitHub API
-    # Returns a hashtable with success status, commit SHA, and branch name
+    # Returns a hashtable with success status, commit SHA, branch name, and (when the repo-info
+    # call is made) the repository's pushed_at timestamp - a single GET gives existence,
+    # pushed_at and default_branch together, so callers don't need a separate exists check.
     # This is more efficient than cloning the repo just to check if it's up to date
-    
+
     if ([string]::IsNullOrWhiteSpace($owner) -or [string]::IsNullOrWhiteSpace($repo)) {
         return @{
             success = $false
             sha = $null
             branch = $null
+            pushed_at = $null
             error = "Invalid owner or repo"
         }
     }
-    
+
     try {
-        # First get the repository info to find the default branch
-        $repoUrl = "repos/$owner/$repo"
-        $repoInfo = ApiCall -method GET -url $repoUrl -access_token $access_token -hideFailedCall $true
-        
-        if ($null -eq $repoInfo -or $repoInfo -eq $false) {
-            return @{
-                success = $false
-                sha = $null
-                branch = $null
-                error = "Repository not found"
-            }
-        }
-        
-        $defaultBranch = $repoInfo.default_branch
+        $defaultBranch = $knownDefaultBranch
+        $pushedAt = $null
+
         if ([string]::IsNullOrWhiteSpace($defaultBranch)) {
-            # Repository metadata may not have default_branch set; default to main
-            $defaultBranch = "main"
+            # First get the repository info to find the default branch (this same call also
+            # proves existence and returns pushed_at, so no separate exists check is needed)
+            $repoUrl = "repos/$owner/$repo"
+            $repoInfo = ApiCall -method GET -url $repoUrl -access_token $access_token -hideFailedCall $true
+
+            if ($null -eq $repoInfo -or $repoInfo -eq $false) {
+                return @{
+                    success = $false
+                    sha = $null
+                    branch = $null
+                    pushed_at = $null
+                    error = "Repository not found"
+                }
+            }
+
+            $defaultBranch = $repoInfo.default_branch
+            if ([string]::IsNullOrWhiteSpace($defaultBranch)) {
+                # Repository metadata may not have default_branch set; default to main
+                $defaultBranch = "main"
+            }
+            $pushedAt = $repoInfo.pushed_at
         }
-        
+
         # Get the latest commit from the default branch
         $branchUrl = "repos/$owner/$repo/branches/$defaultBranch"
         $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
-        
+
         if ($null -eq $branchInfo -or $branchInfo -eq $false) {
             # If the default branch is 'main' and wasn't found, try 'master' as some repos use it
             # This fallback only applies to 'main' since it's our default assumption
@@ -3765,20 +3779,22 @@ function Get-RepositoryDefaultBranchCommit {
                 $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
             }
         }
-        
+
         if ($null -eq $branchInfo -or $branchInfo -eq $false) {
             return @{
                 success = $false
                 sha = $null
                 branch = $defaultBranch
+                pushed_at = $pushedAt
                 error = "Branch not found"
             }
         }
-        
+
         return @{
             success = $true
             sha = $branchInfo.commit.sha
             branch = $defaultBranch
+            pushed_at = $pushedAt
             error = $null
         }
     }
@@ -3787,6 +3803,7 @@ function Get-RepositoryDefaultBranchCommit {
             success = $false
             sha = $null
             branch = $null
+            pushed_at = $null
             error = $_.Exception.Message
         }
     }
@@ -3798,16 +3815,22 @@ function Compare-RepositoryCommitHashes {
         [string] $sourceRepo,
         [string] $mirrorOwner,
         [string] $mirrorRepo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        # Optional: a previously stored HEAD SHA for the mirror (e.g. status.json's
+        # mirrorCommitSha, captured after the last successful sync). When provided, the
+        # mirror-side existence check and commit lookup are skipped entirely, since we own
+        # all writes to the mirrors and can trust the last SHA we recorded there.
+        [string] $knownMirrorSha = $null
     )
-    
+
     # Compare the latest commit hashes of source and mirror repositories
     # Returns a hashtable indicating if they are in sync and the commit details
     # This allows early exit before expensive git clone/fetch operations
-    
+
     Write-Debug "Comparing commits: source [$sourceOwner/$sourceRepo] vs mirror [$mirrorOwner/$mirrorRepo]"
-    
-    # Get source repository commit
+
+    # Get source repository commit (this single call also proves the upstream repo exists
+    # and returns its pushed_at, so no separate upstream-exists call is needed)
     $sourceCommit = Get-RepositoryDefaultBranchCommit -owner $sourceOwner -repo $sourceRepo -access_token $access_token
     if (-not $sourceCommit.success) {
         return @{
@@ -3815,11 +3838,31 @@ function Compare-RepositoryCommitHashes {
             can_compare = $false
             source_sha = $null
             mirror_sha = $null
+            source_not_found = ($sourceCommit.error -eq "Repository not found")
+            mirror_not_found = $false
             error = "Could not get source commit: $($sourceCommit.error)"
         }
     }
-    
-    # Get mirror repository commit  
+
+    # Fast path: compare against a previously recorded mirror SHA without touching the
+    # mirror repo's API at all
+    if (-not [string]::IsNullOrWhiteSpace($knownMirrorSha)) {
+        $inSync = $sourceCommit.sha -eq $knownMirrorSha
+        return @{
+            in_sync = $inSync
+            can_compare = $true
+            source_sha = $sourceCommit.sha
+            mirror_sha = $knownMirrorSha
+            source_branch = $sourceCommit.branch
+            mirror_branch = $null
+            used_cached_mirror_sha = $true
+            source_not_found = $false
+            mirror_not_found = $false
+            error = $null
+        }
+    }
+
+    # No cached mirror SHA available - fall back to the full API-based comparison
     $mirrorCommit = Get-RepositoryDefaultBranchCommit -owner $mirrorOwner -repo $mirrorRepo -access_token $access_token
     if (-not $mirrorCommit.success) {
         return @{
@@ -3827,13 +3870,15 @@ function Compare-RepositoryCommitHashes {
             can_compare = $false
             source_sha = $sourceCommit.sha
             mirror_sha = $null
+            source_not_found = $false
+            mirror_not_found = ($mirrorCommit.error -eq "Repository not found")
             error = "Could not get mirror commit: $($mirrorCommit.error)"
         }
     }
-    
+
     # Compare the commit SHAs
     $inSync = $sourceCommit.sha -eq $mirrorCommit.sha
-    
+
     return @{
         in_sync = $inSync
         can_compare = $true
@@ -3841,6 +3886,9 @@ function Compare-RepositoryCommitHashes {
         mirror_sha = $mirrorCommit.sha
         source_branch = $sourceCommit.branch
         mirror_branch = $mirrorCommit.branch
+        used_cached_mirror_sha = $false
+        source_not_found = $false
+        mirror_not_found = $false
         error = $null
     }
 }
@@ -3998,7 +4046,12 @@ function SyncMirrorWithUpstream {
         $repo,
         $upstreamOwner,
         $upstreamRepo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        # Optional: the mirror's HEAD SHA as recorded after the last successful sync
+        # (status.json's mirrorCommitSha). When present, it lets us skip the mirror-side
+        # existence check and commit lookup entirely - we own all writes to the mirrors,
+        # so a cached SHA is trustworthy. Falls back to the full API comparison when absent.
+        [string] $storedMirrorSha = $null
     )
     
     # Sync a mirror repository by pulling from upstream and pushing to mirror
@@ -4024,33 +4077,40 @@ function SyncMirrorWithUpstream {
         }
     }
     
-    # Check if upstream repository exists before attempting sync
-    $upstreamExists = Test-RepositoryExists -owner $upstreamOwner -repo $upstreamRepo -access_token $access_token
-    if (-not $upstreamExists) {
-        Write-Debug "Upstream repository [$upstreamOwner/$upstreamRepo] does not exist or is not accessible"
-        return @{
-            success = $false
-            message = "Upstream repository not found"
-            error_type = "upstream_not_found"
+    # Single API-based comparison collapses what used to be up to 4 separate calls
+    # (upstream exists, mirror exists, upstream commit, mirror commit) into as few as 2:
+    # - Get-RepositoryDefaultBranchCommit(upstream) proves existence + gives pushed_at +
+    #   default_branch + HEAD sha in one GET plus one branch GET
+    # - when a trustworthy cached mirror SHA is available, the mirror-side existence check
+    #   and commit lookup are skipped entirely (see Compare-RepositoryCommitHashes)
+    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token -knownMirrorSha $storedMirrorSha
+
+    if (-not $comparison.can_compare) {
+        if ($comparison.source_not_found) {
+            Write-Debug "Upstream repository [$upstreamOwner/$upstreamRepo] does not exist or is not accessible"
+            return @{
+                success = $false
+                message = "Upstream repository not found"
+                error_type = "upstream_not_found"
+            }
         }
-    }
-    
-    # Check if mirror repository exists
-    $mirrorExists = Test-RepositoryExists -owner $owner -repo $repo -access_token $access_token
-    if (-not $mirrorExists) {
-        Write-Debug "Mirror repository [$owner/$repo] does not exist"
-        return @{
-            success = $false
-            message = "Mirror repository not found"
-            error_type = "mirror_not_found"
+
+        if ($comparison.mirror_not_found) {
+            Write-Debug "Mirror repository [$owner/$repo] does not exist"
+            return @{
+                success = $false
+                message = "Mirror repository not found"
+                error_type = "mirror_not_found"
+            }
         }
+
+        # If comparison failed for another reason, continue with normal sync process
+        # (clone/fetch/merge). This handles cases where API comparison might fail but git
+        # operations could succeed, and covers the "trust the cached SHA, skip the mirror
+        # exists check" case where a deleted mirror is only discovered when git clone fails.
+        Write-Debug "Could not compare commits via API, proceeding with git-based sync: $($comparison.error)"
     }
-    
-    # Early sync detection: Compare commit hashes before cloning
-    # This avoids expensive git clone/fetch operations when repos are already in sync
-    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token
-    
-    if ($comparison.can_compare -and $comparison.in_sync) {
+    elseif ($comparison.in_sync) {
         Write-Debug "Mirror [$owner/$repo] is already in sync with upstream (SHA: $($comparison.source_sha))"
         return @{
             success = $true
@@ -4059,12 +4119,6 @@ function SyncMirrorWithUpstream {
             source_sha = $comparison.source_sha
             mirror_sha = $comparison.mirror_sha
         }
-    }
-    
-    # If comparison failed, continue with normal sync process (clone/fetch/merge)
-    # This handles cases where API comparison might fail but git operations could succeed
-    if (-not $comparison.can_compare) {
-        Write-Debug "Could not compare commits via API, proceeding with git-based sync: $($comparison.error)"
     }
     
     # Create temp directory if it doesn't exist
@@ -4322,6 +4376,7 @@ function SyncMirrorWithUpstream {
                     success = $true
                     message = "Already up to date"
                     merge_type = "none"
+                    mirror_sha = "$afterHash"
                 }
             }
         }
@@ -4381,6 +4436,7 @@ function SyncMirrorWithUpstream {
             success = $true
             message = $message
             merge_type = $mergeType
+            mirror_sha = "$afterHash"
         }
     }
     catch {
@@ -4628,6 +4684,8 @@ function Split-ActionsIntoChunks {
     - Forks that haven't been synced recently are prioritized
     - Failed sync attempts respect a cool-off period before retry
     - Upstream unavailable repos are skipped
+    - Forks whose upstream repoInfo.updated_at is not newer than lastSynced are skipped
+      with zero API calls, since there is nothing to sync
     
     .PARAMETER existingForks
     The complete array of fork objects from status.json
@@ -4659,6 +4717,7 @@ function Select-ForksToProcess {
     $filteredNoMirror = 0
     $filteredUpstreamUnavailable = 0
     $filteredCoolOff = 0
+    $filteredAlreadyUpToDate = 0
     
     # First pass: count each filter reason and collect eligible forks
     # Use generic List for better performance and type safety with large datasets
@@ -4691,10 +4750,29 @@ function Select-ForksToProcess {
             }
         }
         
+        # Zero-API-call skip: if we already know (from repoInfo.ps1's periodic upstream
+        # check) that the upstream repo hasn't been updated since our last successful
+        # sync, there is nothing to sync - skip without spending any API calls on it.
+        # Only trust this when both timestamps are present and parseable; otherwise fall
+        # through and let the normal sync path (which re-checks via the API) decide.
+        if ($fork.lastSynced -and $fork.repoInfo -and $fork.repoInfo.updated_at) {
+            try {
+                $upstreamUpdatedAt = [DateTime]::Parse($fork.repoInfo.updated_at)
+                $lastSyncedDate = [DateTime]::Parse($fork.lastSynced)
+                if ($upstreamUpdatedAt -le $lastSyncedDate) {
+                    $filteredAlreadyUpToDate++
+                    continue
+                }
+            } catch {
+                # Unparseable dates - do not skip, let the sync path re-check via the API
+                Write-Debug "Failed to parse repoInfo.updated_at/lastSynced for [$($fork.name)]"
+            }
+        }
+
         # This fork passed all filters
         [void]$eligibleForks.Add($fork)
     }
-    
+
     # Display filtering statistics
     Write-Message -message "" -logToSummary $true
     Write-Message -message "### Fork Selection Filtering Results" -logToSummary $true
@@ -4705,6 +4783,7 @@ function Select-ForksToProcess {
     Write-Message -message "| Filtered: No mirror found | $(DisplayIntWithDots $filteredNoMirror) |" -logToSummary $true
     Write-Message -message "| Filtered: Upstream unavailable | $(DisplayIntWithDots $filteredUpstreamUnavailable) |" -logToSummary $true
     Write-Message -message "| Filtered: In cool-off period (failed < ${coolOffHoursForFailedSync}h ago) | $(DisplayIntWithDots $filteredCoolOff) |" -logToSummary $true
+    Write-Message -message "| Filtered: Already up to date (0 API calls) | $(DisplayIntWithDots $filteredAlreadyUpToDate) |" -logToSummary $true
     Write-Message -message "| **Eligible forks after filtering** | **$(DisplayIntWithDots $eligibleForks.Count)** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
@@ -4809,6 +4888,7 @@ function Select-ForksToProcess {
     }
     
     Write-Message -message "- Eligible forks with recent failures: [$(DisplayIntWithDots $reposWithRecentFailures)] (deprioritized by smart sorting)" -logToSummary $true
+    Write-Message -message "- Skipped as already up to date (0 API calls): [$(DisplayIntWithDots $filteredAlreadyUpToDate)]" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     return $selectedForks
