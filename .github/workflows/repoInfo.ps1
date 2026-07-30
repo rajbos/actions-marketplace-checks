@@ -396,11 +396,16 @@ function GetRepoInfo {
         [Parameter(Mandatory=$true)]
         [Alias('access_token')]
         $accessToken,
-        $startTime
+        $startTime,
+        # Previously stored ETag for this repo's metadata, if any. When provided, an
+        # unchanged repo comes back as a 304 Not Modified, which GitHub does not count
+        # against the core rate limit - so repeatedly re-checking already-known repos
+        # here is effectively free instead of costing a full API call each time.
+        $etag = $null
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
-        return ($null, $null, $null, $null, $null)
+        return ($null, $null, $null, $null, $null, $null, $false)
     }
 
     # Check if we are nearing the 50-minute mark
@@ -414,7 +419,7 @@ function GetRepoInfo {
     Write-Host "Loading repository info for [$owner/$repo]"
 
     # Treat 404s as expected (repo deleted or private) without flooding logs
-    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken -etag $etag -returnETag $true
     if ($repoResponse -is [hashtable] -and $repoResponse.Error) {
         $statusCode = $null
         if ($repoResponse.StatusCode) {
@@ -436,12 +441,20 @@ function GetRepoInfo {
             Write-Host "Error loading repository info for [$owner/$repo]: StatusCode [$statusCode]"
         }
 
-        return ($null, $null, $null, $null, $statusCode)
+        return ($null, $null, $null, $null, $statusCode, $null, $false)
     }
 
-    if ($null -eq $repoResponse) {
-        return ($null, $null, $null, $null, $null)
+    if ($repoResponse -is [hashtable] -and $repoResponse.NotModified) {
+        Write-Host "Repository info for [$owner/$repo] is unchanged (304 Not Modified) - call was free, not counted against rate limit"
+        return ($null, $null, $null, $null, $null, $repoResponse.ETag, $true)
     }
+
+    if ($null -eq $repoResponse -or $null -eq $repoResponse.Data) {
+        return ($null, $null, $null, $null, $null, $null, $false)
+    }
+
+    $repoData = $repoResponse.Data
+    $newEtag = $repoResponse.ETag
 
     $releaseUrl = "/repos/$owner/$repo/releases/latest"
     $releaseResponse = ApiCall -method GET -url $releaseUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
@@ -450,7 +463,7 @@ function GetRepoInfo {
         $latestReleaseDate = $releaseResponse.published_at
     }
 
-    return ($repoResponse.archived, $repoResponse.disabled, $repoResponse.updated_at, $latestReleaseDate, $null)
+    return ($repoData.archived, $repoData.disabled, $repoData.updated_at, $latestReleaseDate, $null, $newEtag, $false)
 }
 
 # GetRepoTagInfo and GetRepoReleases moved to library.ps1 so releaseInfo-refresh.ps1
@@ -1672,6 +1685,9 @@ function GetMoreInfo {
                 $repo_disabled = $null
                 $repo_updated_at = $null
                 $latest_release_published_at = $null
+                # Only ever set by the REST fallback path below (GraphQL has no ETag/304 concept here)
+                $repoNotModified = $false
+                $newRepoEtag = $null
 
                 $graphqlEntry = $null
                 if ($graphqlResultsByName.ContainsKey($action.name)) {
@@ -1703,8 +1719,12 @@ function GetMoreInfo {
                 }
                 else {
                     Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)] via REST fallback. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                    $existingRepoEtag = $null
+                    if ($hasField -and $action.repoInfo -and (Get-Member -InputObject $action.repoInfo -Name "etag" -MemberType Properties)) {
+                        $existingRepoEtag = $action.repoInfo.etag
+                    }
                     try {
-                        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+                        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode, $newRepoEtag, $repoNotModified) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingRepoEtag
                         if ($statusCode -and ($statusCode -eq "NotFound")) {
                             $action.upstreamFound = $false
                             # todo: remove this repo from the list (and push it back into the original actions list!)
@@ -1756,7 +1776,19 @@ function GetMoreInfo {
                     }
                 }
 
-                if ($repo_updated_at) {
+                if ($repoNotModified -and $hasField) {
+                    # 304 from the REST fallback: the repo hasn't changed since we last saw it, so
+                    # this call was free (not counted against the core rate limit). Only bump
+                    # lastFetched (and the ETag, in case GitHub rotated it) so priority scoring
+                    # doesn't keep reselecting this entry every run - don't touch the actual data.
+                    Write-Host "Repo information for [$($action.owner)/$($action.name)] is unchanged (304 Not Modified) - refreshing lastFetched only"
+                    $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
+                    if ($newRepoEtag) {
+                        $action.repoInfo | Add-Member -Name etag -Value $newRepoEtag -MemberType NoteProperty -Force
+                    }
+                    $memberUpdate++ | Out-Null
+                }
+                elseif ($repo_updated_at) {
                     if (!$hasField) {
                         Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
                         $repoInfo = @{
@@ -1765,6 +1797,9 @@ function GetMoreInfo {
                             updated_at = $repo_updated_at
                             latest_release_published_at = $latest_release_published_at
                             lastFetched = (Get-Date -Format 'o')
+                        }
+                        if ($newRepoEtag) {
+                            $repoInfo.etag = $newRepoEtag
                         }
 
                         $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
@@ -1778,6 +1813,9 @@ function GetMoreInfo {
                         $action.repoInfo.updated_at = $repo_updated_at
                         $action.repoInfo.latest_release_published_at = $latest_release_published_at
                         $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
+                        if ($newRepoEtag) {
+                            $action.repoInfo | Add-Member -Name etag -Value $newRepoEtag -MemberType NoteProperty -Force
+                        }
                         $memberUpdate++ | Out-Null
                     }
                 }
@@ -1795,17 +1833,34 @@ function GetMoreInfo {
             }
             if (!$hasField -or ($null -eq $action.tagInfo) -or $tagInfoStale) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                $existingTagEtagField = Get-Member -inputobject $action -name "tagInfoEtag" -Membertype Properties
+                $existingTagEtag = if ($existingTagEtagField) { $action.tagInfoEtag } else { $null }
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-                    if (!$hasField) {
-                        Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
-
-                        $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
-                        $i++ | Out-Null
+                    $tagResult = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingTagEtag
+                    if ($tagResult.NotModified) {
+                        # Free call (304) - tags haven't changed, only refresh the checked-at timestamp
+                        # so staleness scoring doesn't keep reselecting this entry every run.
+                        Write-Host "Tags for [$owner/$repo] are unchanged (304 Not Modified)"
                     }
                     else {
-                        #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
-                        $action.tagInfo = $tagInfo
+                        $tagInfo = $tagResult.Data
+                        if (!$hasField) {
+                            Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
+
+                            $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+                            $i++ | Out-Null
+                        }
+                        else {
+                            #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
+                            $action.tagInfo = $tagInfo
+                        }
+                    }
+                    if ($tagResult.ETag) {
+                        if (!$existingTagEtagField) {
+                            $action | Add-Member -Name tagInfoEtag -Value $tagResult.ETag -MemberType NoteProperty
+                        } else {
+                            $action.tagInfoEtag = $tagResult.ETag
+                        }
                     }
                     if (!$tagInfoCheckedAtField) {
                         $action | Add-Member -Name tagInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty
@@ -1851,17 +1906,34 @@ function GetMoreInfo {
             }
             if (!$hasField -or ($null -eq $action.releaseInfo) -or $releaseInfoStale) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                $existingReleaseEtagField = Get-Member -inputobject $action -name "releaseInfoEtag" -Membertype Properties
+                $existingReleaseEtag = if ($existingReleaseEtagField) { $action.releaseInfoEtag } else { $null }
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-                    if (!$hasField) {
-                        Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
-
-                        $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
-                        $i++ | Out-Null
+                    $releaseResult = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingReleaseEtag
+                    if ($releaseResult.NotModified) {
+                        # Free call (304) - releases haven't changed, only refresh the checked-at timestamp
+                        # so staleness scoring doesn't keep reselecting this entry every run.
+                        Write-Host "Releases for [$owner/$repo] are unchanged (304 Not Modified)"
                     }
                     else {
-                        #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
-                        $action.releaseInfo = $releaseInfo
+                        $releaseInfo = $releaseResult.Data
+                        if (!$hasField) {
+                            Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
+
+                            $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+                            $i++ | Out-Null
+                        }
+                        else {
+                            #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                            $action.releaseInfo = $releaseInfo
+                        }
+                    }
+                    if ($releaseResult.ETag) {
+                        if (!$existingReleaseEtagField) {
+                            $action | Add-Member -Name releaseInfoEtag -Value $releaseResult.ETag -MemberType NoteProperty
+                        } else {
+                            $action.releaseInfoEtag = $releaseResult.ETag
+                        }
                     }
                     if (!$releaseInfoCheckedAtField) {
                         $action | Add-Member -Name releaseInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty

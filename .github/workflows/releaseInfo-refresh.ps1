@@ -121,15 +121,37 @@ function Update-VersionInfoForAction {
 
     Write-Host "Refreshing tag/release info for [$owner/$repo]"
 
-    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-    if ($null -ne $tagInfo) {
-        if (Get-Member -InputObject $action -Name "tagInfo" -MemberType Properties) {
-            $action.tagInfo = $tagInfo
-        }
-        else {
-            $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+    # Sending back the ETag we stored last time turns an unchanged repo's tags/releases
+    # into a free 304 (not counted against the core rate limit) instead of a full call -
+    # this is the dominant case for the vast majority of the ~29k tracked actions on any
+    # given hourly run, since most repos don't cut a new tag/release every hour.
+    $existingTagEtagField = Get-Member -InputObject $action -Name "tagInfoEtag" -MemberType Properties
+    $existingTagEtag = if ($existingTagEtagField) { $action.tagInfoEtag } else { $null }
+    $tagResult = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingTagEtag
+    $tagInfoChanged = $false
+    if ($null -ne $tagResult) {
+        if (-not $tagResult.NotModified) {
+            $tagInfo = $tagResult.Data
+            if (Get-Member -InputObject $action -Name "tagInfo" -MemberType Properties) {
+                $action.tagInfo = $tagInfo
+            }
+            else {
+                $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+            }
+            $tagInfoChanged = $true
         }
 
+        if ($tagResult.ETag) {
+            if ($existingTagEtagField) {
+                $action.tagInfoEtag = $tagResult.ETag
+            }
+            else {
+                $action | Add-Member -Name tagInfoEtag -Value $tagResult.ETag -MemberType NoteProperty
+            }
+        }
+
+        # Always bump the checked-at timestamp, even on a 304, so priority scoring
+        # (oldest tagInfoCheckedAt first) doesn't keep reselecting the same entries.
         if (Get-Member -InputObject $action -Name "tagInfoCheckedAt" -MemberType Properties) {
             $action.tagInfoCheckedAt = Get-Date
         }
@@ -138,15 +160,33 @@ function Update-VersionInfoForAction {
         }
     }
 
-    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-    if ($null -ne $releaseInfo) {
-        if (Get-Member -InputObject $action -Name "releaseInfo" -MemberType Properties) {
-            $action.releaseInfo = $releaseInfo
-        }
-        else {
-            $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+    $existingReleaseEtagField = Get-Member -InputObject $action -Name "releaseInfoEtag" -MemberType Properties
+    $existingReleaseEtag = if ($existingReleaseEtagField) { $action.releaseInfoEtag } else { $null }
+    $releaseResult = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingReleaseEtag
+    $releaseInfoChanged = $false
+    if ($null -ne $releaseResult) {
+        if (-not $releaseResult.NotModified) {
+            $releaseInfo = $releaseResult.Data
+            if (Get-Member -InputObject $action -Name "releaseInfo" -MemberType Properties) {
+                $action.releaseInfo = $releaseInfo
+            }
+            else {
+                $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+            }
+            $releaseInfoChanged = $true
         }
 
+        if ($releaseResult.ETag) {
+            if ($existingReleaseEtagField) {
+                $action.releaseInfoEtag = $releaseResult.ETag
+            }
+            else {
+                $action | Add-Member -Name releaseInfoEtag -Value $releaseResult.ETag -MemberType NoteProperty
+            }
+        }
+
+        # Always bump the checked-at timestamp, even on a 304, so priority scoring
+        # (oldest releaseInfoCheckedAt first) doesn't keep reselecting the same entries.
         if (Get-Member -InputObject $action -Name "releaseInfoCheckedAt" -MemberType Properties) {
             $action.releaseInfoCheckedAt = Get-Date
         }
@@ -155,7 +195,7 @@ function Update-VersionInfoForAction {
         }
     }
 
-    return ($null -ne $tagInfo -or $null -ne $releaseInfo)
+    return ($tagInfoChanged -or $releaseInfoChanged)
 }
 
 function Run {
