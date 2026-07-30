@@ -2357,8 +2357,8 @@ function Get-GitHubAppRateLimitOverview {
     $secondaryKey = $env:APPLICATION_PRIVATE_KEY_2
     $tertiaryKey = $env:APPLICATION_PRIVATE_KEY_3
 
-    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $appPrivateKeys = @($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @(@($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $appPrivateKeys = @(@($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
     if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
         return @()
@@ -2730,8 +2730,8 @@ function Invoke-GitHubAppRateLimitCheckForConfiguredApps {
         throw "APP_ORGANIZATION (or explicit organization parameter) must be provided to perform the rate limit check"
     }
 
-    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $appPrivateKeys = @($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @(@($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $appPrivateKeys = @(@($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
     if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
         throw "At least one APP_ID and APPLICATION_PRIVATE_KEY must be provided to perform the rate limit check"
