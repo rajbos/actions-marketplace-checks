@@ -1532,6 +1532,91 @@ function GetMoreInfo {
     $originalRepoDoesNotExists = New-Object System.Collections.ArrayList
     # store the timestamp
     $startTime = Get-Date
+
+    # --- GraphQL batch pre-fetch for plain repoInfo metadata refresh ---
+    # Batches repos whose repoInfo is missing/stale through the GraphQL API (a separate
+    # rate-limit pool from REST) instead of one REST call per repo via GetRepoInfo. The main
+    # loop below falls back to the existing per-repo REST path for anything not covered here
+    # (GraphQL request failure for a whole batch, or repos with no parseable owner/repo).
+    $graphqlResultsByName = @{}
+    $graphqlStats = @{
+        BatchCount = 0
+        ReposRequested = 0
+        ReposRefreshed = 0
+        ReposNotFound = 0
+        TotalCost = 0
+        RestCallsAvoided = 0
+    }
+
+    $graphqlCandidates = @()
+    foreach ($action in $forksToProcess) {
+        if (!$action.upstreamFound) {
+            continue
+        }
+
+        $hasRepoInfoFieldForBatch = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+        $repoInfoIsStaleForBatch = $false
+        if ($hasRepoInfoFieldForBatch -and $action.repoInfo) {
+            $hasLastFetchedForBatch = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+            if (!$hasLastFetchedForBatch -or ($null -eq $action.repoInfo.lastFetched)) {
+                $repoInfoIsStaleForBatch = $true
+            }
+            else {
+                try {
+                    $daysSinceLastFetchForBatch = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                    if ($daysSinceLastFetchForBatch -gt 14) { $repoInfoIsStaleForBatch = $true }
+                }
+                catch { $repoInfoIsStaleForBatch = $true }
+            }
+        }
+
+        $needsGraphQLRefresh = !$hasRepoInfoFieldForBatch -or ($hasRepoInfoFieldForBatch -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoIsStaleForBatch
+        if ($needsGraphQLRefresh) {
+            ($ownerForBatch, $repoForBatch) = GetOrgActionInfo($action.name)
+            if ($ownerForBatch -ne "" -and $repoForBatch -ne "") {
+                $graphqlCandidates += @{ Owner = $ownerForBatch; Repo = $repoForBatch; Name = $action.name }
+            }
+        }
+    }
+
+    if ($graphqlCandidates.Count -gt 0) {
+        Write-Host "Batching [$($graphqlCandidates.Count)] repos with missing/stale repoInfo through GraphQL"
+        $graphqlBatchSize = 50
+        for ($batchStart = 0; $batchStart -lt $graphqlCandidates.Count; $batchStart += $graphqlBatchSize) {
+            $batchEnd = [Math]::Min($batchStart + $graphqlBatchSize, $graphqlCandidates.Count) - 1
+            $batch = $graphqlCandidates[$batchStart..$batchEnd]
+
+            $batchResult = Invoke-GraphQLRepoMetadataBatch -RepoPairs $batch -accessToken $accessToken
+            $graphqlStats.BatchCount++
+            $graphqlStats.ReposRequested += $batch.Count
+
+            if ($batchResult.Failed) {
+                Write-Host "GraphQL batch [$($graphqlStats.BatchCount)] failed; those [$($batch.Count)] repos will fall back to REST"
+                continue
+            }
+
+            if ($null -ne $batchResult.RateLimit) {
+                Write-Host "GraphQL batch [$($graphqlStats.BatchCount)]: cost [$($batchResult.RateLimit.cost)] point(s), [$($batchResult.RateLimit.remaining)] remaining"
+                $graphqlStats.TotalCost += $batchResult.RateLimit.cost
+            }
+
+            foreach ($name in $batchResult.Results.Keys) {
+                $graphqlResultsByName[$name] = $batchResult.Results[$name]
+                if ($batchResult.Results[$name].NotFound) {
+                    $graphqlStats.ReposNotFound++
+                }
+                else {
+                    $graphqlStats.ReposRefreshed++
+                }
+            }
+        }
+
+        # Each repo refreshed via GraphQL replaces 2 REST calls that GetRepoInfo would have
+        # made (repo info + latest release).
+        $graphqlStats.RestCallsAvoided = $graphqlStats.ReposRefreshed * 2
+    }
+    # --- end GraphQL batch pre-fetch ---
+
     try {
         foreach ($action in $forksToProcess) {
             $script:moreInfoMetrics.TotalReposExamined++
@@ -1583,10 +1668,20 @@ function GetMoreInfo {
             }
             
             if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoStale) {
-                Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
-                try {
-                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-                    if ($statusCode -and ($statusCode -eq "NotFound")) {
+                $repo_archived = $null
+                $repo_disabled = $null
+                $repo_updated_at = $null
+                $latest_release_published_at = $null
+
+                $graphqlEntry = $null
+                if ($graphqlResultsByName.ContainsKey($action.name)) {
+                    $graphqlEntry = $graphqlResultsByName[$action.name]
+                }
+
+                if ($null -ne $graphqlEntry) {
+                    Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)] via GraphQL batch"
+
+                    if ($graphqlEntry.NotFound) {
                         $action.upstreamFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
                         $actionNoLongerExists = @{
@@ -1598,68 +1693,93 @@ function GetMoreInfo {
                         continue
                     }
 
-                    if ($repo_updated_at) {
-                        if (!$hasField) {
-                            Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
-                            $repoInfo = @{
-                                archived = $repo_archived
-                                disabled = $repo_disabled
-                                updated_at = $repo_updated_at
-                                latest_release_published_at = $latest_release_published_at
-                                lastFetched = (Get-Date -Format 'o')
-                            }
-
-                            $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
-                            $memberAdded++ | Out-Null
-                            $i++ | Out-Null
-                        }
-                        else {
-                            Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
-                            $action.repoInfo.archived = $repo_archived
-                            $action.repoInfo.disabled = $repo_disabled
-                            $action.repoInfo.updated_at = $repo_updated_at
-                            $action.repoInfo.latest_release_published_at = $latest_release_published_at
-                            $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
-                            $memberUpdate++ | Out-Null
-                        }
+                    $repoData = $graphqlEntry.Data
+                    $repo_archived = $repoData.isArchived
+                    $repo_disabled = $repoData.isDisabled
+                    $repo_updated_at = $repoData.updatedAt
+                    if ($repoData.latestRelease) {
+                        $latest_release_published_at = $repoData.latestRelease.publishedAt
                     }
                 }
-                catch {
-                    $errorMsg = $_.Exception.Message
-                    Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $errorMsg"
-                    
-                    # Track upstream repo 404 errors
-                    if (Is404Error -errorMessage $errorMsg) {
-                        $script:errorCounts.UpstreamRepo404++
-                        $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
-                    }
-                    else {
-                        $script:errorCounts.OtherErrors++
-                        $script:errorDetails.OtherErrors += "$owner/$repo : $errorMsg"
-                    }
-                    
-                    # Check if our forked copy exists
+                else {
+                    Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)] via REST fallback. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                     try {
-                        $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
-                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -hideFailedCall $true -access_token $accessToken
-                        if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
-                            Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
-                        }
-                        else {
-                            Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
+                        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+                        if ($statusCode -and ($statusCode -eq "NotFound")) {
+                            $action.upstreamFound = $false
+                            # todo: remove this repo from the list (and push it back into the original actions list!)
+                            $actionNoLongerExists = @{
+                                action = $($action.name)
+                                owner = $owner
+                                repo = $repo
+                            }
+                            $originalRepoDoesNotExists.Add($actionNoLongerExists) | Out-Null
+                            continue
                         }
                     }
                     catch {
-                        $forkErrorMsg = $_.Exception.Message
-                        Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $forkErrorMsg"
-                        
-                        # Track fork 404 errors
-                        if (Is404Error -errorMessage $forkErrorMsg) {
-                            $script:errorCounts.ForkRepo404++
-                            $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+                        $errorMsg = $_.Exception.Message
+                        Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $errorMsg"
+
+                        # Track upstream repo 404 errors
+                        if (Is404Error -errorMessage $errorMsg) {
+                            $script:errorCounts.UpstreamRepo404++
+                            $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
                         }
+                        else {
+                            $script:errorCounts.OtherErrors++
+                            $script:errorDetails.OtherErrors += "$owner/$repo : $errorMsg"
+                        }
+
+                        # Check if our forked copy exists
+                        try {
+                            $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
+                            $forkResponse = ApiCall -method GET -url $forkCheckUrl -hideFailedCall $true -access_token $accessToken
+                            if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
+                                Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
+                            }
+                            else {
+                                Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
+                            }
+                        }
+                        catch {
+                            $forkErrorMsg = $_.Exception.Message
+                            Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $forkErrorMsg"
+
+                            # Track fork 404 errors
+                            if (Is404Error -errorMessage $forkErrorMsg) {
+                                $script:errorCounts.ForkRepo404++
+                                $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+                            }
+                        }
+                        # continue with next one, repo_updated_at stays $null so the block below is skipped
                     }
-                    # continue with next one
+                }
+
+                if ($repo_updated_at) {
+                    if (!$hasField) {
+                        Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
+                        $repoInfo = @{
+                            archived = $repo_archived
+                            disabled = $repo_disabled
+                            updated_at = $repo_updated_at
+                            latest_release_published_at = $latest_release_published_at
+                            lastFetched = (Get-Date -Format 'o')
+                        }
+
+                        $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                        $memberAdded++ | Out-Null
+                        $i++ | Out-Null
+                    }
+                    else {
+                        Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
+                        $action.repoInfo.archived = $repo_archived
+                        $action.repoInfo.disabled = $repo_disabled
+                        $action.repoInfo.updated_at = $repo_updated_at
+                        $action.repoInfo.latest_release_published_at = $latest_release_published_at
+                        $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
+                        $memberUpdate++ | Out-Null
+                    }
                 }
             }
 
@@ -1938,6 +2058,27 @@ function GetMoreInfo {
     if ($dockerBaseImageInfoAdded -gt 0) {
         $summaryOutput += "`nDocker base image information added for [$(DisplayIntWithDots $dockerBaseImageInfoAdded)] actions"
     }
+
+    # GraphQL batch stats: repos refreshed per GraphQL point spent vs the REST-call
+    # equivalent that would have been made through GetRepoInfo (1 call for repo info +
+    # 1 call for latest release, per repo).
+    if ($graphqlStats.ReposRequested -gt 0) {
+        $graphqlSummary = "`n`n## GraphQL Batch Metadata Refresh`n`n"
+        $graphqlSummary += "| Metric | Count |`n"
+        $graphqlSummary += "| --- | --- |`n"
+        $graphqlSummary += "| Batch queries executed | $(DisplayIntWithDots $graphqlStats.BatchCount) |`n"
+        $graphqlSummary += "| Repos requested | $(DisplayIntWithDots $graphqlStats.ReposRequested) |`n"
+        $graphqlSummary += "| Repos refreshed | $(DisplayIntWithDots $graphqlStats.ReposRefreshed) |`n"
+        $graphqlSummary += "| Repos not found (deleted/renamed) | $(DisplayIntWithDots $graphqlStats.ReposNotFound) |`n"
+        $graphqlSummary += "| GraphQL points spent | $(DisplayIntWithDots $graphqlStats.TotalCost) |`n"
+        $graphqlSummary += "| Equivalent REST calls avoided | $(DisplayIntWithDots $graphqlStats.RestCallsAvoided) |`n"
+        if ($graphqlStats.TotalCost -gt 0) {
+            $reposPerPoint = [math]::Round($graphqlStats.ReposRefreshed / $graphqlStats.TotalCost, 2)
+            $graphqlSummary += "| Repos refreshed per GraphQL point | $reposPerPoint |`n"
+        }
+        $summaryOutput += $graphqlSummary
+    }
+
     Write-Message -message $summaryOutput -logToSummary $true
 
     Write-Host "Starting the cleanup with [$($existingForks.Count)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
