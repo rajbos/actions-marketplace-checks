@@ -238,6 +238,7 @@ jobs:
         run: |
           . ./.github/workflows/library.ps1
           Install-ModuleWithRetry -ModuleName "powershell-yaml"
+          Install-ModuleWithRetry -ModuleName "PSGraphQL"
 
       - name: Process repo info chunk ${{ matrix.chunk-id }}
         shell: pwsh

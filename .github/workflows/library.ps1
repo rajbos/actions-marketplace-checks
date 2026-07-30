@@ -1991,6 +1991,167 @@ function GetRepoReleases {
     return $response
 }
 
+function Invoke-GraphQLRepoMetadataBatch {
+    <#
+    .SYNOPSIS
+        Fetches metadata for a batch of repositories in a single GraphQL query.
+
+    .DESCRIPTION
+        Uses GraphQL aliases to fetch basic metadata (archived/disabled/pushedAt/updatedAt/
+        diskUsage/stargazerCount/defaultBranchRef), fundingLinks, latestRelease and a page of
+        recent tag refs for up to ~50-100 repos in a single request. GraphQL has its own
+        rate-limit pool (points based, separate from REST), so this is used to offload work
+        that would otherwise cost one REST call per repo per field.
+
+        Missing or renamed repos come back with a null repository for their alias and a
+        matching entry in the top-level `errors` array (`path[0]` equal to the alias). Those
+        are surfaced as `NotFound = $true` on the result entry so callers can apply the same
+        handling as a REST 404, without treating the whole batch as failed.
+
+    .PARAMETER RepoPairs
+        Array of objects/hashtables with Owner, Repo and Name properties. Name is the
+        status.json fork name used as the lookup key in the returned Results hashtable.
+
+    .PARAMETER accessToken
+        GitHub token (App installation token) used for the request.
+
+    .PARAMETER tagLimit
+        Number of most-recent tag refs to request per repo. GraphQL's refs connection has no
+        commit-date ordering, so this returns the last N tags in alphabetical order - a
+        best-effort recency signal, not a guaranteed "most recently created" list.
+
+    .OUTPUTS
+        Hashtable with:
+        - Results: hashtable keyed by Name, each value @{ Owner; Repo; Name; Data; NotFound; Errors }
+        - RateLimit: @{ cost; remaining; resetAt; limit } from the query's rateLimit field, or $null
+        - Failed: $true if the whole request failed (network/auth error), in which case callers
+          should fall back to REST for every repo in the batch
+    #>
+    Param (
+        [Parameter(Mandatory=$true)]
+        [AllowEmptyCollection()]
+        [array] $RepoPairs,
+        [Alias('access_token')]
+        $accessToken = $env:GITHUB_TOKEN,
+        [int] $tagLimit = 5
+    )
+
+    $emptyResult = @{ Results = @{}; RateLimit = $null; Failed = $false }
+    if ($null -eq $RepoPairs -or $RepoPairs.Count -eq 0) {
+        return $emptyResult
+    }
+
+    $aliasMap = @{}
+    $variableDefs = @()
+    $queryParts = @()
+    $variables = @{}
+
+    $i = 0
+    foreach ($pair in $RepoPairs) {
+        if ([string]::IsNullOrWhiteSpace($pair.Owner) -or [string]::IsNullOrWhiteSpace($pair.Repo)) {
+            $i++
+            continue
+        }
+
+        $alias = "r$i"
+        $ownerVar = "owner$i"
+        $nameVar = "name$i"
+        $aliasMap[$alias] = $pair
+
+        $variableDefs += ('${0}: String!, ${1}: String!' -f $ownerVar, $nameVar)
+        $variables[$ownerVar] = $pair.Owner
+        $variables[$nameVar] = $pair.Repo
+
+        $queryParts += (@'
+  {0}: repository(owner: ${1}, name: ${2}) {{
+    isArchived
+    isDisabled
+    pushedAt
+    updatedAt
+    diskUsage
+    stargazerCount
+    defaultBranchRef {{ name target {{ oid }} }}
+    fundingLinks {{ platform url }}
+    latestRelease {{ tagName publishedAt }}
+    refs(refPrefix: "refs/tags/", last: {3}) {{
+      nodes {{ name target {{ oid }} }}
+    }}
+  }}
+'@ -f $alias, $ownerVar, $nameVar, $tagLimit)
+
+        $i++
+    }
+
+    if ($aliasMap.Count -eq 0) {
+        return $emptyResult
+    }
+
+    $query = "query(" + ($variableDefs -join ", ") + ") {`n" + ($queryParts -join "`n") + "`n  rateLimit { cost remaining resetAt limit }`n}"
+    $variablesJson = $variables | ConvertTo-Json -Compress
+
+    $uri = "https://api.github.com/graphql"
+    $requestHeaders = @{
+        Authorization = GetBasicAuthenticationHeader -access_token $accessToken
+    }
+
+    try {
+        $response = (Invoke-GraphQLQuery -Query $query -Variables $variablesJson -Uri $uri -Headers $requestHeaders -Raw | ConvertFrom-Json)
+    }
+    catch {
+        Write-Host "GraphQL batch request failed for [$($aliasMap.Count)] repos: $($_.Exception.Message)"
+        return @{ Results = @{}; RateLimit = $null; Failed = $true }
+    }
+
+    $rateLimitInfo = $null
+    if ($null -ne $response.data -and $null -ne $response.data.rateLimit) {
+        $rateLimitInfo = @{
+            cost = $response.data.rateLimit.cost
+            remaining = $response.data.rateLimit.remaining
+            resetAt = $response.data.rateLimit.resetAt
+            limit = $response.data.rateLimit.limit
+        }
+
+        if ($rateLimitInfo.remaining -lt 500) {
+            Write-Warning "GraphQL rate limit is low: [$($rateLimitInfo.remaining)] points remaining, resets at [$($rateLimitInfo.resetAt)]"
+        }
+    }
+
+    # Map per-alias errors (missing/renamed repos come back as data.<alias> = null with a
+    # matching entry in the top-level errors array whose path[0] is the alias)
+    $errorsByAlias = @{}
+    if ($null -ne $response.errors) {
+        foreach ($err in $response.errors) {
+            if ($null -ne $err.path -and $err.path.Count -gt 0) {
+                $errAlias = "$($err.path[0])"
+                if (-not $errorsByAlias.ContainsKey($errAlias)) {
+                    $errorsByAlias[$errAlias] = @()
+                }
+                $errorsByAlias[$errAlias] += $err
+            }
+        }
+    }
+
+    $results = @{}
+    foreach ($alias in $aliasMap.Keys) {
+        $pair = $aliasMap[$alias]
+        $repoData = $null
+        if ($null -ne $response.data) {
+            $repoData = $response.data.$alias
+        }
+
+        $results[$pair.Name] = @{
+            Owner = $pair.Owner
+            Repo = $pair.Repo
+            Name = $pair.Name
+            Data = $repoData
+            NotFound = ($null -eq $repoData)
+            Errors = if ($errorsByAlias.ContainsKey($alias)) { $errorsByAlias[$alias] } else { @() }
+        }
+    }
+
+    return @{ Results = $results; RateLimit = $rateLimitInfo; Failed = $false }
+}
+
 function SplitUrlLastPart {
     Param (
         $url
