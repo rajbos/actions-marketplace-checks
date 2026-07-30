@@ -78,7 +78,8 @@ foreach ($item in $ready) {
 
     if ($createResult) {
         Write-Host "Mirror created for [$mirrorName], attempting sync"
-        $sync = SyncMirrorWithUpstream -owner $forkOrg -repo $mirrorName -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+        # A freshly created mirror has no cached SHA to trust yet
+        $sync = SyncMirrorWithUpstream -owner $forkOrg -repo $mirrorName -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -storedMirrorSha $null
         $syncSuccess = if ($sync -is [hashtable]) { $sync.success } else { $sync.success }
         if ($syncSuccess) {
             Write-Host "Successfully synced [$mirrorName]; removing from queue"
