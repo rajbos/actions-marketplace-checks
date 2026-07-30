@@ -1,0 +1,302 @@
+# AI-generated `aiDescription` field, generated from README + action.yml/yaml
+# content using a small local language model (SLM) run via Ollama.
+#
+# This is a NEW, separate field from the real `description` field parsed
+# straight from action.yml (owned by description-backfill.yml/.ps1) - it is
+# never overwritten or confused with it. Motivation: description-backfill
+# found only ~8% of missing-description candidates actually have one in
+# action.yml (91% genuinely have none there), and READMEs carry much more
+# signal than the sparse action.yml `description:` field.
+#
+# Runs on its own dedicated 5th GitHub App (APPLICATION_ID_5 /
+# AUTOMATION_APP_KEY5, installed on the same actions-marketplace-validations
+# org) so it never contends with the other hourly workflows or with
+# description-backfill's 4th app - this workload adds its own README + file
+# fetch API calls per repo on top of the existing per-run budgets.
+#
+# The Ollama model is started once as a service container for the whole job
+# (mirrors rajbos/github-azure-devops-marketplace-extension-news's
+# PostNews job) and reused for one HTTP call per repo in the processing loop,
+# instead of loading a model per repo.
+
+name: AI description generation
+
+on:
+  push:
+    paths:
+      - .github/workflows/ai-description-generation.yml
+      - .github/workflows/ai-description-generation.ps1
+      - .github/workflows/action-ai-description-prompt.txt
+      - .github/actions/setup-ollama/action.yml
+
+  schedule:
+     # Runs every 6 hours, offset from the other hourly/6-hourly workflows
+     # (analyze :05, releaseInfo-refresh :20, update-mirrors :35, repoInfo :50,
+     # description-backfill :15) so it never starts in the same minute as any
+     # of them.
+     - cron: '40 */6 * * *'
+
+  workflow_dispatch:
+
+# Prevent concurrent runs of this workflow - it's a single long-running job.
+concurrency:
+  group: ai-description-generation-workflow
+  cancel-in-progress: false
+
+env:
+  # Isolated 5th GitHub App - deliberately NOT setting APP_ID_2/APP_ID_3 here
+  # so this workflow can never fall back to (and contend for) the other 4
+  # apps used by analyze/releaseInfo-refresh/update-mirrors/repoInfo/
+  # description-backfill.
+  APP_ID: ${{ vars.APPLICATION_ID_5 }}
+  APP_ORGANIZATION: actions-marketplace-validations
+  OLLAMA_MODEL: qwen2.5-coder:3b
+
+jobs:
+  process-ai-description-generation:
+    runs-on: ubuntu-latest
+    # Hard backstop below GitHub-hosted runners' 6 hour job cap. The script's
+    # own ~340 minute internal guard should always stop it before this fires;
+    # this is only a safety net if that guard is ever bypassed.
+    timeout-minutes: 355
+    services:
+      ollama:
+        image: ollama/ollama:0.23.4
+        ports:
+          - 11434:11434
+        volumes:
+          - /home/runner/.ollama:/root/.ollama
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ollama
+        uses: ./.github/actions/setup-ollama
+        with:
+          model: ${{ env.OLLAMA_MODEL }}
+
+      - name: Download status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - shell: pwsh
+        name: Generate AI descriptions
+        env:
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY5 }}
+        run: |
+          . "${{ github.workspace }}/.github/workflows/library.ps1"
+          Install-ModuleWithRetry -ModuleName "powershell-yaml"
+          & "${{ github.workspace }}/.github/workflows/ai-description-generation.ps1"
+
+      - name: Upload updated status.json as artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: status-updated
+          path: status.json
+          retention-days: 1
+
+  upload-changes:
+    name: Consolidate and upload changes to blob storage
+    needs: process-ai-description-generation
+    if: always()
+    runs-on: ubuntu-latest
+    concurrency:
+      group: repo-state-updates
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download latest status.json from blob storage
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Get-StatusFromBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to download status.json from blob storage"
+            exit 1
+          }
+
+      - name: Download updated status from previous job
+        uses: actions/download-artifact@v8
+        with:
+          name: status-updated
+          path: updated-data/
+
+      - name: Merge changes from processing job
+        id: merge
+        shell: pwsh
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "# Consolidating AI Description Generation Changes" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          # Tracks whether we actually merged any updated forks - stays $false
+          # when the processing job produced no output (e.g. it failed before
+          # writing any descriptions), so the API upload step can skip itself
+          # instead of always spending an upload call for nothing.
+          $hasChanges = $false
+
+          # Load current status from blob storage
+          try {
+              $jsonContent = Get-Content status.json -Raw
+              $jsonContent = $jsonContent -replace '^\uFEFF', ''
+              $currentStatus = $jsonContent | ConvertFrom-Json
+          } catch {
+              Write-Error "Failed to parse current status.json: $($_.Exception.Message)"
+              exit 1
+          }
+
+          Write-Message -message "Loaded current status from blob storage with [$(DisplayIntWithDots $currentStatus.Count)] forks" -logToSummary $true
+
+          # Load updated status from processing job
+          $updatedStatusFile = "updated-data/status.json"
+          if (Test-Path $updatedStatusFile) {
+              try {
+                  $updatedContent = Get-Content $updatedStatusFile -Raw
+                  $updatedContent = $updatedContent -replace '^\uFEFF', ''
+                  $updatedStatus = $updatedContent | ConvertFrom-Json
+                  Write-Message -message "Loaded updated status from processing job with [$(DisplayIntWithDots $updatedStatus.Count)] forks" -logToSummary $true
+              } catch {
+                  Write-Error "Failed to parse updated status.json: $($_.Exception.Message)"
+                  exit 1
+              }
+
+              # Create hashtable for fast lookup
+              $statusByName = @{}
+              foreach ($item in $currentStatus) {
+                  $statusByName[$item.name] = $item
+              }
+
+              # Merge updates - copy all properties from updated forks
+              $mergeCount = 0
+              foreach ($updatedFork in $updatedStatus) {
+                  if ($statusByName.ContainsKey($updatedFork.name)) {
+                      # Update existing entry - copy all properties from updated fork
+                      $existing = $statusByName[$updatedFork.name]
+
+                      foreach ($prop in $updatedFork.PSObject.Properties) {
+                          $propName = $prop.Name
+                          $propValue = $prop.Value
+
+                          $existingProp = $existing.PSObject.Properties[$propName]
+                          if ($existingProp) {
+                              $existingProp.Value = $propValue
+                          } else {
+                              $existing | Add-Member -Name $propName -Value $propValue -MemberType NoteProperty -Force
+                          }
+                      }
+                      $mergeCount++
+                  } else {
+                      # Add new entry
+                      $statusByName[$updatedFork.name] = $updatedFork
+                      $mergeCount++
+                  }
+              }
+
+              Write-Message -message "Merged [$(DisplayIntWithDots $mergeCount)] fork updates into current status" -logToSummary $true
+
+              # Convert back to array and save
+              $mergedStatus = $statusByName.Values
+              Write-Message -message "Saving merged status with [$(DisplayIntWithDots $mergedStatus.Count)] forks" -logToSummary $true
+              SaveStatus -existingForks $mergedStatus
+
+              $hasChanges = $mergeCount -gt 0
+          } else {
+              Write-Message -message "No updated status.json found from processing job - nothing to merge (the processing job likely failed before producing output)" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "✓ Consolidation complete" -logToSummary $true
+
+          "has-changes=$($hasChanges.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Setup Node.js for API updates
+        if: steps.merge.outputs.has-changes == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devops-actions'
+
+      - name: Install npm package for API updates
+        if: steps.merge.outputs.has-changes == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+        run: |
+          npm install @devops-actions/actions-marketplace-client
+
+      - name: Update API storage with consolidated data
+        if: always() && steps.merge.outputs.has-changes == 'true'
+        shell: pwsh
+        env:
+          AZ_FUNCTION_URL: ${{ vars.AZ_FUNCTION_URL }}
+          AZ_FUNCTION_TOKEN: ${{ secrets.AZ_FUNCTION_TOKEN }}
+        run: |
+          . ./.github/workflows/library.ps1
+
+          Write-Message -message "" -logToSummary $true
+          Write-Message -message "## API Storage Update" -logToSummary $true
+          Write-Message -message "" -logToSummary $true
+
+          if ([string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_URL) -or [string]::IsNullOrWhiteSpace($env:AZ_FUNCTION_TOKEN)) {
+            Write-Message -message "⚠️ API credentials not available - skipping API update" -logToSummary $true
+            exit 0
+          }
+
+          try {
+            $jsonContent = Get-Content status.json -Raw
+            $jsonContent = $jsonContent -replace '^\uFEFF', ''
+            $status = $jsonContent | ConvertFrom-Json
+          } catch {
+            Write-Message -message "❌ Failed to load status.json: $($_.Exception.Message)" -logToSummary $true
+            exit 0
+          }
+
+          # A single generation run can update far more than the usual 100
+          # records per hourly run, so push a much larger batch here to avoid
+          # newly-generated descriptions sitting unpublished for days behind
+          # the other workflows' smaller per-run caps.
+          $numberOfRepos = 10000
+          Write-Host "Uploading up to $numberOfRepos actions to API storage..."
+          $result = Invoke-ApiUpsert -status $status -apiUrl $env:AZ_FUNCTION_URL -functionKey $env:AZ_FUNCTION_TOKEN -numberOfRepos $numberOfRepos
+
+          if ($result.error) {
+            Write-Message -message "⚠️ API update encountered an error: $($result.error)" -logToSummary $true
+          } else {
+            $totalUpdates = $result.createdCount + $result.updatedCount
+            Write-Message -message "| Status | Count |" -logToSummary $true
+            Write-Message -message "|--------|------:|" -logToSummary $true
+            Write-Message -message "| ✅ Successful | $($result.successCount) |" -logToSummary $true
+            Write-Message -message "| ❌ Failed | $($result.failCount) |" -logToSummary $true
+            Write-Message -message "| 🆕 Created | $($result.createdCount) |" -logToSummary $true
+            Write-Message -message "| 📝 Updated | $($result.updatedCount) |" -logToSummary $true
+            Write-Message -message "| ⏭️ Skipped | $($result.skippedCount) |" -logToSummary $true
+            Write-Message -message "" -logToSummary $true
+            Write-Message -message "✓ Total updates to API: **$totalUpdates** (created + updated)" -logToSummary $true
+          }
+
+          Write-Message -message "" -logToSummary $true
+
+      - name: Upload status.json to blob storage
+        if: always()
+        shell: pwsh
+        env:
+          BLOB_SAS_TOKEN: "${{ secrets.BLOB_SAS_TOKEN }}"
+        run: |
+          . ./.github/workflows/library.ps1
+          $result = Set-StatusToBlobStorage -sasToken $env:BLOB_SAS_TOKEN
+          if (-not $result) {
+            Write-Error "Failed to upload status.json to blob storage"
+            exit 1
+          }
