@@ -311,7 +311,7 @@ jobs:
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
       - name: Setup Node.js for API updates
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'
