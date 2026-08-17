@@ -48,7 +48,9 @@ env:
   # so this workflow can never fall back to (and contend for) the other 4
   # apps used by analyze/releaseInfo-refresh/update-mirrors/repoInfo/
   # description-backfill.
-  APP_ID: ${{ vars.APPLICATION_ID_5 }}
+  
+  # update 20260817: key and id_5 where never created, so this all failed. Running with ID 4 for now.
+  APP_ID: ${{ vars.APPLICATION_ID_4 }}
   APP_ORGANIZATION: actions-marketplace-validations
   OLLAMA_MODEL: qwen2.5-coder:3b
 
@@ -89,7 +91,7 @@ jobs:
       - shell: pwsh
         name: Generate AI descriptions
         env:
-          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY5 }}
+          APPLICATION_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_KEY4 }}
         run: |
           . "${{ github.workspace }}/.github/workflows/library.ps1"
           Install-ModuleWithRetry -ModuleName "powershell-yaml"
