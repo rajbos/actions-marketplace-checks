@@ -8,8 +8,8 @@
 # action.yml (91% genuinely have none there), and READMEs carry much more
 # signal than the sparse action.yml `description:` field.
 #
-# Runs on its own dedicated 5th GitHub App (APPLICATION_ID_5 /
-# AUTOMATION_APP_KEY5, installed on the same actions-marketplace-validations
+# Runs on its own dedicated 4th GitHub App (APPLICATION_ID_4 /
+# AUTOMATION_APP_KEY4, installed on the same actions-marketplace-validations
 # org) so it never contends with the other hourly workflows or with
 # description-backfill's 4th app - this workload adds its own README + file
 # fetch API calls per repo on top of the existing per-run budgets.

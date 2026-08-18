@@ -79,12 +79,12 @@ $env:GITHUB_TOKEN = $accessToken
 # call instead of discovering it thousands of failed candidates later.
 try {
     $rateLimitCheck = Invoke-RestMethod -Uri "https://api.github.com/rate_limit" -Headers @{
-        Authorization = "******"
+        Authorization = "Bearer $accessToken"
         Accept        = "application/vnd.github+json"
     } -Method GET -ErrorAction Stop
 }
 catch {
-    Write-Error "Startup credential check failed: could not call GET /rate_limit with the obtained token ($($_.Exception.Message)). Refusing to start AI description generation - verify APP_ID/APPLICATION_PRIVATE_KEY (AUTOMATION_APP_KEY5) are correct and the app is installed on [$($env:APP_ORGANIZATION)]."
+    Write-Error "Startup credential check failed: could not call GET /rate_limit with the obtained token ($($_.Exception.Message)). Refusing to start AI description generation - verify APP_ID/APPLICATION_PRIVATE_KEY (AUTOMATION_APP_KEY4) are correct and the app is installed on [$($env:APP_ORGANIZATION)]."
     exit 1
 }
 
@@ -94,7 +94,7 @@ if ($coreLimit -le 60) {
     # 60/hour is the standard unauthenticated limit - seeing exactly that
     # means the token did not actually authenticate as the App/installation,
     # even though we received a non-empty token string.
-    Write-Error "Startup credential check failed: authenticated core rate limit is only [$coreLimit] requests/hour, which means the token is not actually authenticated as the GitHub App (this is the standard unauthenticated limit). Refusing to start AI description generation - verify APP_ID/APPLICATION_PRIVATE_KEY (AUTOMATION_APP_KEY5) are correct and the app is installed on [$($env:APP_ORGANIZATION)]."
+    Write-Error "Startup credential check failed: authenticated core rate limit is only [$coreLimit] requests/hour, which means the token is not actually authenticated as the GitHub App (this is the standard unauthenticated limit). Refusing to start AI description generation - verify APP_ID/APPLICATION_PRIVATE_KEY (AUTOMATION_APP_KEY4) are correct and the app is installed on [$($env:APP_ORGANIZATION)]."
     exit 1
 }
 
