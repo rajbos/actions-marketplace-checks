@@ -55,7 +55,7 @@ if ([string]::IsNullOrWhiteSpace($accessToken)) {
     # ID/path pasted by mistake) before ever attempting a token exchange or
     # processing a single candidate.
     if (-not (Test-IsLikelyGitHubAppPemKey -pemKey $env:APPLICATION_PRIVATE_KEY)) {
-        Write-Error "APPLICATION_PRIVATE_KEY does not look like a PEM-encoded GitHub App private key (missing a '-----BEGIN ... PRIVATE KEY-----' header, or too short). Refusing to start AI description generation - update the AUTOMATION_APP_KEY5 secret with the real private key contents before re-running."
+        Write-Error "APPLICATION_PRIVATE_KEY does not look like a PEM-encoded GitHub App private key (missing a '-----BEGIN ... PRIVATE KEY-----' header, or too short). Refusing to start AI description generation - update the AUTOMATION_APP_KEY secret with the real private key contents before re-running."
         exit 1
     }
 
