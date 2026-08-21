@@ -21,23 +21,46 @@ on:
   workflow_dispatch:
     inputs:
       numberOfReposRepoInfo:
-        description: 'Number of repos for repo info (default: 150)'
+        description: 'Number of repos for repo info (default: 600)'
         required: false
-        default: '150'
+        default: '600'
       numberOfChunks:
-        description: 'Number of parallel chunks (default: 10)'
+        description: 'Number of parallel chunks (default: 6)'
         required: false
-        default: '10'
+        default: '6'
 
-# Prevent concurrent runs of this workflow to reduce rate limit pressure
+# Prevent concurrent runs of this workflow to reduce rate limit pressure.
+#
+# cancel-in-progress stays false on purpose. Each repo-info chunk uploads a partial status
+# artifact that only the consolidate job merges into blob storage, and GitHub does not start
+# a queued job once a run is cancelled - so cancelling in progress would discard every
+# chunk's completed API work rather than saving it. The schedule stays hourly because
+# dropping to 6 chunks shortens the matrix (fewer jobs competing for runners) and 8 of the
+# last 30 runs were cancelled rather than 13 as on repoInfo.yml - the overlap here is milder,
+# so spacing the schedule is not yet warranted. Revisit if cancellations climb.
 concurrency:
   group: analyze-workflow
   cancel-in-progress: false
   
 env:
-  numberOfReposRepoInfo: 150
-  # Reduced from 25 to 10 to decrease rate limit pressure when running concurrently with other workflows
-  numberOfChunks: 10
+  # 600 repos over 6 chunks = 100 repos per chunk, which is exactly two full GraphQL metadata
+  # batches (batch size 50 in repoInfo.ps1) instead of the ~13 repos per chunk that did not
+  # even fill one batch.
+  #
+  # Sizing, measured 2026-08-21 from run 32496518583: marginal cost is ~7 seconds and ~0.7
+  # core REST calls per repo (chunk 0 refreshed 13 repos using 9 REST calls), and repoInfo.ps1
+  # stops its loop at 50 minutes. The binding constraint is NOT the API budget - it is a
+  # per-job startup phase ("Updating actions with split RepoUrl") that measured 23-60 minutes
+  # and runs before that 50-minute clock, leaving each chunk only 0-27 minutes of usable time.
+  # 100 repos (~12 minutes of work) is sized to fill the usable budget of a fast chunk instead
+  # of the ~13 that left ~35 minutes idle. Slow chunks stay preamble-bound - see the PR for
+  # why that startup phase is the next thing to fix.
+  #
+  # Chunk count went 10 -> 6 deliberately: every chunk job downloads the whole ~102 MB
+  # status.json, so fewer, fatter chunks move more repos per run while *reducing* blob
+  # traffic (10 x 102 MB -> 6 x 102 MB per run). See issue #246.
+  numberOfReposRepoInfo: 600
+  numberOfChunks: 6
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}

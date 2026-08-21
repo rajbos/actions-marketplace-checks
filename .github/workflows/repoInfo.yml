@@ -11,9 +11,18 @@ on:
       - .github/workflows/repoInfo.ps1
 
   schedule:
-     #- cron: '*/60 * * * *'
-     # Run at minute 50 to avoid overlap with Analyze (minute 5) and Update Mirrors (minute 35)
-     - cron: '50 */1 * * *'
+     # Every 2 hours, not hourly. The single process-repo-info job measured 95-126 minutes
+     # (mean ~110) across 2026-08-21, so against an hourly cron it was still running when the
+     # next run fired. A concurrency group holds only one pending run, so the queued run was
+     # cancelled by the run after it: 13 of the last 30 runs (43%) never executed at all.
+     #
+     # Flipping cancel-in-progress to true would be worse, not better. The partial results are
+     # only written to blob storage by the separate upload-changes job, and GitHub does not
+     # start queued jobs once a run is cancelled - so cancelling mid-run would throw away up
+     # to two hours of completed API work, and could interrupt upload-changes while it is
+     # writing the ~102 MB status.json. Spacing the schedule keeps cancel-in-progress: false
+     # and loses nothing.
+     - cron: '50 */2 * * *'
 
   workflow_dispatch:
 
@@ -23,7 +32,14 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  numberOfReposToDo: 100 
+  # 100 -> 150. This workflow now runs half as often, so 150 keeps its nominal contribution at
+  # 75 repos/hour versus a *measured* effective 57/hour before (100 repos x the 57% of runs
+  # that actually completed) - a small net gain, with every run now actually finishing.
+  #
+  # Deliberately not raised further: this workflow and analyze.yml both select "stalest
+  # repoInfo first", so their selections overlap. The throughput increase belongs on
+  # analyze.yml, which parallelises across chunks; widening both would mostly duplicate work.
+  numberOfReposToDo: 150
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
