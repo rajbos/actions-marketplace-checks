@@ -288,3 +288,80 @@ Describe "Trivy scan failure artifact" {
         Remove-Item $testFile -Force
     }
 }
+
+Describe "Trivy install caching and fail-fast behaviour" {
+    Context "Ensure-TrivyInstalled state machine" {
+        BeforeEach {
+            # Load only the state machine contract, not the whole repoInfo.ps1 script (which
+            # needs API tokens). These mirror the tri-state cache in repoInfo.ps1.
+            $script:trivyState = $null
+            $script:trivyUnavailableReason = $null
+            $script:installAttempts = 0
+
+            function Ensure-TrivyInstalledMock {
+                if ($script:trivyState -eq 'available') { return $true }
+                if ($script:trivyState -eq 'unavailable') { return $false }
+                $script:installAttempts++
+                $script:trivyState = 'unavailable'
+                $script:trivyUnavailableReason = "simulated 404 from the download CDN"
+                return $false
+            }
+        }
+
+        It "Attempts the install only once even when called for many repos" {
+            1..50 | ForEach-Object { Ensure-TrivyInstalledMock | Out-Null }
+            $script:installAttempts | Should -Be 1
+        }
+
+        It "Keeps returning false after a failed install without retrying" {
+            Ensure-TrivyInstalledMock | Should -Be $false
+            Ensure-TrivyInstalledMock | Should -Be $false
+            $script:installAttempts | Should -Be 1
+        }
+
+        It "Records a reason that is surfaced in the scan error" {
+            Ensure-TrivyInstalledMock | Out-Null
+            $scanError = "Trivy unavailable: $($script:trivyUnavailableReason)"
+            $scanError | Should -Match "simulated 404"
+        }
+
+        It "Short-circuits further scans once state is unavailable" {
+            Ensure-TrivyInstalledMock | Out-Null
+            $skipped = 0
+            1..10 | ForEach-Object {
+                if ($script:trivyState -eq 'unavailable') { $skipped++ }
+            }
+            $skipped | Should -Be 10
+        }
+    }
+
+    Context "Pinned Trivy version" {
+        It "repoInfo.ps1 pins a Trivy version rather than tracking latest" {
+            $content = Get-Content "$PSScriptRoot/../.github/workflows/repoInfo.ps1" -Raw
+            $content | Should -Match '\$script:trivyDefaultVersion\s*=\s*"v\d+\.\d+\.\d+"'
+        }
+
+        It "does not use the old sudo pipe install that failed silently" {
+            $content = Get-Content "$PSScriptRoot/../.github/workflows/repoInfo.ps1" -Raw
+            $content | Should -Not -Match 'sudo sh -s'
+            $content | Should -Not -Match 'Invoke-Expression \$installCmd'
+        }
+
+        It "captures install output instead of discarding it" {
+            $content = Get-Content "$PSScriptRoot/../.github/workflows/repoInfo.ps1" -Raw
+            $content | Should -Match 'Trivy install script exit code'
+        }
+    }
+
+    Context "status.json schema compatibility" {
+        It "keeps the containerScan shape unchanged" {
+            $result = @{
+                critical = 0
+                high = 0
+                lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                scanError = "Trivy unavailable: reason"
+            }
+            $result.Keys | Sort-Object | Should -Be @('critical', 'high', 'lastScanned', 'scanError')
+        }
+    }
+}

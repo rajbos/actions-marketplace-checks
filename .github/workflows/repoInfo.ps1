@@ -882,6 +882,7 @@ function GetInfo {
         OtherErrors = @()
     }
     $script:trivyScanFailures = @()
+    $script:trivyScansSkipped = 0
 
     # Initialize tracking for summary
     $script:processMetrics = @{
@@ -1347,6 +1348,139 @@ function EnableSecretScanning {
     return $patchResult
 }
 
+# Default Trivy version used when the workflow does not pin one via $env:TRIVY_VERSION.
+# Deliberately pinned for reproducibility. NOTE: Aqua's install script downloads through the
+# get.trivy.dev CDN, which only serves a rolling window of recent releases - old pins stop
+# resolving (HTTP 404) and the install silently breaks. That is exactly how v0.48.0 rotted.
+# When bumping, verify the version is still served before merging.
+$script:trivyDefaultVersion = "v0.74.0"
+
+# Tri-state cache so the install is attempted at most once per process instead of once per repo.
+#   $null          - not attempted yet
+#   'available'    - trivy is on PATH and usable
+#   'unavailable'  - install failed; skip all further scans in this run
+$script:trivyState = $null
+$script:trivyUnavailableReason = $null
+
+function Ensure-TrivyInstalled {
+    <#
+    .SYNOPSIS
+        Makes sure the trivy binary is available, installing it at most once per process.
+
+    .DESCRIPTION
+        Returns $true when trivy can be invoked, $false otherwise. The result is cached in
+        $script:trivyState so a failed install is not retried for every Docker action.
+
+        Unlike the previous implementation this captures stdout, stderr and the exit code of
+        the install and logs them, so a failure is diagnosable instead of silent. The install
+        script is run with -d (debug logging) because it logs HTTP failures at debug priority
+        and otherwise exits 1 with no output at all.
+
+        Installs into a user-writable directory so no sudo (and no sudo stdin handling) is
+        involved.
+    #>
+
+    if ($script:trivyState -eq 'available') { return $true }
+    if ($script:trivyState -eq 'unavailable') { return $false }
+
+    # A failed install leaves $LASTEXITCODE non-zero. The surrounding workflow step exits with
+    # whatever $LASTEXITCODE holds, so leaving it set would fail the whole chunk job and throw
+    # away every repo already processed. Trivy being unavailable is reported loudly in the step
+    # summary instead; it must not abort data collection.
+    $entryExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+
+    # Already on PATH (e.g. installed by the aquasecurity/setup-trivy workflow step)?
+    $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+    if ($trivyPath) {
+        $versionOutput = (& trivy --version 2>&1 | Out-String).Trim()
+        Write-Host "Trivy already available at [$($trivyPath.Source)]: $versionOutput"
+        $script:trivyState = 'available'
+        return $true
+    }
+
+    $requestedVersion = if ($null -ne $env:TRIVY_VERSION -and $env:TRIVY_VERSION.Trim().Length -gt 0) {
+        $env:TRIVY_VERSION.Trim()
+    } else {
+        $script:trivyDefaultVersion
+    }
+
+    Write-Host "Trivy not found on PATH; installing [$requestedVersion] (once for this run)..."
+
+    $installDir = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-bin"
+    $scriptPath = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-install.sh"
+    $installUrl = "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh"
+
+    try {
+        # Step 1: download the install script to a file (no shell pipe involved).
+        $downloadOutput = (& curl -sSfL -o $scriptPath $installUrl 2>&1 | Out-String).Trim()
+        $downloadExit = $LASTEXITCODE
+        if ($downloadExit -ne 0 -or -not (Test-Path $scriptPath)) {
+            $reason = "Could not download the Trivy install script from [$installUrl] (curl exit code [$downloadExit]): $downloadOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        $scriptLength = (Get-Item $scriptPath).Length
+        Write-Host "Downloaded Trivy install script [$scriptLength] bytes to [$scriptPath]"
+
+        # Step 2: run it via bash with -d so download failures are actually reported.
+        $installOutput = (& bash $scriptPath -d -b $installDir $requestedVersion 2>&1 | Out-String).Trim()
+        $installExit = $LASTEXITCODE
+
+        Write-Host "Trivy install script exit code: [$installExit]"
+        Write-Host "Trivy install script output:"
+        Write-Host $installOutput
+
+        $installedBinary = Join-Path $installDir "trivy"
+        if ($installExit -ne 0 -or -not (Test-Path $installedBinary)) {
+            $reason = "Trivy install script failed for version [$requestedVersion] with exit code [$installExit]. Output: $installOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        # Step 3: put it on PATH for the rest of this process and verify.
+        $env:PATH = "$installDir$([System.IO.Path]::PathSeparator)$env:PATH"
+        $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+        if (-not $trivyPath) {
+            $reason = "Trivy install script reported success but [trivy] is still not resolvable on PATH (expected [$installedBinary])"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        $versionOutput = (& trivy --version 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            $reason = "Installed Trivy binary is not runnable (trivy --version exit code [$LASTEXITCODE]): $versionOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        Write-Host "Trivy installed successfully at [$($trivyPath.Source)]: $versionOutput"
+        $script:trivyState = 'available'
+        $global:LASTEXITCODE = $entryExitCode
+        return $true
+    }
+    catch {
+        $reason = "Unexpected error while installing Trivy: $($_.Exception.Message)"
+        Write-Host "ERROR: $reason"
+        $script:trivyState = 'unavailable'
+        $script:trivyUnavailableReason = $reason
+        $global:LASTEXITCODE = $entryExitCode
+        return $false
+    }
+}
+
 function Invoke-TrivyScan {
     <#
     .SYNOPSIS
@@ -1387,21 +1521,11 @@ function Invoke-TrivyScan {
     Write-Host "Running Trivy scan for Docker action [$owner/$repo]"
 
     try {
-        # Check if Trivy is installed
-        $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
-        if (-not $trivyPath) {
-            Write-Host "Installing Trivy..."
-            # Install Trivy on Ubuntu using the install script method (faster and more reliable)
-            $installCmd = "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.48.0"
-            Invoke-Expression $installCmd 2>&1 | Out-Null
-            
-            # Verify installation
-            $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
-            if (-not $trivyPath) {
-                Write-Host "Failed to install Trivy for [$owner/$repo]"
-                $result.scanError = "Trivy installation failed"
-                return $result
-            }
+        # Make sure Trivy is available. This installs at most once per process; if it failed
+        # earlier in this run we bail out immediately instead of re-attempting per repo.
+        if (-not (Ensure-TrivyInstalled)) {
+            $result.scanError = "Trivy unavailable: $($script:trivyUnavailableReason)"
+            return $result
         }
 
         # Create a temporary directory for the scan
@@ -2030,6 +2154,14 @@ function GetMoreInfo {
                     }
                 }
                 
+                # If Trivy could not be installed earlier in this run, stop trying: the install
+                # is process-wide, so retrying it for every Docker action just burns time and
+                # floods the failure list with thousands of identical entries.
+                if ($needsContainerScan -and $script:trivyState -eq 'unavailable') {
+                    $script:trivyScansSkipped++
+                    $needsContainerScan = $false
+                }
+
                 if ($needsContainerScan -and $action.actionType.actionDockerType -eq "Dockerfile") {
                     Write-Host "$i/$max - Running Trivy container scan for [$($owner)/$($repo)]"
                     try {
@@ -2209,6 +2341,21 @@ function GetMoreInfo {
         $stepSummaryOutput += "`n</details>`n"
         
         Write-Message -message $stepSummaryOutput -logToSummary $true
+    }
+
+    # Surface a Trivy install failure loudly. This is infrastructure rot, not a per-repo
+    # problem: when it happens every Docker action goes unscanned and container CVE data
+    # silently goes stale, which is exactly how this went unnoticed for months.
+    if ($script:trivyState -eq 'unavailable') {
+        $trivyAlert = "`n## :rotating_light: Trivy unavailable - container scanning did not run`n`n"
+        $trivyAlert += "Trivy could not be installed, so **no container vulnerability scans ran in this job**.`n`n"
+        $trivyAlert += "Skipped Docker actions that needed a scan: **$($script:trivyScansSkipped)**`n`n"
+        $trivyAlert += "Reason:`n`n" + '```' + "`n$($script:trivyUnavailableReason)`n" + '```' + "`n`n"
+        $trivyAlert += "Container scan data is now going stale. Fix the Trivy install before relying on ``actionType.containerScan``.`n"
+        Write-Message -message $trivyAlert -logToSummary $true
+    }
+    elseif ($script:trivyState -eq 'available') {
+        Write-Host "Trivy was available for this run; container scanning ran normally."
     }
 
     # Write Trivy scan failures to a file for artifact upload

@@ -28,6 +28,7 @@ env:
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
   APP_ORGANIZATION: actions-marketplace-validations
+  TRIVY_VERSION: v0.74.0
 
 jobs:
   process-repo-info:
@@ -78,6 +79,14 @@ jobs:
             Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
+
+      # Install Trivy once per job rather than once per scanned repo. Pinned deliberately:
+      # Aqua's CDN only serves a rolling window of recent releases, so an old pin eventually
+      # 404s. repoInfo.ps1 falls back to installing it itself if this step is ever removed.
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.3.1
+        with:
+          version: ${{ env.TRIVY_VERSION }}
 
       - shell: pwsh
         name: Gotta check 'em all
