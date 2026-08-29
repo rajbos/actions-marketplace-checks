@@ -1393,22 +1393,15 @@ function Ensure-TrivyInstalled {
     $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
     if ($trivyPath) {
         $versionOutput = (& trivy --version 2>&1 | Out-String).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            # Something on PATH resolves to `trivy` but is not actually runnable (corrupted
-            # binary, wrong architecture, etc.). Cache this as unavailable rather than treating
-            # a resolvable command as usable - otherwise every scan for the rest of this run
-            # would keep invoking the same broken binary instead of failing fast once.
-            $reason = "A [trivy] command is on PATH at [$($trivyPath.Source)] but is not runnable (trivy --version exit code [$LASTEXITCODE]): $versionOutput"
-            Write-Host "ERROR: $reason"
-            $script:trivyState = 'unavailable'
-            $script:trivyUnavailableReason = $reason
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Trivy already available at [$($trivyPath.Source)]: $versionOutput"
+            $script:trivyState = 'available'
             $global:LASTEXITCODE = $entryExitCode
-            return $false
+            return $true
         }
-        Write-Host "Trivy already available at [$($trivyPath.Source)]: $versionOutput"
-        $script:trivyState = 'available'
-        $global:LASTEXITCODE = $entryExitCode
-        return $true
+
+        Write-Host "WARNING: A [trivy] command is on PATH at [$($trivyPath.Source)] but is not runnable (trivy --version exit code [$LASTEXITCODE]): $versionOutput"
+        Write-Host "WARNING: Will attempt a fresh install to a temp directory instead."
     }
 
     $requestedVersion = if ($null -ne $env:TRIVY_VERSION -and $env:TRIVY_VERSION.Trim().Length -gt 0) {
