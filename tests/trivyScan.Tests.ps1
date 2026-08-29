@@ -365,3 +365,182 @@ Describe "Trivy install caching and fail-fast behaviour" {
         }
     }
 }
+
+Describe "Ensure-TrivyInstalled (real implementation)" {
+    # Unlike the mock-based tests above, these extract and execute the actual
+    # Ensure-TrivyInstalled function body from repoInfo.ps1 via its AST, so a regression in the
+    # real curl/bash invocation, exit-code handling, or caching logic would actually be caught
+    # here. External commands (curl, bash, trivy) are shadowed with PowerShell functions of the
+    # same name for the duration of each test - command resolution prefers functions over
+    # native executables, so Ensure-TrivyInstalled's calls to them are redirected here without
+    # touching the network or the real trivy binary.
+    BeforeAll {
+        $repoInfoPath = "$PSScriptRoot/../.github/workflows/repoInfo.ps1"
+        $src = Get-Content $repoInfoPath -Raw
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput($src, [ref]$null, [ref]$null)
+        $fnAst = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Ensure-TrivyInstalled' }, $true)
+        if ($fnAst.Count -ne 1) { throw "Expected exactly 1 Ensure-TrivyInstalled function in repoInfo.ps1, found $($fnAst.Count)" }
+        Invoke-Expression $fnAst[0].Extent.Text
+    }
+
+    BeforeEach {
+        $script:trivyState = $null
+        $script:trivyUnavailableReason = $null
+        $script:trivyDefaultVersion = "v9.9.9"
+        # Shadow functions in the tests below are defined as `function global:X` so they are
+        # visible to Ensure-TrivyInstalled (which does not share a scope with the `It` block
+        # that defines them) - they must be removed from the global function table too, or
+        # they leak into later tests and make Get-Command find a stale shadow instead of
+        # nothing.
+        Remove-Item function:curl -ErrorAction SilentlyContinue
+        Remove-Item function:bash -ErrorAction SilentlyContinue
+        Remove-Item function:trivy -ErrorAction SilentlyContinue
+        $env:TRIVY_VERSION = $null
+
+        # The real Ensure-TrivyInstalled prepends a fixed temp directory to $env:PATH on a
+        # successful install and leaves it there for the rest of the process (by design - it is
+        # meant to persist for the life of a real workflow job). That mutation, plus the fake
+        # binary a test's `bash` mock writes to that same real path, otherwise leak into later
+        # tests: Get-Command would find the previous test's leftover file on disk even after its
+        # shadow functions are gone. Snapshot PATH and clean the directory before every test.
+        $script:savedPath = $env:PATH
+        $script:trivyTestInstallDir = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-bin"
+        Remove-Item $script:trivyTestInstallDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item (Join-Path $([System.IO.Path]::GetTempPath()) "trivy-install.sh") -Force -ErrorAction SilentlyContinue
+    }
+
+    AfterEach {
+        $env:PATH = $script:savedPath
+        Remove-Item $script:trivyTestInstallDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item (Join-Path $([System.IO.Path]::GetTempPath()) "trivy-install.sh") -Force -ErrorAction SilentlyContinue
+    }
+
+    AfterAll {
+        Remove-Item function:curl -ErrorAction SilentlyContinue
+        Remove-Item function:bash -ErrorAction SilentlyContinue
+        Remove-Item function:trivy -ErrorAction SilentlyContinue
+    }
+
+    It "Detects a working trivy already on PATH without downloading anything" {
+        function global:trivy { $global:LASTEXITCODE = 0; "Version: 9.9.9" }
+        function global:curl { throw "curl should not be called when trivy is already on PATH" }
+
+        $result = Ensure-TrivyInstalled
+
+        $result | Should -Be $true
+        $script:trivyState | Should -Be 'available'
+    }
+
+    It "Caches a broken trivy-on-PATH as unavailable instead of trusting it" {
+        function global:trivy { $global:LASTEXITCODE = 1; "unsupported architecture" }
+        function global:curl { throw "curl should not be called for a broken trivy-on-PATH" }
+
+        # Ensure-TrivyInstalled's contract is to *preserve* whatever $LASTEXITCODE held before
+        # it ran, not to force it to any particular value - asserting against a distinctive
+        # sentinel (rather than 0) proves genuine preservation instead of coincidentally passing
+        # because some earlier native command in the process happened to leave a 0 behind.
+        $global:LASTEXITCODE = 42
+        $result = Ensure-TrivyInstalled
+
+        $result | Should -Be $false
+        $script:trivyState | Should -Be 'unavailable'
+        $script:trivyUnavailableReason | Should -Match "not runnable"
+        $LASTEXITCODE | Should -Be 42
+    }
+
+    It "Downloads and runs the install script via bash when trivy is not on PATH, then verifies it" {
+        $global:installedViaBash = $false
+        function global:curl {
+            # `-o $path` is the last two args in Ensure-TrivyInstalled's curl invocation
+            $outPath = $args[$args.IndexOf('-o') + 1]
+            Set-Content -Path $outPath -Value "#!/bin/sh`necho fake install script"
+            $global:LASTEXITCODE = 0
+        }
+        function global:bash {
+            $global:installedViaBash = $true
+            $installDir = $args[$args.IndexOf('-b') + 1]
+            New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+            Set-Content -Path (Join-Path $installDir "trivy") -Value "fake binary"
+            # Simulate the install actually landing a usable `trivy` on PATH: on Windows there
+            # is no bare-extensionless-file resolution the way there is on Linux, so this shadow
+            # function stands in for the real installed binary that Ensure-TrivyInstalled's
+            # post-install Get-Command/--version check expects to find. Defined here, inside the
+            # bash mock, rather than before the call - trivy must not exist until "install" runs.
+            function global:trivy { $global:LASTEXITCODE = 0; "Version: 9.9.9" }
+            $global:LASTEXITCODE = 0
+        }
+
+        $result = Ensure-TrivyInstalled
+
+        $result | Should -Be $true
+        $script:trivyState | Should -Be 'available'
+        $global:installedViaBash | Should -Be $true
+        Remove-Item variable:global:installedViaBash -ErrorAction SilentlyContinue
+    }
+
+    It "Marks Trivy unavailable, with a captured reason, when the install script itself fails" {
+        function global:curl {
+            $outPath = $args[$args.IndexOf('-o') + 1]
+            Set-Content -Path $outPath -Value "#!/bin/sh`necho fake install script"
+            $global:LASTEXITCODE = 0
+        }
+        function global:bash {
+            "aquasecurity/trivy debug http_download_curl received HTTP status 404"
+            $global:LASTEXITCODE = 1
+        }
+
+        # See the sentinel-value note in "Caches a broken trivy-on-PATH..." above.
+        $global:LASTEXITCODE = 42
+        $result = Ensure-TrivyInstalled
+
+        $result | Should -Be $false
+        $script:trivyState | Should -Be 'unavailable'
+        $script:trivyUnavailableReason | Should -Match "404"
+        $LASTEXITCODE | Should -Be 42
+    }
+
+    It "Does not re-download or re-run bash on a second call once installed" {
+        $global:bashCallCount = 0
+        function global:curl {
+            $outPath = $args[$args.IndexOf('-o') + 1]
+            Set-Content -Path $outPath -Value "#!/bin/sh`necho fake install script"
+            $global:LASTEXITCODE = 0
+        }
+        function global:bash {
+            $global:bashCallCount++
+            $installDir = $args[$args.IndexOf('-b') + 1]
+            New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+            Set-Content -Path (Join-Path $installDir "trivy") -Value "fake binary"
+            # See the "Downloads and runs..." test above for why the shadow is defined here.
+            function global:trivy { $global:LASTEXITCODE = 0; "Version: 9.9.9" }
+            $global:LASTEXITCODE = 0
+        }
+
+        Ensure-TrivyInstalled | Out-Null
+        Ensure-TrivyInstalled | Out-Null
+
+        $global:bashCallCount | Should -Be 1
+        Remove-Item variable:global:bashCallCount -ErrorAction SilentlyContinue
+    }
+
+    It "Does not re-attempt the download after a failed install (fail-fast)" {
+        $global:curlCallCount = 0
+        function global:curl {
+            $global:curlCallCount++
+            $global:LASTEXITCODE = 1
+        }
+
+        Ensure-TrivyInstalled | Out-Null
+        Ensure-TrivyInstalled | Out-Null
+        Ensure-TrivyInstalled | Out-Null
+
+        $global:curlCallCount | Should -Be 1
+        Remove-Item variable:global:curlCallCount -ErrorAction SilentlyContinue
+    }
+
+    It "Fetches the fallback install script from a pinned commit, not the mutable main branch" {
+        $content = Get-Content "$PSScriptRoot/../.github/workflows/repoInfo.ps1" -Raw
+        $content | Should -Match 'raw\.githubusercontent\.com/aquasecurity/trivy/\$installScriptCommit/contrib/install\.sh'
+        $content | Should -Not -Match 'raw\.githubusercontent\.com/aquasecurity/trivy/main/contrib/install\.sh'
+    }
+}

@@ -61,7 +61,8 @@ function ProcessRepoInfoChunk {
 
     # Initialize summary buffer for conditional logging
     $summaryBuffer = Initialize-ChunkSummaryBuffer -chunkId $chunkId
-    
+    $script:repoInfoExitCode = 0
+
     Add-ChunkMessage -buffer $summaryBuffer -message "# Chunk [$chunkId] - Repo Info Processing"
     Add-ChunkMessage -buffer $summaryBuffer -message "Processing [$($actionNamesToProcess.Count)] forks in this chunk"
     Add-ChunkMessage -buffer $summaryBuffer -message ""
@@ -130,13 +131,23 @@ function ProcessRepoInfoChunk {
             -access_token_destination $accessToken `
             -actionNamesToProcess $actionNamesToProcess `
             -skipSecretScanSummary
-        
+
+        # repoInfo.ps1 exits 1 (instead of its usual 0) when Trivy could not be installed for
+        # this chunk. Capture that here and re-raise it from this script's own exit code below
+        # so the failure surfaces as a failed job/workflow instead of being silently absorbed -
+        # status.json for this chunk has already been written by repoInfo.ps1 at this point, so
+        # nothing collected is lost by also failing the chunk job.
+        if ($LASTEXITCODE -ne 0) {
+            $script:repoInfoExitCode = $LASTEXITCODE
+            Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ repoInfo.ps1 exited with code [$LASTEXITCODE] (likely a Trivy install failure - see job log)" -isError $true
+        }
+
         # Check if rate limit was exceeded during processing
         if (Test-RateLimitExceeded) {
             Add-ChunkMessage -buffer $summaryBuffer -message "⚠️ Rate limit exceeded (20+ minute wait) during repo info processing" -isError $true
             Add-ChunkMessage -buffer $summaryBuffer -message "Partial results will be saved"
         }
-        
+
         $processedCount = $forksToProcess.Count
     } catch {
         Write-Warning "Failed to process repo info chunk: $($_.Exception.Message)"
@@ -192,6 +203,16 @@ GetRateLimitInfo -access_token $accessToken -access_token_destination $accessTok
 
 Write-Host ""
 Write-Host "✓ Chunk [$chunkId] repoInfo processing complete"
+
+# Propagate a Trivy install failure from repoInfo.ps1 (see ProcessRepoInfoChunk above) as this
+# chunk job's own exit code. status-partial-repoinfo-$chunkId.json has already been written
+# above, and analyze.yml's consolidate job runs with `if: always()`, so failing here does not
+# lose the work this chunk collected - it only makes a rotted/unreachable Trivy pin show up as
+# a failed workflow run instead of a step-summary note nobody reads.
+if ($script:repoInfoExitCode -ne 0) {
+    Write-Host "##[error]Chunk [$chunkId] failed: repoInfo.ps1 reported exit code [$script:repoInfoExitCode]"
+    exit $script:repoInfoExitCode
+}
 
 # Explicitly exit with success code
 exit 0

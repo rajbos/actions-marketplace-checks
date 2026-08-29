@@ -1393,8 +1393,21 @@ function Ensure-TrivyInstalled {
     $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
     if ($trivyPath) {
         $versionOutput = (& trivy --version 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            # Something on PATH resolves to `trivy` but is not actually runnable (corrupted
+            # binary, wrong architecture, etc.). Cache this as unavailable rather than treating
+            # a resolvable command as usable - otherwise every scan for the rest of this run
+            # would keep invoking the same broken binary instead of failing fast once.
+            $reason = "A [trivy] command is on PATH at [$($trivyPath.Source)] but is not runnable (trivy --version exit code [$LASTEXITCODE]): $versionOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
         Write-Host "Trivy already available at [$($trivyPath.Source)]: $versionOutput"
         $script:trivyState = 'available'
+        $global:LASTEXITCODE = $entryExitCode
         return $true
     }
 
@@ -1408,7 +1421,13 @@ function Ensure-TrivyInstalled {
 
     $installDir = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-bin"
     $scriptPath = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-install.sh"
-    $installUrl = "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh"
+    # Pinned to a reviewed commit rather than the mutable `main` branch: this process runs with
+    # GitHub App private key env vars, so fetching-and-executing an unpinned branch would be
+    # arbitrary code execution in a credentialed job on any future change (malicious or
+    # accidental) to that file. Pinned to the same commit aquasecurity/setup-trivy@v0.3.1 itself
+    # checks out (see its action.yaml) so this fallback tracks a version Aqua already ships.
+    $installScriptCommit = "75c4dc0f45c5d7ffd05ae26df1e0c666787bdf2a"
+    $installUrl = "https://raw.githubusercontent.com/aquasecurity/trivy/$installScriptCommit/contrib/install.sh"
 
     try {
         # Step 1: download the install script to a file (no shell pipe involved).
@@ -2157,7 +2176,13 @@ function GetMoreInfo {
                 # If Trivy could not be installed earlier in this run, stop trying: the install
                 # is process-wide, so retrying it for every Docker action just burns time and
                 # floods the failure list with thousands of identical entries.
-                if ($needsContainerScan -and $script:trivyState -eq 'unavailable') {
+                #
+                # Gated on actionDockerType -eq "Dockerfile" (not just $needsContainerScan) so
+                # this only counts actions that would actually have been scanned - $needsContainerScan
+                # alone is also true for Node/composite/remote-image actions that simply lack a
+                # containerScan field, which are never scannable and would otherwise inflate the
+                # "skipped" count reported in the step summary.
+                if ($needsContainerScan -and $action.actionType.actionDockerType -eq "Dockerfile" -and $script:trivyState -eq 'unavailable') {
                     $script:trivyScansSkipped++
                     $needsContainerScan = $false
                 }
@@ -2430,5 +2455,16 @@ function Run {
 # main call
 Run -actions $actions -accessToken $accessToken -accessTokenDestination $accessTokenDestination -filterActionNames $actionNamesToProcess
 
-# Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
+# Explicitly control the exit code rather than let PowerShell inherit whatever $LASTEXITCODE a
+# native command (curl, bash, trivy) happened to leave behind.
+#
+# All repo-info work has already been saved to status.json by Run/GetMoreInfo/SaveStatus above,
+# so failing here for a Trivy install problem does not lose any collected data - the downstream
+# consolidate/upload-changes jobs run with `if: always()` regardless of this exit code. Failing
+# on purpose is what makes a rotted/unreachable Trivy pin show up as a failed workflow run
+# instead of only a step-summary note that nobody reads - see Ensure-TrivyInstalled.
+if ($script:trivyState -eq 'unavailable') {
+    Write-Host "##[error]Trivy could not be installed this run: $script:trivyUnavailableReason"
+    exit 1
+}
 exit 0
