@@ -529,12 +529,27 @@ Describe "Run wires prioritization into the direct (un-chunked) repoInfo.yml pat
         # Arrange
         $repoInfoScriptPath = Join-Path $PSScriptRoot "../.github/workflows/repoInfo.ps1"
 
-        # Act
-        $source = Get-Content $repoInfoScriptPath -Raw
-        $runFunctionMatch = [regex]::Match($source, '(?ms)^function Run \{.*?\n\}')
+        # Act - parse with the PowerShell AST rather than a brace-matching regex, so this
+        # stays correct regardless of how Run()'s internals are indented/reformatted.
+        $tokens = $null
+        $parseErrors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile($repoInfoScriptPath, [ref]$tokens, [ref]$parseErrors)
+
+        $runFunction = $ast.Find({
+            param($node)
+            $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Run'
+        }, $true)
 
         # Assert
-        $runFunctionMatch.Success | Should -Be $true -Because "the Run function should be found in repoInfo.ps1"
-        $runFunctionMatch.Value | Should -Match "Get-PrioritizedReposToProcess" -Because "Run() must select which repos to process by priority when it is not given an explicit filterActionNames list (i.e. called directly from repoInfo.yml, not via repoInfo-chunk.ps1) - otherwise repos are processed in whatever order status.json happens to hold"
+        ($parseErrors.Count) | Should -Be 0 -Because "repoInfo.ps1 should parse without errors"
+        $runFunction | Should -Not -BeNullOrEmpty -Because "the Run function should be found in repoInfo.ps1"
+
+        $callsPrioritization = $runFunction.Find({
+            param($node)
+            $node -is [System.Management.Automation.Language.CommandAst] -and
+                $node.GetCommandName() -eq 'Get-PrioritizedReposToProcess'
+        }, $true)
+
+        $callsPrioritization | Should -Not -BeNullOrEmpty -Because "Run() must select which repos to process by priority when it is not given an explicit filterActionNames list (i.e. called directly from repoInfo.yml, not via repoInfo-chunk.ps1) - otherwise repos are processed in whatever order status.json happens to hold"
     }
 }

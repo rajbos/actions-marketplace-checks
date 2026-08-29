@@ -266,15 +266,17 @@ function Get-PrioritizedReposToProcess {
     
     Write-Host "Prioritizing repos for processing..."
     
-    # Calculate priority scores for all repos
-    $scoredRepos = @()
+    # Calculate priority scores for all repos. Uses a List rather than array += - the latter
+    # reallocates and copies the whole array on every append, which is O(n^2) over a status.json
+    # that already holds 36k+ entries.
+    $scoredRepos = [System.Collections.Generic.List[hashtable]]::new()
     foreach ($action in $existingForks) {
         $score = Get-RepoPriorityScore -action $action
         if ($score -gt 0) {
-            $scoredRepos += @{
+            $scoredRepos.Add(@{
                 Action = $action
                 Score = $score
-            }
+            })
         }
     }
     
