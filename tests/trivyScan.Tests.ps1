@@ -431,9 +431,36 @@ Describe "Ensure-TrivyInstalled (real implementation)" {
         $script:trivyState | Should -Be 'available'
     }
 
-    It "Caches a broken trivy-on-PATH as unavailable instead of trusting it" {
+    It "Does not trust a broken trivy-on-PATH, and falls back to a fresh install" {
+        # A resolvable-but-broken `trivy` (partial/failed setup-trivy step, wrong architecture,
+        # etc.) must not be cached as a terminal failure - a fresh install to a temp directory
+        # might still fix it, so Ensure-TrivyInstalled falls through to the normal curl/bash
+        # path instead of giving up immediately.
         function global:trivy { $global:LASTEXITCODE = 1; "unsupported architecture" }
-        function global:curl { throw "curl should not be called for a broken trivy-on-PATH" }
+        function global:curl {
+            $outPath = $args[$args.IndexOf('-o') + 1]
+            Set-Content -Path $outPath -Value "#!/bin/sh`necho fake install script"
+            $global:LASTEXITCODE = 0
+        }
+        function global:bash {
+            $installDir = $args[$args.IndexOf('-b') + 1]
+            New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+            Set-Content -Path (Join-Path $installDir "trivy") -Value "fake binary"
+            # Replace the broken PATH shadow with a working one, simulating the fresh install
+            # actually landing a usable binary.
+            function global:trivy { $global:LASTEXITCODE = 0; "Version: 9.9.9" }
+            $global:LASTEXITCODE = 0
+        }
+
+        $result = Ensure-TrivyInstalled
+
+        $result | Should -Be $true
+        $script:trivyState | Should -Be 'available'
+    }
+
+    It "Ends up unavailable, with a captured reason, when a broken trivy-on-PATH AND the fresh install both fail" {
+        function global:trivy { $global:LASTEXITCODE = 1; "unsupported architecture" }
+        function global:curl { $global:LASTEXITCODE = 1 }
 
         # Ensure-TrivyInstalled's contract is to *preserve* whatever $LASTEXITCODE held before
         # it ran, not to force it to any particular value - asserting against a distinctive
@@ -444,7 +471,7 @@ Describe "Ensure-TrivyInstalled (real implementation)" {
 
         $result | Should -Be $false
         $script:trivyState | Should -Be 'unavailable'
-        $script:trivyUnavailableReason | Should -Match "not runnable"
+        $script:trivyUnavailableReason | Should -Match "download"
         $LASTEXITCODE | Should -Be 42
     }
 
