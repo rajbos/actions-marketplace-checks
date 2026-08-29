@@ -63,7 +63,7 @@ Describe "Select-ForksToProcess" {
         }
         
         It "Should deprioritize forks with recent repeated failures" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             # Fork1: Never synced successfully, failed recently (high penalty)
             # Fork2: Old successful sync, no failures (high priority due to age)
             # Fork3: Recent successful sync (lower priority due to recency)
@@ -98,7 +98,7 @@ Describe "Select-ForksToProcess" {
         }
         
         It "Should prioritize successfully synced repos over repeatedly failing ones" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             # Create scenario where a repo keeps failing and monopolizing the queue
             $forks = @(
                 [PSCustomObject]@{ 
@@ -126,7 +126,7 @@ Describe "Select-ForksToProcess" {
     
     Context "Cool-off period for failed syncs" {
         It "Should skip forks with recent failed sync attempts" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             $recentFailure = $now.AddHours(-12).ToString("yyyy-MM-ddTHH:mm:ssZ")
             $oldFailure = $now.AddHours(-36).ToString("yyyy-MM-ddTHH:mm:ssZ")
             
@@ -286,7 +286,7 @@ Describe "Select-ForksToProcess" {
     
     Context "Filtering statistics" {
         It "Should report detailed filtering statistics for all filter types" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             $forks = @(
                 # 3 forks with mirrorFound = false
                 [PSCustomObject]@{ name = "noMirror1"; mirrorFound = $false }

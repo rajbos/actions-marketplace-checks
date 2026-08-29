@@ -5070,14 +5070,34 @@ function Split-ActionsIntoChunks {
     .EXAMPLE
     $selectedForks = Select-ForksToProcess -existingForks $allForks -numberOfRepos 300 -coolOffHoursForFailedSync 24
 #>
+function ConvertTo-SafeUtcDateTime {
+    <#
+    .SYNOPSIS
+    Parses a stored timestamp (written with a trailing "Z") as true UTC.
+
+    .DESCRIPTION
+    A bare [DateTime]::Parse() on a "Z"-suffixed string can be reinterpreted
+    according to the runner's culture/timezone settings, which silently skews
+    the result on any non-UTC machine. Parsing explicitly with
+    AssumeUniversal|AdjustToUniversal guarantees the returned DateTime is a
+    precise UTC instant regardless of the local timezone, so it can be safely
+    compared against [DateTime]::UtcNow.
+    #>
+    Param (
+        [string] $value
+    )
+
+    return [DateTime]::Parse($value, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+}
+
 function Select-ForksToProcess {
     Param (
         $existingForks,
         [int] $numberOfRepos = 300,
         [int] $coolOffHoursForFailedSync = 24
     )
-    
-    $now = Get-Date
+
+    $now = [DateTime]::UtcNow
     $coolOffThreshold = $now.AddHours(-$coolOffHoursForFailedSync)
     
     Write-Message -message "Selecting up to [$(DisplayIntWithDots $numberOfRepos)] forks to process" -logToSummary $true
@@ -5109,7 +5129,7 @@ function Select-ForksToProcess {
         # Check cool-off period for failed syncs
         if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttempt = [DateTime]::Parse($fork.lastSyncAttempt)
+                $lastAttempt = ConvertTo-SafeUtcDateTime $fork.lastSyncAttempt
                 if ($lastAttempt -gt $coolOffThreshold) {
                     # Still in cool-off period
                     $filteredCoolOff++
@@ -5128,8 +5148,8 @@ function Select-ForksToProcess {
         # through and let the normal sync path (which re-checks via the API) decide.
         if ($fork.lastSynced -and $fork.repoInfo -and $fork.repoInfo.updated_at) {
             try {
-                $upstreamUpdatedAt = [DateTime]::Parse($fork.repoInfo.updated_at)
-                $lastSyncedDate = [DateTime]::Parse($fork.lastSynced)
+                $upstreamUpdatedAt = ConvertTo-SafeUtcDateTime $fork.repoInfo.updated_at
+                $lastSyncedDate = ConvertTo-SafeUtcDateTime $fork.lastSynced
                 if ($upstreamUpdatedAt -le $lastSyncedDate) {
                     $filteredAlreadyUpToDate++
                     continue
@@ -5166,7 +5186,7 @@ function Select-ForksToProcess {
         @{ Expression = {
             if ($_.lastSynced) {
                 try {
-                    return [DateTime]::Parse($_.lastSynced).Ticks
+                    return (ConvertTo-SafeUtcDateTime $_.lastSynced).Ticks
                 } catch {
                     return [int64]::MaxValue
                 }
@@ -5191,14 +5211,14 @@ function Select-ForksToProcess {
         # Check if this fork has a recent failure that should deprioritize it
         if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttemptDate = [DateTime]::Parse($fork.lastSyncAttempt)
+                $lastAttemptDate = ConvertTo-SafeUtcDateTime $fork.lastSyncAttempt
                 $hoursSinceAttempt = ($now - $lastAttemptDate).TotalHours
-                
+
                 # Determine if this is a repeated failure
                 $isRepeatedFailure = $false
                 if ($fork.lastSynced) {
                     try {
-                        $lastSyncDate = [DateTime]::Parse($fork.lastSynced)
+                        $lastSyncDate = ConvertTo-SafeUtcDateTime $fork.lastSynced
                         if ($lastAttemptDate -gt $lastSyncDate) {
                             $isRepeatedFailure = $true
                         }
@@ -5236,8 +5256,8 @@ function Select-ForksToProcess {
     $reposWithRecentFailures = ($eligibleForks | Where-Object { 
         if ($_.lastSyncError -and $_.lastSyncAttempt -and $_.lastSynced) {
             try {
-                $lastAttemptDate = [DateTime]::Parse($_.lastSyncAttempt)
-                $lastSyncDate = [DateTime]::Parse($_.lastSynced)
+                $lastAttemptDate = ConvertTo-SafeUtcDateTime $_.lastSyncAttempt
+                $lastSyncDate = ConvertTo-SafeUtcDateTime $_.lastSynced
                 # Has a recent failure (attempt is more recent than last success)
                 return $lastAttemptDate -gt $lastSyncDate
             } catch {
