@@ -2263,6 +2263,13 @@ function Run {
     ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $accessTokenDestination
 
     $existingForks = GetInfo -existingForks $existingForks -accessToken $accessToken -startTime $startTime -filterActionNames $filterActionNames
+
+    # Clear orphaned Trivy scan records: entries that were Dockerfile-based Docker
+    # actions when last scanned but have since switched to a remote image, become
+    # Node/Composite, or lost their action definition. This is a pure in-memory
+    # sweep over every entry (no API calls), so a single run cleans the whole file.
+    Remove-StaleContainerScans -existingForks $existingForks -logToSummary $true | Out-Null
+
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
 

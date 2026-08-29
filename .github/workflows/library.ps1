@@ -3100,6 +3100,135 @@ function SaveStatus {
     }
 }
 
+<#
+    .SYNOPSIS
+    Removes a stale actionType.containerScan record from a single action entry when
+    the action is no longer a Dockerfile-based Docker action.
+
+    .DESCRIPTION
+    Trivy container scans (repoInfo.ps1 -> Invoke-TrivyScan) only ever run for Docker
+    actions that build from a repo-local Dockerfile, i.e. actionType.actionDockerType
+    -eq "Dockerfile". When an action later switches to a remote image
+    (actionDockerType "Image"), becomes a Node/Composite action, or its action
+    definition can no longer be found ("No file found"), any previously stored
+    containerScan result describes a container that is no longer built for this
+    action and is misleading.
+
+    containerScan is an optional field in the status.json schema, so removing it
+    keeps the file backward compatible. If the action is ever detected as a
+    Dockerfile-based Docker action again, repoInfo.ps1 re-adds a fresh scan on the
+    next run (missing containerScan -> needsContainerScan).
+
+    .PARAMETER action
+    A single action entry (PSCustomObject or hashtable) from status.json.
+
+    .OUTPUTS
+    Boolean - $true when a stale containerScan was removed, $false otherwise.
+#>
+function Clear-StaleContainerScan {
+    Param (
+        [Parameter(Mandatory = $true)]
+        $action
+    )
+
+    if ($null -eq $action -or $null -eq $action.actionType) {
+        return $false
+    }
+
+    $actionType = $action.actionType
+
+    # Only act when a containerScan record is actually present.
+    $hasContainerScan = $false
+    if ($actionType -is [hashtable]) {
+        $hasContainerScan = $actionType.ContainsKey('containerScan') -and $null -ne $actionType['containerScan']
+    }
+    else {
+        $prop = $actionType.PSObject.Properties['containerScan']
+        $hasContainerScan = $null -ne $prop -and $null -ne $prop.Value
+    }
+    if (-not $hasContainerScan) {
+        return $false
+    }
+
+    # Keep the scan only for Dockerfile-based Docker actions - the one shape
+    # repoInfo.ps1 ever scans. Anything else is stale and gets cleared.
+    if ($actionType.actionDockerType -eq 'Dockerfile') {
+        return $false
+    }
+
+    if ($actionType -is [hashtable]) {
+        $actionType.Remove('containerScan') | Out-Null
+    }
+    else {
+        $actionType.PSObject.Properties.Remove('containerScan')
+    }
+
+    return $true
+}
+
+<#
+    .SYNOPSIS
+    Sweeps a collection of action entries and clears every stale
+    actionType.containerScan record (see Clear-StaleContainerScan).
+
+    .DESCRIPTION
+    Pure in-memory pass with no GitHub API calls. Intended to be run once per
+    repoInfo.ps1 run so records that switched away from a Dockerfile source get
+    their orphaned scan cleared without waiting to be re-selected for processing.
+
+    .PARAMETER existingForks
+    The full array of action entries from status.json.
+
+    .PARAMETER logToSummary
+    When $true, writes a one-line summary to the GitHub Actions step summary.
+
+    .OUTPUTS
+    Hashtable with Cleared (count) and ByActionType (breakdown) keys.
+#>
+function Remove-StaleContainerScans {
+    Param (
+        $existingForks,
+        [bool] $logToSummary = $false
+    )
+
+    $cleared = 0
+    $byActionType = @{}
+
+    if ($null -ne $existingForks) {
+        foreach ($action in $existingForks) {
+            # Capture the type label before we clear, for reporting.
+            $typeLabel = "$($action.actionType.actionType)"
+            if ([string]::IsNullOrWhiteSpace($typeLabel)) { $typeLabel = "(empty)" }
+
+            if (Clear-StaleContainerScan -action $action) {
+                $cleared++
+                if ($byActionType.ContainsKey($typeLabel)) {
+                    $byActionType[$typeLabel]++
+                }
+                else {
+                    $byActionType[$typeLabel] = 1
+                }
+            }
+        }
+    }
+
+    if ($cleared -gt 0) {
+        $breakdown = ($byActionType.GetEnumerator() | Sort-Object -Property Value -Descending | ForEach-Object { "$($_.Key): $($_.Value)" }) -join ", "
+        Write-Host "Cleared [$cleared] stale containerScan record(s) from entries no longer using a Dockerfile ($breakdown)"
+        if ($logToSummary) {
+            Write-Message -message "Cleared [$(DisplayIntWithDots $cleared)] stale ``containerScan`` record(s) from entries whose ``actionDockerType`` is no longer ``Dockerfile`` ($breakdown)" -logToSummary $true
+        }
+    }
+    else {
+        Write-Host "No stale containerScan records found to clear"
+    }
+
+    return @{
+        Cleared = $cleared
+        ByActionType = $byActionType
+    }
+}
+
 function FilterActionsToProcess {
     Param (
         $actionsToProcess,
