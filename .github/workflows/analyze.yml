@@ -256,6 +256,7 @@ jobs:
         continue-on-error: true
         with:
           version: ${{ env.TRIVY_VERSION }}
+        continue-on-error: true
 
       - name: Process repo info chunk ${{ matrix.chunk-id }}
         shell: pwsh
