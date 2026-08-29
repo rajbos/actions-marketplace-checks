@@ -94,6 +94,7 @@ jobs:
         continue-on-error: true
         with:
           version: ${{ env.TRIVY_VERSION }}
+        continue-on-error: true
 
       - shell: pwsh
         name: Gotta check 'em all
