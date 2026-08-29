@@ -28,6 +28,8 @@ Scans are performed:
 - When the last scan is older than 7 days
 - Only for actions with Dockerfiles (not remote Docker images)
 
+If an action later stops being a Dockerfile-based Docker action (it switches to a remote image, becomes a Node/Composite action, or its action definition can no longer be found), the now-stale `actionType.containerScan` record is removed automatically on the next `repoInfo.yml` run. The field is optional, so its removal is backward compatible; a fresh scan is added again if the action ever returns to using a Dockerfile. A one-off bulk cleanup can be run with `.github/workflows/cleanup-stale-container-scans.ps1` (dry-run by default).
+
 The scanning uses Trivy's config/filesystem mode to analyze the Dockerfile without building the image, making it lightweight and efficient for processing thousands of actions.
 
 ## Cleanup of Invalid Repos
