@@ -1520,7 +1520,7 @@ function Invoke-TrivyScan {
     $result = @{
         critical = 0
         high = 0
-        lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+        lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
         scanError = $null
     }
 
@@ -2154,8 +2154,12 @@ function GetMoreInfo {
                 }
                 elseif ($null -ne $action.actionType.containerScan.lastScanned) {
                     try {
-                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned)
-                        $daysSinceLastScan = ((Get-Date) - $lastScanned).Days
+                        # Parse the stored timestamp as UTC (it is written with a trailing "Z").
+                        # Use AssumeUniversal/AdjustToUniversal so culture settings on the runner
+                        # cannot reinterpret it as local time, and compare with TotalDays so the
+                        # 7-day threshold is honored precisely instead of being truncated by .Days.
+                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                        $daysSinceLastScan = ([DateTime]::UtcNow - $lastScanned).TotalDays
                         if ($daysSinceLastScan -gt 7) {
                             $needsContainerScan = $true
                         }
@@ -2202,7 +2206,7 @@ function GetMoreInfo {
                                 ownerRepo = "$owner/$repo"
                                 dockerSource = $dockerSource
                                 error = $scanResult.scanError
-                                timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                                timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
                             }
                         }
                     }
@@ -2213,7 +2217,7 @@ function GetMoreInfo {
                             ownerRepo = "$owner/$repo"
                             dockerSource = $dockerSource
                             error = $_.Exception.Message
-                            timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
                         }
                         # continue with next one
                     }
