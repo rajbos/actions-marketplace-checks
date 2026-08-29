@@ -1374,7 +1374,7 @@ function Invoke-TrivyScan {
     $result = @{
         critical = 0
         high = 0
-        lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+        lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
         scanError = $null
     }
 
@@ -2056,7 +2056,7 @@ function GetMoreInfo {
                                 ownerRepo = "$owner/$repo"
                                 dockerSource = $dockerSource
                                 error = $scanResult.scanError
-                                timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                                timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
                             }
                         }
                     }
@@ -2067,7 +2067,7 @@ function GetMoreInfo {
                             ownerRepo = "$owner/$repo"
                             dockerSource = $dockerSource
                             error = $_.Exception.Message
-                            timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                            timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
                         }
                         # continue with next one
                     }

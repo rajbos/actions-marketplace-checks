@@ -14,7 +14,7 @@ BeforeAll {
         return @{
             critical = 0
             high = 0
-            lastScanned = $lastScanned.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            lastScanned = $lastScanned.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'")
             scanError = $null
         }
     }
@@ -41,8 +41,8 @@ Describe "Trivy Container Scan Logic" {
         
         It "Should need scan when last scan is older than 7 days" {
             # Arrange
-            $oldScanDate = (Get-Date).AddDays(-8)
-            $lastScanned = $oldScanDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            $oldScanDate = [DateTime]::UtcNow.AddDays(-8)
+            $lastScanned = $oldScanDate.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'")
             
             # Act
             $parsedDate = [DateTime]::Parse($lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
@@ -55,8 +55,8 @@ Describe "Trivy Container Scan Logic" {
         
         It "Should not need scan when last scan is within 7 days" {
             # Arrange
-            $recentScanDate = (Get-Date).AddDays(-3)
-            $lastScanned = $recentScanDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            $recentScanDate = [DateTime]::UtcNow.AddDays(-3)
+            $lastScanned = $recentScanDate.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'")
             
             # Act
             $parsedDate = [DateTime]::Parse($lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
@@ -106,7 +106,7 @@ Describe "Trivy Container Scan Logic" {
             $scanResult = @{
                 critical = 5
                 high = 10
-                lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
                 scanError = $null
             }
             
@@ -122,7 +122,7 @@ Describe "Trivy Container Scan Logic" {
             $scanResult = @{
                 critical = 0
                 high = 0
-                lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
                 scanError = "Docker build failed"
             }
             
@@ -187,7 +187,7 @@ Describe "Trivy scan result handling" {
         $scanResult = @{
             critical = 2
             high = 5
-            lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+            lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
             scanError = $null
         }
 
@@ -221,7 +221,7 @@ Describe "Trivy scan result handling" {
         $scanResult = @{
             critical = 0
             high = 0
-            lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+            lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
             scanError = "Trivy installation failed"
         }
         $trivyScanFailures = @()
@@ -242,7 +242,7 @@ Describe "Trivy scan result handling" {
                 ownerRepo = "$($action.owner)/$($action.name)"
                 dockerSource = $dockerSource
                 error = $scanResult.scanError
-                timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+                timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
             }
         }
 
