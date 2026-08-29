@@ -518,3 +518,23 @@ Describe "Prioritization Benefits Analysis" {
         # prioritization would skip processing entirely rather than checking all repos
     }
 }
+
+Describe "Run wires prioritization into the direct (un-chunked) repoInfo.yml path" {
+    # repoInfo.ps1's top level executes `Run` unconditionally, so tests in this file avoid
+    # dot-sourcing it directly (see the other tests in this repo that copy function bodies for
+    # the same reason). Get-PrioritizedReposToProcess was defined but never called in
+    # production for a while - only this test file's standalone copy exercised it. Guard
+    # against that regressing again with a source-text check that Run() actually calls it.
+    It "Should have Run() call Get-PrioritizedReposToProcess for the un-chunked path" {
+        # Arrange
+        $repoInfoScriptPath = Join-Path $PSScriptRoot "../.github/workflows/repoInfo.ps1"
+
+        # Act
+        $source = Get-Content $repoInfoScriptPath -Raw
+        $runFunctionMatch = [regex]::Match($source, '(?ms)^function Run \{.*?\n\}')
+
+        # Assert
+        $runFunctionMatch.Success | Should -Be $true -Because "the Run function should be found in repoInfo.ps1"
+        $runFunctionMatch.Value | Should -Match "Get-PrioritizedReposToProcess" -Because "Run() must select which repos to process by priority when it is not given an explicit filterActionNames list (i.e. called directly from repoInfo.yml, not via repoInfo-chunk.ps1) - otherwise repos are processed in whatever order status.json happens to hold"
+    }
+}

@@ -11,17 +11,23 @@ on:
       - .github/workflows/repoInfo.ps1
 
   schedule:
-     # Every 2 hours, not hourly. The single process-repo-info job measured 95-126 minutes
-     # (mean ~110) across 2026-08-21, so against an hourly cron it was still running when the
-     # next run fired. A concurrency group holds only one pending run, so the queued run was
-     # cancelled by the run after it: 13 of the last 30 runs (43%) never executed at all.
+     # Every 2 hours, not hourly. The full workflow (process-repo-info + upload-changes)
+     # measured 98-129 minutes end to end across 2026-08-21, so against an hourly cron it was
+     # still running when the next run fired. A concurrency group holds only one pending run,
+     # so the queued run was cancelled by the run after it: 13 of the last 30 runs (43%) never
+     # executed at all.
      #
      # Flipping cancel-in-progress to true would be worse, not better. The partial results are
      # only written to blob storage by the separate upload-changes job, and GitHub does not
      # start queued jobs once a run is cancelled - so cancelling mid-run would throw away up
      # to two hours of completed API work, and could interrupt upload-changes while it is
-     # writing the ~102 MB status.json. Spacing the schedule keeps cancel-in-progress: false
-     # and loses nothing.
+     # writing the ~102 MB status.json.
+     #
+     # 120 minutes is not a hard upper bound on job duration, so a run occasionally still
+     # active past its 2-hour mark is possible - it does not reintroduce the cancellation
+     # problem though: the next tick queues behind it and starts as soon as it finishes, and
+     # would only itself be cancelled if the *first* run somehow ran past 240 minutes, roughly
+     # double anything observed. Worth revisiting if measured durations drift that high.
      - cron: '50 */2 * * *'
 
   workflow_dispatch:
@@ -36,9 +42,19 @@ env:
   # 75 repos/hour versus a *measured* effective 57/hour before (100 repos x the 57% of runs
   # that actually completed) - a small net gain, with every run now actually finishing.
   #
-  # Deliberately not raised further: this workflow and analyze.yml both select "stalest
-  # repoInfo first", so their selections overlap. The throughput increase belongs on
-  # analyze.yml, which parallelises across chunks; widening both would mostly duplicate work.
+  # NOTE: numberOfReposToDo is not a hard repo-count cap inside repoInfo.ps1 - GetInfo/GetMoreInfo
+  # use it as a budget of newly-added-field events, incremented per field rather than per repo, so
+  # a chunk with mostly-complete data can process more than 150 before the counter trips, and one
+  # with lots of missing fields can stop short of 150. This PR does not change that counting
+  # scheme (pre-existing, and out of scope for a tuning-only change) - it does add prioritization
+  # in Run() (repoInfo.ps1) so this workflow actually selects the ~150 stalest/most-incomplete
+  # repos first, same as analyze.yml's chunks already do, instead of iterating status.json in
+  # whatever order it happens to hold.
+  #
+  # Deliberately not raised further: this workflow and analyze.yml's chunks both prioritize by
+  # the same staleness/missing-data score, so their selections overlap. The throughput increase
+  # belongs on analyze.yml, which parallelises across chunks; widening both would mostly
+  # duplicate work.
   numberOfReposToDo: 150
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}

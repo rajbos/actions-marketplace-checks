@@ -2262,6 +2262,26 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $accessTokenDestination
 
+    # When Run is invoked without an explicit chunk selection (i.e. directly from repoInfo.yml,
+    # not via repoInfo-chunk.ps1), pick which repos to process by staleness/missing-data score
+    # instead of iterating $existingForks in whatever order it happens to hold. Chunk callers
+    # already receive a pre-selected, staleness-sorted name list from analyze.yml's "prepare"
+    # job, so this only changes the direct, un-chunked repoInfo.yml path.
+    if ($null -eq $filterActionNames -or $filterActionNames.Count -eq 0) {
+        $prioritizedRepos = Get-PrioritizedReposToProcess -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+        if ($prioritizedRepos.Count -gt 0) {
+            $filterActionNames = $prioritizedRepos | ForEach-Object { $_.name }
+            Write-Host "Prioritized [$($filterActionNames.Count)] repos to process out of [$($existingForks.Count)] total"
+        }
+        else {
+            # Nothing scored above 0 - every repo is fully up to date. Point the filter at a name
+            # that cannot match so GetInfo/GetMoreInfo process nothing, rather than falling back to
+            # their "no filter" behavior and re-scanning the entire multi-thousand-entry list.
+            $filterActionNames = @("__no_repos_need_processing__")
+            Write-Host "No repos scored above 0 for prioritization; nothing needs processing"
+        }
+    }
+
     $existingForks = GetInfo -existingForks $existingForks -accessToken $accessToken -startTime $startTime -filterActionNames $filterActionNames
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
