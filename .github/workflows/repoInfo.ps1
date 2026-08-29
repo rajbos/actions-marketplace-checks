@@ -2018,8 +2018,12 @@ function GetMoreInfo {
                 }
                 elseif ($null -ne $action.actionType.containerScan.lastScanned) {
                     try {
-                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned)
-                        $daysSinceLastScan = ((Get-Date) - $lastScanned).Days
+                        # Parse the stored timestamp as UTC (it is written with a trailing "Z").
+                        # Use AssumeUniversal/AdjustToUniversal so culture settings on the runner
+                        # cannot reinterpret it as local time, and compare with TotalDays so the
+                        # 7-day threshold is honored precisely instead of being truncated by .Days.
+                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                        $daysSinceLastScan = ([DateTime]::UtcNow - $lastScanned).TotalDays
                         if ($daysSinceLastScan -gt 7) {
                             $needsContainerScan = $true
                         }

@@ -45,10 +45,10 @@ Describe "Trivy Container Scan Logic" {
             $lastScanned = $oldScanDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
             
             # Act
-            $parsedDate = [DateTime]::Parse($lastScanned)
-            $daysSinceLastScan = ((Get-Date) - $parsedDate).Days
+            $parsedDate = [DateTime]::Parse($lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+            $daysSinceLastScan = ([DateTime]::UtcNow - $parsedDate).TotalDays
             $needsContainerScan = $daysSinceLastScan -gt 7
-            
+
             # Assert
             $needsContainerScan | Should -Be $true
         }
@@ -59,10 +59,10 @@ Describe "Trivy Container Scan Logic" {
             $lastScanned = $recentScanDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
             
             # Act
-            $parsedDate = [DateTime]::Parse($lastScanned)
-            $daysSinceLastScan = ((Get-Date) - $parsedDate).Days
+            $parsedDate = [DateTime]::Parse($lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+            $daysSinceLastScan = ([DateTime]::UtcNow - $parsedDate).TotalDays
             $needsContainerScan = $daysSinceLastScan -gt 7
-            
+
             # Assert
             $needsContainerScan | Should -Be $false
         }
