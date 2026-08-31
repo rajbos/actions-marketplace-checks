@@ -253,7 +253,42 @@ function Get-RepoPriorityScore {
             }
         }
     }
-    
+
+    # Container scan staleness (lower-medium priority): a Dockerfile-based action whose
+    # Trivy container scan is missing, previously errored, or older than 7 days is only
+    # ever re-scanned by GetMoreInfo's needsContainerScan check if the repo happens to be
+    # selected for some other reason first. Scoring it here lets the container-scan backlog
+    # drain on its own. Gated on actionDockerType -eq "Dockerfile" to match the
+    # needsContainerScan gate - non-Dockerfile actions are never container-scanned and must
+    # not be scored. Uses ConvertTo-SafeUtcDateTime + TotalDays and the same 7-day threshold
+    # as GetMoreInfo so the timezone/off-by-one bug fixed in #258/#260 is not reintroduced.
+    if ($hasActionType -and $action.actionType -and $action.actionType.actionDockerType -eq "Dockerfile") {
+        $hasContainerScan = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+        if (!$hasContainerScan -or ($null -eq $action.actionType.containerScan)) {
+            $score += 25
+        }
+        elseif ($action.actionType.containerScan.scanError) {
+            # A previous scan attempt failed (e.g. the now-fixed "Trivy installation failed"
+            # errors that may still be sitting in status.json) - retry it.
+            $score += 25
+        }
+        else {
+            $lastScanned = $null
+            $hasLastScanned = Get-Member -inputobject $action.actionType.containerScan -name "lastScanned" -Membertype Properties
+            if ($hasLastScanned -and $action.actionType.containerScan.lastScanned) {
+                try {
+                    $lastScanned = ConvertTo-SafeUtcDateTime $action.actionType.containerScan.lastScanned
+                }
+                catch {
+                    $lastScanned = $null
+                }
+            }
+            if (($null -eq $lastScanned) -or (([DateTime]::UtcNow - $lastScanned).TotalDays -gt 7)) {
+                $score += 25
+            }
+        }
+    }
+
     return $score
 }
 

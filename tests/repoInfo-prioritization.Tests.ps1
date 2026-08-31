@@ -1,5 +1,32 @@
 BeforeAll {
     # Duplicate the prioritization functions for testing
+
+    # Mirror of the helper in .github/workflows/library.ps1 (see PR #258/#260).
+    function ConvertTo-SafeUtcDateTime {
+        Param (
+            [string] $value
+        )
+        return [DateTime]::Parse($value, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+    }
+
+    function New-DockerActionWithScan {
+        Param ( $containerScan, $actionDockerType = "Dockerfile" )
+        $actionType = [PSCustomObject]@{ actionType = "Docker"; actionDockerType = $actionDockerType }
+        if ($null -ne $containerScan) {
+            $actionType | Add-Member -Name containerScan -Value $containerScan -MemberType NoteProperty
+        }
+        [PSCustomObject]@{
+            name = "docker-action"
+            owner = "test-owner"
+            mirrorFound = $true
+            actionType = $actionType
+            repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }
+            repoSize = 100
+            dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
+            fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+        }
+    }
+
     function Get-RepoPriorityScore {
         Param (
             $action
@@ -94,10 +121,37 @@ BeforeAll {
                 }
             }
         }
-        
+
+        # Container scan staleness (lower-medium priority) - mirrors the block in
+        # .github/workflows/repoInfo.ps1's Get-RepoPriorityScore.
+        if ($hasActionType -and $action.actionType -and $action.actionType.actionDockerType -eq "Dockerfile") {
+            $hasContainerScan = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+            if (!$hasContainerScan -or ($null -eq $action.actionType.containerScan)) {
+                $score += 25
+            }
+            elseif ($action.actionType.containerScan.scanError) {
+                $score += 25
+            }
+            else {
+                $lastScanned = $null
+                $hasLastScanned = Get-Member -inputobject $action.actionType.containerScan -name "lastScanned" -Membertype Properties
+                if ($hasLastScanned -and $action.actionType.containerScan.lastScanned) {
+                    try {
+                        $lastScanned = ConvertTo-SafeUtcDateTime $action.actionType.containerScan.lastScanned
+                    }
+                    catch {
+                        $lastScanned = $null
+                    }
+                }
+                if (($null -eq $lastScanned) -or (([DateTime]::UtcNow - $lastScanned).TotalDays -gt 7)) {
+                    $score += 25
+                }
+            }
+        }
+
         return $score
     }
-    
+
     function Get-PrioritizedReposToProcess {
         Param (
             $existingForks,
@@ -378,6 +432,42 @@ Describe "Get-RepoPriorityScore" {
 
         # Assert
         $score | Should -Be 30  # 15 for stale tagInfo + 15 for stale releaseInfo
+    }
+
+    Context "Container scan staleness scoring" {
+        It "Should add score when containerScan is entirely missing" {
+            $score = Get-RepoPriorityScore -action (New-DockerActionWithScan -containerScan $null)
+            $score | Should -Be 25
+        }
+
+        It "Should add score when a previous scan attempt failed (scanError set)" {
+            $scan = [PSCustomObject]@{ lastScanned = (Get-Date).ToUniversalTime().ToString("o"); scanError = "Trivy installation failed" }
+            $score = Get-RepoPriorityScore -action (New-DockerActionWithScan -containerScan $scan)
+            $score | Should -Be 25
+        }
+
+        It "Should add score when containerScan.lastScanned is missing/unparseable" {
+            $scan = [PSCustomObject]@{ scanError = $null; lastScanned = "not-a-date" }
+            $score = Get-RepoPriorityScore -action (New-DockerActionWithScan -containerScan $scan)
+            $score | Should -Be 25
+        }
+
+        It "Should add score when containerScan.lastScanned is stale (>7 days)" {
+            $scan = [PSCustomObject]@{ scanError = $null; lastScanned = (Get-Date).ToUniversalTime().AddDays(-10).ToString("o") }
+            $score = Get-RepoPriorityScore -action (New-DockerActionWithScan -containerScan $scan)
+            $score | Should -Be 25
+        }
+
+        It "Should not add score when containerScan is fresh (<7 days)" {
+            $scan = [PSCustomObject]@{ scanError = $null; lastScanned = (Get-Date).ToUniversalTime().AddDays(-2).ToString("o") }
+            $score = Get-RepoPriorityScore -action (New-DockerActionWithScan -containerScan $scan)
+            $score | Should -Be 0
+        }
+
+        It "Should not score container scan staleness for non-Dockerfile actions" {
+            $score = Get-RepoPriorityScore -action (New-DockerActionWithScan -containerScan $null -actionDockerType "Image")
+            $score | Should -Be 0
+        }
     }
 }
 
