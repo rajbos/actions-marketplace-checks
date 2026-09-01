@@ -1,13 +1,11 @@
 BeforeAll {
-    # Duplicate the prioritization functions for testing
-
-    # Mirror of the helper in .github/workflows/library.ps1 (see PR #258/#260).
-    function ConvertTo-SafeUtcDateTime {
-        Param (
-            [string] $value
-        )
-        return [DateTime]::Parse($value, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
-    }
+    # Get-RepoPriorityScore and Get-PrioritizedReposToProcess live in library.ps1 (moved there
+    # so analyze.yml's "prepare" job - which already dot-sources library.ps1 - can share the
+    # same scoring logic that repoInfo.ps1's direct (un-chunked) Run path uses, instead of
+    # duplicating it inline). Dot-source the real implementation rather than a copy so these
+    # tests exercise production code.
+    $env:GITHUB_TOKEN = "test_token_mock"
+    . $PSScriptRoot/../.github/workflows/library.ps1
 
     function New-DockerActionWithScan {
         Param ( $containerScan, $actionDockerType = "Dockerfile" )
@@ -25,156 +23,6 @@ BeforeAll {
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
         }
-    }
-
-    function Get-RepoPriorityScore {
-        Param (
-            $action
-        )
-        
-        $score = 0
-        
-        # Critical missing fields (highest priority)
-        $hasOwner = Get-Member -inputobject $action -name "owner" -Membertype Properties
-        if (!$hasOwner) {
-            $score += 100
-        }
-        
-        $hasMirrorFound = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
-        if (!$hasMirrorFound -or !$action.mirrorFound) {
-            $score += 90
-        }
-        
-        $hasActionType = Get-Member -inputobject $action -name "actionType" -Membertype Properties
-        if (!$hasActionType -or ($null -eq $action.actionType.actionType)) {
-            $score += 80
-        }
-        
-        # Important fields (medium priority)
-        $hasRepoInfo = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-        if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
-            $score += 50
-        }
-        elseif ($action.repoInfo) {
-            # Stale repoInfo: lastFetched missing or older than 14 days
-            $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
-            if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
-                $score += 20
-            }
-            else {
-                try {
-                    $daysSince = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
-                    if ($daysSince -gt 14) { $score += 20 }
-                }
-                catch { $score += 20 }
-            }
-        }
-        
-        $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
-        if (!$hasRepoSize) {
-            $score += 40
-        }
-        
-        $hasDependents = Get-Member -inputobject $action -name "dependents" -Membertype Properties
-        if (!$hasDependents) {
-            $score += 30
-        }
-        
-        # Stale data checks (lower priority)
-        if ($hasDependents -and $action.dependents.dependentsLastUpdated) {
-            $daysSinceLastUpdate = ((Get-Date) - $action.dependents.dependentsLastUpdated).Days
-            if ($daysSinceLastUpdate -gt 7) {
-                $score += 20
-            }
-        }
-        
-        $hasFundingInfo = Get-Member -inputobject $action -name "fundingInfo" -Membertype Properties
-        if ($hasFundingInfo -and $action.fundingInfo.lastChecked) {
-            $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
-            if ($daysSinceLastCheck -gt 30) {
-                $score += 10
-            }
-        }
-
-        $hasTagInfoCheckedAt = Get-Member -inputobject $action -name "tagInfoCheckedAt" -Membertype Properties
-        $hasTagInfo = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
-        if ($hasTagInfo -and $action.tagInfo) {
-            if (!$hasTagInfoCheckedAt -or !$action.tagInfoCheckedAt) {
-                $score += 15
-            } else {
-                $daysSinceCheck = ((Get-Date) - [datetime]$action.tagInfoCheckedAt).Days
-                if ($daysSinceCheck -gt 30) {
-                    $score += 15
-                }
-            }
-        }
-
-        $hasReleaseInfoCheckedAt = Get-Member -inputobject $action -name "releaseInfoCheckedAt" -Membertype Properties
-        $hasReleaseInfo = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
-        if ($hasReleaseInfo -and $action.releaseInfo) {
-            if (!$hasReleaseInfoCheckedAt -or !$action.releaseInfoCheckedAt) {
-                $score += 15
-            } else {
-                $daysSinceCheck = ((Get-Date) - [datetime]$action.releaseInfoCheckedAt).Days
-                if ($daysSinceCheck -gt 30) {
-                    $score += 15
-                }
-            }
-        }
-
-        # Container scan staleness (lower-medium priority) - mirrors the block in
-        # .github/workflows/repoInfo.ps1's Get-RepoPriorityScore.
-        if ($hasActionType -and $action.actionType -and $action.actionType.actionDockerType -eq "Dockerfile") {
-            $hasContainerScan = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
-            if (!$hasContainerScan -or ($null -eq $action.actionType.containerScan)) {
-                $score += 25
-            }
-            elseif ($action.actionType.containerScan.scanError) {
-                $score += 25
-            }
-            else {
-                $lastScanned = $null
-                $hasLastScanned = Get-Member -inputobject $action.actionType.containerScan -name "lastScanned" -Membertype Properties
-                if ($hasLastScanned -and $action.actionType.containerScan.lastScanned) {
-                    try {
-                        $lastScanned = ConvertTo-SafeUtcDateTime $action.actionType.containerScan.lastScanned
-                    }
-                    catch {
-                        $lastScanned = $null
-                    }
-                }
-                if (($null -eq $lastScanned) -or (([DateTime]::UtcNow - $lastScanned).TotalDays -gt 7)) {
-                    $score += 25
-                }
-            }
-        }
-
-        return $score
-    }
-
-    function Get-PrioritizedReposToProcess {
-        Param (
-            $existingForks,
-            $numberOfReposToDo
-        )
-        
-        # Calculate priority scores for all repos
-        $scoredRepos = @()
-        foreach ($action in $existingForks) {
-            $score = Get-RepoPriorityScore -action $action
-            if ($score -gt 0) {
-                $scoredRepos += @{
-                    Action = $action
-                    Score = $score
-                }
-            }
-        }
-        
-        # Sort by score (highest first) and take top N
-        $prioritizedRepos = $scoredRepos | Sort-Object -Property Score -Descending | Select-Object -First $numberOfReposToDo
-        
-        # Return just the actions
-        return $prioritizedRepos | ForEach-Object { $_.Action }
     }
 }
 
