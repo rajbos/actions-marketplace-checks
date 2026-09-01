@@ -33,7 +33,7 @@ Describe "analyze.yml candidate selection uses the shared priority score" {
     It "Should dot-source library.ps1 in the prepare job so Get-PrioritizedReposToProcess is available" {
         # The "Split work into chunks" step already dot-sources library.ps1 for
         # Split-ForksIntoChunks/Write-Message; this just confirms that stays true after the change.
-        $script:analyzeWorkflowContent | Should -Match '\.\s*/\.github/workflows/library\.ps1'
+        $script:analyzeWorkflowContent | Should -Match '\.\s*\./\.github/workflows/library\.ps1'
     }
 }
 

@@ -3259,7 +3259,7 @@ function Get-RepoPriorityScore {
         $score += 50
     }
     elseif ($action.repoInfo) {
-        # Stale repoInfo: lastFetched missing or older than 7 days
+        # Stale repoInfo: lastFetched missing or older than 14 days
         $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
         if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
             $score += 20
