@@ -161,22 +161,20 @@ jobs:
               exit 1
           }
 
-          # Limit existing forks for repo info - prioritize repos with oldest (or missing) repoInfo.updated_at so stale data gets refreshed first
-          $forksForRepoInfo = $existingForks | 
-            Where-Object { $_.forkFound -eq $true } |
-            Sort-Object -Property @{
-              Expression = {
-                try {
-                  if ($_.repoInfo -and $_.repoInfo.updated_at) {
-                    [DateTime]::Parse($_.repoInfo.updated_at).Ticks
-                  } else {
-                    0L  # No repoInfo → process first
-                  }
-                } catch { 0L }
-              };
-              Ascending = $true
-            } |
-            Select-Object -First $numberOfReposRepoInfo
+          # Limit existing forks for repo info - use the same staleness/missing-data priority
+          # score as repoInfo.yml's direct run path (Get-PrioritizedReposToProcess in
+          # library.ps1), instead of this job's own sort-by-upstream-push-date. The old sort
+          # used repoInfo.updated_at (GitHub's "when was this upstream repo last pushed to"
+          # timestamp), which has nothing to do with when *we* last refreshed the repo - a
+          # rarely-pushed-upstream repo (or one with no repoInfo at all, sorting to the front
+          # forever) never rotated out of the front of the queue, and none of the
+          # Get-RepoPriorityScore factors (repoSize/dependents/fundingInfo/tagInfo/releaseInfo/
+          # containerScan staleness) had any influence on what this 600-repo/hour path selected.
+          # Get-RepoPriorityScore keys staleness off repoInfo.lastFetched (when we actually
+          # fetched it), so this also fixes that "some repos never get reprocessed" bug, not
+          # just the container-scan backlog.
+          $forkCandidates = $existingForks | Where-Object { $_.forkFound -eq $true }
+          $forksForRepoInfo = Get-PrioritizedReposToProcess -existingForks $forkCandidates -numberOfReposToDo $numberOfReposRepoInfo
           
             # Split the work for repo info
             $chunksRepoInfoRaw = Split-ForksIntoChunks -existingForks $forksForRepoInfo -numberOfChunks $numberOfChunks
