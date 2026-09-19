@@ -1445,13 +1445,17 @@ function GetInfo {
             # This action's observation history is already fresh (checked within
             # the last 30 days), but it may have been populated by a previous run
             # of this pipeline before immutableReleaseCoverage (issue #266) existed.
-            # Backfill the derived summary from the existing history whenever it is
-            # missing, independently of the fetch cadence above - otherwise a repo
-            # with up-to-date observations but no coverage would silently go
-            # without the field for up to 30 days, until its next real refresh.
+            # Backfill the derived summary whenever it is missing, independently of
+            # the fetch cadence above - otherwise a repo with up-to-date observations
+            # but no coverage would silently go without the field for up to 30 days,
+            # until its next real refresh. Gate only on the observations *property*
+            # being present, not on it being non-null/non-empty: Get-ImmutableReleaseCoverage
+            # explicitly supports $null/empty input and returns a valid zero-count
+            # summary, so a migrated action with no releases at all must still get a
+            # summary rather than being skipped here.
             $hasImmutableReleaseObservationsFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
             $hasImmutableReleaseCoverageFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
-            if ($hasImmutableReleaseObservationsFieldForBackfill -and ($null -ne $action.immutableReleaseObservations) -and !$hasImmutableReleaseCoverageFieldForBackfill) {
+            if ($hasImmutableReleaseObservationsFieldForBackfill -and !$hasImmutableReleaseCoverageFieldForBackfill) {
                 $backfilledCoverageResult = Get-ImmutableReleaseCoverage -observations $action.immutableReleaseObservations
                 $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
                 $repoHadUpdates = $true
