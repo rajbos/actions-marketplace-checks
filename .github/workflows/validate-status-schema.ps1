@@ -301,6 +301,22 @@ function Test-ActionSchema {
                 $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyCheckedAt has unexpected format: $($action.immutableReleasePolicyCheckedAt)"
             }
         }
+
+        # immutableReleasePolicyChangedAt (issue #266) is documented as a
+        # datetime just like immutableReleasePolicyCheckedAt above, so it gets
+        # the same type/format validation - otherwise a value such as
+        # "not-a-date" would silently pass validation despite being invalid.
+        if ($null -ne $action.immutableReleasePolicyChangedAt) {
+            if ($action.immutableReleasePolicyChangedAt -isnot [string] -and $action.immutableReleasePolicyChangedAt -isnot [datetime]) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt should be a date/string, found: $($action.immutableReleasePolicyChangedAt.GetType().Name)"
+            }
+            elseif ($action.immutableReleasePolicyChangedAt -is [string]) {
+                $parsedChangedAtDate = [datetime]::MinValue
+                if (-not [datetime]::TryParse($action.immutableReleasePolicyChangedAt, [ref]$parsedChangedAtDate)) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt has unexpected format: $($action.immutableReleasePolicyChangedAt)"
+                }
+            }
+        }
     }
 
     # Validate immutableReleaseObservations append-only history if present (issue #265)

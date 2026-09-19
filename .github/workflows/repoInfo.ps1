@@ -1627,6 +1627,22 @@ function GetInfo {
                 }
             }
         }
+        else {
+            # This action's observation history is already fresh (checked within
+            # the last 30 days), but it may have been populated by a previous run
+            # of this pipeline before immutableReleaseCoverage (issue #266) existed.
+            # Backfill the derived summary from the existing history whenever it is
+            # missing, independently of the fetch cadence above - otherwise a repo
+            # with up-to-date observations but no coverage would silently go
+            # without the field for up to 30 days, until its next real refresh.
+            $hasImmutableReleaseObservationsFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+            $hasImmutableReleaseCoverageFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+            if ($hasImmutableReleaseObservationsFieldForBackfill -and ($null -ne $action.immutableReleaseObservations) -and !$hasImmutableReleaseCoverageFieldForBackfill) {
+                $backfilledCoverageResult = Get-ImmutableReleaseCoverage -observations $action.immutableReleaseObservations
+                $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
+                $repoHadUpdates = $true
+            }
+        }
 
         # Compose the concise, marketplace-ready immutable-release summary
         # string (issue #267) from whatever policy/coverage values are
