@@ -276,6 +276,97 @@ Describe "Status JSON Schema Validation" {
         }
     }
     
+    Context "immutableReleasePolicy field (issue #264)" {
+        It "Should validate a repo with policy enabled" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "enabled"
+                immutableReleasePolicyCheckedAt = "2025-01-10T16:00:00.000Z"
+                immutableReleasePolicyReason = $null
+                immutableReleasePolicySource = "GET /repos/{owner}/{repo}"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+        }
+
+        It "Should validate a repo with policy unknown and a reason" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "unknown"
+                immutableReleasePolicyCheckedAt = "2025-01-10T16:00:00.000Z"
+                immutableReleasePolicyReason = "field_not_present_in_api_response"
+                immutableReleasePolicySource = "GET /repos/{owner}/{repo}"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings -join " " | Should -Not -Match "immutableReleasePolicy"
+        }
+
+        It "Should error when immutableReleasePolicy has an invalid value" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "disabled_but_typo"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "immutableReleasePolicy should be one of"
+        }
+
+        It "Should never accept 'disabled' being silently produced from a missing value (only explicit strings are valid)" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = $null
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings.Count | Should -Be 0
+        }
+
+        It "Should warn when status is unknown but reason is missing" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "unknown"
+                immutableReleasePolicyCheckedAt = "2025-01-10T16:00:00.000Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "missing 'immutableReleasePolicyReason'"
+        }
+
+        It "Should warn when immutableReleasePolicyCheckedAt is missing" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "enabled"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "missing 'immutableReleasePolicyCheckedAt'"
+        }
+
+        It "Should warn when immutableReleasePolicyCheckedAt has an unparsable format" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "enabled"
+                immutableReleasePolicyCheckedAt = "not-a-date"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "immutableReleasePolicyCheckedAt has unexpected format"
+        }
+    }
+
     Context "Test-ActionSchema function with errors" {
         It "Should error when vulnerabilityStatus is not an object" {
             $action = @{

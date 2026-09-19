@@ -3325,6 +3325,24 @@ function Get-RepoPriorityScore {
         }
     }
 
+    # Immutable-release policy staleness (issue #264): bounded 30-day refresh
+    # cadence, same pattern/threshold as fundingInfo/tagInfo/releaseInfo above,
+    # so this backlog drains alongside the others instead of needing a
+    # dedicated full pass. Scored whenever the field is missing entirely (so
+    # new repos get collected) or the last check is stale/unparsable.
+    $hasImmutableReleasePolicy = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleasePolicyCheckedAt = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleasePolicy -or !$hasImmutableReleasePolicyCheckedAt -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+        $score += 20
+    }
+    else {
+        try {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
+            if ($daysSinceCheck -gt 30) { $score += 20 }
+        }
+        catch { $score += 20 }
+    }
+
     # Container scan staleness (lower-medium priority): a Dockerfile-based action whose
     # Trivy container scan is missing, previously errored, or older than 7 days is only
     # ever re-scanned by GetMoreInfo's needsContainerScan check if the repo happens to be

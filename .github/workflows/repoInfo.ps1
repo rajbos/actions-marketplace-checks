@@ -442,6 +442,144 @@ function GetFundingInfo {
     }
 }
 
+<#
+    .SYNOPSIS
+    Collects the current GitHub "immutable releases" policy for an upstream
+    action repository, returning an explicit tri-state result.
+
+    .DESCRIPTION
+    Calls the GitHub repos API for the upstream owner/repo (not the fork) via
+    the shared ApiCall helper, so retries/rate-limit handling/App token
+    rotation is reused as-is. The result always distinguishes a confirmed
+    "enabled"/"disabled" policy from an "unknown" one - a missing field,
+    an API error, a rate limit, or running out of time budget are all
+    reported as "unknown" with a machine-readable reason, never as "disabled".
+
+    GitHub's immutable-release policy only affects releases published after
+    the policy was turned on for a repository; this function only reports the
+    *current* policy value, it does not infer anything about past releases.
+
+    .PARAMETER owner
+    The upstream repository owner (organization or user login).
+
+    .PARAMETER repo
+    The upstream repository name.
+
+    .PARAMETER accessToken
+    GitHub access token (App token) to use for the API call.
+
+    .PARAMETER startTime
+    Start time of the overall run, used for the shared 50-minute time budget
+    check other collectors in this file also use.
+
+    .OUTPUTS
+    Hashtable with:
+      status    - "enabled", "disabled" or "unknown"
+      checkedAt - the datetime this check was performed
+      reason    - machine-readable reason string when status is "unknown", otherwise $null
+      source    - the API call used to collect the value, for audit purposes
+#>
+function GetImmutableReleasePolicy {
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    $checkedAt = Get-Date
+    $source = "GET /repos/{owner}/{repo}"
+
+    function New-UnknownImmutableReleasePolicyResult {
+        Param ([string] $reason)
+        return @{
+            status    = "unknown"
+            checkedAt = $checkedAt
+            reason    = $reason
+            source    = $source
+        }
+    }
+
+    if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0) {
+        return New-UnknownImmutableReleasePolicyResult -reason "missing_owner_or_repo"
+    }
+
+    # Check if we are nearing the 50-minute mark, same time budget every other
+    # per-repo collector in this file respects.
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return New-UnknownImmutableReleasePolicyResult -reason "run_time_budget_exceeded"
+    }
+
+    $url = "/repos/$owner/$repo"
+    $response = $null
+    try {
+        # -returnErrorInfo means failures (404, 403, rate limits, etc.) come back
+        # as a hashtable with Error=$true rather than throwing, so ApiCall's
+        # existing retry/backoff/rate-limit/app-switch handling still runs, and
+        # we simply map whatever comes back into our own "unknown" reasons.
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to check immutable release policy for [$owner/$repo]: $($_.Exception.Message)"
+        return New-UnknownImmutableReleasePolicyResult -reason "transient_error"
+    }
+
+    $isErrorResult = ($response -is [hashtable] -and $response.ContainsKey('Error') -and $response.Error)
+    if ($isErrorResult) {
+        $reason = "api_error"
+        if ($response.ContainsKey('StatusCode')) {
+            switch ($response.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "repo_not_found" }
+                default { $reason = "api_error_status_$($response.StatusCode)" }
+            }
+        }
+        return New-UnknownImmutableReleasePolicyResult -reason $reason
+    }
+
+    if ($null -eq $response) {
+        return New-UnknownImmutableReleasePolicyResult -reason "no_response"
+    }
+
+    # GitHub does not (yet, as of this writing) expose the immutable-release
+    # policy under a stable, generally-available field name on every API
+    # version/plan. Rather than guess wrong and silently report a wrong
+    # enabled/disabled value, we look for the documented field and fall back
+    # to an explicit "unknown" with a reason when it is not present, so this
+    # never turns a missing/unsupported result into "disabled".
+    #
+    # $response can be either a Hashtable (test mocks, and some ApiCall
+    # helper paths) or a PSCustomObject (real JSON deserialized by
+    # Invoke-RestMethod), and .PSObject.Properties does not see Hashtable
+    # keys - so check both shapes rather than assuming one.
+    $hasPolicyField = $false
+    if ($response -is [System.Collections.IDictionary]) {
+        $hasPolicyField = $response.ContainsKey('immutable_releases_enabled')
+    }
+    else {
+        $hasPolicyField = $null -ne $response.PSObject.Properties['immutable_releases_enabled']
+    }
+    if (!$hasPolicyField) {
+        return New-UnknownImmutableReleasePolicyResult -reason "field_not_present_in_api_response"
+    }
+
+    $policyValue = $response.immutable_releases_enabled
+    if ($null -eq $policyValue) {
+        return New-UnknownImmutableReleasePolicyResult -reason "field_null_in_api_response"
+    }
+
+    $status = if ($policyValue) { "enabled" } else { "disabled" }
+    return @{
+        status    = $status
+        checkedAt = $checkedAt
+        reason    = $null
+        source    = $source
+    }
+}
+
 function GetActionType {
     Param (
         $owner,
@@ -1030,7 +1168,67 @@ function GetInfo {
                 }
             }
         }
-        
+
+        # store the current immutable-release policy (issue #264). Tri-state:
+        # enabled/disabled/unknown - never collapse a missing/unavailable
+        # result into "disabled". Refreshed on the same 30-day cadence as
+        # fundingInfo, since it is similarly unlikely to change often and this
+        # keeps the prioritized collection backlog (Get-RepoPriorityScore)
+        # bounded rather than re-checking every repo every run.
+        $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+        $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+        $needsImmutableReleasePolicyCheck = $false
+        if (!$hasImmutableReleasePolicyField -or !$hasImmutableReleasePolicyCheckedAtField -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+            $needsImmutableReleasePolicyCheck = $true
+        }
+        else {
+            $daysSinceLastCheck = (Get-Date) - $action.immutableReleasePolicyCheckedAt
+            if ($daysSinceLastCheck.Days -gt 30) {
+                $needsImmutableReleasePolicyCheck = $true
+            }
+        }
+
+        if ($needsImmutableReleasePolicyCheck) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            if ($repo -ne "" -and $owner -ne "") {
+                Write-Debug "Checking immutable release policy for [$($owner)/$($repo)]"
+                $immutableReleasePolicyResult = GetImmutableReleasePolicy -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+
+                if (!$hasImmutableReleasePolicyField) {
+                    $action | Add-Member -Name immutableReleasePolicy -Value $immutableReleasePolicyResult.status -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicy = $immutableReleasePolicyResult.status
+                }
+
+                if (!$hasImmutableReleasePolicyCheckedAtField) {
+                    $action | Add-Member -Name immutableReleasePolicyCheckedAt -Value $immutableReleasePolicyResult.checkedAt -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicyCheckedAt = $immutableReleasePolicyResult.checkedAt
+                }
+
+                $hasImmutableReleasePolicyReasonField = Get-Member -inputobject $action -name "immutableReleasePolicyReason" -Membertype Properties
+                if (!$hasImmutableReleasePolicyReasonField) {
+                    $action | Add-Member -Name immutableReleasePolicyReason -Value $immutableReleasePolicyResult.reason -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicyReason = $immutableReleasePolicyResult.reason
+                }
+
+                $hasImmutableReleasePolicySourceField = Get-Member -inputobject $action -name "immutableReleasePolicySource" -Membertype Properties
+                if (!$hasImmutableReleasePolicySourceField) {
+                    $action | Add-Member -Name immutableReleasePolicySource -Value $immutableReleasePolicyResult.source -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicySource = $immutableReleasePolicyResult.source
+                }
+
+                $i++ | Out-Null
+                $repoHadUpdates = $true
+            }
+        }
+
         # Track if this repo had any updates
         if ($repoHadUpdates) {
             $script:processMetrics.ReposWithUpdates++
