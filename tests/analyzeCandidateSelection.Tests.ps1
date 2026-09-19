@@ -86,6 +86,8 @@ Describe "Get-PrioritizedReposToProcess selection matches analyze.yml's fork-fil
                 repoSize = 100
                 dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
                 fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+                immutableReleasePolicy = "enabled"
+                immutableReleasePolicyCheckedAt = Get-Date
             }
         )
 

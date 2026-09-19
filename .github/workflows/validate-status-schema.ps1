@@ -88,6 +88,15 @@ class StatusJsonSchema {
     
     # Verification status (typically present)
     [object] $verified  # Can be boolean or null
+
+    # Immutable-release policy tri-state (optional; issue #264). status is one
+    # of "enabled"/"disabled"/"unknown" - never inferred as "disabled" when
+    # unavailable. checkedAt/source/reason exist to audit the displayed state;
+    # reason is only expected to be set when status is "unknown".
+    [object] $immutableReleasePolicy  # "enabled", "disabled" or "unknown"
+    [object] $immutableReleasePolicyCheckedAt  # Can be string (datetime) or null
+    [object] $immutableReleasePolicyReason  # Machine-readable reason string or null
+    [object] $immutableReleasePolicySource  # String describing the API call used, or null
 }
 
 <#
@@ -215,6 +224,30 @@ function Test-ActionSchema {
         }
     }
     
+    # Validate immutableReleasePolicy tri-state if present (issue #264)
+    if ($null -ne $action.immutableReleasePolicy) {
+        $validPolicyValues = @('enabled', 'disabled', 'unknown')
+        if ($validPolicyValues -notcontains $action.immutableReleasePolicy) {
+            $errors += "Object ${index} ($($action.name)): immutableReleasePolicy should be one of 'enabled', 'disabled', 'unknown', found: $($action.immutableReleasePolicy)"
+        }
+        elseif ($action.immutableReleasePolicy -eq 'unknown' -and [string]::IsNullOrWhiteSpace($action.immutableReleasePolicyReason)) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleasePolicy is 'unknown' but missing 'immutableReleasePolicyReason'"
+        }
+
+        if ($null -eq $action.immutableReleasePolicyCheckedAt) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleasePolicy missing 'immutableReleasePolicyCheckedAt' field"
+        }
+        elseif ($action.immutableReleasePolicyCheckedAt -isnot [string] -and $action.immutableReleasePolicyCheckedAt -isnot [datetime]) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyCheckedAt should be a date/string, found: $($action.immutableReleasePolicyCheckedAt.GetType().Name)"
+        }
+        elseif ($action.immutableReleasePolicyCheckedAt -is [string]) {
+            $parsedDate = [datetime]::MinValue
+            if (-not [datetime]::TryParse($action.immutableReleasePolicyCheckedAt, [ref]$parsedDate)) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyCheckedAt has unexpected format: $($action.immutableReleasePolicyCheckedAt)"
+            }
+        }
+    }
+
     # Validate boolean fields
     $booleanFields = @('forkFound', 'secretScanningEnabled', 'dependabotEnabled', 'verified', 'ossf')
     foreach ($field in $booleanFields) {
