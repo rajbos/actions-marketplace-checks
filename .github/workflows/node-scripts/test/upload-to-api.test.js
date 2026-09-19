@@ -7,7 +7,8 @@ const {
   compareTagStringsDesc,
   parseSemverLike,
   needsUpdate,
-  immutableReleaseObservationsChanged
+  immutableReleaseObservationsChanged,
+  immutableReleaseCoverageChanged
 } = require('../src/upload-to-api');
 
 test('parseSemverLike parses basic v-prefixed tags', () => {
@@ -195,5 +196,35 @@ test('needsUpdate returns false when repoInfo.updated_at and immutableReleaseObs
 test('needsUpdate still returns true on a repoInfo.updated_at change regardless of observations', () => {
   const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' } };
   const candidate = { repoInfo: { updated_at: '2024-06-01T00:00:00Z' } };
+  assert.strictEqual(needsUpdate(existing, candidate), true);
+});
+
+test('immutableReleaseCoverageChanged is false when both sides lack coverage', () => {
+  assert.strictEqual(immutableReleaseCoverageChanged({}, {}), false);
+});
+
+test('immutableReleaseCoverageChanged is true when coverage goes from absent to present', () => {
+  const existing = {};
+  const candidate = { immutableReleaseCoverage: { releasesConsidered: 1, immutableCount: 1, knownCount: 1, unknownCount: 0, latestReleaseImmutable: 'immutable', summary: '1 of 1 known releases immutable (last 1; 0 unknown)' } };
+  assert.strictEqual(immutableReleaseCoverageChanged(existing, candidate), true);
+});
+
+test('immutableReleaseCoverageChanged is false when coverage is identical', () => {
+  const coverage = { releasesConsidered: 1, immutableCount: 1, knownCount: 1, unknownCount: 0, latestReleaseImmutable: 'immutable', summary: '1 of 1 known releases immutable (last 1; 0 unknown)' };
+  const existing = { immutableReleaseCoverage: coverage };
+  const candidate = { immutableReleaseCoverage: JSON.parse(JSON.stringify(coverage)) };
+  assert.strictEqual(immutableReleaseCoverageChanged(existing, candidate), false);
+});
+
+test('needsUpdate returns true when an existing API record with identical observation history is missing coverage that the candidate now has (issue #266 rollout)', () => {
+  const observations = [
+    { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+  ];
+  const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' }, immutableReleaseObservations: observations };
+  const candidate = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleaseObservations: JSON.parse(JSON.stringify(observations)),
+    immutableReleaseCoverage: { releasesConsidered: 1, immutableCount: 1, knownCount: 1, unknownCount: 0, latestReleaseImmutable: 'immutable', summary: '1 of 1 known releases immutable (last 1; 0 unknown)' }
+  };
   assert.strictEqual(needsUpdate(existing, candidate), true);
 });

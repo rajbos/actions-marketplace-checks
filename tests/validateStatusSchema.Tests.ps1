@@ -365,6 +365,32 @@ Describe "Status JSON Schema Validation" {
             $result = Test-ActionSchema -action $action -index 0
             $result.Warnings -join " " | Should -Match "immutableReleasePolicyCheckedAt has unexpected format"
         }
+
+        It "Should warn when immutableReleasePolicyChangedAt has an unparsable format" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "enabled"
+                immutableReleasePolicyCheckedAt = "2025-01-10T16:00:00.000Z"
+                immutableReleasePolicyChangedAt = "not-a-date"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "immutableReleasePolicyChangedAt has unexpected format"
+        }
+
+        It "Should not warn when immutableReleasePolicyChangedAt is a well-formed date string" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicy = "enabled"
+                immutableReleasePolicyCheckedAt = "2025-01-10T16:00:00.000Z"
+                immutableReleasePolicyChangedAt = "2025-01-01T00:00:00.000Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Not -Match "immutableReleasePolicyChangedAt"
+        }
     }
 
     Context "immutableReleaseObservations field (issue #265)" {

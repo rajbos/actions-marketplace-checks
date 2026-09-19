@@ -2288,6 +2288,7 @@ function Merge-ImmutableReleaseObservations {
 function Get-ImmutableReleaseCoverage {
     Param (
         $observations,
+        [ValidateRange(0, 10)]
         [int] $releaseLimit = 10
     )
 

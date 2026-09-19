@@ -150,6 +150,14 @@ Describe 'Get-ImmutableReleaseCoverage' {
         $result.releasesConsidered | Should -Be 1
         $result.immutableCount | Should -Be 1
     }
+
+    It 'Should reject a releaseLimit above 10 instead of allowing releasesConsidered to exceed the documented/schema maximum' {
+        { Get-ImmutableReleaseCoverage -observations @() -releaseLimit 11 } | Should -Throw
+    }
+
+    It 'Should reject a negative releaseLimit' {
+        { Get-ImmutableReleaseCoverage -observations @() -releaseLimit -1 } | Should -Throw
+    }
 }
 
 Describe 'Get-ImmutableReleasePolicyChangedAt' {

@@ -233,14 +233,54 @@ function immutableReleaseObservationsChanged(existingAction, candidateAction) {
     return true;
   }
 
-  if (existingObservations.length === 0) {
+  if (existingObservations.length > 0) {
+    try {
+      if (JSON.stringify(existingObservations) !== JSON.stringify(candidateObservations)) {
+        return true;
+      }
+    } catch (jsonError) {
+      // If we can't safely compare, assume it changed so the observation history
+      // is never silently left stale.
+      return true;
+    }
+  }
+
+  return immutableReleaseCoverageChanged(existingAction, candidateAction);
+}
+
+/**
+ * Checks whether the derived immutableReleaseCoverage summary (issue #266)
+ * differs between what the API already has and the current status.json
+ * candidate.
+ *
+ * This is checked independently of the observation-history comparison above
+ * because coverage is a derived field that can go from absent to present (or
+ * otherwise change) without the underlying observations array itself
+ * changing length or content on this particular pass - e.g. an existing API
+ * record uploaded before this field existed. Without this check, such a
+ * record would never pick up the new field once repoInfo.updated_at and the
+ * observation history both happen to be unchanged.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the coverage summary differs (or could not be compared safely)
+ */
+function immutableReleaseCoverageChanged(existingAction, candidateAction) {
+  const existingCoverage = (existingAction && existingAction.immutableReleaseCoverage) || null;
+  const candidateCoverage = (candidateAction && candidateAction.immutableReleaseCoverage) || null;
+
+  if (!existingCoverage && !candidateCoverage) {
     return false;
   }
 
+  if (!existingCoverage || !candidateCoverage) {
+    return true;
+  }
+
   try {
-    return JSON.stringify(existingObservations) !== JSON.stringify(candidateObservations);
+    return JSON.stringify(existingCoverage) !== JSON.stringify(candidateCoverage);
   } catch (jsonError) {
-    // If we can't safely compare, assume it changed so the observation history
+    // If we can't safely compare, assume it changed so the coverage summary
     // is never silently left stale.
     return true;
   }
@@ -626,6 +666,7 @@ module.exports = {
   parseSemverLike,
   compareTagStringsDesc,
   immutableReleaseObservationsChanged,
+  immutableReleaseCoverageChanged,
   trimTagInfoToLatest,
   trimReleaseInfoToLatest,
   needsUpdate,
