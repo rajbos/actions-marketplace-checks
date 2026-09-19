@@ -97,6 +97,22 @@ class StatusJsonSchema {
     [object] $immutableReleasePolicyCheckedAt  # Can be string (datetime) or null
     [object] $immutableReleasePolicyReason  # Machine-readable reason string or null
     [object] $immutableReleasePolicySource  # String describing the API call used, or null
+
+    # Append-only per-release immutable-release observation history (optional;
+    # issue #265). Unlike immutableReleasePolicy above (current policy only),
+    # this is an array with one or more entries per release, built by
+    # Merge-ImmutableReleaseObservations so existing entries are never rewritten.
+    # Each entry is expected to have:
+    #   releaseId         - the GitHub release id (stable key)
+    #   tagName           - the release's tag name
+    #   publishedAt       - the release's published_at timestamp, or null
+    #   immutabilityState - "immutable", "notImmutable" or "unknown"
+    #   status            - "present" or "deleted" (whether the release existed
+    #                        as of this specific observation)
+    #   observedAt        - when this observation entry was recorded
+    #   source            - string describing the API call used, for audit purposes
+    [object] $immutableReleaseObservations  # Array of observation objects, or null
+    [object] $immutableReleaseObservationsCheckedAt  # Can be string (datetime) or null
 }
 
 <#
@@ -244,6 +260,66 @@ function Test-ActionSchema {
             $parsedDate = [datetime]::MinValue
             if (-not [datetime]::TryParse($action.immutableReleasePolicyCheckedAt, [ref]$parsedDate)) {
                 $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyCheckedAt has unexpected format: $($action.immutableReleasePolicyCheckedAt)"
+            }
+        }
+    }
+
+    # Validate immutableReleaseObservations append-only history if present (issue #265)
+    if ($null -ne $action.immutableReleaseObservations) {
+        if ($action.immutableReleaseObservations -isnot [array] -and $action.immutableReleaseObservations -isnot [System.Collections.IEnumerable]) {
+            $errors += "Object ${index} ($($action.name)): immutableReleaseObservations should be an array, found: $($action.immutableReleaseObservations.GetType().Name)"
+        }
+        else {
+            $validImmutabilityStates = @('immutable', 'notImmutable', 'unknown')
+            $validObservationStatuses = @('present', 'deleted')
+            $observationIndex = 0
+            foreach ($observation in @($action.immutableReleaseObservations)) {
+                if ($null -eq $observation) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex] is null"
+                    $observationIndex++
+                    continue
+                }
+
+                if ($null -eq $observation.releaseId) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex] missing 'releaseId' field"
+                }
+
+                if ([string]::IsNullOrWhiteSpace($observation.tagName)) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex] missing 'tagName' field"
+                }
+
+                if ($validImmutabilityStates -notcontains $observation.immutabilityState) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].immutabilityState should be one of 'immutable', 'notImmutable', 'unknown', found: $($observation.immutabilityState)"
+                }
+
+                if ($validObservationStatuses -notcontains $observation.status) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].status should be one of 'present', 'deleted', found: $($observation.status)"
+                }
+
+                if ($null -eq $observation.observedAt) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex] missing 'observedAt' field"
+                }
+                elseif ($observation.observedAt -is [string]) {
+                    $parsedDate = [datetime]::MinValue
+                    if (-not [datetime]::TryParse($observation.observedAt, [ref]$parsedDate)) {
+                        $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].observedAt has unexpected format: $($observation.observedAt)"
+                    }
+                }
+
+                $observationIndex++
+            }
+        }
+
+        if ($null -eq $action.immutableReleaseObservationsCheckedAt) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations missing 'immutableReleaseObservationsCheckedAt' field"
+        }
+        elseif ($action.immutableReleaseObservationsCheckedAt -isnot [string] -and $action.immutableReleaseObservationsCheckedAt -isnot [datetime]) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleaseObservationsCheckedAt should be a date/string, found: $($action.immutableReleaseObservationsCheckedAt.GetType().Name)"
+        }
+        elseif ($action.immutableReleaseObservationsCheckedAt -is [string]) {
+            $parsedDate = [datetime]::MinValue
+            if (-not [datetime]::TryParse($action.immutableReleaseObservationsCheckedAt, [ref]$parsedDate)) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleaseObservationsCheckedAt has unexpected format: $($action.immutableReleaseObservationsCheckedAt)"
             }
         }
     }

@@ -5,7 +5,9 @@ const {
   trimTagInfoToLatest,
   trimReleaseInfoToLatest,
   compareTagStringsDesc,
-  parseSemverLike
+  parseSemverLike,
+  needsUpdate,
+  immutableReleaseObservationsChanged
 } = require('../src/upload-to-api');
 
 test('parseSemverLike parses basic v-prefixed tags', () => {
@@ -117,4 +119,81 @@ test('trimReleaseInfoToLatest filters out +run* releases and prefers SemVer', ()
   if (actionData.releaseInfo[0].tag_name !== 'v1.1.0') throw new Error('Expected v1.1.0 first');
   if (actionData.releaseInfo[1].tag_name !== 'v1.0.1') throw new Error('Expected v1.0.1 second');
   if (actionData.releaseInfo[2].tag_name !== 'v1.0.0') throw new Error('Expected v1.0.0 third');
+});
+
+test('immutableReleaseObservationsChanged is false when both histories are empty/absent', () => {
+  const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' } };
+  const candidate = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' } };
+  assert.strictEqual(immutableReleaseObservationsChanged(existing, candidate), false);
+});
+
+test('immutableReleaseObservationsChanged is true when the candidate has appended a new observation', () => {
+  const existing = {
+    immutableReleaseObservations: [
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+    ]
+  };
+  const candidate = {
+    immutableReleaseObservations: [
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-01-01T00:00:00Z' },
+      { releaseId: 2, tagName: 'v2.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-02-01T00:00:00Z' }
+    ]
+  };
+  assert.strictEqual(immutableReleaseObservationsChanged(existing, candidate), true);
+});
+
+test('immutableReleaseObservationsChanged is false when the history is identical', () => {
+  const observations = [
+    { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+  ];
+  const existing = { immutableReleaseObservations: observations };
+  const candidate = { immutableReleaseObservations: JSON.parse(JSON.stringify(observations)) };
+  assert.strictEqual(immutableReleaseObservationsChanged(existing, candidate), false);
+});
+
+test('immutableReleaseObservationsChanged is true when a release is newly marked deleted', () => {
+  const existing = {
+    immutableReleaseObservations: [
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+    ]
+  };
+  const candidate = {
+    immutableReleaseObservations: [
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'present', observedAt: '2024-01-01T00:00:00Z' },
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'deleted', observedAt: '2024-03-01T00:00:00Z' }
+    ]
+  };
+  assert.strictEqual(immutableReleaseObservationsChanged(existing, candidate), true);
+});
+
+test('needsUpdate returns true when repoInfo.updated_at is unchanged but immutableReleaseObservations grew', () => {
+  const existing = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleaseObservations: [
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+    ]
+  };
+  const candidate = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleaseObservations: [
+      { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-01-01T00:00:00Z' },
+      { releaseId: 2, tagName: 'v2.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-02-01T00:00:00Z' }
+    ]
+  };
+  assert.strictEqual(needsUpdate(existing, candidate), true);
+});
+
+test('needsUpdate returns false when repoInfo.updated_at and immutableReleaseObservations are both unchanged', () => {
+  const observations = [
+    { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'unknown', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+  ];
+  const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' }, immutableReleaseObservations: observations };
+  const candidate = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' }, immutableReleaseObservations: JSON.parse(JSON.stringify(observations)) };
+  assert.strictEqual(needsUpdate(existing, candidate), false);
+});
+
+test('needsUpdate still returns true on a repoInfo.updated_at change regardless of observations', () => {
+  const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' } };
+  const candidate = { repoInfo: { updated_at: '2024-06-01T00:00:00Z' } };
+  assert.strictEqual(needsUpdate(existing, candidate), true);
 });

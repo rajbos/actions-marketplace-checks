@@ -367,6 +367,169 @@ Describe "Status JSON Schema Validation" {
         }
     }
 
+    Context "immutableReleaseObservations field (issue #265)" {
+        It "Should validate a repo with a well-formed observation history" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        publishedAt = "2025-01-10T16:00:00.000Z"
+                        immutabilityState = "unknown"
+                        status = "present"
+                        observedAt = "2025-01-10T16:05:00.000Z"
+                        source = "GET /repos/{owner}/{repo}/releases"
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T16:05:00.000Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+        }
+
+        It "Should validate multiple observations for the same release id (append-only history)" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        publishedAt = "2025-01-10T16:00:00.000Z"
+                        immutabilityState = "immutable"
+                        status = "present"
+                        observedAt = "2025-01-10T16:05:00.000Z"
+                        source = "GET /repos/{owner}/{repo}/releases"
+                    }
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        publishedAt = "2025-01-10T16:00:00.000Z"
+                        immutabilityState = "immutable"
+                        status = "deleted"
+                        observedAt = "2025-02-10T16:05:00.000Z"
+                        source = "GET /repos/{owner}/{repo}/releases"
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-02-10T16:05:00.000Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+        }
+
+        It "Should error when an observation has an invalid immutabilityState" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        immutabilityState = "definitely-immutable"
+                        status = "present"
+                        observedAt = "2025-01-10T16:05:00.000Z"
+                    }
+                )
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "immutabilityState should be one of"
+        }
+
+        It "Should error when an observation has an invalid status" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        immutabilityState = "unknown"
+                        status = "removed"
+                        observedAt = "2025-01-10T16:05:00.000Z"
+                    }
+                )
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "status should be one of 'present', 'deleted'"
+        }
+
+        It "Should warn when an observation is missing releaseId or tagName" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        immutabilityState = "unknown"
+                        status = "present"
+                        observedAt = "2025-01-10T16:05:00.000Z"
+                    }
+                )
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "missing 'releaseId'"
+            $result.Warnings -join " " | Should -Match "missing 'tagName'"
+        }
+
+        It "Should warn when immutableReleaseObservationsCheckedAt is missing" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        immutabilityState = "unknown"
+                        status = "present"
+                        observedAt = "2025-01-10T16:05:00.000Z"
+                    }
+                )
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "missing 'immutableReleaseObservationsCheckedAt'"
+        }
+
+        It "Should warn when an observation's observedAt has an unparsable format" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId = 1
+                        tagName = "v1.0.0"
+                        immutabilityState = "unknown"
+                        status = "present"
+                        observedAt = "not-a-date"
+                    }
+                )
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "observedAt has unexpected format"
+        }
+
+        It "Should not require immutableReleaseObservations to be present at all (backwards compatible)" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings.Count | Should -Be 0
+        }
+    }
+
     Context "Test-ActionSchema function with errors" {
         It "Should error when vulnerabilityStatus is not an object" {
             $action = @{

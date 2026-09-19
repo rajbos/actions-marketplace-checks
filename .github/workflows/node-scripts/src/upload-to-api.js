@@ -211,7 +211,45 @@ function trimReleaseInfoToLatest(actionData, maxReleases) {
 }
 
 /**
- * Checks if an action needs to be updated based on repoInfo.updated_at comparison.
+ * Checks whether the append-only immutableReleaseObservations history differs
+ * between what the API already has and the current status.json candidate.
+ *
+ * repoInfo.updated_at (the primary needsUpdate signal below) only changes when
+ * the upstream repo itself is pushed to - it does not change just because a new
+ * release observation (or a "deleted" observation for a removed release) was
+ * appended. Without this check, newly appended observations would silently
+ * never reach the API whenever repoInfo.updated_at happens to be unchanged,
+ * which would defeat the point of persisting this history at all.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the observation history differs (or could not be compared safely)
+ */
+function immutableReleaseObservationsChanged(existingAction, candidateAction) {
+  const existingObservations = (existingAction && existingAction.immutableReleaseObservations) || [];
+  const candidateObservations = (candidateAction && candidateAction.immutableReleaseObservations) || [];
+
+  if (existingObservations.length !== candidateObservations.length) {
+    return true;
+  }
+
+  if (existingObservations.length === 0) {
+    return false;
+  }
+
+  try {
+    return JSON.stringify(existingObservations) !== JSON.stringify(candidateObservations);
+  } catch (jsonError) {
+    // If we can't safely compare, assume it changed so the observation history
+    // is never silently left stale.
+    return true;
+  }
+}
+
+/**
+ * Checks if an action needs to be updated based on repoInfo.updated_at comparison
+ * (or, failing that, whether the append-only immutableReleaseObservations history
+ * has grown/changed - see immutableReleaseObservationsChanged above).
  *
  * @param {object|null} existingAction - The action from API storage (or null if not exists)
  * @param {object} candidateAction - The action from status.json
@@ -222,19 +260,22 @@ function needsUpdate(existingAction, candidateAction) {
     // Action is in status.json but not in API - needs to be created
     return true;
   }
-  
+
   if (existingAction.repoInfo && existingAction.repoInfo.updated_at &&
       candidateAction.repoInfo && candidateAction.repoInfo.updated_at) {
     try {
       const existingUpdated = new Date(existingAction.repoInfo.updated_at).toISOString();
       const candidateUpdated = new Date(candidateAction.repoInfo.updated_at).toISOString();
-      return existingUpdated !== candidateUpdated;
+      if (existingUpdated !== candidateUpdated) {
+        return true;
+      }
+      return immutableReleaseObservationsChanged(existingAction, candidateAction);
     } catch (dateError) {
       // If date comparison fails, assume it needs update to be safe
       return true;
     }
   }
-  
+
   // If either side is missing updated_at, assume it needs update
   return true;
 }
@@ -416,6 +457,14 @@ async function uploadActions() {
     if (action.ossfDateLastUpdate) actionData.ossfDateLastUpdate = action.ossfDateLastUpdate;
     if (action.dependents) actionData.dependents = action.dependents;
     if (action.verified !== undefined) actionData.verified = action.verified;
+    // Append-only per-release immutable-release observation history (issue #265).
+    // Passed through as-is - the API upsert path must not drop or collapse this
+    // history. (Unlike tagInfo/releaseInfo below, this is intentionally not
+    // trimmed here: trimming would mean silently dropping observations for
+    // releases that are no longer "latest", which the append-only/no-erase
+    // acceptance criteria for this history explicitly rules out.)
+    if (action.immutableReleaseObservations) actionData.immutableReleaseObservations = action.immutableReleaseObservations;
+    if (action.immutableReleaseObservationsCheckedAt) actionData.immutableReleaseObservationsCheckedAt = action.immutableReleaseObservationsCheckedAt;
 
     // Trim tag list to the latest tags, preferring SemVer ordering and
     // falling back to alphabetical if SemVer parsing fails.
@@ -572,6 +621,7 @@ module.exports = {
   formatErrorForSummary,
   parseSemverLike,
   compareTagStringsDesc,
+  immutableReleaseObservationsChanged,
   trimTagInfoToLatest,
   trimReleaseInfoToLatest,
   needsUpdate,
