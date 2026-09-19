@@ -709,6 +709,81 @@ function ReportFundingInsights {
     LogMessage "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*"
 }
 
+function ReportImmutableReleaseInsights {
+    # Surfaces the immutable-release signals computed by issues #264-#266
+    # (immutableReleasePolicy, immutableReleaseCoverage, immutableReleaseSummary)
+    # with clear provenance and no overclaiming: a current "enabled" policy is
+    # reported alongside, never instead of, the recent-release coverage - it
+    # never establishes on its own that older releases are immutable, and
+    # unknown counts are always shown as their own bucket, never folded into
+    # pass/fail.
+    LogMessage "## Immutable Release Information"
+    LogMessage "Analysis of the immutable-release policy and recent-release integrity for repositories where this has been checked."
+    LogMessage ""
+
+    $policyCounts = @{ enabled = 0; disabled = 0; unknown = 0 }
+    $actionsWithPolicy = 0
+    $actionsWithCoverage = 0
+    $latestReleaseImmutableCounts = @{ immutable = 0; notImmutable = 0; unknown = 0 }
+    $totalKnownReleases = 0
+    $totalImmutableReleases = 0
+    $totalUnknownReleases = 0
+
+    foreach ($action in $actions) {
+        if ($action.immutableReleasePolicy) {
+            $actionsWithPolicy++
+            if ($policyCounts.ContainsKey($action.immutableReleasePolicy)) {
+                $policyCounts[$action.immutableReleasePolicy]++
+            }
+        }
+
+        if ($action.immutableReleaseCoverage -and $action.immutableReleaseCoverage.releasesConsidered -gt 0) {
+            $actionsWithCoverage++
+            $coverage = $action.immutableReleaseCoverage
+            if ($latestReleaseImmutableCounts.ContainsKey($coverage.latestReleaseImmutable)) {
+                $latestReleaseImmutableCounts[$coverage.latestReleaseImmutable]++
+            }
+            $totalKnownReleases += $coverage.knownCount
+            $totalImmutableReleases += $coverage.immutableCount
+            $totalUnknownReleases += $coverage.unknownCount
+        }
+    }
+
+    if ($actionsWithPolicy -eq 0 -and $actionsWithCoverage -eq 0) {
+        LogMessage "No actions have immutable-release information available yet."
+        LogMessage ""
+        LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
+        return
+    }
+
+    LogMessage "### Current Immutable-Release Policy"
+    LogMessage "|Description|Count|"
+    LogMessage "|---|---:|"
+    LogMessage "|Actions with a known policy state|$(DisplayIntWithDots($actionsWithPolicy))|"
+    LogMessage "|Policy enabled|$(DisplayIntWithDots($policyCounts.enabled))|"
+    LogMessage "|Policy disabled|$(DisplayIntWithDots($policyCounts.disabled))|"
+    LogMessage "|Policy unknown (never collapsed into disabled)|$(DisplayIntWithDots($policyCounts.unknown))|"
+    LogMessage ""
+
+    if ($actionsWithCoverage -gt 0) {
+        LogMessage "### Recent-Release Immutability Coverage (last 10 releases per action)"
+        LogMessage "*A current 'enabled' policy above does not by itself establish that these historical releases were immutable - this table reflects only what was actually observed per release.*"
+        LogMessage ""
+        LogMessage "|Description|Count|"
+        LogMessage "|---|---:|"
+        LogMessage "|Actions with recent-release coverage|$(DisplayIntWithDots($actionsWithCoverage))|"
+        LogMessage "|Latest release known immutable|$(DisplayIntWithDots($latestReleaseImmutableCounts.immutable))|"
+        LogMessage "|Latest release known not immutable|$(DisplayIntWithDots($latestReleaseImmutableCounts.notImmutable))|"
+        LogMessage "|Latest release immutability unknown|$(DisplayIntWithDots($latestReleaseImmutableCounts.unknown))|"
+        LogMessage "|Total known releases considered|$(DisplayIntWithDots($totalKnownReleases))|"
+        LogMessage "|Total immutable releases considered|$(DisplayIntWithDots($totalImmutableReleases))|"
+        LogMessage "|Total unknown releases considered (excluded from pass/fail)|$(DisplayIntWithDots($totalUnknownReleases))|"
+        LogMessage ""
+    }
+
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
+}
+
 function GetOSSFInfo {
     $ossfInfoCount = 0
     $total = 0
@@ -799,6 +874,9 @@ ReportAgeInsights
 LogMessage ""
 
 ReportFundingInsights
+LogMessage ""
+
+ReportImmutableReleaseInsights
 LogMessage ""
 
 ReportInsightsInMarkdown -repoInformation $repoInformation

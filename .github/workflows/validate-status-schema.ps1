@@ -107,14 +107,26 @@ class StatusJsonSchema {
     # this is an array with one or more entries per release, built by
     # Merge-ImmutableReleaseObservations so existing entries are never rewritten.
     # Each entry is expected to have:
-    #   releaseId         - the GitHub release id (stable key)
-    #   tagName           - the release's tag name
-    #   publishedAt       - the release's published_at timestamp, or null
-    #   immutabilityState - "immutable", "notImmutable" or "unknown"
-    #   status            - "present" or "deleted" (whether the release existed
-    #                        as of this specific observation)
-    #   observedAt        - when this observation entry was recorded
-    #   source            - string describing the API call used, for audit purposes
+    #   releaseId              - the GitHub release id (stable key)
+    #   tagName                - the release's tag name
+    #   publishedAt            - the release's published_at timestamp, or null
+    #   immutabilityState      - "immutable", "notImmutable" or "unknown"
+    #   status                 - "present" or "deleted" (whether the release existed
+    #                             as of this specific observation)
+    #   observedAt             - when this observation entry was recorded
+    #   source                 - string describing the API call used, for audit purposes
+    #   releaseTargetCommitish - the release's recorded target_commitish (branch name
+    #                             or commit SHA), or null (optional; issue #267)
+    #   resolvedCommitSha      - the release's tag resolved/peeled to its target commit
+    #                             SHA (annotated tags are peeled - see
+    #                             Resolve-ReleaseTagCommitSha in repoInfo.ps1), or null
+    #                             when not resolved (bounded to the newest releases
+    #                             only, to limit extra API calls) (optional; issue #267)
+    #   tagReleaseMismatch     - boolean, only set when releaseTargetCommitish is
+    #                             itself a full commit SHA that can be honestly
+    #                             compared against resolvedCommitSha; null/absent
+    #                             otherwise (e.g. target is a branch name) - never
+    #                             guessed (optional; issue #267)
     [object] $immutableReleaseObservations  # Array of observation objects, or null
     [object] $immutableReleaseObservationsCheckedAt  # Can be string (datetime) or null
 
@@ -131,6 +143,15 @@ class StatusJsonSchema {
     #   latestReleaseImmutable - "immutable", "notImmutable" or "unknown" for the single newest release
     #   summary                - human-readable string, e.g. "7 of 8 known releases immutable (last 10; 2 unknown)"
     [object] $immutableReleaseCoverage  # Object with the fields above, or null
+
+    # Concise human-readable rendering combining the current policy with the
+    # recent-release coverage summary (optional; issue #267), produced by
+    # Get-ImmutableReleaseSummary (library.ps1), e.g.
+    # "Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)". A current
+    # "enabled"/"disabled" policy is always shown *alongside*, never in place of,
+    # the recent-release coverage - an enabled-today policy does not by itself
+    # establish that older releases are immutable.
+    [object] $immutableReleaseSummary  # String, or null
 }
 
 <#
@@ -324,6 +345,18 @@ function Test-ActionSchema {
                     }
                 }
 
+                # Release-integrity context is optional (issue #267) - only the
+                # newest releases get it resolved, and resolution itself can fail
+                # - so absence is expected and never a warning by itself. Only
+                # flag a mismatch flag that was set without a resolved SHA to back
+                # it up, since that combination should never happen.
+                if ($null -ne $observation.tagReleaseMismatch -and [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha)) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].tagReleaseMismatch is set without a 'resolvedCommitSha'"
+                }
+                if (-not [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha) -and $observation.resolvedCommitSha -notmatch '^[0-9a-f]{40}$') {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].resolvedCommitSha has unexpected format: $($observation.resolvedCommitSha)"
+                }
+
                 $observationIndex++
             }
         }
@@ -369,6 +402,30 @@ function Test-ActionSchema {
 
             if ([string]::IsNullOrWhiteSpace($coverage.summary)) {
                 $warnings += "Object ${index} ($($action.name)): immutableReleaseCoverage missing 'summary' field"
+            }
+        }
+    }
+
+    # Validate the composed immutableReleaseSummary rendering if present (issue #267).
+    # This must never collapse the tri-state policy or the unknown/known coverage
+    # counts into a bare pass/fail - it is expected to always start with one of the
+    # three policy labels below, so callers relying on it can still tell "disabled"
+    # and "unknown" apart from "enabled" at a glance.
+    if ($null -ne $action.immutableReleaseSummary) {
+        if ($action.immutableReleaseSummary -isnot [string]) {
+            $errors += "Object ${index} ($($action.name)): immutableReleaseSummary should be a string, found: $($action.immutableReleaseSummary.GetType().Name)"
+        }
+        else {
+            $validSummaryPrefixes = @('Enabled;', 'Disabled;', 'Unknown;')
+            $hasValidPrefix = $false
+            foreach ($prefix in $validSummaryPrefixes) {
+                if ($action.immutableReleaseSummary.StartsWith($prefix)) {
+                    $hasValidPrefix = $true
+                    break
+                }
+            }
+            if (-not $hasValidPrefix) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleaseSummary does not start with a recognized policy label ('Enabled;'/'Disabled;'/'Unknown;'), found: $($action.immutableReleaseSummary)"
             }
         }
     }

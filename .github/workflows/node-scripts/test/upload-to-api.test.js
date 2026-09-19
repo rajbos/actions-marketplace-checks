@@ -7,7 +7,8 @@ const {
   compareTagStringsDesc,
   parseSemverLike,
   needsUpdate,
-  immutableReleaseObservationsChanged
+  immutableReleaseObservationsChanged,
+  buildActionData
 } = require('../src/upload-to-api');
 
 test('parseSemverLike parses basic v-prefixed tags', () => {
@@ -196,4 +197,131 @@ test('needsUpdate still returns true on a repoInfo.updated_at change regardless 
   const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' } };
   const candidate = { repoInfo: { updated_at: '2024-06-01T00:00:00Z' } };
   assert.strictEqual(needsUpdate(existing, candidate), true);
+});
+
+// buildActionData - issue #267: surfacing immutable-release policy/coverage/summary
+// fields (and the release-integrity context added to observations) through the
+// marketplace API payload.
+
+test('buildActionData passes through the "enabled" immutable-release policy with its provenance', () => {
+  const action = {
+    owner: 'test-owner',
+    name: 'test-repo',
+    immutableReleasePolicy: 'enabled',
+    immutableReleasePolicyCheckedAt: '2025-01-10T16:00:00.000Z',
+    immutableReleasePolicySource: 'GET /repos/{owner}/{repo}',
+    immutableReleasePolicyChangedAt: '2024-06-01T00:00:00.000Z'
+  };
+
+  const actionData = buildActionData(action);
+
+  assert.strictEqual(actionData.immutableReleasePolicy, 'enabled');
+  assert.strictEqual(actionData.immutableReleasePolicyCheckedAt, '2025-01-10T16:00:00.000Z');
+  assert.strictEqual(actionData.immutableReleasePolicySource, 'GET /repos/{owner}/{repo}');
+  assert.strictEqual(actionData.immutableReleasePolicyChangedAt, '2024-06-01T00:00:00.000Z');
+  // No reason expected when the policy is known, not unknown
+  assert.strictEqual(actionData.immutableReleasePolicyReason, undefined);
+});
+
+test('buildActionData passes through the "disabled" immutable-release policy', () => {
+  const action = {
+    owner: 'test-owner',
+    name: 'test-repo',
+    immutableReleasePolicy: 'disabled',
+    immutableReleasePolicyCheckedAt: '2025-01-10T16:00:00.000Z'
+  };
+
+  const actionData = buildActionData(action);
+
+  assert.strictEqual(actionData.immutableReleasePolicy, 'disabled');
+});
+
+test('buildActionData passes through the "unknown" immutable-release policy together with its reason', () => {
+  const action = {
+    owner: 'test-owner',
+    name: 'test-repo',
+    immutableReleasePolicy: 'unknown',
+    immutableReleasePolicyCheckedAt: '2025-01-10T16:00:00.000Z',
+    immutableReleasePolicyReason: 'field_not_present_in_api_response'
+  };
+
+  const actionData = buildActionData(action);
+
+  assert.strictEqual(actionData.immutableReleasePolicy, 'unknown');
+  assert.strictEqual(actionData.immutableReleasePolicyReason, 'field_not_present_in_api_response');
+});
+
+test('buildActionData omits immutable-release policy fields entirely when never checked', () => {
+  const action = { owner: 'test-owner', name: 'test-repo' };
+
+  const actionData = buildActionData(action);
+
+  assert.strictEqual('immutableReleasePolicy' in actionData, false);
+  assert.strictEqual('immutableReleasePolicyCheckedAt' in actionData, false);
+  assert.strictEqual('immutableReleasePolicyReason' in actionData, false);
+  assert.strictEqual('immutableReleasePolicySource' in actionData, false);
+  assert.strictEqual('immutableReleasePolicyChangedAt' in actionData, false);
+});
+
+test('buildActionData passes through immutableReleaseCoverage with mixed known/unknown counts', () => {
+  const action = {
+    owner: 'test-owner',
+    name: 'test-repo',
+    immutableReleaseCoverage: {
+      releasesConsidered: 10,
+      immutableCount: 7,
+      notImmutableCount: 1,
+      unknownCount: 2,
+      knownCount: 8,
+      latestReleaseImmutable: 'immutable',
+      summary: '7 of 8 known releases immutable (last 10; 2 unknown)'
+    }
+  };
+
+  const actionData = buildActionData(action);
+
+  assert.deepStrictEqual(actionData.immutableReleaseCoverage, action.immutableReleaseCoverage);
+});
+
+test('buildActionData passes through the composed immutableReleaseSummary string', () => {
+  const action = {
+    owner: 'test-owner',
+    name: 'test-repo',
+    immutableReleaseSummary: 'Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)'
+  };
+
+  const actionData = buildActionData(action);
+
+  assert.strictEqual(actionData.immutableReleaseSummary, 'Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)');
+});
+
+test('buildActionData passes through release-integrity fields on observations without trimming the history', () => {
+  const observations = [
+    {
+      releaseId: 1,
+      tagName: 'v1.0.0',
+      publishedAt: '2024-01-01T00:00:00Z',
+      immutabilityState: 'unknown',
+      status: 'present',
+      observedAt: '2024-01-10T00:00:00Z',
+      source: 'GET /repos/{owner}/{repo}/releases',
+      releaseTargetCommitish: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+      resolvedCommitSha: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+      tagReleaseMismatch: false
+    }
+  ];
+  const action = { owner: 'test-owner', name: 'test-repo', immutableReleaseObservations: observations };
+
+  const actionData = buildActionData(action);
+
+  assert.deepStrictEqual(actionData.immutableReleaseObservations, observations);
+});
+
+test('buildActionData never collapses the three policy states into a boolean', () => {
+  const policies = ['enabled', 'disabled', 'unknown'];
+  for (const policy of policies) {
+    const actionData = buildActionData({ owner: 'o', name: 'n', immutableReleasePolicy: policy });
+    assert.strictEqual(actionData.immutableReleasePolicy, policy);
+    assert.notStrictEqual(typeof actionData.immutableReleasePolicy, 'boolean');
+  }
 });

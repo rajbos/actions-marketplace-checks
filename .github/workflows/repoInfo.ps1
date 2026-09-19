@@ -615,8 +615,16 @@ function GetImmutableReleasePolicy {
 
     .OUTPUTS
     Hashtable with:
-      Releases  - array of hashtables (releaseId, tagName, publishedAt) for every
-                  non-draft release found; empty array when none/on error
+      Releases  - array of hashtables (releaseId, tagName, publishedAt,
+                  releaseTargetCommitish) for every non-draft release found;
+                  empty array when none/on error. For the newest releases (up
+                  to 10, bounded to limit extra API calls - issue #267) each
+                  entry also carries resolvedCommitSha (the tag's peeled
+                  commit SHA, via Resolve-ReleaseTagCommitSha below) and
+                  tagReleaseMismatch (boolean, only set when
+                  releaseTargetCommitish is itself a full commit SHA that can
+                  be honestly compared against it - $null/unset otherwise,
+                  e.g. when the target is a branch name, never guessed)
       CheckedAt - the datetime this check was performed
       Source    - the API call used to collect the value, for audit purposes
       Error     - $true when the fetch failed/was skipped, otherwise $false
@@ -693,11 +701,49 @@ function GetImmutableReleaseObservations {
 
     $releases = @($publishedReleases | ForEach-Object {
         @{
-            releaseId   = $_.id
-            tagName     = $_.tag_name
-            publishedAt = $_.published_at
+            releaseId              = $_.id
+            tagName                = $_.tag_name
+            publishedAt            = $_.published_at
+            releaseTargetCommitish = $_.target_commitish
         }
     })
+
+    # Resolve the peeled commit SHA for the tag of only the newest releases
+    # (bounded to the same "last 10" window Get-ImmutableReleaseCoverage uses in
+    # library.ps1), so this doesn't add an unbounded number of extra API calls
+    # per repo per run. Annotated tags are peeled to their target commit before
+    # any release/tag comparison is made, per the issue #267 acceptance
+    # criteria - see Resolve-ReleaseTagCommitSha below for the lightweight vs
+    # annotated distinction.
+    $releaseTagShaResolutionLimit = 10
+    $releasesNewestFirst = @($releases | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
+    $releaseIdsToResolve = New-Object System.Collections.Generic.HashSet[object]
+    foreach ($r in ($releasesNewestFirst | Select-Object -First $releaseTagShaResolutionLimit)) {
+        [void]$releaseIdsToResolve.Add($r.releaseId)
+    }
+
+    foreach ($release in $releases) {
+        if (-not $releaseIdsToResolve.Contains($release.releaseId)) { continue }
+        if ($null -eq $release.tagName -or $release.tagName.Length -eq 0) { continue }
+
+        $shaResult = Resolve-ReleaseTagCommitSha -owner $owner -repo $repo -tagName $release.tagName -accessToken $accessToken -startTime $startTime
+        if ($shaResult.Error) {
+            # Leave resolvedCommitSha/tagReleaseMismatch unset on failure - never
+            # guess a resolved SHA or a mismatch verdict we couldn't verify.
+            continue
+        }
+
+        $release.resolvedCommitSha = $shaResult.Sha
+
+        # Only compare when the release's recorded target actually looks like a
+        # full commit SHA - target_commitish is very often a branch name instead
+        # (e.g. "main"), which cannot honestly be compared against a commit SHA.
+        # In that case tagReleaseMismatch is left unset ($null / unknown) rather
+        # than reporting a mismatch (or a match) that isn't actually verified.
+        if ($release.releaseTargetCommitish -match '^[0-9a-f]{40}$') {
+            $release.tagReleaseMismatch = ($release.releaseTargetCommitish -ne $shaResult.Sha)
+        }
+    }
 
     return @{
         Releases  = $releases
@@ -706,6 +752,146 @@ function GetImmutableReleaseObservations {
         Error     = $false
         Reason    = $null
     }
+}
+
+<#
+    .SYNOPSIS
+    Resolves a release's tag to its underlying commit SHA, peeling annotated
+    tags to their target commit (issue #267).
+
+    .DESCRIPTION
+    GitHub's git ref API returns the tag ref's immediate target object, which
+    for a lightweight tag IS the commit, but for an annotated tag is the
+    annotated tag object itself - a distinct Git object with its own SHA, not
+    the commit it ultimately points to. Comparing an annotated tag's ref SHA
+    directly against a release's recorded target would misreport nearly every
+    annotated-tag release as changed/mismatched. This function distinguishes
+    the two ref types via the "type" field GitHub returns on the ref's object
+    ("commit" for lightweight tags, "tag" for annotated tags) and, only for
+    annotated tags, makes one further call to peel the tag object down to the
+    commit SHA it actually targets.
+
+    Follows the same ApiCall/error-mapping/time-budget conventions as
+    GetImmutableReleasePolicy and GetImmutableReleaseObservations above -
+    failures come back as an explicit Error/Reason rather than throwing or
+    guessing a SHA.
+
+    .PARAMETER owner
+    The upstream repository owner (organization or user login).
+
+    .PARAMETER repo
+    The upstream repository name.
+
+    .PARAMETER tagName
+    The release's tag name to resolve.
+
+    .PARAMETER accessToken
+    GitHub access token (App token) to use for the API call.
+
+    .PARAMETER startTime
+    Start time of the overall run, used for the shared 50-minute time budget
+    check other collectors in this file also use.
+
+    .OUTPUTS
+    Hashtable with:
+      Sha    - the resolved commit SHA, or $null when resolution failed
+      Error  - $true when resolution failed, otherwise $false
+      Reason - machine-readable reason string when Error is $true, otherwise $null
+#>
+function Resolve-ReleaseTagCommitSha {
+    Param (
+        $owner,
+        $repo,
+        $tagName,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    function New-ResolveReleaseTagCommitShaErrorResult {
+        Param ([string] $reason)
+        return @{ Sha = $null; Error = $true; Reason = $reason }
+    }
+
+    if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0 -or $null -eq $tagName -or $tagName.Length -eq 0) {
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "missing_owner_repo_or_tag"
+    }
+
+    # Check if we are nearing the 50-minute mark, same time budget every other
+    # per-repo collector in this file respects.
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "run_time_budget_exceeded"
+    }
+
+    $encodedTag = [uri]::EscapeDataString($tagName)
+    $refUrl = "/repos/$owner/$repo/git/ref/tags/$encodedTag"
+    $refResponse = $null
+    try {
+        $refResponse = ApiCall -method GET -url $refUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to resolve tag ref for [$owner/$repo] tag [$tagName]: $($_.Exception.Message)"
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "transient_error"
+    }
+
+    $isRefError = ($refResponse -is [hashtable] -and $refResponse.ContainsKey('Error') -and $refResponse.Error)
+    if ($isRefError) {
+        $reason = "api_error"
+        if ($refResponse.ContainsKey('StatusCode')) {
+            switch ($refResponse.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "tag_ref_not_found" }
+                default { $reason = "api_error_status_$($refResponse.StatusCode)" }
+            }
+        }
+        return New-ResolveReleaseTagCommitShaErrorResult -reason $reason
+    }
+
+    if ($null -eq $refResponse -or $null -eq $refResponse.object) {
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "no_response"
+    }
+
+    $objectType = $refResponse.object.type
+    $objectSha = $refResponse.object.sha
+
+    if ($objectType -ne "tag") {
+        # Lightweight tag (or already a commit ref) - the ref's object SHA is
+        # already the commit SHA, no peeling required.
+        return @{ Sha = $objectSha; Error = $false; Reason = $null }
+    }
+
+    # Annotated tag - the ref points at a tag object, not a commit, so peel it
+    # one level further to find the commit it actually targets.
+    $tagObjectUrl = "/repos/$owner/$repo/git/tags/$objectSha"
+    $tagObjectResponse = $null
+    try {
+        $tagObjectResponse = ApiCall -method GET -url $tagObjectUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to peel annotated tag [$tagName] for [$owner/$repo]: $($_.Exception.Message)"
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "transient_error"
+    }
+
+    $isTagObjectError = ($tagObjectResponse -is [hashtable] -and $tagObjectResponse.ContainsKey('Error') -and $tagObjectResponse.Error)
+    if ($isTagObjectError) {
+        $reason = "api_error"
+        if ($tagObjectResponse.ContainsKey('StatusCode')) {
+            switch ($tagObjectResponse.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "tag_object_not_found" }
+                default { $reason = "api_error_status_$($tagObjectResponse.StatusCode)" }
+            }
+        }
+        return New-ResolveReleaseTagCommitShaErrorResult -reason $reason
+    }
+
+    if ($null -eq $tagObjectResponse -or $null -eq $tagObjectResponse.object) {
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "no_response"
+    }
+
+    return @{ Sha = $tagObjectResponse.object.sha; Error = $false; Reason = $null }
 }
 
 function GetActionType {
@@ -1439,6 +1625,33 @@ function GetInfo {
                     $i++ | Out-Null
                     $repoHadUpdates = $true
                 }
+            }
+        }
+
+        # Compose the concise, marketplace-ready immutable-release summary
+        # string (issue #267) from whatever policy/coverage values are
+        # currently stored on this action - not gated behind the 30-day
+        # refresh cadence above, so it always reflects the latest known
+        # policy and coverage even on runs where neither was refreshed.
+        # A current "enabled" policy never gets combined into a pass/fail
+        # verdict here - it is always shown alongside (never instead of)
+        # the recent-release coverage summary, so an enabled-today policy
+        # does not overclaim the immutability of older releases.
+        $hasImmutableReleasePolicyFieldForSummary = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+        $currentImmutableReleasePolicy = if ($hasImmutableReleasePolicyFieldForSummary) { $action.immutableReleasePolicy } else { $null }
+        $hasImmutableReleaseCoverageFieldForSummary = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        $currentImmutableReleaseCoverage = if ($hasImmutableReleaseCoverageFieldForSummary) { $action.immutableReleaseCoverage } else { $null }
+
+        if ($null -ne $currentImmutableReleasePolicy -or $null -ne $currentImmutableReleaseCoverage) {
+            $immutableReleaseSummaryValue = Get-ImmutableReleaseSummary -policyStatus $currentImmutableReleasePolicy -coverage $currentImmutableReleaseCoverage
+            $hasImmutableReleaseSummaryField = Get-Member -inputobject $action -name "immutableReleaseSummary" -Membertype Properties
+            if (!$hasImmutableReleaseSummaryField) {
+                $action | Add-Member -Name immutableReleaseSummary -Value $immutableReleaseSummaryValue -MemberType NoteProperty
+                $repoHadUpdates = $true
+            }
+            elseif ($action.immutableReleaseSummary -ne $immutableReleaseSummaryValue) {
+                $action.immutableReleaseSummary = $immutableReleaseSummaryValue
+                $repoHadUpdates = $true
             }
         }
 

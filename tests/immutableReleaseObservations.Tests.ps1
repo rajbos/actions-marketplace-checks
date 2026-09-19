@@ -65,11 +65,37 @@ BeforeAll {
 
         $releases = @($publishedReleases | ForEach-Object {
             @{
-                releaseId   = $_.id
-                tagName     = $_.tag_name
-                publishedAt = $_.published_at
+                releaseId              = $_.id
+                tagName                = $_.tag_name
+                publishedAt            = $_.published_at
+                releaseTargetCommitish = $_.target_commitish
             }
         })
+
+        # Resolve the peeled commit SHA for only the newest releases (issue #267),
+        # bounded to limit extra API calls - mirrors repoInfo.ps1.
+        $releaseTagShaResolutionLimit = 10
+        $releasesNewestFirst = @($releases | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
+        $releaseIdsToResolve = New-Object System.Collections.Generic.HashSet[object]
+        foreach ($r in ($releasesNewestFirst | Select-Object -First $releaseTagShaResolutionLimit)) {
+            [void]$releaseIdsToResolve.Add($r.releaseId)
+        }
+
+        foreach ($release in $releases) {
+            if (-not $releaseIdsToResolve.Contains($release.releaseId)) { continue }
+            if ($null -eq $release.tagName -or $release.tagName.Length -eq 0) { continue }
+
+            $shaResult = Resolve-ReleaseTagCommitSha -owner $owner -repo $repo -tagName $release.tagName -accessToken $accessToken -startTime $startTime
+            if ($shaResult.Error) {
+                continue
+            }
+
+            $release.resolvedCommitSha = $shaResult.Sha
+
+            if ($release.releaseTargetCommitish -match '^[0-9a-f]{40}$') {
+                $release.tagReleaseMismatch = ($release.releaseTargetCommitish -ne $shaResult.Sha)
+            }
+        }
 
         return @{
             Releases  = $releases
@@ -78,6 +104,95 @@ BeforeAll {
             Error     = $false
             Reason    = $null
         }
+    }
+
+    # Define Resolve-ReleaseTagCommitSha inline (mirrors .github/workflows/repoInfo.ps1)
+    # for the same reason as GetImmutableReleaseObservations above.
+    function Resolve-ReleaseTagCommitSha {
+        Param (
+            $owner,
+            $repo,
+            $tagName,
+            [Alias('access_token')]
+            $accessToken,
+            $startTime
+        )
+
+        function New-ResolveReleaseTagCommitShaErrorResult {
+            Param ([string] $reason)
+            return @{ Sha = $null; Error = $true; Reason = $reason }
+        }
+
+        if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0 -or $null -eq $tagName -or $tagName.Length -eq 0) {
+            return New-ResolveReleaseTagCommitShaErrorResult -reason "missing_owner_repo_or_tag"
+        }
+
+        $timeSpan = (Get-Date) - $startTime
+        if ($timeSpan.TotalMinutes -gt 50) {
+            return New-ResolveReleaseTagCommitShaErrorResult -reason "run_time_budget_exceeded"
+        }
+
+        $encodedTag = [uri]::EscapeDataString($tagName)
+        $refUrl = "/repos/$owner/$repo/git/ref/tags/$encodedTag"
+        $refResponse = $null
+        try {
+            $refResponse = ApiCall -method GET -url $refUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+        }
+        catch {
+            return New-ResolveReleaseTagCommitShaErrorResult -reason "transient_error"
+        }
+
+        $isRefError = ($refResponse -is [hashtable] -and $refResponse.ContainsKey('Error') -and $refResponse.Error)
+        if ($isRefError) {
+            $reason = "api_error"
+            if ($refResponse.ContainsKey('StatusCode')) {
+                switch ($refResponse.StatusCode) {
+                    403 { $reason = "forbidden_or_rate_limited" }
+                    404 { $reason = "tag_ref_not_found" }
+                    default { $reason = "api_error_status_$($refResponse.StatusCode)" }
+                }
+            }
+            return New-ResolveReleaseTagCommitShaErrorResult -reason $reason
+        }
+
+        if ($null -eq $refResponse -or $null -eq $refResponse.object) {
+            return New-ResolveReleaseTagCommitShaErrorResult -reason "no_response"
+        }
+
+        $objectType = $refResponse.object.type
+        $objectSha = $refResponse.object.sha
+
+        if ($objectType -ne "tag") {
+            return @{ Sha = $objectSha; Error = $false; Reason = $null }
+        }
+
+        $tagObjectUrl = "/repos/$owner/$repo/git/tags/$objectSha"
+        $tagObjectResponse = $null
+        try {
+            $tagObjectResponse = ApiCall -method GET -url $tagObjectUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+        }
+        catch {
+            return New-ResolveReleaseTagCommitShaErrorResult -reason "transient_error"
+        }
+
+        $isTagObjectError = ($tagObjectResponse -is [hashtable] -and $tagObjectResponse.ContainsKey('Error') -and $tagObjectResponse.Error)
+        if ($isTagObjectError) {
+            $reason = "api_error"
+            if ($tagObjectResponse.ContainsKey('StatusCode')) {
+                switch ($tagObjectResponse.StatusCode) {
+                    403 { $reason = "forbidden_or_rate_limited" }
+                    404 { $reason = "tag_object_not_found" }
+                    default { $reason = "api_error_status_$($tagObjectResponse.StatusCode)" }
+                }
+            }
+            return New-ResolveReleaseTagCommitShaErrorResult -reason $reason
+        }
+
+        if ($null -eq $tagObjectResponse -or $null -eq $tagObjectResponse.object) {
+            return New-ResolveReleaseTagCommitShaErrorResult -reason "no_response"
+        }
+
+        return @{ Sha = $tagObjectResponse.object.sha; Error = $false; Reason = $null }
     }
 }
 
@@ -200,6 +315,204 @@ Describe 'GetImmutableReleaseObservations' {
 
         $result.Error | Should -Be $false
         $result.Releases.Count | Should -Be 0
+    }
+
+    It 'Should resolve a lightweight tag''s commit SHA and flag no mismatch when target_commitish is a matching SHA (issue #267)' {
+        $sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = $sha })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $sha; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $sha
+        $result.Releases[0].tagReleaseMismatch | Should -Be $false
+    }
+
+    It 'Should peel an annotated tag to its target commit before comparing (issue #267)' {
+        $tagObjectSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        $commitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = $commitSha })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                # Annotated tag: the ref points at a tag object, not the commit
+                return @{ object = @{ sha = $tagObjectSha; type = "tag" } }
+            }
+            if ($url -like "*/git/tags/*") {
+                # Peeling the tag object resolves to the actual target commit
+                return @{ object = @{ sha = $commitSha } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $commitSha
+        $result.Releases[0].tagReleaseMismatch | Should -Be $false
+    }
+
+    It 'Should flag a mismatch when the resolved commit differs from a full-SHA target_commitish (issue #267)' {
+        $resolvedSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $recordedTarget = "111111111111111111111111111111111111111a"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = $recordedTarget })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $resolvedSha; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $resolvedSha
+        $result.Releases[0].tagReleaseMismatch | Should -Be $true
+    }
+
+    It 'Should leave tagReleaseMismatch unset when target_commitish is a branch name, never guessing a verdict (issue #267)' {
+        $resolvedSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $resolvedSha; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $resolvedSha
+        $result.Releases[0].tagReleaseMismatch | Should -BeNullOrEmpty
+    }
+
+    It 'Should not resolve a SHA for releases older than the 10 newest, to bound extra API calls (issue #267)' {
+        $releases = @(1..12 | ForEach-Object {
+            @{ id = $_; tag_name = "v$_.0.0"; draft = $false; published_at = (Get-Date "2024-01-01").AddDays($_).ToString("o"); target_commitish = "main" }
+        })
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return $releases
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        # Releases 3..12 (the ten newest by publishedAt) get resolved; 1 and 2 (oldest) do not.
+        $oldest = $result.Releases | Where-Object { $_.releaseId -eq 1 -or $_.releaseId -eq 2 }
+        foreach ($release in $oldest) {
+            $release.resolvedCommitSha | Should -BeNullOrEmpty
+        }
+        $newest = $result.Releases | Where-Object { $_.releaseId -ge 3 }
+        foreach ($release in $newest) {
+            $release.resolvedCommitSha | Should -Not -BeNullOrEmpty
+        }
+    }
+}
+
+Describe 'Resolve-ReleaseTagCommitSha' {
+    It 'Should return an error result with missing_owner_repo_or_tag when tagName is null' {
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName $null -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "missing_owner_repo_or_tag"
+    }
+
+    It 'Should return an error result with run_time_budget_exceeded when nearing the 50-minute mark' {
+        $startTime = (Get-Date).AddMinutes(-51)
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime $startTime
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "run_time_budget_exceeded"
+    }
+
+    It 'Should return the ref object SHA directly for a lightweight tag (type "commit")' {
+        $sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall { return @{ object = @{ sha = $sha; type = "commit" } } }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $false
+        $result.Sha | Should -Be $sha
+    }
+
+    It 'Should peel an annotated tag (type "tag") to its target commit SHA' {
+        $tagObjectSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        $commitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $tagObjectSha; type = "tag" } }
+            }
+            return @{ object = @{ sha = $commitSha } }
+        }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $false
+        $result.Sha | Should -Be $commitSha
+    }
+
+    It 'Should return tag_ref_not_found on a 404 resolving the tag ref' {
+        Mock ApiCall { return @{ Error = $true; StatusCode = 404 } }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "tag_ref_not_found"
+    }
+
+    It 'Should return forbidden_or_rate_limited on a 403 resolving the tag ref' {
+        Mock ApiCall { return @{ Error = $true; StatusCode = 403 } }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "forbidden_or_rate_limited"
+    }
+
+    It 'Should return transient_error when ApiCall throws' {
+        Mock ApiCall { throw "boom" }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "transient_error"
+    }
+
+    It 'Should return an error when peeling an annotated tag object fails' {
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"; type = "tag" } }
+            }
+            return @{ Error = $true; StatusCode = 404 }
+        }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "tag_object_not_found"
     }
 }
 
@@ -332,6 +645,52 @@ Describe 'Merge-ImmutableReleaseObservations' {
         # The original hashtable reference should be present, completely unchanged
         (@($merged | Where-Object { $_.status -eq "present" }))[0] | Should -Be $existingEntry
         $existingEntry.status | Should -Be "present"
+    }
+
+    It 'Should carry through resolvedCommitSha/releaseTargetCommitish/tagReleaseMismatch on a first observation (issue #267)' {
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "111111111111111111111111111111111111111a"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            tagReleaseMismatch     = $true
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $null -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $merged[0].releaseTargetCommitish | Should -Be "111111111111111111111111111111111111111a"
+        $merged[0].tagReleaseMismatch | Should -Be $true
+    }
+
+    It 'Should leave resolvedCommitSha/tagReleaseMismatch as $null when the caller could not resolve them' {
+        $current = @(@{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z" })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $null -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged[0].resolvedCommitSha | Should -BeNullOrEmpty
+        $merged[0].tagReleaseMismatch | Should -BeNullOrEmpty
+    }
+
+    It 'Should carry through the release-integrity fields on a reappearance after deletion' {
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "deleted"; observedAt = (Get-Date).AddDays(-5); source = "src" }
+        )
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            tagReleaseMismatch     = $false
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $reappeared = $merged | Where-Object { $_.status -eq "present" }
+        $reappeared.resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $reappeared.tagReleaseMismatch | Should -Be $false
     }
 }
 

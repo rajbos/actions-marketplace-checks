@@ -623,6 +623,175 @@ Describe "Status JSON Schema Validation" {
         }
     }
 
+    Context "immutableReleaseSummary field (issue #267)" {
+        It "Should validate an 'Enabled' summary with known coverage" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseSummary = "Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings -join " " | Should -Not -Match "immutableReleaseSummary"
+        }
+
+        It "Should validate a 'Disabled' summary" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseSummary = "Disabled; 0 of 3 known releases immutable (last 3; 0 unknown)"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings -join " " | Should -Not -Match "immutableReleaseSummary"
+        }
+
+        It "Should validate an 'Unknown' summary with no release history yet" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseSummary = "Unknown; no release history available"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings -join " " | Should -Not -Match "immutableReleaseSummary"
+        }
+
+        It "Should warn when immutableReleaseSummary does not start with a recognized policy label" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseSummary = "7 of 8 known releases immutable"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "does not start with a recognized policy label"
+        }
+
+        It "Should error when immutableReleaseSummary is not a string" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseSummary = @{ not = "a string" }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "immutableReleaseSummary should be a string"
+        }
+
+        It "Should not require immutableReleaseSummary to be present at all (backwards compatible)" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings.Count | Should -Be 0
+        }
+    }
+
+    Context "immutableReleaseObservations release-integrity fields (issue #267)" {
+        It "Should validate an observation with a resolved commit SHA and no mismatch" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId              = 1
+                        tagName                = "v1.0.0"
+                        publishedAt            = "2025-01-01T00:00:00Z"
+                        immutabilityState      = "unknown"
+                        status                 = "present"
+                        observedAt             = "2025-01-10T00:00:00Z"
+                        source                 = "GET /repos/{owner}/{repo}/releases"
+                        releaseTargetCommitish = "main"
+                        resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                        tagReleaseMismatch     = $null
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings -join " " | Should -Not -Match "resolvedCommitSha|tagReleaseMismatch"
+        }
+
+        It "Should warn when tagReleaseMismatch is set without a resolvedCommitSha" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId          = 1
+                        tagName            = "v1.0.0"
+                        publishedAt        = "2025-01-01T00:00:00Z"
+                        immutabilityState  = "unknown"
+                        status             = "present"
+                        observedAt         = "2025-01-10T00:00:00Z"
+                        source             = "GET /repos/{owner}/{repo}/releases"
+                        tagReleaseMismatch = $true
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "tagReleaseMismatch is set without a 'resolvedCommitSha'"
+        }
+
+        It "Should warn when resolvedCommitSha has an unexpected format" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId         = 1
+                        tagName           = "v1.0.0"
+                        publishedAt       = "2025-01-01T00:00:00Z"
+                        immutabilityState = "unknown"
+                        status            = "present"
+                        observedAt        = "2025-01-10T00:00:00Z"
+                        source            = "GET /repos/{owner}/{repo}/releases"
+                        resolvedCommitSha = "not-a-sha"
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "resolvedCommitSha has unexpected format"
+        }
+
+        It "Should not require release-integrity fields to be present at all (backwards compatible)" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId         = 1
+                        tagName           = "v1.0.0"
+                        publishedAt       = "2025-01-01T00:00:00Z"
+                        immutabilityState = "unknown"
+                        status            = "present"
+                        observedAt        = "2025-01-10T00:00:00Z"
+                        source            = "GET /repos/{owner}/{repo}/releases"
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings -join " " | Should -Not -Match "resolvedCommitSha|tagReleaseMismatch"
+        }
+    }
+
     Context "Test-ActionSchema function with errors" {
         It "Should error when vulnerabilityStatus is not an object" {
             $action = @{
