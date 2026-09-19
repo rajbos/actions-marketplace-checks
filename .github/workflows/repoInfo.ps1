@@ -580,6 +580,134 @@ function GetImmutableReleasePolicy {
     }
 }
 
+<#
+    .SYNOPSIS
+    Collects the current set of published releases for an upstream action
+    repository, for use as input to the append-only per-release immutable-release
+    observation history (issue #265).
+
+    .DESCRIPTION
+    Calls the GitHub releases API for the upstream owner/repo via the shared
+    ApiCall helper, following the same conventions as GetImmutableReleasePolicy
+    (explicit unknown/error reasons, never throwing, respecting the shared
+    50-minute run time budget). Draft releases are excluded here so they are
+    never counted as published releases, per the issue #265 acceptance criteria.
+
+    This function only reports what releases currently exist (id, tag name,
+    published timestamp) - it does NOT determine per-release immutability itself.
+    Merge-ImmutableReleaseObservations (library.ps1) is responsible for turning
+    this snapshot into (or reconciling it against) the append-only observation
+    history; actually determining whether a given release is immutable is left to
+    a future collector (issue #266).
+
+    .PARAMETER owner
+    The upstream repository owner (organization or user login).
+
+    .PARAMETER repo
+    The upstream repository name.
+
+    .PARAMETER accessToken
+    GitHub access token (App token) to use for the API call.
+
+    .PARAMETER startTime
+    Start time of the overall run, used for the shared 50-minute time budget
+    check other collectors in this file also use.
+
+    .OUTPUTS
+    Hashtable with:
+      Releases  - array of hashtables (releaseId, tagName, publishedAt) for every
+                  non-draft release found; empty array when none/on error
+      CheckedAt - the datetime this check was performed
+      Source    - the API call used to collect the value, for audit purposes
+      Error     - $true when the fetch failed/was skipped, otherwise $false
+      Reason    - machine-readable reason string when Error is $true, otherwise $null
+#>
+function GetImmutableReleaseObservations {
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    $checkedAt = Get-Date
+    $source = "GET /repos/{owner}/{repo}/releases"
+
+    function New-ImmutableReleaseObservationsErrorResult {
+        Param ([string] $reason)
+        return @{
+            Releases  = @()
+            CheckedAt = $checkedAt
+            Source    = $source
+            Error     = $true
+            Reason    = $reason
+        }
+    }
+
+    if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0) {
+        return New-ImmutableReleaseObservationsErrorResult -reason "missing_owner_or_repo"
+    }
+
+    # Check if we are nearing the 50-minute mark, same time budget every other
+    # per-repo collector in this file respects.
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return New-ImmutableReleaseObservationsErrorResult -reason "run_time_budget_exceeded"
+    }
+
+    $url = "/repos/$owner/$repo/releases"
+    $response = $null
+    try {
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to fetch releases for immutable-release observations for [$owner/$repo]: $($_.Exception.Message)"
+        return New-ImmutableReleaseObservationsErrorResult -reason "transient_error"
+    }
+
+    $isErrorResult = ($response -is [hashtable] -and $response.ContainsKey('Error') -and $response.Error)
+    if ($isErrorResult) {
+        $reason = "api_error"
+        if ($response.ContainsKey('StatusCode')) {
+            switch ($response.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "repo_not_found" }
+                default { $reason = "api_error_status_$($response.StatusCode)" }
+            }
+        }
+        return New-ImmutableReleaseObservationsErrorResult -reason $reason
+    }
+
+    # The releases API returns an array directly (not wrapped in a Data property
+    # like the ETag-aware helpers in this file). A repo with zero releases comes
+    # back as an empty array, which PowerShell unwraps to $null once it passes
+    # through ApiCall - so, like GetRepoReleases above, treat a null/empty
+    # response as "no releases" (success), not as an error.
+    $rawReleases = @($response)
+
+    # Exclude drafts: draft releases are not published and must never be counted
+    # as published releases (issue #265 acceptance criteria).
+    $publishedReleases = $rawReleases | Where-Object { $null -ne $_ -and $_.draft -ne $true }
+
+    $releases = @($publishedReleases | ForEach-Object {
+        @{
+            releaseId   = $_.id
+            tagName     = $_.tag_name
+            publishedAt = $_.published_at
+        }
+    })
+
+    return @{
+        Releases  = $releases
+        CheckedAt = $checkedAt
+        Source    = $source
+        Error     = $false
+        Reason    = $null
+    }
+}
+
 function GetActionType {
     Param (
         $owner,
@@ -1236,6 +1364,59 @@ function GetInfo {
 
                 $i++ | Out-Null
                 $repoHadUpdates = $true
+            }
+        }
+
+        # Store append-only per-release immutable-release observations (issue #265).
+        # This only records which releases currently exist (draft releases excluded);
+        # it never determines or backfills whether a release is actually immutable,
+        # and never rewrites a previously recorded observation - see
+        # Merge-ImmutableReleaseObservations in library.ps1 for the append-only merge
+        # rules. Refreshed on the same 30-day cadence as immutableReleasePolicy above.
+        $hasImmutableReleaseObservationsCheckedAtField = Get-Member -inputobject $action -name "immutableReleaseObservationsCheckedAt" -Membertype Properties
+        $needsImmutableReleaseObservationsCheck = $false
+        if (!$hasImmutableReleaseObservationsCheckedAtField -or ($null -eq $action.immutableReleaseObservationsCheckedAt)) {
+            $needsImmutableReleaseObservationsCheck = $true
+        }
+        else {
+            $daysSinceLastCheck = (Get-Date) - $action.immutableReleaseObservationsCheckedAt
+            if ($daysSinceLastCheck.Days -gt 30) {
+                $needsImmutableReleaseObservationsCheck = $true
+            }
+        }
+
+        if ($needsImmutableReleaseObservationsCheck) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            if ($repo -ne "" -and $owner -ne "") {
+                Write-Debug "Checking immutable release observations for [$($owner)/$($repo)]"
+                $releaseObservationsResult = GetImmutableReleaseObservations -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+
+                if (!$releaseObservationsResult.Error) {
+                    $hasImmutableReleaseObservationsField = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+                    $existingObservations = if ($hasImmutableReleaseObservationsField) { $action.immutableReleaseObservations } else { $null }
+
+                    $mergedObservations = Merge-ImmutableReleaseObservations -existingObservations $existingObservations -currentReleases $releaseObservationsResult.Releases -observedAt $releaseObservationsResult.CheckedAt -source $releaseObservationsResult.Source
+
+                    if (!$hasImmutableReleaseObservationsField) {
+                        $action | Add-Member -Name immutableReleaseObservations -Value $mergedObservations -MemberType NoteProperty
+                    }
+                    else {
+                        $action.immutableReleaseObservations = $mergedObservations
+                    }
+
+                    # Only bump the checked-at timestamp when the fetch actually
+                    # succeeded, so a transient failure gets retried on the next run
+                    # instead of being treated as up-to-date for another 30 days.
+                    if (!$hasImmutableReleaseObservationsCheckedAtField) {
+                        $action | Add-Member -Name immutableReleaseObservationsCheckedAt -Value $releaseObservationsResult.CheckedAt -MemberType NoteProperty
+                    }
+                    else {
+                        $action.immutableReleaseObservationsCheckedAt = $releaseObservationsResult.CheckedAt
+                    }
+
+                    $i++ | Out-Null
+                    $repoHadUpdates = $true
+                }
             }
         }
 
