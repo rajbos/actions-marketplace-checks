@@ -2072,6 +2072,167 @@ function GetRepoReleases {
     return @{ NotModified = $false; ETag = $newEtag; Data = $response }
 }
 
+<#
+    .SYNOPSIS
+    Merges freshly observed upstream releases into an append-only per-release
+    immutable-release observation history (issue #265).
+
+    .DESCRIPTION
+    This is the single source of truth for how immutable-release observations are
+    combined with whatever history already exists on an action, so callers never
+    need to (and must not) replace the array wholesale the way releaseInfo/tagInfo
+    are refreshed today.
+
+    Behavior, keyed by GitHub release id:
+      - A release seen for the first time gets exactly one new observation appended
+        with immutabilityState "unknown" - this function does not itself determine
+        true immutability (that is a later collector's job, e.g. issue #266); it
+        never invents "immutable"/"notImmutable" from a repo's current policy.
+      - A release that is already known and still present is left completely alone;
+        no existing entry is ever mutated and no duplicate "still present" entry is
+        appended, so a later policy change cannot silently rewrite history.
+      - A release that was previously observed but is missing from the current
+        fetch gets a new observation appended with status "deleted" - the absence
+        is recorded as its own event rather than erasing or overwriting the prior
+        "present" observation(s).
+      - A release that reappears after being marked "deleted" gets a new "present"
+        observation appended, carrying forward its last known immutabilityState
+        (still never inventing a new state).
+
+    The returned array is always the existing observations plus zero or more new
+    entries - existing elements are never removed or edited in place, satisfying
+    the "append-only" acceptance criterion.
+
+    .PARAMETER existingObservations
+    The action's current immutableReleaseObservations array (or $null/empty when
+    this is the first observation pass for the repo).
+
+    .PARAMETER currentReleases
+    Array of hashtables describing the currently observed *published* releases
+    (draft releases must already be filtered out by the caller before this is
+    called - see GetImmutableReleaseObservations in repoInfo.ps1). Each entry is
+    expected to have releaseId, tagName and publishedAt.
+
+    .PARAMETER observedAt
+    The datetime this observation batch was made.
+
+    .PARAMETER source
+    Machine-readable description of the API call used to collect this batch, kept
+    per-entry for audit purposes (e.g. "GET /repos/{owner}/{repo}/releases").
+
+    .OUTPUTS
+    The merged array of observation hashtables (existing entries untouched, plus
+    any newly appended entries).
+#>
+function Merge-ImmutableReleaseObservations {
+    Param (
+        $existingObservations,
+        $currentReleases,
+        $observedAt,
+        [string] $source
+    )
+
+    $existing = @()
+    if ($null -ne $existingObservations) {
+        $existing = @($existingObservations)
+    }
+
+    $current = @()
+    if ($null -ne $currentReleases) {
+        $current = @($currentReleases)
+    }
+
+    # Find the most recent observation per release id so we know whether a release
+    # is currently considered "present" or "deleted" and what its last known
+    # immutabilityState was, without ever mutating the history itself.
+    $latestByReleaseId = @{}
+    foreach ($entry in $existing) {
+        if ($null -eq $entry) { continue }
+        $rid = $entry.releaseId
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            $latestByReleaseId[$rid] = $entry
+        }
+        else {
+            $existingLatest = $latestByReleaseId[$rid]
+            try {
+                $isNewer = [datetime]$entry.observedAt -gt [datetime]$existingLatest.observedAt
+            }
+            catch {
+                $isNewer = $false
+            }
+            if ($isNewer) {
+                $latestByReleaseId[$rid] = $entry
+            }
+        }
+    }
+
+    $newEntries = [System.Collections.Generic.List[hashtable]]::new()
+    $seenReleaseIds = New-Object System.Collections.Generic.HashSet[object]
+
+    foreach ($release in $current) {
+        if ($null -eq $release) { continue }
+        $rid = $release.releaseId
+        [void]$seenReleaseIds.Add($rid)
+
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            # Never observed before - append a first observation. Always "unknown":
+            # no backfill claims are invented from the repo's current policy.
+            $newEntries.Add(@{
+                releaseId         = $rid
+                tagName           = $release.tagName
+                publishedAt       = $release.publishedAt
+                immutabilityState = "unknown"
+                status            = "present"
+                observedAt        = $observedAt
+                source            = $source
+            })
+        }
+        else {
+            $prior = $latestByReleaseId[$rid]
+            if ($prior.status -eq "deleted") {
+                # Reappeared after being observed missing - record the reappearance
+                # as a new event, carrying forward the last known state rather than
+                # guessing a new one.
+                $newEntries.Add(@{
+                    releaseId         = $rid
+                    tagName           = $release.tagName
+                    publishedAt       = $release.publishedAt
+                    immutabilityState = $prior.immutabilityState
+                    status            = "present"
+                    observedAt        = $observedAt
+                    source            = $source
+                })
+            }
+            # else: already known and still present - leave history untouched.
+        }
+    }
+
+    # Releases that were previously known and present, but are absent from this
+    # observation batch, get a "deleted" event appended rather than having their
+    # prior "present" observation(s) removed or rewritten.
+    foreach ($rid in $latestByReleaseId.Keys) {
+        if ($seenReleaseIds.Contains($rid)) { continue }
+        $prior = $latestByReleaseId[$rid]
+        if ($prior.status -eq "deleted") { continue }
+
+        $newEntries.Add(@{
+            releaseId         = $rid
+            tagName           = $prior.tagName
+            publishedAt       = $prior.publishedAt
+            immutabilityState = $prior.immutabilityState
+            status            = "deleted"
+            observedAt        = $observedAt
+            source            = $source
+        })
+    }
+
+    # The unary comma forces this to always come back as a single array object -
+    # without it, PowerShell unrolls a one-element result into a bare scalar
+    # (e.g. the lone hashtable itself, whose .Count would then mean its number of
+    # keys, not "one observation"), which callers here rely on being an array.
+    return ,@($existing + $newEntries)
+}
+
 function Invoke-GraphQLRepoMetadataBatch {
     <#
     .SYNOPSIS
@@ -3341,6 +3502,25 @@ function Get-RepoPriorityScore {
             if ($daysSinceCheck -gt 30) { $score += 20 }
         }
         catch { $score += 20 }
+    }
+
+    # Immutable-release per-release observation staleness (issue #265): same bounded
+    # 30-day refresh cadence as immutableReleasePolicy above, so the append-only
+    # release-history backlog also drains alongside the others. Scored whenever
+    # immutableReleaseObservationsCheckedAt is missing entirely (so new repos get an
+    # initial pass) or the last check is stale/unparsable. This only controls how often
+    # we re-scan the upstream releases list for newly-published/removed releases - it
+    # never rewrites an already-recorded observation (see Merge-ImmutableReleaseObservations).
+    $hasImmutableReleaseObservationsCheckedAt = Get-Member -inputobject $action -name "immutableReleaseObservationsCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleaseObservationsCheckedAt -or ($null -eq $action.immutableReleaseObservationsCheckedAt)) {
+        $score += 15
+    }
+    else {
+        try {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.immutableReleaseObservationsCheckedAt).TotalDays
+            if ($daysSinceCheck -gt 30) { $score += 15 }
+        }
+        catch { $score += 15 }
     }
 
     # Container scan staleness (lower-medium priority): a Dockerfile-based action whose

@@ -88,6 +88,7 @@ Describe "Get-PrioritizedReposToProcess selection matches analyze.yml's fork-fil
                 fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
                 immutableReleasePolicy = "enabled"
                 immutableReleasePolicyCheckedAt = Get-Date
+                immutableReleaseObservationsCheckedAt = Get-Date
             }
         )
 
