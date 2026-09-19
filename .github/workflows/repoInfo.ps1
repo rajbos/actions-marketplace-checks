@@ -1452,12 +1452,20 @@ function GetInfo {
             # being present, not on it being non-null/non-empty: Get-ImmutableReleaseCoverage
             # explicitly supports $null/empty input and returns a valid zero-count
             # summary, so a migrated action with no releases at all must still get a
-            # summary rather than being skipped here.
+            # summary rather than being skipped here. Likewise, treat a present-but-null
+            # immutableReleaseCoverage (the schema documents null as an allowed value,
+            # e.g. a migration placeholder) as missing, not as "already backfilled".
             $hasImmutableReleaseObservationsFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
             $hasImmutableReleaseCoverageFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
-            if ($hasImmutableReleaseObservationsFieldForBackfill -and !$hasImmutableReleaseCoverageFieldForBackfill) {
+            $immutableReleaseCoverageIsMissing = !$hasImmutableReleaseCoverageFieldForBackfill -or ($null -eq $action.immutableReleaseCoverage)
+            if ($hasImmutableReleaseObservationsFieldForBackfill -and $immutableReleaseCoverageIsMissing) {
                 $backfilledCoverageResult = Get-ImmutableReleaseCoverage -observations $action.immutableReleaseObservations
-                $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
+                if (!$hasImmutableReleaseCoverageFieldForBackfill) {
+                    $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleaseCoverage = $backfilledCoverageResult
+                }
                 $repoHadUpdates = $true
             }
         }
