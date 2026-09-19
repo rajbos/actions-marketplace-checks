@@ -1182,8 +1182,18 @@ function GetInfo {
             $needsImmutableReleasePolicyCheck = $true
         }
         else {
-            $daysSinceLastCheck = (Get-Date) - $action.immutableReleasePolicyCheckedAt
-            if ($daysSinceLastCheck.Days -gt 30) {
+            # A malformed/unparsable persisted timestamp is allowed by the schema (only a
+            # validation warning, not an error) so it must not throw and abort the whole
+            # repo-info run. Mirrors the defensive try/catch used for the same field in
+            # Get-RepoPriorityScore (library.ps1): treat a conversion failure as needing
+            # a refresh, same as a missing/null timestamp.
+            try {
+                $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).Days
+                if ($daysSinceLastCheck -gt 30) {
+                    $needsImmutableReleasePolicyCheck = $true
+                }
+            }
+            catch {
                 $needsImmutableReleasePolicyCheck = $true
             }
         }

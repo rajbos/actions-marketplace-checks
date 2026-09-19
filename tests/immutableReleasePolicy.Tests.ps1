@@ -1,92 +1,18 @@
 BeforeAll {
     . $PSScriptRoot/../.github/workflows/library.ps1
 
-    # Define GetImmutableReleasePolicy inline (mirrors .github/workflows/repoInfo.ps1)
-    # to avoid loading repoInfo.ps1's script-level code, matching the pattern used by
-    # tests/fundingInfo.Tests.ps1.
-    function GetImmutableReleasePolicy {
-        Param (
-            $owner,
-            $repo,
-            [Alias('access_token')]
-            $accessToken,
-            $startTime
-        )
-
-        $checkedAt = Get-Date
-        $source = "GET /repos/{owner}/{repo}"
-
-        function New-UnknownImmutableReleasePolicyResult {
-            Param ([string] $reason)
-            return @{
-                status    = "unknown"
-                checkedAt = $checkedAt
-                reason    = $reason
-                source    = $source
-            }
-        }
-
-        if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0) {
-            return New-UnknownImmutableReleasePolicyResult -reason "missing_owner_or_repo"
-        }
-
-        $timeSpan = (Get-Date) - $startTime
-        if ($timeSpan.TotalMinutes -gt 50) {
-            Write-Host "Stopping the run, since we are nearing the 50-minute mark"
-            return New-UnknownImmutableReleasePolicyResult -reason "run_time_budget_exceeded"
-        }
-
-        $url = "/repos/$owner/$repo"
-        $response = $null
-        try {
-            $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
-        }
-        catch {
-            Write-Debug "Failed to check immutable release policy for [$owner/$repo]: $($_.Exception.Message)"
-            return New-UnknownImmutableReleasePolicyResult -reason "transient_error"
-        }
-
-        $isErrorResult = ($response -is [hashtable] -and $response.ContainsKey('Error') -and $response.Error)
-        if ($isErrorResult) {
-            $reason = "api_error"
-            if ($response.ContainsKey('StatusCode')) {
-                switch ($response.StatusCode) {
-                    403 { $reason = "forbidden_or_rate_limited" }
-                    404 { $reason = "repo_not_found" }
-                    default { $reason = "api_error_status_$($response.StatusCode)" }
-                }
-            }
-            return New-UnknownImmutableReleasePolicyResult -reason $reason
-        }
-
-        if ($null -eq $response) {
-            return New-UnknownImmutableReleasePolicyResult -reason "no_response"
-        }
-
-        $hasPolicyField = $false
-        if ($response -is [System.Collections.IDictionary]) {
-            $hasPolicyField = $response.ContainsKey('immutable_releases_enabled')
-        }
-        else {
-            $hasPolicyField = $null -ne $response.PSObject.Properties['immutable_releases_enabled']
-        }
-        if (!$hasPolicyField) {
-            return New-UnknownImmutableReleasePolicyResult -reason "field_not_present_in_api_response"
-        }
-
-        $policyValue = $response.immutable_releases_enabled
-        if ($null -eq $policyValue) {
-            return New-UnknownImmutableReleasePolicyResult -reason "field_null_in_api_response"
-        }
-
-        $status = if ($policyValue) { "enabled" } else { "disabled" }
-        return @{
-            status    = $status
-            checkedAt = $checkedAt
-            reason    = $null
-            source    = $source
-        }
-    }
+    # Extract and execute the real GetImmutableReleasePolicy function body from
+    # repoInfo.ps1 via its AST (mirrors the "Ensure-TrivyInstalled (real implementation)"
+    # pattern in tests/trivyScan.Tests.ps1), rather than redefining a local test double.
+    # A test double can drift from, or keep passing despite a regression in, the actual
+    # production collector - extracting the real function's text and Invoke-Expression'ing
+    # it here means these tests exercise the same code that repoInfo.ps1 runs.
+    $repoInfoPath = "$PSScriptRoot/../.github/workflows/repoInfo.ps1"
+    $src = Get-Content $repoInfoPath -Raw
+    $ast = [System.Management.Automation.Language.Parser]::ParseInput($src, [ref]$null, [ref]$null)
+    $fnAst = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'GetImmutableReleasePolicy' }, $true)
+    if ($fnAst.Count -ne 1) { throw "Expected exactly 1 GetImmutableReleasePolicy function in repoInfo.ps1, found $($fnAst.Count)" }
+    Invoke-Expression $fnAst[0].Extent.Text
 }
 
 Describe 'GetImmutableReleasePolicy' {
