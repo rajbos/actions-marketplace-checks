@@ -465,6 +465,10 @@ async function uploadActions() {
     // acceptance criteria for this history explicitly rules out.)
     if (action.immutableReleaseObservations) actionData.immutableReleaseObservations = action.immutableReleaseObservations;
     if (action.immutableReleaseObservationsCheckedAt) actionData.immutableReleaseObservationsCheckedAt = action.immutableReleaseObservationsCheckedAt;
+    // Derived immutable-release coverage summary for the ten newest releases
+    // (issue #266) - a small object, passed through as-is so #267's reports/API
+    // can consume it without recomputing it from the raw observation history.
+    if (action.immutableReleaseCoverage) actionData.immutableReleaseCoverage = action.immutableReleaseCoverage;
 
     // Trim tag list to the latest tags, preferring SemVer ordering and
     // falling back to alphabetical if SemVer parsing fails.

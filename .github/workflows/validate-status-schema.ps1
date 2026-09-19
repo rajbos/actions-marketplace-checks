@@ -97,6 +97,10 @@ class StatusJsonSchema {
     [object] $immutableReleasePolicyCheckedAt  # Can be string (datetime) or null
     [object] $immutableReleasePolicyReason  # Machine-readable reason string or null
     [object] $immutableReleasePolicySource  # String describing the API call used, or null
+    # When the observed immutableReleasePolicy status last actually changed value
+    # (issue #266) - distinct from immutableReleasePolicyCheckedAt, which is bumped
+    # on every check regardless of whether the value changed.
+    [object] $immutableReleasePolicyChangedAt  # Can be string (datetime) or null
 
     # Append-only per-release immutable-release observation history (optional;
     # issue #265). Unlike immutableReleasePolicy above (current policy only),
@@ -113,6 +117,20 @@ class StatusJsonSchema {
     #   source            - string describing the API call used, for audit purposes
     [object] $immutableReleaseObservations  # Array of observation objects, or null
     [object] $immutableReleaseObservationsCheckedAt  # Can be string (datetime) or null
+
+    # Derived immutable-release coverage summary for the ten newest published,
+    # non-draft releases (optional; issue #266). Pure derivation from
+    # immutableReleaseObservations via Get-ImmutableReleaseCoverage - never
+    # inspects raw release data itself, and never pads the denominator with
+    # unknown/absent releases as if they were known-good or known-bad.
+    #   releasesConsidered     - number of releases actually included (<= 10, never padded)
+    #   immutableCount         - count of considered releases known immutable
+    #   notImmutableCount      - count of considered releases known not immutable
+    #   unknownCount           - count of considered releases with unknown state
+    #   knownCount             - immutableCount + notImmutableCount (the summary's denominator)
+    #   latestReleaseImmutable - "immutable", "notImmutable" or "unknown" for the single newest release
+    #   summary                - human-readable string, e.g. "7 of 8 known releases immutable (last 10; 2 unknown)"
+    [object] $immutableReleaseCoverage  # Object with the fields above, or null
 }
 
 <#
@@ -320,6 +338,37 @@ function Test-ActionSchema {
             $parsedDate = [datetime]::MinValue
             if (-not [datetime]::TryParse($action.immutableReleaseObservationsCheckedAt, [ref]$parsedDate)) {
                 $warnings += "Object ${index} ($($action.name)): immutableReleaseObservationsCheckedAt has unexpected format: $($action.immutableReleaseObservationsCheckedAt)"
+            }
+        }
+    }
+
+    # Validate the derived immutableReleaseCoverage summary if present (issue #266)
+    if ($null -ne $action.immutableReleaseCoverage) {
+        if ($action.immutableReleaseCoverage -isnot [hashtable] -and $action.immutableReleaseCoverage -isnot [PSCustomObject]) {
+            $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage should be an object, found: $($action.immutableReleaseCoverage.GetType().Name)"
+        }
+        else {
+            $coverage = $action.immutableReleaseCoverage
+            $validLatestReleaseStates = @('immutable', 'notImmutable', 'unknown')
+            if ($validLatestReleaseStates -notcontains $coverage.latestReleaseImmutable) {
+                $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.latestReleaseImmutable should be one of 'immutable', 'notImmutable', 'unknown', found: $($coverage.latestReleaseImmutable)"
+            }
+
+            if ($null -eq $coverage.releasesConsidered) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleaseCoverage missing 'releasesConsidered' field"
+            }
+            elseif ($coverage.releasesConsidered -gt 10) {
+                $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.releasesConsidered should never exceed 10, found: $($coverage.releasesConsidered)"
+            }
+
+            if ($null -ne $coverage.immutableCount -and $null -ne $coverage.notImmutableCount -and $null -ne $coverage.knownCount) {
+                if (($coverage.immutableCount + $coverage.notImmutableCount) -ne $coverage.knownCount) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.knownCount should equal immutableCount + notImmutableCount, found: $($coverage.knownCount) vs $($coverage.immutableCount + $coverage.notImmutableCount)"
+                }
+            }
+
+            if ([string]::IsNullOrWhiteSpace($coverage.summary)) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleaseCoverage missing 'summary' field"
             }
         }
     }

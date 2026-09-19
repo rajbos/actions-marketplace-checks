@@ -530,6 +530,99 @@ Describe "Status JSON Schema Validation" {
         }
     }
 
+    Context "immutableReleaseCoverage field (issue #266)" {
+        It "Should validate a well-formed coverage summary" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 10
+                    immutableCount         = 7
+                    notImmutableCount      = 1
+                    unknownCount           = 2
+                    knownCount             = 8
+                    latestReleaseImmutable = "immutable"
+                    summary                = "7 of 8 known releases immutable (last 10; 2 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+        }
+
+        It "Should error when latestReleaseImmutable has an invalid value" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 1
+                    immutableCount         = 1
+                    notImmutableCount      = 0
+                    unknownCount           = 0
+                    knownCount             = 1
+                    latestReleaseImmutable = "definitely-immutable"
+                    summary                = "1 of 1 known releases immutable (last 1; 0 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "latestReleaseImmutable should be one of"
+        }
+
+        It "Should error when releasesConsidered exceeds 10" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 12
+                    immutableCount         = 12
+                    notImmutableCount      = 0
+                    unknownCount           = 0
+                    knownCount             = 12
+                    latestReleaseImmutable = "immutable"
+                    summary                = "12 of 12 known releases immutable (last 12; 0 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "should never exceed 10"
+        }
+
+        It "Should error when knownCount does not equal immutableCount + notImmutableCount" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 10
+                    immutableCount         = 7
+                    notImmutableCount      = 1
+                    unknownCount           = 2
+                    knownCount             = 5
+                    latestReleaseImmutable = "immutable"
+                    summary                = "7 of 5 known releases immutable (last 10; 2 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "knownCount should equal immutableCount \+ notImmutableCount"
+        }
+
+        It "Should not require immutableReleaseCoverage to be present at all (backwards compatible)" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Warnings.Count | Should -Be 0
+        }
+    }
+
     Context "Test-ActionSchema function with errors" {
         It "Should error when vulnerabilityStatus is not an object" {
             $action = @{

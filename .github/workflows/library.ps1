@@ -2233,6 +2233,173 @@ function Merge-ImmutableReleaseObservations {
     return ,@($existing + $newEntries)
 }
 
+<#
+    .SYNOPSIS
+    Derives an honest, marketplace-ready immutable-release coverage summary for
+    the most recent releases from the persisted per-release observation history
+    (issue #266, built on top of #265's Merge-ImmutableReleaseObservations).
+
+    .DESCRIPTION
+    This is a pure calculation/derivation layer: it takes the append-only
+    immutableReleaseObservations array (or $null/empty) and reduces it to the
+    latest known state of the ten newest currently-present releases, without
+    ever inspecting live upstream data itself.
+
+    Rules:
+      - Only the most recent observation per release id is considered (so a
+        release's current immutabilityState/status reflects its latest
+        recorded observation, never an earlier one).
+      - Releases whose latest observation has status "deleted" are excluded -
+        a deleted release is no longer part of "the latest releases" and must
+        not be counted as a known-immutable, known-not-immutable or unknown
+        release, and must not be padded in as a placeholder either.
+      - The remaining "present" releases are ordered by publishedAt
+        descending (newest first) and the ten newest are selected. Fewer than
+        ten available releases is not an error and is never padded - the
+        denominator simply reflects however many releases actually exist.
+      - immutable/notImmutable/unknown are counted independently among the
+        selected releases. The "known" denominator used in the summary string
+        is immutableCount + notImmutableCount only - unknown observations are
+        never counted as failures nor as known-good, and are never silently
+        dropped from the total either (they show up as their own count).
+      - latestReleaseImmutable reflects the immutabilityState of the single
+        newest selected release ("immutable"/"notImmutable"/"unknown"), or
+        "unknown" when there are no known releases at all.
+
+    .PARAMETER observations
+    The action's immutableReleaseObservations array (or $null/empty when no
+    observations have been recorded yet).
+
+    .PARAMETER releaseLimit
+    How many of the newest published, non-draft releases to consider. Defaults
+    to 10, matching the issue #266 "last 10" acceptance criteria.
+
+    .OUTPUTS
+    Hashtable with:
+      releasesConsidered      - number of releases actually included (<= releaseLimit, never padded)
+      immutableCount          - count of considered releases with immutabilityState "immutable"
+      notImmutableCount       - count of considered releases with immutabilityState "notImmutable"
+      unknownCount            - count of considered releases with immutabilityState "unknown"
+      knownCount              - immutableCount + notImmutableCount (the summary's denominator)
+      latestReleaseImmutable  - "immutable", "notImmutable" or "unknown" for the single newest release
+      summary                 - human-readable string, e.g.
+                                 "7 of 8 known releases immutable (last 10; 2 unknown)"
+#>
+function Get-ImmutableReleaseCoverage {
+    Param (
+        $observations,
+        [int] $releaseLimit = 10
+    )
+
+    $all = @()
+    if ($null -ne $observations) {
+        $all = @($observations)
+    }
+
+    # Keep only the latest observation per release id, so a release's current
+    # state always reflects its most recently recorded observation.
+    $latestByReleaseId = @{}
+    foreach ($entry in $all) {
+        if ($null -eq $entry) { continue }
+        $rid = $entry.releaseId
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            $latestByReleaseId[$rid] = $entry
+        }
+        else {
+            $existingLatest = $latestByReleaseId[$rid]
+            try {
+                $isNewer = [datetime]$entry.observedAt -gt [datetime]$existingLatest.observedAt
+            }
+            catch {
+                $isNewer = $false
+            }
+            if ($isNewer) {
+                $latestByReleaseId[$rid] = $entry
+            }
+        }
+    }
+
+    # A "deleted" release is no longer part of the current release set - it is
+    # excluded entirely rather than counted as unknown/failing, and never used
+    # to pad the denominator back up to releaseLimit.
+    $present = @($latestByReleaseId.Values | Where-Object { $_.status -ne "deleted" })
+
+    # Order newest-first by publishedAt and take at most releaseLimit - fewer
+    # than releaseLimit available releases is handled as-is, with no padding.
+    $ordered = @($present | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
+    $selected = @($ordered | Select-Object -First $releaseLimit)
+
+    $immutableCount = @($selected | Where-Object { $_.immutabilityState -eq "immutable" }).Count
+    $notImmutableCount = @($selected | Where-Object { $_.immutabilityState -eq "notImmutable" }).Count
+    $unknownCount = @($selected | Where-Object { $_.immutabilityState -eq "unknown" }).Count
+    $knownCount = $immutableCount + $notImmutableCount
+
+    $latestReleaseImmutable = "unknown"
+    if ($selected.Count -gt 0) {
+        $latestReleaseImmutable = $selected[0].immutabilityState
+    }
+
+    $summary = "$immutableCount of $knownCount known releases immutable (last $($selected.Count); $unknownCount unknown)"
+
+    return @{
+        releasesConsidered     = $selected.Count
+        immutableCount         = $immutableCount
+        notImmutableCount      = $notImmutableCount
+        unknownCount           = $unknownCount
+        knownCount             = $knownCount
+        latestReleaseImmutable = $latestReleaseImmutable
+        summary                = $summary
+    }
+}
+
+<#
+    .SYNOPSIS
+    Determines the immutableReleasePolicyChangedAt value to persist after a fresh
+    immutable-release policy check (issue #266).
+
+    .DESCRIPTION
+    immutableReleasePolicyCheckedAt (issue #264) is bumped on every check regardless
+    of whether the observed status actually changed, so it cannot answer "when did
+    this repo's policy last change?" - a repo checked every 30 days for a year with
+    a policy that never changed would otherwise look like it just changed on every
+    check. This function captures that transition time separately: it returns the
+    current check's timestamp only when the status is being recorded for the first
+    time or actually differs from the previously stored status, and otherwise
+    returns the existing changed-at value unchanged (so a repeated "still enabled"
+    observation never resets it).
+
+    .PARAMETER previousStatus
+    The immutableReleasePolicy status previously stored on the action ($null if
+    this is the first check ever performed for this repo).
+
+    .PARAMETER newStatus
+    The immutableReleasePolicy status just observed by GetImmutableReleasePolicy.
+
+    .PARAMETER checkedAt
+    The datetime of the just-performed check (GetImmutableReleasePolicy's checkedAt).
+
+    .PARAMETER existingChangedAt
+    The immutableReleasePolicyChangedAt value currently stored on the action, or
+    $null if it has never been set.
+
+    .OUTPUTS
+    The datetime to store as immutableReleasePolicyChangedAt.
+#>
+function Get-ImmutableReleasePolicyChangedAt {
+    Param (
+        [string] $previousStatus,
+        [string] $newStatus,
+        $checkedAt,
+        $existingChangedAt
+    )
+
+    if ($null -eq $existingChangedAt -or $previousStatus -ne $newStatus) {
+        return $checkedAt
+    }
+
+    return $existingChangedAt
+}
+
 function Invoke-GraphQLRepoMetadataBatch {
     <#
     .SYNOPSIS

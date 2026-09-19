@@ -119,6 +119,23 @@ Describe 'GetImmutableReleaseObservations' {
         $result.Releases[0].tagName | Should -Be "v1.0.0"
     }
 
+    It 'Should include prerelease releases the same as regular published releases (issue #266 draft/prerelease coverage)' {
+        # Only drafts are excluded by this collector - a prerelease is still a
+        # published release and must be counted normally, not silently dropped.
+        Mock ApiCall {
+            return @(
+                @{ id = 1; tag_name = "v1.0.0"; draft = $false; prerelease = $false; published_at = "2024-01-01T00:00:00Z" }
+                @{ id = 2; tag_name = "v2.0.0-rc1"; draft = $false; prerelease = $true; published_at = "2024-02-01T00:00:00Z" }
+            )
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $false
+        $result.Releases.Count | Should -Be 2
+        (@($result.Releases | Where-Object { $_.releaseId -eq 2 })).Count | Should -Be 1
+    }
+
     It 'Should map id/tag_name/published_at into releaseId/tagName/publishedAt' {
         Mock ApiCall {
             return @(

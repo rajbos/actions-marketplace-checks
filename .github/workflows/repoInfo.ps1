@@ -1322,11 +1322,30 @@ function GetInfo {
                 Write-Debug "Checking immutable release policy for [$($owner)/$($repo)]"
                 $immutableReleasePolicyResult = GetImmutableReleasePolicy -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
 
+                # Capture the observed policy *transition* time separately from
+                # immutableReleasePolicyCheckedAt (issue #266): CheckedAt is bumped on
+                # every check regardless of whether the value changed, so it cannot be
+                # used to answer "when did this repo's policy last change?" -
+                # Get-ImmutableReleasePolicyChangedAt (library.ps1) is the single source
+                # of truth for that decision, computed here where the previous and
+                # newly observed status are both in hand.
+                $previousImmutableReleasePolicy = if ($hasImmutableReleasePolicyField) { $action.immutableReleasePolicy } else { $null }
+                $hasImmutableReleasePolicyChangedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyChangedAt" -Membertype Properties
+                $existingImmutableReleasePolicyChangedAt = if ($hasImmutableReleasePolicyChangedAtField) { $action.immutableReleasePolicyChangedAt } else { $null }
+                $immutableReleasePolicyChangedAt = Get-ImmutableReleasePolicyChangedAt -previousStatus $previousImmutableReleasePolicy -newStatus $immutableReleasePolicyResult.status -checkedAt $immutableReleasePolicyResult.checkedAt -existingChangedAt $existingImmutableReleasePolicyChangedAt
+
                 if (!$hasImmutableReleasePolicyField) {
                     $action | Add-Member -Name immutableReleasePolicy -Value $immutableReleasePolicyResult.status -MemberType NoteProperty
                 }
                 else {
                     $action.immutableReleasePolicy = $immutableReleasePolicyResult.status
+                }
+
+                if (!$hasImmutableReleasePolicyChangedAtField) {
+                    $action | Add-Member -Name immutableReleasePolicyChangedAt -Value $immutableReleasePolicyChangedAt -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicyChangedAt = $immutableReleasePolicyChangedAt
                 }
 
                 if (!$hasImmutableReleasePolicyCheckedAtField) {
@@ -1392,6 +1411,19 @@ function GetInfo {
                     }
                     else {
                         $action.immutableReleaseObservations = $mergedObservations
+                    }
+
+                    # Derive the marketplace-ready recent-release coverage summary
+                    # (issue #266) from the freshly merged observation history, so
+                    # #267's reports/API can consume a clean summary object instead
+                    # of having to walk the raw observations array themselves.
+                    $immutableReleaseCoverageResult = Get-ImmutableReleaseCoverage -observations $mergedObservations
+                    $hasImmutableReleaseCoverageField = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+                    if (!$hasImmutableReleaseCoverageField) {
+                        $action | Add-Member -Name immutableReleaseCoverage -Value $immutableReleaseCoverageResult -MemberType NoteProperty
+                    }
+                    else {
+                        $action.immutableReleaseCoverage = $immutableReleaseCoverageResult
                     }
 
                     # Only bump the checked-at timestamp when the fetch actually
