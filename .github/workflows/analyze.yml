@@ -75,6 +75,7 @@ jobs:
       contents: read
     outputs:
       matrix-repoinfo: ${{ steps.split-work.outputs.matrix-repoinfo }}
+      has-repoinfo-work: ${{ steps.split-work.outputs.has-repoinfo-work }}
     steps:
       - uses: actions/checkout@v7
 
@@ -173,7 +174,13 @@ jobs:
           # Get-RepoPriorityScore keys staleness off repoInfo.lastFetched (when we actually
           # fetched it), so this also fixes that "some repos never get reprocessed" bug, not
           # just the container-scan backlog.
-          $forkCandidates = $existingForks | Where-Object { $_.forkFound -eq $true }
+          # Candidates are filtered on mirrorFound, not forkFound. Split-ForksIntoChunks and
+          # CheckForInfoUpdateNeeded both refuse to do anything for a repo without a mirror, while
+          # Get-RepoPriorityScore *adds 90 points* when mirrorFound is missing or false. Selecting on
+          # forkFound therefore filled the top-600 with exactly the repos the splitter then discarded,
+          # so every run produced zero chunks (see run 35535875988: "Prioritized top [600] repos" is
+          # immediately followed by "No forks to process (all have mirrorFound = false)").
+          $forkCandidates = $existingForks | Where-Object { $_.mirrorFound -eq $true }
           $forksForRepoInfo = Get-PrioritizedReposToProcess -existingForks $forkCandidates -numberOfReposToDo $numberOfReposRepoInfo
           
             # Split the work for repo info
@@ -185,8 +192,15 @@ jobs:
               $matrixIdsRepoInfo += $chunkId
             }
 
-            # Sort to ensure consistent order
-            $matrixIdsRepoInfo = $matrixIdsRepoInfo | Sort-Object
+            # Sort to ensure consistent order.
+            #
+            # The @() wrapper is load bearing: Sort-Object returns $null for an empty collection and a
+            # bare scalar for a single element, and ConvertTo-Json then emits `null` / `0` instead of a
+            # JSON array. fromJson() hands that straight to strategy.matrix, GitHub rejects it at run
+            # level ("Matrix vector 'chunk-id' does not contain any values"), and because the repo-info
+            # job never starts it does not show up in the jobs API at all - every job reports success
+            # while the run itself is marked failed. Keep the output a real array, always.
+            $matrixIdsRepoInfo = @($matrixIdsRepoInfo | Sort-Object)
 
             # Save chunks to files for each matrix job to pick up
             foreach ($chunkId in $matrixIdsRepoInfo) {
@@ -196,16 +210,27 @@ jobs:
             }
 
             # Output matrix configurations
-            $matrixRepoInfoJson = ConvertTo-Json -InputObject $matrixIdsRepoInfo -Compress
+            $matrixRepoInfoJson = ConvertTo-Json -InputObject @($matrixIdsRepoInfo) -Compress
             Write-Host "RepoInfo matrix configuration: $matrixRepoInfoJson"
+
+            # An empty matrix vector is still a run-level error on GitHub, so the repo-info job is
+            # gated on this flag and gets skipped instead of failing when there is nothing stale to
+            # process. consolidate runs with `if: always()`, so it still executes after a skip.
+            $hasRepoInfoWork = ($matrixIdsRepoInfo.Count -gt 0)
 
             # Set outputs for next jobs
             "matrix-repoinfo=$matrixRepoInfoJson" >> $env:GITHUB_OUTPUT
+            "has-repoinfo-work=$($hasRepoInfoWork.ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
           Write-Message -message "" -logToSummary $true
-          Write-Message -message "✓ Work distribution complete. Starting parallel jobs." -logToSummary $true
+          if ($hasRepoInfoWork) {
+            Write-Message -message "✓ Work distribution complete. Starting parallel jobs." -logToSummary $true
+          } else {
+            Write-Message -message "✓ Nothing to process this run - skipping the repo info jobs." -logToSummary $true
+          }
 
       - name: Upload chunk files
+        if: steps.split-work.outputs.has-repoinfo-work == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: work-chunks
@@ -215,6 +240,10 @@ jobs:
   repo-info:
     name: Get repo info (chunk ${{ matrix.chunk-id }})
     needs: prepare
+    # Without this guard an empty chunk list produces an empty (or null) matrix vector, which GitHub
+    # treats as a run-level configuration error and marks the whole run as failed even though every
+    # job succeeded. Skipping the job instead keeps a "nothing to do" run green.
+    if: needs.prepare.outputs.has-repoinfo-work == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
