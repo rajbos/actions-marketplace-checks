@@ -1476,6 +1476,7 @@ function GetInfo {
             else {
                 $action.immutableReleaseCoverage = $backfilledCoverageResult
             }
+            $i++ | Out-Null
             $repoHadUpdates = $true
         }
 

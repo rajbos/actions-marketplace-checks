@@ -2394,7 +2394,13 @@ function Get-ImmutableReleasePolicyChangedAt {
         $existingChangedAt
     )
 
-    if ($null -eq $existingChangedAt -or $previousStatus -ne $newStatus) {
+    # A missing existingChangedAt does NOT by itself mean this is the first
+    # check ever - a repo migrated from #264 (before this field existed) can
+    # already have a non-null previousStatus with no changedAt recorded yet.
+    # Basing "first observation" on a missing/empty previousStatus instead
+    # avoids falsely recording today as a policy transition on that repo's
+    # first post-migration check when the status hasn't actually changed.
+    if ([string]::IsNullOrEmpty($previousStatus) -or $previousStatus -ne $newStatus) {
         return $checkedAt
     }
 

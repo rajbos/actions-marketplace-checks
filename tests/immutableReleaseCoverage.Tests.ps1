@@ -204,4 +204,18 @@ Describe 'Get-ImmutableReleasePolicyChangedAt' {
 
         $result | Should -Be $checkedAt
     }
+
+    It 'Should not claim a policy transition on the first post-migration check when the status has not actually changed' {
+        # A repo migrated from #264 already has immutableReleasePolicy = "enabled"
+        # (or disabled/unknown) recorded, but immutableReleasePolicyChangedAt did
+        # not exist yet before this function did. A missing existingChangedAt must
+        # not by itself be treated as "first observation ever" when previousStatus
+        # is already known and unchanged - that would falsely claim today as the
+        # transition date for a policy that could have been unchanged for years.
+        $checkedAt = Get-Date
+
+        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "enabled" -newStatus "enabled" -checkedAt $checkedAt -existingChangedAt $null
+
+        $result | Should -Be $null
+    }
 }
