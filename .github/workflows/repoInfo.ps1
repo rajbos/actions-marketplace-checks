@@ -1304,6 +1304,7 @@ function GetInfo {
         # keeps the prioritized collection backlog (Get-RepoPriorityScore)
         # bounded rather than re-checking every repo every run.
         $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+        $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
         # Test-ImmutableReleasePolicyNeedsRefresh (library.ps1) never throws on a
         # malformed/unparsable persisted timestamp - see its doc comment - so this
         # decision cannot abort the whole repo-info run.
