@@ -3703,8 +3703,16 @@ function Get-RepoPriorityScore {
     # whenever observation history is present but coverage is absent/null, so
     # this migration drains through the normal prioritized backlog instead of
     # depending on unrelated data going stale first.
+    #
+    # Gate on the observations *property being present* only - the same
+    # condition the backfill itself uses in repoInfo.ps1 - not on it being
+    # non-null. A schema-valid present-but-null immutableReleaseObservations
+    # still needs backfilling (Get-ImmutableReleaseCoverage explicitly
+    # supports null input and returns the zero-count summary), so requiring
+    # non-null here would leave that repo unscored and therefore never
+    # selected to receive that backfill at all.
     $hasImmutableReleaseObservationsForCoverageGap = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
-    if ($hasImmutableReleaseObservationsForCoverageGap -and ($null -ne $action.immutableReleaseObservations)) {
+    if ($hasImmutableReleaseObservationsForCoverageGap) {
         $hasImmutableReleaseCoverageForGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
         if (!$hasImmutableReleaseCoverageForGap -or ($null -eq $action.immutableReleaseCoverage)) {
             $score += 15

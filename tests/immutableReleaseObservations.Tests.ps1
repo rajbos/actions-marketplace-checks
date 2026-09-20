@@ -446,4 +446,35 @@ Describe 'Get-RepoPriorityScore for immutableReleaseObservations staleness' {
         # score must be at least as high as the no-history-yet case, not lower.
         $scoreWithEmptyHistory | Should -BeGreaterOrEqual $scoreWithoutHistory
     }
+
+    It 'Should score the coverage gap for a schema-valid present-but-null immutableReleaseObservations' {
+        # The coverage-gap score must use the same property-presence condition
+        # as the backfill itself (repoInfo.ps1), not require non-null: a
+        # present-but-null immutableReleaseObservations is schema-valid and the
+        # backfill explicitly handles it (Get-ImmutableReleaseCoverage returns
+        # the zero-count summary for null input), so it must still be scored
+        # here or it would never be selected to receive that backfill.
+        $action = [PSCustomObject]@{
+            owner = "test-owner"
+            name = "test-owner_test-repo"
+            mirrorFound = $true
+            actionType = @{ actionType = "Node" }
+            repoInfo = @{ updated_at = (Get-Date).ToString("o"); lastFetched = (Get-Date) }
+            repoSize = 100
+            dependents = @{ dependents = "1"; dependentsLastUpdated = (Get-Date) }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = (Get-Date)
+            immutableReleaseObservationsCheckedAt = (Get-Date)
+        }
+        $action | Add-Member -Name immutableReleaseObservations -Value $null -MemberType NoteProperty -Force
+
+        $withNullCoverage = $action | Select-Object *
+        $withNullCoverage | Add-Member -Name immutableReleaseCoverage -Value $null -MemberType NoteProperty -Force
+
+        $scoreWithNullObservations = Get-RepoPriorityScore -action $action
+        $scoreWithNullCoverageToo = Get-RepoPriorityScore -action $withNullCoverage
+
+        $scoreWithNullObservations | Should -BeGreaterThan 0
+        $scoreWithNullCoverageToo | Should -Be $scoreWithNullObservations
+    }
 }
