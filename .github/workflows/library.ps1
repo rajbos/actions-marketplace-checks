@@ -2178,11 +2178,14 @@ function Merge-ImmutableReleaseObservations {
         $rid = $release.releaseId
         [void]$seenReleaseIds.Add($rid)
 
-        # Release/tag integrity context (issue #267) - only populated when the
-        # caller (GetImmutableReleaseObservations) was able to resolve it, e.g.
-        # bounded to the newest releases to limit extra API calls. $null/absent
-        # here is preserved as $null on the appended entry rather than guessed,
-        # keeping the "no overclaiming" guarantee this whole feature relies on.
+        # Release/tag integrity context (issue #267). releaseTargetCommitish
+        # comes straight off the releases list and is present for every
+        # current release; resolvedCommitSha and tagReleaseMismatch are only
+        # populated when the caller (GetImmutableReleaseObservations) was able
+        # to resolve the tag, bounded to the newest releases not already
+        # resolved, to limit extra API calls. $null/absent here is preserved
+        # as $null on the appended entry rather than guessed, keeping the "no
+        # overclaiming" guarantee this whole feature relies on.
         $resolvedCommitSha = $release.resolvedCommitSha
         $releaseTargetCommitish = $release.releaseTargetCommitish
         $tagReleaseMismatch = $release.tagReleaseMismatch
@@ -2226,24 +2229,29 @@ function Merge-ImmutableReleaseObservations {
                 # Already known and still present - normally left completely
                 # untouched (the recorded immutabilityState/status must never be
                 # rewritten). However, if release-integrity metadata (issue #267)
-                # is now available that the prior entry didn't have - e.g. this
-                # release just entered the newest-10 SHA-resolution window, or a
-                # resolution attempt that previously failed just succeeded -
-                # append a metadata-only update event carrying forward the prior
+                # is now available that the prior entry didn't have - specifically
+                # a resolvedCommitSha (and its derived tagReleaseMismatch) that a
+                # bounded, newest-10 resolution attempt just obtained - append a
+                # metadata-only update event carrying forward the prior
                 # immutabilityState unchanged, so that newly resolved context is
                 # not silently discarded forever.
-                # Compare each field individually rather than treating "any one
-                # field present" as sufficient prior metadata: releaseTargetCommitish
-                # is recorded on essentially every pass regardless of whether
-                # resolution succeeds, so a single combined presence check would
-                # let it alone mask a resolvedCommitSha that only became available
-                # later (e.g. a first attempt records releaseTargetCommitish but
-                # fails to resolve the tag, then a later attempt succeeds) -
-                # discarding that SHA forever instead of persisting it.
+                #
+                # Deliberately NOT triggered by releaseTargetCommitish alone:
+                # GetImmutableReleaseObservations supplies it unconditionally for
+                # every current release (it comes straight off the releases list,
+                # not from the bounded SHA-resolution calls), so on a pre-#267
+                # migration every still-present release would gain it at once and
+                # this would append a metadata-only entry for every release in
+                # the repo's entire history, not just the bounded newest-10 SHA
+                # resolutions - inflating the append-only history well beyond
+                # what a single 30-day pass should add, and risking the Azure
+                # Table per-property size limit for repos with many releases.
+                # releaseTargetCommitish is still carried through/merged onto the
+                # appended entry below whenever a real gain (SHA or mismatch)
+                # triggers it, just never used to trigger one by itself.
                 $gainedResolvedCommitSha = ($null -eq $prior.resolvedCommitSha) -and ($null -ne $resolvedCommitSha)
-                $gainedReleaseTargetCommitish = ($null -eq $prior.releaseTargetCommitish) -and ($null -ne $releaseTargetCommitish)
                 $gainedTagReleaseMismatch = ($null -eq $prior.tagReleaseMismatch) -and ($null -ne $tagReleaseMismatch)
-                if ($gainedResolvedCommitSha -or $gainedReleaseTargetCommitish -or $gainedTagReleaseMismatch) {
+                if ($gainedResolvedCommitSha -or $gainedTagReleaseMismatch) {
                     # Merge rather than overwrite: keep whichever value (new or
                     # prior) is non-null for each field, so a field already known
                     # is never regressed back to null just because this pass

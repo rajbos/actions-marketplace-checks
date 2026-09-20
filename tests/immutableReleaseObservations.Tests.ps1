@@ -904,6 +904,32 @@ Describe 'Merge-ImmutableReleaseObservations' {
         $backfilled[0].releaseTargetCommitish | Should -Be "main"
         $backfilled[0].immutabilityState | Should -Be "unknown"
     }
+
+    It 'Should NOT append a backfill entry for releaseTargetCommitish alone, even for many pre-#267 releases at once' {
+        # releaseTargetCommitish is supplied by GetImmutableReleaseObservations
+        # for every current release (it comes straight off the releases list,
+        # not from bounded SHA-resolution calls) - unlike resolvedCommitSha,
+        # which is bounded to the newest-10 resolution window. On a pre-#267
+        # migration, every still-present release in a repo's entire history
+        # would otherwise gain releaseTargetCommitish at once and each get a
+        # metadata-only entry appended, ballooning the append-only history far
+        # beyond the bounded newest-10 SHA resolutions and risking the Azure
+        # Table per-property size limit for repos with many releases.
+        $existing = @(1..30 | ForEach-Object {
+            @{ releaseId = $_; tagName = "v$_.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src" }
+        })
+        # Every release now carries releaseTargetCommitish (unbounded), but
+        # none have a resolvedCommitSha this pass (none were in the bounded
+        # newest-10 resolution window, or none resolved successfully).
+        $current = @(1..30 | ForEach-Object {
+            @{ releaseId = $_; tagName = "v$_.0.0"; publishedAt = "2024-01-01T00:00:00Z"; releaseTargetCommitish = "main" }
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        # No new entries at all - releaseTargetCommitish alone must never trigger a backfill.
+        $merged.Count | Should -Be 30
+    }
 }
 
 Describe 'Get-RepoPriorityScore for immutableReleaseObservations staleness' {
