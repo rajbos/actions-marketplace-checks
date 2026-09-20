@@ -1439,35 +1439,44 @@ function GetInfo {
                     $i++ | Out-Null
                     $repoHadUpdates = $true
                 }
+                # When $releaseObservationsResult.Error is true (or owner/repo could
+                # not be resolved), fall through to the local backfill below instead
+                # of leaving immutableReleaseCoverage untouched - a transient API
+                # failure should not also block a purely local derivation over
+                # whatever history is already persisted.
             }
         }
-        else {
-            # This action's observation history is already fresh (checked within
-            # the last 30 days), but it may have been populated by a previous run
-            # of this pipeline before immutableReleaseCoverage (issue #266) existed.
-            # Backfill the derived summary whenever it is missing, independently of
-            # the fetch cadence above - otherwise a repo with up-to-date observations
-            # but no coverage would silently go without the field for up to 30 days,
-            # until its next real refresh. Gate only on the observations *property*
-            # being present, not on it being non-null/non-empty: Get-ImmutableReleaseCoverage
-            # explicitly supports $null/empty input and returns a valid zero-count
-            # summary, so a migrated action with no releases at all must still get a
-            # summary rather than being skipped here. Likewise, treat a present-but-null
-            # immutableReleaseCoverage (the schema documents null as an allowed value,
-            # e.g. a migration placeholder) as missing, not as "already backfilled".
-            $hasImmutableReleaseObservationsFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
-            $hasImmutableReleaseCoverageFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
-            $immutableReleaseCoverageIsMissing = !$hasImmutableReleaseCoverageFieldForBackfill -or ($null -eq $action.immutableReleaseCoverage)
-            if ($hasImmutableReleaseObservationsFieldForBackfill -and $immutableReleaseCoverageIsMissing) {
-                $backfilledCoverageResult = Get-ImmutableReleaseCoverage -observations $action.immutableReleaseObservations
-                if (!$hasImmutableReleaseCoverageFieldForBackfill) {
-                    $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
-                }
-                else {
-                    $action.immutableReleaseCoverage = $backfilledCoverageResult
-                }
-                $repoHadUpdates = $true
+
+        # Backfill the derived immutableReleaseCoverage summary (issue #266)
+        # whenever it is still missing, regardless of why: the history may already
+        # be fresh (the check above was skipped entirely), or a refresh was just
+        # attempted and failed (GetImmutableReleaseObservations returned an error,
+        # or owner/repo could not be resolved) - in both cases no network call is
+        # needed here, since Get-ImmutableReleaseCoverage is a pure derivation over
+        # whatever observation history is already persisted on the action. Without
+        # this, a transient API failure could leave immutableReleaseCoverage absent
+        # for another full 30-day cadence even though the existing history already
+        # has everything needed to compute it.
+        #
+        # Gate only on the observations *property* being present, not on it being
+        # non-null/non-empty: Get-ImmutableReleaseCoverage explicitly supports
+        # $null/empty input and returns a valid zero-count summary, so a migrated
+        # action with no releases at all must still get a summary rather than being
+        # skipped here. Likewise, treat a present-but-null immutableReleaseCoverage
+        # (the schema documents null as an allowed value, e.g. a migration
+        # placeholder) as missing, not as "already backfilled".
+        $hasImmutableReleaseObservationsFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+        $hasImmutableReleaseCoverageFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        $immutableReleaseCoverageIsMissing = !$hasImmutableReleaseCoverageFieldForBackfill -or ($null -eq $action.immutableReleaseCoverage)
+        if ($hasImmutableReleaseObservationsFieldForBackfill -and $immutableReleaseCoverageIsMissing) {
+            $backfilledCoverageResult = Get-ImmutableReleaseCoverage -observations $action.immutableReleaseObservations
+            if (!$hasImmutableReleaseCoverageFieldForBackfill) {
+                $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
             }
+            else {
+                $action.immutableReleaseCoverage = $backfilledCoverageResult
+            }
+            $repoHadUpdates = $true
         }
 
         # Track if this repo had any updates
