@@ -22,6 +22,10 @@ BeforeAll {
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
     }
 }
@@ -80,11 +84,15 @@ Describe "Get-RepoPriorityScore" {
             fundingInfo = [PSCustomObject]@{
                 lastChecked = Get-Date
             }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
-        
+
         # Act
         $score = Get-RepoPriorityScore -action $action
-        
+
         # Assert
         $score | Should -Be 0
     }
@@ -111,11 +119,15 @@ Describe "Get-RepoPriorityScore" {
             fundingInfo = [PSCustomObject]@{
                 lastChecked = Get-Date
             }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
-        
+
         # Act
         $score = Get-RepoPriorityScore -action $action
-        
+
         # Assert
         $score | Should -BeGreaterThan 0
         $score | Should -BeLessOrEqual 20
@@ -143,11 +155,15 @@ Describe "Get-RepoPriorityScore" {
             fundingInfo = [PSCustomObject]@{
                 lastChecked = $oldDate
             }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
-        
+
         # Act
         $score = Get-RepoPriorityScore -action $action
-        
+
         # Assert
         $score | Should -BeGreaterThan 0
         $score | Should -BeLessOrEqual 10
@@ -164,6 +180,10 @@ Describe "Get-RepoPriorityScore" {
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
 
         # Act
@@ -185,6 +205,10 @@ Describe "Get-RepoPriorityScore" {
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
 
         # Act
@@ -206,6 +230,10 @@ Describe "Get-RepoPriorityScore" {
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
 
         # Act
@@ -227,6 +255,10 @@ Describe "Get-RepoPriorityScore" {
             tagInfo = @(@{ tag = "v1.0.0"; sha = "abc" })  # no tagInfoCheckedAt
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
 
         # Act
@@ -248,6 +280,10 @@ Describe "Get-RepoPriorityScore" {
             releaseInfo = @(@{ tag_name = "v1.0.0"; target_commitish = "main" })  # no releaseInfoCheckedAt
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
 
         # Act
@@ -273,6 +309,10 @@ Describe "Get-RepoPriorityScore" {
             releaseInfoCheckedAt = $oldDate
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
 
         # Act
@@ -323,7 +363,7 @@ Describe "Get-PrioritizedReposToProcess" {
     It "Should return repos with highest scores first" {
         # Arrange
         $repos = @(
-            [PSCustomObject]@{ name = "complete-repo"; owner = "test"; mirrorFound = $true; actionType = [PSCustomObject]@{ actionType = "Node" }; repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }; repoSize = 100; dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date } }
+            [PSCustomObject]@{ name = "complete-repo"; owner = "test"; mirrorFound = $true; actionType = [PSCustomObject]@{ actionType = "Node" }; repoInfo = [PSCustomObject]@{ updated_at = Get-Date; lastFetched = (Get-Date -Format 'o') }; repoSize = 100; dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }; immutableReleasePolicy = "enabled"; immutableReleasePolicyCheckedAt = Get-Date; immutableReleaseObservationsCheckedAt = Get-Date; immutableReleaseSummary = "Enabled; no recent-release coverage available" }
             [PSCustomObject]@{ name = "missing-owner" }
             [PSCustomObject]@{ name = "missing-actionType"; owner = "test"; mirrorFound = $true }
         )
@@ -371,6 +411,10 @@ Describe "Get-PrioritizedReposToProcess" {
                 dependentsLastUpdated = Get-Date 
             }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
         
         $completeRepo2 = [PSCustomObject]@{ 
@@ -389,6 +433,10 @@ Describe "Get-PrioritizedReposToProcess" {
                 dependentsLastUpdated = Get-Date 
             }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
         
         $repos = @($completeRepo1, $completeRepo2)
@@ -412,6 +460,10 @@ Describe "Get-PrioritizedReposToProcess" {
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
         $staleRepo = [PSCustomObject]@{
             name = "stale-repo"
@@ -422,6 +474,10 @@ Describe "Get-PrioritizedReposToProcess" {
             repoSize = 100
             dependents = [PSCustomObject]@{ dependents = 50; dependentsLastUpdated = Get-Date }
             fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = Get-Date
+            immutableReleaseObservationsCheckedAt = Get-Date
+            immutableReleaseSummary = "Enabled; no recent-release coverage available"
         }
         $repos = @($freshRepo, $staleRepo)
 

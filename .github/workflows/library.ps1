@@ -2072,6 +2072,486 @@ function GetRepoReleases {
     return @{ NotModified = $false; ETag = $newEtag; Data = $response }
 }
 
+<#
+    .SYNOPSIS
+    Merges freshly observed upstream releases into an append-only per-release
+    immutable-release observation history (issue #265).
+
+    .DESCRIPTION
+    This is the single source of truth for how immutable-release observations are
+    combined with whatever history already exists on an action, so callers never
+    need to (and must not) replace the array wholesale the way releaseInfo/tagInfo
+    are refreshed today.
+
+    Behavior, keyed by GitHub release id:
+      - A release seen for the first time gets exactly one new observation appended
+        with immutabilityState "unknown" - this function does not itself determine
+        true immutability (that is a later collector's job, e.g. issue #266); it
+        never invents "immutable"/"notImmutable" from a repo's current policy.
+      - A release that is already known and still present is left completely alone;
+        no existing entry is ever mutated and no duplicate "still present" entry is
+        appended, so a later policy change cannot silently rewrite history.
+      - A release that was previously observed but is missing from the current
+        fetch gets a new observation appended with status "deleted" - the absence
+        is recorded as its own event rather than erasing or overwriting the prior
+        "present" observation(s).
+      - A release that reappears after being marked "deleted" gets a new "present"
+        observation appended, carrying forward its last known immutabilityState
+        (still never inventing a new state).
+
+    The returned array is always the existing observations plus zero or more new
+    entries - existing elements are never removed or edited in place, satisfying
+    the "append-only" acceptance criterion.
+
+    .PARAMETER existingObservations
+    The action's current immutableReleaseObservations array (or $null/empty when
+    this is the first observation pass for the repo).
+
+    .PARAMETER currentReleases
+    Array of hashtables describing the currently observed *published* releases
+    (draft releases must already be filtered out by the caller before this is
+    called - see GetImmutableReleaseObservations in repoInfo.ps1). Each entry is
+    expected to have releaseId, tagName and publishedAt. May optionally also carry
+    resolvedCommitSha/releaseTargetCommitish/tagReleaseMismatch (issue #267) when
+    the caller resolved them - typically bounded to the newest releases only, to
+    limit extra API calls; absent/unresolved values are carried through as $null
+    rather than guessed.
+
+    .PARAMETER observedAt
+    The datetime this observation batch was made.
+
+    .PARAMETER source
+    Machine-readable description of the API call used to collect this batch, kept
+    per-entry for audit purposes (e.g. "GET /repos/{owner}/{repo}/releases").
+
+    .OUTPUTS
+    The merged array of observation hashtables (existing entries untouched, plus
+    any newly appended entries).
+#>
+function Merge-ImmutableReleaseObservations {
+    Param (
+        $existingObservations,
+        $currentReleases,
+        $observedAt,
+        [string] $source
+    )
+
+    $existing = @()
+    if ($null -ne $existingObservations) {
+        $existing = @($existingObservations)
+    }
+
+    $current = @()
+    if ($null -ne $currentReleases) {
+        $current = @($currentReleases)
+    }
+
+    # Find the most recent observation per release id so we know whether a release
+    # is currently considered "present" or "deleted" and what its last known
+    # immutabilityState was, without ever mutating the history itself.
+    $latestByReleaseId = @{}
+    foreach ($entry in $existing) {
+        if ($null -eq $entry) { continue }
+        $rid = $entry.releaseId
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            $latestByReleaseId[$rid] = $entry
+        }
+        else {
+            $existingLatest = $latestByReleaseId[$rid]
+            try {
+                $isNewer = [datetime]$entry.observedAt -gt [datetime]$existingLatest.observedAt
+            }
+            catch {
+                $isNewer = $false
+            }
+            if ($isNewer) {
+                $latestByReleaseId[$rid] = $entry
+            }
+        }
+    }
+
+    $newEntries = [System.Collections.Generic.List[hashtable]]::new()
+    $seenReleaseIds = New-Object System.Collections.Generic.HashSet[object]
+
+    foreach ($release in $current) {
+        if ($null -eq $release) { continue }
+        $rid = $release.releaseId
+        [void]$seenReleaseIds.Add($rid)
+
+        # Release/tag integrity context (issue #267). releaseTargetCommitish
+        # comes straight off the releases list and is present for every
+        # current release; resolvedCommitSha and tagReleaseMismatch are only
+        # populated when the caller (GetImmutableReleaseObservations) was able
+        # to resolve the tag, bounded to the newest releases not already
+        # resolved, to limit extra API calls. $null/absent here is preserved
+        # as $null on the appended entry rather than guessed, keeping the "no
+        # overclaiming" guarantee this whole feature relies on.
+        $resolvedCommitSha = $release.resolvedCommitSha
+        $releaseTargetCommitish = $release.releaseTargetCommitish
+        $tagReleaseMismatch = $release.tagReleaseMismatch
+
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            # Never observed before - append a first observation. Always "unknown":
+            # no backfill claims are invented from the repo's current policy.
+            $newEntries.Add(@{
+                releaseId              = $rid
+                tagName                = $release.tagName
+                publishedAt            = $release.publishedAt
+                immutabilityState      = "unknown"
+                status                 = "present"
+                observedAt             = $observedAt
+                source                 = $source
+                resolvedCommitSha      = $resolvedCommitSha
+                releaseTargetCommitish = $releaseTargetCommitish
+                tagReleaseMismatch     = $tagReleaseMismatch
+            })
+        }
+        else {
+            $prior = $latestByReleaseId[$rid]
+            if ($prior.status -eq "deleted") {
+                # Reappeared after being observed missing - record the reappearance
+                # as a new event, carrying forward the last known state rather than
+                # guessing a new one.
+                $newEntries.Add(@{
+                    releaseId              = $rid
+                    tagName                = $release.tagName
+                    publishedAt            = $release.publishedAt
+                    immutabilityState      = $prior.immutabilityState
+                    status                 = "present"
+                    observedAt             = $observedAt
+                    source                 = $source
+                    resolvedCommitSha      = $resolvedCommitSha
+                    releaseTargetCommitish = $releaseTargetCommitish
+                    tagReleaseMismatch     = $tagReleaseMismatch
+                })
+            }
+            else {
+                # Already known and still present - normally left completely
+                # untouched (the recorded immutabilityState/status must never be
+                # rewritten). However, if release-integrity metadata (issue #267)
+                # is now available that the prior entry didn't have - specifically
+                # a resolvedCommitSha (and its derived tagReleaseMismatch) that a
+                # bounded, newest-10 resolution attempt just obtained - append a
+                # metadata-only update event carrying forward the prior
+                # immutabilityState unchanged, so that newly resolved context is
+                # not silently discarded forever.
+                #
+                # Deliberately NOT triggered by releaseTargetCommitish alone:
+                # GetImmutableReleaseObservations supplies it unconditionally for
+                # every current release (it comes straight off the releases list,
+                # not from the bounded SHA-resolution calls), so on a pre-#267
+                # migration every still-present release would gain it at once and
+                # this would append a metadata-only entry for every release in
+                # the repo's entire history, not just the bounded newest-10 SHA
+                # resolutions - inflating the append-only history well beyond
+                # what a single 30-day pass should add, and risking the Azure
+                # Table per-property size limit for repos with many releases.
+                # releaseTargetCommitish is still carried through/merged onto the
+                # appended entry below whenever a real gain (SHA or mismatch)
+                # triggers it, just never used to trigger one by itself.
+                $gainedResolvedCommitSha = ($null -eq $prior.resolvedCommitSha) -and ($null -ne $resolvedCommitSha)
+                $gainedTagReleaseMismatch = ($null -eq $prior.tagReleaseMismatch) -and ($null -ne $tagReleaseMismatch)
+                if ($gainedResolvedCommitSha -or $gainedTagReleaseMismatch) {
+                    # Merge rather than overwrite: keep whichever value (new or
+                    # prior) is non-null for each field, so a field already known
+                    # is never regressed back to null just because this pass
+                    # didn't happen to re-resolve it.
+                    $mergedResolvedCommitSha = if ($null -ne $resolvedCommitSha) { $resolvedCommitSha } else { $prior.resolvedCommitSha }
+                    $mergedReleaseTargetCommitish = if ($null -ne $releaseTargetCommitish) { $releaseTargetCommitish } else { $prior.releaseTargetCommitish }
+                    $mergedTagReleaseMismatch = if ($null -ne $tagReleaseMismatch) { $tagReleaseMismatch } else { $prior.tagReleaseMismatch }
+                    $newEntries.Add(@{
+                        releaseId              = $rid
+                        tagName                = $release.tagName
+                        publishedAt            = $release.publishedAt
+                        immutabilityState      = $prior.immutabilityState
+                        status                 = "present"
+                        observedAt             = $observedAt
+                        source                 = $source
+                        resolvedCommitSha      = $mergedResolvedCommitSha
+                        releaseTargetCommitish = $mergedReleaseTargetCommitish
+                        tagReleaseMismatch     = $mergedTagReleaseMismatch
+                    })
+                }
+            }
+        }
+    }
+
+    # Releases that were previously known and present, but are absent from this
+    # observation batch, get a "deleted" event appended rather than having their
+    # prior "present" observation(s) removed or rewritten.
+    foreach ($rid in $latestByReleaseId.Keys) {
+        if ($seenReleaseIds.Contains($rid)) { continue }
+        $prior = $latestByReleaseId[$rid]
+        if ($prior.status -eq "deleted") { continue }
+
+        $newEntries.Add(@{
+            releaseId         = $rid
+            tagName           = $prior.tagName
+            publishedAt       = $prior.publishedAt
+            immutabilityState = $prior.immutabilityState
+            status            = "deleted"
+            observedAt        = $observedAt
+            source            = $source
+        })
+    }
+
+    # The unary comma forces this to always come back as a single array object -
+    # without it, PowerShell unrolls a one-element result into a bare scalar
+    # (e.g. the lone hashtable itself, whose .Count would then mean its number of
+    # keys, not "one observation"), which callers here rely on being an array.
+    return ,@($existing + $newEntries)
+}
+
+<#
+    .SYNOPSIS
+    Derives an honest, marketplace-ready immutable-release coverage summary for
+    the most recent releases from the persisted per-release observation history
+    (issue #266, built on top of #265's Merge-ImmutableReleaseObservations).
+
+    .DESCRIPTION
+    This is a pure calculation/derivation layer: it takes the append-only
+    immutableReleaseObservations array (or $null/empty) and reduces it to the
+    latest known state of the ten newest currently-present releases, without
+    ever inspecting live upstream data itself.
+
+    Rules:
+      - Only the most recent observation per release id is considered (so a
+        release's current immutabilityState/status reflects its latest
+        recorded observation, never an earlier one).
+      - Releases whose latest observation has status "deleted" are excluded -
+        a deleted release is no longer part of "the latest releases" and must
+        not be counted as a known-immutable, known-not-immutable or unknown
+        release, and must not be padded in as a placeholder either.
+      - The remaining "present" releases are ordered by publishedAt
+        descending (newest first) and the ten newest are selected. Fewer than
+        ten available releases is not an error and is never padded - the
+        denominator simply reflects however many releases actually exist.
+      - immutable/notImmutable/unknown are counted independently among the
+        selected releases. The "known" denominator used in the summary string
+        is immutableCount + notImmutableCount only - unknown observations are
+        never counted as failures nor as known-good, and are never silently
+        dropped from the total either (they show up as their own count).
+      - latestReleaseImmutable reflects the immutabilityState of the single
+        newest selected release ("immutable"/"notImmutable"/"unknown"), or
+        "unknown" when there are no known releases at all.
+
+    .PARAMETER observations
+    The action's immutableReleaseObservations array (or $null/empty when no
+    observations have been recorded yet).
+
+    .PARAMETER releaseLimit
+    How many of the newest published, non-draft releases to consider. Defaults
+    to 10, matching the issue #266 "last 10" acceptance criteria.
+
+    .OUTPUTS
+    Hashtable with:
+      releasesConsidered      - number of releases actually included (<= releaseLimit, never padded)
+      immutableCount          - count of considered releases with immutabilityState "immutable"
+      notImmutableCount       - count of considered releases with immutabilityState "notImmutable"
+      unknownCount            - count of considered releases with immutabilityState "unknown"
+      knownCount              - immutableCount + notImmutableCount (the summary's denominator)
+      latestReleaseImmutable  - "immutable", "notImmutable" or "unknown" for the single newest release
+      summary                 - human-readable string, e.g.
+                                 "7 of 8 known releases immutable (last 10; 2 unknown)"
+#>
+function Get-ImmutableReleaseCoverage {
+    Param (
+        $observations,
+        [ValidateRange(0, 10)]
+        [int] $releaseLimit = 10
+    )
+
+    $all = @()
+    if ($null -ne $observations) {
+        $all = @($observations)
+    }
+
+    # Keep only the latest observation per release id, so a release's current
+    # state always reflects its most recently recorded observation.
+    $latestByReleaseId = @{}
+    foreach ($entry in $all) {
+        if ($null -eq $entry) { continue }
+        $rid = $entry.releaseId
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            $latestByReleaseId[$rid] = $entry
+        }
+        else {
+            $existingLatest = $latestByReleaseId[$rid]
+            try {
+                $isNewer = [datetime]$entry.observedAt -gt [datetime]$existingLatest.observedAt
+            }
+            catch {
+                $isNewer = $false
+            }
+            if ($isNewer) {
+                $latestByReleaseId[$rid] = $entry
+            }
+        }
+    }
+
+    # A "deleted" release is no longer part of the current release set - it is
+    # excluded entirely rather than counted as unknown/failing, and never used
+    # to pad the denominator back up to releaseLimit.
+    $present = @($latestByReleaseId.Values | Where-Object { $_.status -ne "deleted" })
+
+    # Order newest-first by publishedAt and take at most releaseLimit - fewer
+    # than releaseLimit available releases is handled as-is, with no padding.
+    $ordered = @($present | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
+    $selected = @($ordered | Select-Object -First $releaseLimit)
+
+    $immutableCount = @($selected | Where-Object { $_.immutabilityState -eq "immutable" }).Count
+    $notImmutableCount = @($selected | Where-Object { $_.immutabilityState -eq "notImmutable" }).Count
+    $unknownCount = @($selected | Where-Object { $_.immutabilityState -eq "unknown" }).Count
+    $knownCount = $immutableCount + $notImmutableCount
+
+    $latestReleaseImmutable = "unknown"
+    if ($selected.Count -gt 0) {
+        $latestReleaseImmutable = $selected[0].immutabilityState
+    }
+
+    $summary = "$immutableCount of $knownCount known releases immutable (last $($selected.Count); $unknownCount unknown)"
+
+    return @{
+        releasesConsidered     = $selected.Count
+        immutableCount         = $immutableCount
+        notImmutableCount      = $notImmutableCount
+        unknownCount           = $unknownCount
+        knownCount             = $knownCount
+        latestReleaseImmutable = $latestReleaseImmutable
+        summary                = $summary
+    }
+}
+
+<#
+    .SYNOPSIS
+    Determines the immutableReleasePolicyChangedAt value to persist after a fresh
+    immutable-release policy check (issue #266).
+
+    .DESCRIPTION
+    immutableReleasePolicyCheckedAt (issue #264) is bumped on every check regardless
+    of whether the observed status actually changed, so it cannot answer "when did
+    this repo's policy last change?" - a repo checked every 30 days for a year with
+    a policy that never changed would otherwise look like it just changed on every
+    check. This function captures that transition time separately: it returns the
+    current check's timestamp only when the status is being recorded for the first
+    time or actually differs from the previously stored status, and otherwise
+    returns the existing changed-at value unchanged (so a repeated "still enabled"
+    observation never resets it).
+
+    .PARAMETER previousStatus
+    The immutableReleasePolicy status previously stored on the action ($null if
+    this is the first check ever performed for this repo).
+
+    .PARAMETER newStatus
+    The immutableReleasePolicy status just observed by GetImmutableReleasePolicy.
+
+    .PARAMETER checkedAt
+    The datetime of the just-performed check (GetImmutableReleasePolicy's checkedAt).
+
+    .PARAMETER existingChangedAt
+    The immutableReleasePolicyChangedAt value currently stored on the action, or
+    $null if it has never been set.
+
+    .OUTPUTS
+    The datetime to store as immutableReleasePolicyChangedAt.
+#>
+function Get-ImmutableReleasePolicyChangedAt {
+    Param (
+        [string] $previousStatus,
+        [string] $newStatus,
+        $checkedAt,
+        $existingChangedAt
+    )
+
+    # A missing existingChangedAt does NOT by itself mean this is the first
+    # check ever - a repo migrated from #264 (before this field existed) can
+    # already have a non-null previousStatus with no changedAt recorded yet.
+    # Basing "first observation" on a missing/empty previousStatus instead
+    # avoids falsely recording today as a policy transition on that repo's
+    # first post-migration check when the status hasn't actually changed.
+    if ([string]::IsNullOrEmpty($previousStatus)) {
+        return $checkedAt
+    }
+
+    # GetImmutableReleasePolicy reports "unknown" for a missing field, a
+    # 403/rate-limit response, or any other transient API failure - it is an
+    # availability failure, not a confirmed change to the repo's actual
+    # policy. A transition into or out of "unknown" (e.g. enabled -> unknown
+    # during an outage, then unknown -> enabled once it recovers) must
+    # therefore never update changedAt, or a temporary API blip would
+    # fabricate a transition timestamp that does not represent any real
+    # policy change. Only a confirmed transition between two known states
+    # (enabled <-> disabled) counts.
+    if ($previousStatus -eq "unknown" -or $newStatus -eq "unknown") {
+        return $existingChangedAt
+    }
+
+    if ($previousStatus -ne $newStatus) {
+        return $checkedAt
+    }
+
+    return $existingChangedAt
+}
+
+<#
+    .SYNOPSIS
+    Composes the concise, marketplace-ready human-readable immutable-release
+    summary string surfaced in reports and the API (issue #267).
+
+    .DESCRIPTION
+    This is a pure presentation layer on top of the tri-state current policy
+    (issue #264) and the derived recent-release coverage summary (issue #266,
+    Get-ImmutableReleaseCoverage) - it does not fetch or compute anything itself
+    and never overclaims: a current "enabled" policy only describes the policy
+    right now, so the coverage half of the string is always about the recent
+    releases actually observed, never inferred from the current policy alone.
+
+    Produces strings like:
+      "Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)"
+      "Disabled; 0 of 3 known releases immutable (last 3; 0 unknown)"
+      "Unknown; no release history available"                (no coverage yet)
+
+    .PARAMETER policyStatus
+    The action's current immutableReleasePolicy value ("enabled", "disabled",
+    "unknown", or $null when it has never been checked).
+
+    .PARAMETER coverage
+    The action's immutableReleaseCoverage object (from Get-ImmutableReleaseCoverage),
+    or $null/absent when no release observations have been recorded yet.
+
+    .OUTPUTS
+    A single human-readable string combining the policy label and the coverage
+    summary (or a placeholder when no coverage is available yet).
+#>
+function Get-ImmutableReleaseSummary {
+    Param (
+        [string] $policyStatus,
+        $coverage
+    )
+
+    $policyLabel = switch ($policyStatus) {
+        "enabled"  { "Enabled" }
+        "disabled" { "Disabled" }
+        default    { "Unknown" }
+    }
+
+    $releasesConsidered = 0
+    if ($null -ne $coverage) {
+        if ($coverage -is [System.Collections.IDictionary]) {
+            if ($coverage.ContainsKey('releasesConsidered')) { $releasesConsidered = $coverage.releasesConsidered }
+        }
+        elseif ($null -ne $coverage.PSObject.Properties['releasesConsidered']) {
+            $releasesConsidered = $coverage.releasesConsidered
+        }
+    }
+
+    if ($null -eq $coverage -or $releasesConsidered -eq 0) {
+        return "$policyLabel; no release history available"
+    }
+
+    return "$policyLabel; $($coverage.summary)"
+}
+
 function Invoke-GraphQLRepoMetadataBatch {
     <#
     .SYNOPSIS
@@ -3230,6 +3710,46 @@ function Remove-StaleContainerScans {
 }
 
 # Helper function to calculate priority score for a repo
+function Test-ImmutableReleasePolicyNeedsRefresh {
+    <#
+    .SYNOPSIS
+    Decides whether an action's immutable-release policy (issue #264) needs
+    to be (re)checked, given its persisted immutableReleasePolicy/
+    immutableReleasePolicyCheckedAt fields.
+
+    .DESCRIPTION
+    Refresh is needed when the policy or checked-at field is missing/null, or
+    when the checked-at timestamp is older than 30 days. A malformed/unparsable
+    persisted timestamp is allowed by the schema (only a validation warning,
+    not an error), so parsing it must never throw and abort the caller - a
+    conversion failure is treated the same as a missing/null timestamp, same
+    as the mirrored logic in Get-RepoPriorityScore below.
+
+    .PARAMETER action
+    The action object to inspect.
+
+    .OUTPUTS
+    Boolean - $true when the policy needs to be (re)checked.
+    #>
+    Param (
+        $action
+    )
+
+    $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleasePolicyField -or !$hasImmutableReleasePolicyCheckedAtField -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+        return $true
+    }
+
+    try {
+        $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
+        return $daysSinceLastCheck -gt 30
+    }
+    catch {
+        return $true
+    }
+}
+
 function Get-RepoPriorityScore {
     Param (
         $action
@@ -3322,6 +3842,90 @@ function Get-RepoPriorityScore {
             if ($daysSinceCheck -gt 30) {
                 $score += 15
             }
+        }
+    }
+
+    # Immutable-release policy staleness (issue #264): bounded 30-day refresh
+    # cadence, same pattern/threshold as fundingInfo/tagInfo/releaseInfo above,
+    # so this backlog drains alongside the others instead of needing a
+    # dedicated full pass. Scored whenever the field is missing entirely (so
+    # new repos get collected) or the last check is stale/unparsable.
+    $hasImmutableReleasePolicy = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleasePolicyCheckedAt = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleasePolicy -or !$hasImmutableReleasePolicyCheckedAt -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+        $score += 20
+    }
+    else {
+        try {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
+            if ($daysSinceCheck -gt 30) { $score += 20 }
+        }
+        catch { $score += 20 }
+    }
+
+    # Immutable-release per-release observation staleness (issue #265): same bounded
+    # 30-day refresh cadence as immutableReleasePolicy above, so the append-only
+    # release-history backlog also drains alongside the others. Scored whenever
+    # immutableReleaseObservationsCheckedAt is missing entirely (so new repos get an
+    # initial pass) or the last check is stale/unparsable. This only controls how often
+    # we re-scan the upstream releases list for newly-published/removed releases - it
+    # never rewrites an already-recorded observation (see Merge-ImmutableReleaseObservations).
+    $hasImmutableReleaseObservationsCheckedAt = Get-Member -inputobject $action -name "immutableReleaseObservationsCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleaseObservationsCheckedAt -or ($null -eq $action.immutableReleaseObservationsCheckedAt)) {
+        $score += 15
+    }
+    else {
+        try {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.immutableReleaseObservationsCheckedAt).TotalDays
+            if ($daysSinceCheck -gt 30) { $score += 15 }
+        }
+        catch { $score += 15 }
+    }
+
+    # Missing immutableReleaseCoverage (issue #266) despite already having
+    # observation history: GetInfo's local backfill for this case (no network
+    # call needed - see repoInfo.ps1) only runs for repos that actually reach
+    # GetInfo, which the direct Run path restricts to whatever
+    # Get-PrioritizedReposToProcess selects. An action with otherwise-fresh
+    # policy/observation timestamps (e.g. already migrated by #268/#269 before
+    # #266 existed) would score 0 on every signal above and might never be
+    # selected, leaving it without coverage indefinitely even though the
+    # backfill itself needs no API call at all once selected. Score it
+    # whenever observation history is present but coverage is absent/null, so
+    # this migration drains through the normal prioritized backlog instead of
+    # depending on unrelated data going stale first.
+    #
+    # Gate on the observations *property being present* only - the same
+    # condition the backfill itself uses in repoInfo.ps1 - not on it being
+    # non-null. A schema-valid present-but-null immutableReleaseObservations
+    # still needs backfilling (Get-ImmutableReleaseCoverage explicitly
+    # supports null input and returns the zero-count summary), so requiring
+    # non-null here would leave that repo unscored and therefore never
+    # selected to receive that backfill at all.
+    $hasImmutableReleaseObservationsForCoverageGap = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+    if ($hasImmutableReleaseObservationsForCoverageGap) {
+        $hasImmutableReleaseCoverageForGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        if (!$hasImmutableReleaseCoverageForGap -or ($null -eq $action.immutableReleaseCoverage)) {
+            $score += 15
+        }
+    }
+
+    # Missing immutableReleaseSummary (issue #267) despite already having
+    # policy and/or coverage: like the coverage-gap signal above, GetInfo's
+    # summary backfill is not gated behind any refresh cadence, but it still
+    # only runs for repos that reach GetInfo, which the direct Run path
+    # restricts via Get-PrioritizedReposToProcess. An action with policy
+    # and/or coverage already populated but no summary (e.g. migrated before
+    # #267 existed) would otherwise score 0 on every signal above and never
+    # be selected, leaving it without a summary indefinitely even though
+    # composing it needs no API call at all once selected.
+    $hasImmutableReleasePolicyForSummaryGap = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleaseCoverageForSummaryGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+    if (($hasImmutableReleasePolicyForSummaryGap -and ($null -ne $action.immutableReleasePolicy)) -or
+        ($hasImmutableReleaseCoverageForSummaryGap -and ($null -ne $action.immutableReleaseCoverage))) {
+        $hasImmutableReleaseSummaryForGap = Get-Member -inputobject $action -name "immutableReleaseSummary" -Membertype Properties
+        if (!$hasImmutableReleaseSummaryForGap -or ($null -eq $action.immutableReleaseSummary)) {
+            $score += 15
         }
     }
 
