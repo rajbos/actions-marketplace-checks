@@ -637,6 +637,88 @@ Describe "Status JSON Schema Validation" {
             $result.Errors -join " " | Should -Match "knownCount should equal immutableCount \+ notImmutableCount"
         }
 
+        It "Should error when releasesConsidered is negative even if all counts are zero" {
+            # Get-ImmutableReleaseCoverage can never produce a negative
+            # releasesConsidered - this must be rejected outright rather than
+            # only checked for exceeding 10.
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = -1
+                    immutableCount         = 0
+                    notImmutableCount      = 0
+                    unknownCount           = 0
+                    knownCount             = 0
+                    latestReleaseImmutable = "unknown"
+                    summary                = "0 of 0 known releases immutable (last 0; 0 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "releasesConsidered should be a non-negative integer"
+        }
+
+        It "Should error (not silently skip the consistency check) when a counter is missing entirely" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 10
+                    immutableCount         = 7
+                    notImmutableCount      = 1
+                    latestReleaseImmutable = "immutable"
+                    summary                = "7 of 8 known releases immutable (last 10; 2 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "missing 'unknownCount'"
+            $result.Errors -join " " | Should -Match "missing 'knownCount'"
+        }
+
+        It "Should error when releasesConsidered does not equal immutableCount + notImmutableCount + unknownCount" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 5
+                    immutableCount         = 7
+                    notImmutableCount      = 1
+                    unknownCount           = 2
+                    knownCount             = 8
+                    latestReleaseImmutable = "immutable"
+                    summary                = "7 of 8 known releases immutable (last 5; 2 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "releasesConsidered should equal immutableCount \+ notImmutableCount \+ unknownCount"
+        }
+
+        It "Should error when a counter is a non-numeric type" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = "10"
+                    immutableCount         = 7
+                    notImmutableCount      = 1
+                    unknownCount           = 2
+                    knownCount             = 8
+                    latestReleaseImmutable = "immutable"
+                    summary                = "7 of 8 known releases immutable (last 10; 2 unknown)"
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "releasesConsidered should be a non-negative integer"
+        }
+
         It "Should not require immutableReleaseCoverage to be present at all (backwards compatible)" {
             $action = @{
                 owner = "test-owner"

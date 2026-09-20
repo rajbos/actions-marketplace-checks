@@ -2222,7 +2222,33 @@ function Merge-ImmutableReleaseObservations {
                     tagReleaseMismatch     = $tagReleaseMismatch
                 })
             }
-            # else: already known and still present - leave history untouched.
+            else {
+                # Already known and still present - normally left completely
+                # untouched (the recorded immutabilityState/status must never be
+                # rewritten). However, if release-integrity metadata (issue #267)
+                # is now available that the prior entry didn't have - e.g. this
+                # release just entered the newest-10 SHA-resolution window, or a
+                # resolution attempt that previously failed just succeeded -
+                # append a metadata-only update event carrying forward the prior
+                # immutabilityState unchanged, so that newly resolved context is
+                # not silently discarded forever.
+                $priorHasIntegrityMetadata = ($null -ne $prior.resolvedCommitSha) -or ($null -ne $prior.releaseTargetCommitish) -or ($null -ne $prior.tagReleaseMismatch)
+                $newHasIntegrityMetadata = ($null -ne $resolvedCommitSha) -or ($null -ne $releaseTargetCommitish) -or ($null -ne $tagReleaseMismatch)
+                if (!$priorHasIntegrityMetadata -and $newHasIntegrityMetadata) {
+                    $newEntries.Add(@{
+                        releaseId              = $rid
+                        tagName                = $release.tagName
+                        publishedAt            = $release.publishedAt
+                        immutabilityState      = $prior.immutabilityState
+                        status                 = "present"
+                        observedAt             = $observedAt
+                        source                 = $source
+                        resolvedCommitSha      = $resolvedCommitSha
+                        releaseTargetCommitish = $releaseTargetCommitish
+                        tagReleaseMismatch     = $tagReleaseMismatch
+                    })
+                }
+            }
         }
     }
 
@@ -3816,6 +3842,25 @@ function Get-RepoPriorityScore {
     if ($hasImmutableReleaseObservationsForCoverageGap) {
         $hasImmutableReleaseCoverageForGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
         if (!$hasImmutableReleaseCoverageForGap -or ($null -eq $action.immutableReleaseCoverage)) {
+            $score += 15
+        }
+    }
+
+    # Missing immutableReleaseSummary (issue #267) despite already having
+    # policy and/or coverage: like the coverage-gap signal above, GetInfo's
+    # summary backfill is not gated behind any refresh cadence, but it still
+    # only runs for repos that reach GetInfo, which the direct Run path
+    # restricts via Get-PrioritizedReposToProcess. An action with policy
+    # and/or coverage already populated but no summary (e.g. migrated before
+    # #267 existed) would otherwise score 0 on every signal above and never
+    # be selected, leaving it without a summary indefinitely even though
+    # composing it needs no API call at all once selected.
+    $hasImmutableReleasePolicyForSummaryGap = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleaseCoverageForSummaryGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+    if (($hasImmutableReleasePolicyForSummaryGap -and ($null -ne $action.immutableReleasePolicy)) -or
+        ($hasImmutableReleaseCoverageForSummaryGap -and ($null -ne $action.immutableReleaseCoverage))) {
+        $hasImmutableReleaseSummaryForGap = Get-Member -inputobject $action -name "immutableReleaseSummary" -Membertype Properties
+        if (!$hasImmutableReleaseSummaryForGap -or ($null -eq $action.immutableReleaseSummary)) {
             $score += 15
         }
     }

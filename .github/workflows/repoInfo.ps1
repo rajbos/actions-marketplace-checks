@@ -613,18 +613,32 @@ function GetImmutableReleasePolicy {
     Start time of the overall run, used for the shared 50-minute time budget
     check other collectors in this file also use.
 
+    .PARAMETER existingObservations
+    The action's current immutableReleaseObservations array (or $null/empty),
+    used only to skip re-resolving a release-tag SHA (issue #267) that a
+    previous pass already resolved successfully - see the SHA-resolution
+    bounding note below. Never used to invent or carry forward an
+    immutabilityState here; that remains Merge-ImmutableReleaseObservations's
+    job.
+
     .OUTPUTS
     Hashtable with:
       Releases  - array of hashtables (releaseId, tagName, publishedAt,
                   releaseTargetCommitish) for every non-draft release found;
-                  empty array when none/on error. For the newest releases (up
-                  to 10, bounded to limit extra API calls - issue #267) each
-                  entry also carries resolvedCommitSha (the tag's peeled
-                  commit SHA, via Resolve-ReleaseTagCommitSha below) and
-                  tagReleaseMismatch (boolean, only set when
-                  releaseTargetCommitish is itself a full commit SHA that can
-                  be honestly compared against it - $null/unset otherwise,
-                  e.g. when the target is a branch name, never guessed)
+                  empty array when none/on error. Among the newest releases
+                  (up to 10) that do NOT already have a resolvedCommitSha
+                  recorded in existingObservations, each entry also carries
+                  resolvedCommitSha (the tag's peeled commit SHA, via
+                  Resolve-ReleaseTagCommitSha below) and tagReleaseMismatch
+                  (boolean, only set when releaseTargetCommitish is itself a
+                  full commit SHA that can be honestly compared against it -
+                  $null/unset otherwise, e.g. when the target is a branch
+                  name, never guessed). Bounding resolution to only the
+                  not-yet-resolved releases in that window keeps this
+                  collector's steady-state API cost close to its #266
+                  baseline (a single releases-list call) once a repo's recent
+                  releases have already been resolved once, instead of
+                  spending up to 10-20 extra calls on every 30-day pass.
       CheckedAt - the datetime this check was performed
       Source    - the API call used to collect the value, for audit purposes
       Error     - $true when the fetch failed/was skipped, otherwise $false
@@ -636,7 +650,8 @@ function GetImmutableReleaseObservations {
         $repo,
         [Alias('access_token')]
         $accessToken,
-        $startTime
+        $startTime,
+        $existingObservations
     )
 
     $checkedAt = Get-Date
@@ -715,10 +730,28 @@ function GetImmutableReleaseObservations {
     # any release/tag comparison is made, per the issue #267 acceptance
     # criteria - see Resolve-ReleaseTagCommitSha below for the lightweight vs
     # annotated distinction.
+    #
+    # Further bounded to releases that do NOT already have a resolvedCommitSha
+    # recorded from a previous pass: this collector also drives the #266
+    # 30-day observation refresh, and re-resolving up to 10 already-resolved
+    # tags on every single pass would add 10-20 extra API calls to that
+    # routine cadence indefinitely, well beyond what #266 needs. A resolved
+    # SHA for an immutable tag never changes, so re-resolving it again buys
+    # nothing.
     $releaseTagShaResolutionLimit = 10
+    $releaseIdsWithKnownSha = New-Object System.Collections.Generic.HashSet[object]
+    foreach ($existingObservation in @($existingObservations)) {
+        if ($null -eq $existingObservation) { continue }
+        if ($existingObservation.status -eq "deleted") { continue }
+        if (-not [string]::IsNullOrWhiteSpace($existingObservation.resolvedCommitSha)) {
+            [void]$releaseIdsWithKnownSha.Add($existingObservation.releaseId)
+        }
+    }
+
     $releasesNewestFirst = @($releases | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
     $releaseIdsToResolve = New-Object System.Collections.Generic.HashSet[object]
     foreach ($r in ($releasesNewestFirst | Select-Object -First $releaseTagShaResolutionLimit)) {
+        if ($releaseIdsWithKnownSha.Contains($r.releaseId)) { continue }
         [void]$releaseIdsToResolve.Add($r.releaseId)
     }
 
@@ -1584,12 +1617,16 @@ function GetInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             if ($repo -ne "" -and $owner -ne "") {
                 Write-Debug "Checking immutable release observations for [$($owner)/$($repo)]"
-                $releaseObservationsResult = GetImmutableReleaseObservations -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+                $hasImmutableReleaseObservationsField = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+                $existingObservations = if ($hasImmutableReleaseObservationsField) { $action.immutableReleaseObservations } else { $null }
+
+                # Existing observations are passed through so the collector can skip
+                # re-resolving a release-tag SHA (issue #267) it already resolved on
+                # a previous pass, keeping this routine 30-day refresh close to its
+                # #266 baseline cost once a repo's recent releases are resolved.
+                $releaseObservationsResult = GetImmutableReleaseObservations -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -existingObservations $existingObservations
 
                 if (!$releaseObservationsResult.Error) {
-                    $hasImmutableReleaseObservationsField = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
-                    $existingObservations = if ($hasImmutableReleaseObservationsField) { $action.immutableReleaseObservations } else { $null }
-
                     $mergedObservations = Merge-ImmutableReleaseObservations -existingObservations $existingObservations -currentReleases $releaseObservationsResult.Releases -observedAt $releaseObservationsResult.CheckedAt -source $releaseObservationsResult.Source
 
                     if (!$hasImmutableReleaseObservationsField) {
@@ -1685,10 +1722,12 @@ function GetInfo {
             $hasImmutableReleaseSummaryField = Get-Member -inputobject $action -name "immutableReleaseSummary" -Membertype Properties
             if (!$hasImmutableReleaseSummaryField) {
                 $action | Add-Member -Name immutableReleaseSummary -Value $immutableReleaseSummaryValue -MemberType NoteProperty
+                $i++ | Out-Null
                 $repoHadUpdates = $true
             }
             elseif ($action.immutableReleaseSummary -ne $immutableReleaseSummaryValue) {
                 $action.immutableReleaseSummary = $immutableReleaseSummaryValue
+                $i++ | Out-Null
                 $repoHadUpdates = $true
             }
         }

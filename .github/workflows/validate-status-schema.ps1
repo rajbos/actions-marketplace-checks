@@ -415,16 +415,42 @@ function Test-ActionSchema {
                 $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.latestReleaseImmutable should be one of 'immutable', 'notImmutable', 'unknown', found: $($coverage.latestReleaseImmutable)"
             }
 
-            if ($null -eq $coverage.releasesConsidered) {
-                $warnings += "Object ${index} ($($action.name)): immutableReleaseCoverage missing 'releasesConsidered' field"
-            }
-            elseif ($coverage.releasesConsidered -gt 10) {
-                $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.releasesConsidered should never exceed 10, found: $($coverage.releasesConsidered)"
+            # Validate each counter's presence, type and non-negative range up
+            # front, so a value Get-ImmutableReleaseCoverage could never
+            # actually produce (e.g. releasesConsidered = -1) is always
+            # rejected rather than only checked when convenient. A missing
+            # counter is an error (not just a warning) precisely because it
+            # would otherwise let the consistency checks below be silently
+            # skipped for an incomplete/malformed object.
+            $coverageCounterFields = @('releasesConsidered', 'immutableCount', 'notImmutableCount', 'unknownCount', 'knownCount')
+            $allCoverageCountersValid = $true
+            foreach ($counterField in $coverageCounterFields) {
+                $counterValue = $coverage.$counterField
+                if ($null -eq $counterValue) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage missing '$counterField' field"
+                    $allCoverageCountersValid = $false
+                }
+                elseif ($counterValue -isnot [int] -and $counterValue -isnot [long] -and $counterValue -isnot [double]) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.$counterField should be a non-negative integer, found: $($counterValue.GetType().Name)"
+                    $allCoverageCountersValid = $false
+                }
+                elseif ($counterValue -lt 0 -or $counterValue -ne [Math]::Floor($counterValue)) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.$counterField should be a non-negative integer, found: $counterValue"
+                    $allCoverageCountersValid = $false
+                }
             }
 
-            if ($null -ne $coverage.immutableCount -and $null -ne $coverage.notImmutableCount -and $null -ne $coverage.knownCount) {
+            if ($allCoverageCountersValid) {
+                if ($coverage.releasesConsidered -gt 10) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.releasesConsidered should never exceed 10, found: $($coverage.releasesConsidered)"
+                }
+
                 if (($coverage.immutableCount + $coverage.notImmutableCount) -ne $coverage.knownCount) {
                     $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.knownCount should equal immutableCount + notImmutableCount, found: $($coverage.knownCount) vs $($coverage.immutableCount + $coverage.notImmutableCount)"
+                }
+
+                if (($coverage.immutableCount + $coverage.notImmutableCount + $coverage.unknownCount) -ne $coverage.releasesConsidered) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.releasesConsidered should equal immutableCount + notImmutableCount + unknownCount, found: $($coverage.releasesConsidered) vs $($coverage.immutableCount + $coverage.notImmutableCount + $coverage.unknownCount)"
                 }
             }
 
