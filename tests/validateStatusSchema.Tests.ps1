@@ -794,6 +794,78 @@ Describe "Status JSON Schema Validation" {
             $result.Warnings -join " " | Should -Match "resolvedCommitSha has unexpected format"
         }
 
+        It "Should warn when releaseTargetCommitish is not a string" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId              = 1
+                        tagName                = "v1.0.0"
+                        publishedAt            = "2025-01-01T00:00:00Z"
+                        immutabilityState      = "unknown"
+                        status                 = "present"
+                        observedAt             = "2025-01-10T00:00:00Z"
+                        source                 = "GET /repos/{owner}/{repo}/releases"
+                        releaseTargetCommitish = @{ not = "a string" }
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "releaseTargetCommitish should be a string or null"
+        }
+
+        It "Should warn when tagReleaseMismatch is the string 'false' instead of a boolean" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId          = 1
+                        tagName            = "v1.0.0"
+                        publishedAt        = "2025-01-01T00:00:00Z"
+                        immutabilityState  = "unknown"
+                        status             = "present"
+                        observedAt         = "2025-01-10T00:00:00Z"
+                        source             = "GET /repos/{owner}/{repo}/releases"
+                        resolvedCommitSha  = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                        tagReleaseMismatch = "false"
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "tagReleaseMismatch should be a boolean or null"
+        }
+
+        It "Should not warn for a well-formed releaseTargetCommitish/tagReleaseMismatch pair" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseObservations = @(
+                    @{
+                        releaseId              = 1
+                        tagName                = "v1.0.0"
+                        publishedAt            = "2025-01-01T00:00:00Z"
+                        immutabilityState      = "unknown"
+                        status                 = "present"
+                        observedAt             = "2025-01-10T00:00:00Z"
+                        source                 = "GET /repos/{owner}/{repo}/releases"
+                        releaseTargetCommitish = "main"
+                        resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                        tagReleaseMismatch     = $false
+                    }
+                )
+                immutableReleaseObservationsCheckedAt = "2025-01-10T00:00:00Z"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Not -Match "releaseTargetCommitish|tagReleaseMismatch"
+        }
+
         It "Should not require release-integrity fields to be present at all (backwards compatible)" {
             $action = @{
                 owner = "test-owner"

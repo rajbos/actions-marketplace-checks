@@ -366,7 +366,19 @@ function Test-ActionSchema {
                 # - so absence is expected and never a warning by itself. Only
                 # flag a mismatch flag that was set without a resolved SHA to back
                 # it up, since that combination should never happen.
-                if ($null -ne $observation.tagReleaseMismatch -and [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha)) {
+                #
+                # releaseTargetCommitish and tagReleaseMismatch are documented as
+                # string/null and boolean/null respectively - validate the type of
+                # any present value first, since a malformed value (an object, or a
+                # string like "false" for a boolean field) would otherwise pass
+                # validation and reach the API as malformed integrity data.
+                if ($null -ne $observation.releaseTargetCommitish -and $observation.releaseTargetCommitish -isnot [string]) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].releaseTargetCommitish should be a string or null, found: $($observation.releaseTargetCommitish.GetType().Name)"
+                }
+                if ($null -ne $observation.tagReleaseMismatch -and $observation.tagReleaseMismatch -isnot [bool]) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].tagReleaseMismatch should be a boolean or null, found: $($observation.tagReleaseMismatch.GetType().Name)"
+                }
+                if ($null -ne $observation.tagReleaseMismatch -and $observation.tagReleaseMismatch -is [bool] -and [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha)) {
                     $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].tagReleaseMismatch is set without a 'resolvedCommitSha'"
                 }
                 if (-not [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha) -and $observation.resolvedCommitSha -notmatch '^[0-9a-f]{40}$') {

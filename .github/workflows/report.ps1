@@ -759,7 +759,7 @@ function ReportImmutableReleaseInsights {
     LogMessage "### Current Immutable-Release Policy"
     LogMessage "|Description|Count|"
     LogMessage "|---|---:|"
-    LogMessage "|Actions with a known policy state|$(DisplayIntWithDots($actionsWithPolicy))|"
+    LogMessage "|Actions with a policy state (enabled, disabled, or unknown)|$(DisplayIntWithDots($actionsWithPolicy))|"
     LogMessage "|Policy enabled|$(DisplayIntWithDots($policyCounts.enabled))|"
     LogMessage "|Policy disabled|$(DisplayIntWithDots($policyCounts.disabled))|"
     LogMessage "|Policy unknown (never collapsed into disabled)|$(DisplayIntWithDots($policyCounts.unknown))|"

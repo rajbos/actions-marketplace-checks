@@ -287,9 +287,46 @@ function immutableReleaseCoverageChanged(existingAction, candidateAction) {
 }
 
 /**
+ * Checks whether any of the immutable-release policy fields (issue #264) or
+ * the derived immutableReleaseSummary (issue #267) differ between what the
+ * API already has and the current status.json candidate.
+ *
+ * These are refreshed on their own 30-day cadence in repoInfo.ps1 and can
+ * therefore change (e.g. a policy flips from "unknown" to "enabled", or the
+ * summary string is recomputed) without repoInfo.updated_at changing at all,
+ * since that field only reflects the upstream repo being pushed to. Without
+ * this check, a policy-only refresh would be silently skipped by needsUpdate.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if any of these fields differ
+ */
+function immutableReleasePolicyChanged(existingAction, candidateAction) {
+  const fields = [
+    'immutableReleasePolicy',
+    'immutableReleasePolicyCheckedAt',
+    'immutableReleasePolicyReason',
+    'immutableReleasePolicySource',
+    'immutableReleasePolicyChangedAt',
+    'immutableReleaseSummary'
+  ];
+
+  for (const field of fields) {
+    const existingValue = (existingAction && existingAction[field]) || null;
+    const candidateValue = (candidateAction && candidateAction[field]) || null;
+    if (existingValue !== candidateValue) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Checks if an action needs to be updated based on repoInfo.updated_at comparison
- * (or, failing that, whether the append-only immutableReleaseObservations history
- * has grown/changed - see immutableReleaseObservationsChanged above).
+ * (or, failing that, whether the append-only immutableReleaseObservations history,
+ * the derived immutableReleaseCoverage, the immutable-release policy fields, or
+ * the immutableReleaseSummary have changed - see the helpers above).
  *
  * @param {object|null} existingAction - The action from API storage (or null if not exists)
  * @param {object} candidateAction - The action from status.json
@@ -309,7 +346,10 @@ function needsUpdate(existingAction, candidateAction) {
       if (existingUpdated !== candidateUpdated) {
         return true;
       }
-      return immutableReleaseObservationsChanged(existingAction, candidateAction);
+      if (immutableReleaseObservationsChanged(existingAction, candidateAction)) {
+        return true;
+      }
+      return immutableReleasePolicyChanged(existingAction, candidateAction);
     } catch (dateError) {
       // If date comparison fails, assume it needs update to be safe
       return true;
@@ -707,6 +747,7 @@ module.exports = {
   compareTagStringsDesc,
   immutableReleaseObservationsChanged,
   immutableReleaseCoverageChanged,
+  immutableReleasePolicyChanged,
   trimTagInfoToLatest,
   trimReleaseInfoToLatest,
   needsUpdate,

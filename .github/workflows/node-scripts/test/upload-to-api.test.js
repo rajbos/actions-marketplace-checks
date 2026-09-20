@@ -9,6 +9,7 @@ const {
   needsUpdate,
   immutableReleaseObservationsChanged,
   immutableReleaseCoverageChanged,
+  immutableReleasePolicyChanged,
   buildActionData
 } = require('../src/upload-to-api');
 
@@ -355,4 +356,45 @@ test('buildActionData never collapses the three policy states into a boolean', (
     assert.strictEqual(actionData.immutableReleasePolicy, policy);
     assert.notStrictEqual(typeof actionData.immutableReleasePolicy, 'boolean');
   }
+});
+
+test('immutableReleasePolicyChanged is false when all policy/summary fields are identical', () => {
+  const existing = {
+    immutableReleasePolicy: 'enabled',
+    immutableReleasePolicyCheckedAt: '2025-01-10T00:00:00Z',
+    immutableReleaseSummary: 'Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)'
+  };
+  const candidate = { ...existing };
+  assert.strictEqual(immutableReleasePolicyChanged(existing, candidate), false);
+});
+
+test('immutableReleasePolicyChanged is true when the policy flips from unknown to enabled', () => {
+  const existing = { immutableReleasePolicy: 'unknown', immutableReleasePolicyCheckedAt: '2025-01-01T00:00:00Z' };
+  const candidate = { immutableReleasePolicy: 'enabled', immutableReleasePolicyCheckedAt: '2025-02-01T00:00:00Z' };
+  assert.strictEqual(immutableReleasePolicyChanged(existing, candidate), true);
+});
+
+test('immutableReleasePolicyChanged is true when immutableReleaseSummary is recomputed', () => {
+  const existing = { immutableReleaseSummary: 'Enabled; 5 of 5 known releases immutable (last 5; 0 unknown)' };
+  const candidate = { immutableReleaseSummary: 'Enabled; 6 of 6 known releases immutable (last 6; 0 unknown)' };
+  assert.strictEqual(immutableReleasePolicyChanged(existing, candidate), true);
+});
+
+test('needsUpdate returns true on a policy-only refresh even when repoInfo.updated_at and observations are unchanged', () => {
+  // A policy/summary refresh (issue #264/#267) runs on its own 30-day cadence and
+  // does not touch repoInfo.updated_at, which only reflects the upstream repo
+  // being pushed to - so needsUpdate must not rely on that signal alone here.
+  const existing = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleasePolicy: 'unknown',
+    immutableReleasePolicyCheckedAt: '2024-01-01T00:00:00Z',
+    immutableReleaseSummary: 'Unknown; no recent-release coverage available'
+  };
+  const candidate = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleasePolicy: 'enabled',
+    immutableReleasePolicyCheckedAt: '2024-02-01T00:00:00Z',
+    immutableReleaseSummary: 'Enabled; no recent-release coverage available'
+  };
+  assert.strictEqual(needsUpdate(existing, candidate), true);
 });
