@@ -1550,16 +1550,10 @@ function GetInfo {
         # bounded rather than re-checking every repo every run.
         $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
         $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
-        $needsImmutableReleasePolicyCheck = $false
-        if (!$hasImmutableReleasePolicyField -or !$hasImmutableReleasePolicyCheckedAtField -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
-            $needsImmutableReleasePolicyCheck = $true
-        }
-        else {
-            $daysSinceLastCheck = (Get-Date) - $action.immutableReleasePolicyCheckedAt
-            if ($daysSinceLastCheck.Days -gt 30) {
-                $needsImmutableReleasePolicyCheck = $true
-            }
-        }
+        # Test-ImmutableReleasePolicyNeedsRefresh (library.ps1) never throws on a
+        # malformed/unparsable persisted timestamp - see its doc comment - so this
+        # decision cannot abort the whole repo-info run.
+        $needsImmutableReleasePolicyCheck = Test-ImmutableReleasePolicyNeedsRefresh -action $action
 
         if ($needsImmutableReleasePolicyCheck) {
             ($owner, $repo) = GetOrgActionInfo($action.name)

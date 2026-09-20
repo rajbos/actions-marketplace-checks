@@ -3710,6 +3710,46 @@ function Remove-StaleContainerScans {
 }
 
 # Helper function to calculate priority score for a repo
+function Test-ImmutableReleasePolicyNeedsRefresh {
+    <#
+    .SYNOPSIS
+    Decides whether an action's immutable-release policy (issue #264) needs
+    to be (re)checked, given its persisted immutableReleasePolicy/
+    immutableReleasePolicyCheckedAt fields.
+
+    .DESCRIPTION
+    Refresh is needed when the policy or checked-at field is missing/null, or
+    when the checked-at timestamp is older than 30 days. A malformed/unparsable
+    persisted timestamp is allowed by the schema (only a validation warning,
+    not an error), so parsing it must never throw and abort the caller - a
+    conversion failure is treated the same as a missing/null timestamp, same
+    as the mirrored logic in Get-RepoPriorityScore below.
+
+    .PARAMETER action
+    The action object to inspect.
+
+    .OUTPUTS
+    Boolean - $true when the policy needs to be (re)checked.
+    #>
+    Param (
+        $action
+    )
+
+    $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleasePolicyField -or !$hasImmutableReleasePolicyCheckedAtField -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+        return $true
+    }
+
+    try {
+        $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
+        return $daysSinceLastCheck -gt 30
+    }
+    catch {
+        return $true
+    }
+}
+
 function Get-RepoPriorityScore {
     Param (
         $action
