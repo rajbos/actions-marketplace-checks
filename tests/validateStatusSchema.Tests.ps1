@@ -391,6 +391,21 @@ Describe "Status JSON Schema Validation" {
             $result = Test-ActionSchema -action $action -index 0
             $result.Warnings -join " " | Should -Not -Match "immutableReleasePolicyChangedAt"
         }
+
+        It "Should warn on an unparsable immutableReleasePolicyChangedAt even when immutableReleasePolicy itself is absent" {
+            # A backwards-compatible record can carry immutableReleasePolicyChangedAt
+            # while its policy is absent/null (e.g. a cleared/legacy record) - this
+            # validation must not be skipped just because the policy block above
+            # never runs for such a record.
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleasePolicyChangedAt = "not-a-date"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "immutableReleasePolicyChangedAt has unexpected format"
+        }
     }
 
     Context "immutableReleaseObservations field (issue #265)" {
@@ -717,6 +732,29 @@ Describe "Status JSON Schema Validation" {
             $result = Test-ActionSchema -action $action -index 0
             $result.Valid | Should -Be $false
             $result.Errors -join " " | Should -Match "releasesConsidered should be a non-negative integer"
+        }
+
+        It "Should error when summary is a non-string value" {
+            # [string]::IsNullOrWhiteSpace coerces a non-string argument before
+            # checking it, so a numeric/object summary must be rejected
+            # explicitly rather than relying on that check alone.
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleaseCoverage = @{
+                    releasesConsidered     = 10
+                    immutableCount         = 7
+                    notImmutableCount      = 1
+                    unknownCount           = 2
+                    knownCount             = 8
+                    latestReleaseImmutable = "immutable"
+                    summary                = 12345
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $false
+            $result.Errors -join " " | Should -Match "immutableReleaseCoverage.summary should be a string"
         }
 
         It "Should not require immutableReleaseCoverage to be present at all (backwards compatible)" {

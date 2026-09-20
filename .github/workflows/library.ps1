@@ -2232,9 +2232,25 @@ function Merge-ImmutableReleaseObservations {
                 # append a metadata-only update event carrying forward the prior
                 # immutabilityState unchanged, so that newly resolved context is
                 # not silently discarded forever.
-                $priorHasIntegrityMetadata = ($null -ne $prior.resolvedCommitSha) -or ($null -ne $prior.releaseTargetCommitish) -or ($null -ne $prior.tagReleaseMismatch)
-                $newHasIntegrityMetadata = ($null -ne $resolvedCommitSha) -or ($null -ne $releaseTargetCommitish) -or ($null -ne $tagReleaseMismatch)
-                if (!$priorHasIntegrityMetadata -and $newHasIntegrityMetadata) {
+                # Compare each field individually rather than treating "any one
+                # field present" as sufficient prior metadata: releaseTargetCommitish
+                # is recorded on essentially every pass regardless of whether
+                # resolution succeeds, so a single combined presence check would
+                # let it alone mask a resolvedCommitSha that only became available
+                # later (e.g. a first attempt records releaseTargetCommitish but
+                # fails to resolve the tag, then a later attempt succeeds) -
+                # discarding that SHA forever instead of persisting it.
+                $gainedResolvedCommitSha = ($null -eq $prior.resolvedCommitSha) -and ($null -ne $resolvedCommitSha)
+                $gainedReleaseTargetCommitish = ($null -eq $prior.releaseTargetCommitish) -and ($null -ne $releaseTargetCommitish)
+                $gainedTagReleaseMismatch = ($null -eq $prior.tagReleaseMismatch) -and ($null -ne $tagReleaseMismatch)
+                if ($gainedResolvedCommitSha -or $gainedReleaseTargetCommitish -or $gainedTagReleaseMismatch) {
+                    # Merge rather than overwrite: keep whichever value (new or
+                    # prior) is non-null for each field, so a field already known
+                    # is never regressed back to null just because this pass
+                    # didn't happen to re-resolve it.
+                    $mergedResolvedCommitSha = if ($null -ne $resolvedCommitSha) { $resolvedCommitSha } else { $prior.resolvedCommitSha }
+                    $mergedReleaseTargetCommitish = if ($null -ne $releaseTargetCommitish) { $releaseTargetCommitish } else { $prior.releaseTargetCommitish }
+                    $mergedTagReleaseMismatch = if ($null -ne $tagReleaseMismatch) { $tagReleaseMismatch } else { $prior.tagReleaseMismatch }
                     $newEntries.Add(@{
                         releaseId              = $rid
                         tagName                = $release.tagName
@@ -2243,9 +2259,9 @@ function Merge-ImmutableReleaseObservations {
                         status                 = "present"
                         observedAt             = $observedAt
                         source                 = $source
-                        resolvedCommitSha      = $resolvedCommitSha
-                        releaseTargetCommitish = $releaseTargetCommitish
-                        tagReleaseMismatch     = $tagReleaseMismatch
+                        resolvedCommitSha      = $mergedResolvedCommitSha
+                        releaseTargetCommitish = $mergedReleaseTargetCommitish
+                        tagReleaseMismatch     = $mergedTagReleaseMismatch
                     })
                 }
             }

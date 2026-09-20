@@ -877,6 +877,33 @@ Describe 'Merge-ImmutableReleaseObservations' {
 
         $merged.Count | Should -Be 1
     }
+
+    It 'Should append a backfill entry with the newly resolved SHA even when releaseTargetCommitish was already recorded' {
+        # First attempt: releaseTargetCommitish recorded, but the tag could not
+        # be resolved (resolvedCommitSha never set). A combined "any field
+        # present" check would see releaseTargetCommitish alone as "already has
+        # metadata" and discard a resolvedCommitSha that becomes available on a
+        # later, successful attempt - each field must be compared individually.
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src"; resolvedCommitSha = $null; releaseTargetCommitish = "main"; tagReleaseMismatch = $null }
+        )
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "main"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged.Count | Should -Be 2
+        $backfilled = @($merged | Where-Object { $null -ne $_.resolvedCommitSha })
+        $backfilled.Count | Should -Be 1
+        $backfilled[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $backfilled[0].releaseTargetCommitish | Should -Be "main"
+        $backfilled[0].immutabilityState | Should -Be "unknown"
+    }
 }
 
 Describe 'Get-RepoPriorityScore for immutableReleaseObservations staleness' {

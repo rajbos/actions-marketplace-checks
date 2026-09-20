@@ -301,20 +301,24 @@ function Test-ActionSchema {
                 $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyCheckedAt has unexpected format: $($action.immutableReleasePolicyCheckedAt)"
             }
         }
+    }
 
-        # immutableReleasePolicyChangedAt (issue #266) is documented as a
-        # datetime just like immutableReleasePolicyCheckedAt above, so it gets
-        # the same type/format validation - otherwise a value such as
-        # "not-a-date" would silently pass validation despite being invalid.
-        if ($null -ne $action.immutableReleasePolicyChangedAt) {
-            if ($action.immutableReleasePolicyChangedAt -isnot [string] -and $action.immutableReleasePolicyChangedAt -isnot [datetime]) {
-                $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt should be a date/string, found: $($action.immutableReleasePolicyChangedAt.GetType().Name)"
-            }
-            elseif ($action.immutableReleasePolicyChangedAt -is [string]) {
-                $parsedChangedAtDate = [datetime]::MinValue
-                if (-not [datetime]::TryParse($action.immutableReleasePolicyChangedAt, [ref]$parsedChangedAtDate)) {
-                    $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt has unexpected format: $($action.immutableReleasePolicyChangedAt)"
-                }
+    # immutableReleasePolicyChangedAt (issue #266) is documented as a datetime
+    # just like immutableReleasePolicyCheckedAt above, so it gets the same
+    # type/format validation - otherwise a value such as "not-a-date" would
+    # silently pass validation despite being invalid. Deliberately validated
+    # independently of immutableReleasePolicy being present: a backwards-
+    # compatible record can carry this field while its policy is absent/null
+    # (e.g. a cleared/legacy record), and nesting this check inside the
+    # policy block above would let it skip validation entirely in that case.
+    if ($null -ne $action.immutableReleasePolicyChangedAt) {
+        if ($action.immutableReleasePolicyChangedAt -isnot [string] -and $action.immutableReleasePolicyChangedAt -isnot [datetime]) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt should be a date/string, found: $($action.immutableReleasePolicyChangedAt.GetType().Name)"
+        }
+        elseif ($action.immutableReleasePolicyChangedAt -is [string]) {
+            $parsedChangedAtDate = [datetime]::MinValue
+            if (-not [datetime]::TryParse($action.immutableReleasePolicyChangedAt, [ref]$parsedChangedAtDate)) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt has unexpected format: $($action.immutableReleasePolicyChangedAt)"
             }
         }
     }
@@ -454,7 +458,15 @@ function Test-ActionSchema {
                 }
             }
 
-            if ([string]::IsNullOrWhiteSpace($coverage.summary)) {
+            # [string]::IsNullOrWhiteSpace coerces a non-string argument (e.g. a
+            # number or an object) to a string before checking it, so it alone
+            # would let a non-string summary silently pass. Reject the type
+            # explicitly as an error, and keep the existing warning for a
+            # missing/blank string value.
+            if ($null -ne $coverage.summary -and $coverage.summary -isnot [string]) {
+                $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.summary should be a string, found: $($coverage.summary.GetType().Name)"
+            }
+            elseif ([string]::IsNullOrWhiteSpace($coverage.summary)) {
                 $warnings += "Object ${index} ($($action.name)): immutableReleaseCoverage missing 'summary' field"
             }
         }
