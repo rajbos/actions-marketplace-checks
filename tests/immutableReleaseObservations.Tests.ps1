@@ -1,83 +1,22 @@
 BeforeAll {
     . $PSScriptRoot/../.github/workflows/library.ps1
 
-    # Define GetImmutableReleaseObservations inline (mirrors .github/workflows/repoInfo.ps1)
-    # to avoid loading repoInfo.ps1's script-level code, matching the pattern used by
-    # tests/immutableReleasePolicy.Tests.ps1 and tests/fundingInfo.Tests.ps1.
-    function GetImmutableReleaseObservations {
-        Param (
-            $owner,
-            $repo,
-            [Alias('access_token')]
-            $accessToken,
-            $startTime
-        )
+    # Extract and execute the actual GetImmutableReleaseObservations and
+    # Resolve-ReleaseTagCommitSha function bodies from repoInfo.ps1 via their
+    # AST (as tests/trivyScan.Tests.ps1's "real implementation" describe block
+    # does), rather than maintaining hand-written mirror copies - a mirror can
+    # silently drift from the real SHA-resolution/bounding behavior while
+    # this suite keeps passing against the unchanged copy. This only pulls in
+    # the two function definitions themselves, not repoInfo.ps1's script-level
+    # code.
+    $repoInfoPath = "$PSScriptRoot/../.github/workflows/repoInfo.ps1"
+    $repoInfoSrc = Get-Content $repoInfoPath -Raw
+    $repoInfoAst = [System.Management.Automation.Language.Parser]::ParseInput($repoInfoSrc, [ref]$null, [ref]$null)
 
-        $checkedAt = Get-Date
-        $source = "GET /repos/{owner}/{repo}/releases"
-
-        function New-ImmutableReleaseObservationsErrorResult {
-            Param ([string] $reason)
-            return @{
-                Releases  = @()
-                CheckedAt = $checkedAt
-                Source    = $source
-                Error     = $true
-                Reason    = $reason
-            }
-        }
-
-        if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0) {
-            return New-ImmutableReleaseObservationsErrorResult -reason "missing_owner_or_repo"
-        }
-
-        $timeSpan = (Get-Date) - $startTime
-        if ($timeSpan.TotalMinutes -gt 50) {
-            Write-Host "Stopping the run, since we are nearing the 50-minute mark"
-            return New-ImmutableReleaseObservationsErrorResult -reason "run_time_budget_exceeded"
-        }
-
-        $url = "/repos/$owner/$repo/releases"
-        $response = $null
-        try {
-            $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
-        }
-        catch {
-            Write-Debug "Failed to fetch releases for immutable-release observations for [$owner/$repo]: $($_.Exception.Message)"
-            return New-ImmutableReleaseObservationsErrorResult -reason "transient_error"
-        }
-
-        $isErrorResult = ($response -is [hashtable] -and $response.ContainsKey('Error') -and $response.Error)
-        if ($isErrorResult) {
-            $reason = "api_error"
-            if ($response.ContainsKey('StatusCode')) {
-                switch ($response.StatusCode) {
-                    403 { $reason = "forbidden_or_rate_limited" }
-                    404 { $reason = "repo_not_found" }
-                    default { $reason = "api_error_status_$($response.StatusCode)" }
-                }
-            }
-            return New-ImmutableReleaseObservationsErrorResult -reason $reason
-        }
-
-        $rawReleases = @($response)
-        $publishedReleases = $rawReleases | Where-Object { $null -ne $_ -and $_.draft -ne $true }
-
-        $releases = @($publishedReleases | ForEach-Object {
-            @{
-                releaseId   = $_.id
-                tagName     = $_.tag_name
-                publishedAt = $_.published_at
-            }
-        })
-
-        return @{
-            Releases  = $releases
-            CheckedAt = $checkedAt
-            Source    = $source
-            Error     = $false
-            Reason    = $null
-        }
+    foreach ($functionName in @('GetImmutableReleaseObservations', 'Resolve-ReleaseTagCommitSha')) {
+        $fnAst = $repoInfoAst.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $functionName }, $true)
+        if ($fnAst.Count -ne 1) { throw "Expected exactly 1 $functionName function in repoInfo.ps1, found $($fnAst.Count)" }
+        Invoke-Expression $fnAst[0].Extent.Text
     }
 }
 
@@ -117,6 +56,23 @@ Describe 'GetImmutableReleaseObservations' {
         $result.Releases.Count | Should -Be 1
         $result.Releases[0].releaseId | Should -Be 1
         $result.Releases[0].tagName | Should -Be "v1.0.0"
+    }
+
+    It 'Should include prerelease releases the same as regular published releases (issue #266 draft/prerelease coverage)' {
+        # Only drafts are excluded by this collector - a prerelease is still a
+        # published release and must be counted normally, not silently dropped.
+        Mock ApiCall {
+            return @(
+                @{ id = 1; tag_name = "v1.0.0"; draft = $false; prerelease = $false; published_at = "2024-01-01T00:00:00Z" }
+                @{ id = 2; tag_name = "v2.0.0-rc1"; draft = $false; prerelease = $true; published_at = "2024-02-01T00:00:00Z" }
+            )
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $false
+        $result.Releases.Count | Should -Be 2
+        (@($result.Releases | Where-Object { $_.releaseId -eq 2 })).Count | Should -Be 1
     }
 
     It 'Should map id/tag_name/published_at into releaseId/tagName/publishedAt' {
@@ -183,6 +139,298 @@ Describe 'GetImmutableReleaseObservations' {
 
         $result.Error | Should -Be $false
         $result.Releases.Count | Should -Be 0
+    }
+
+    It 'Should resolve a lightweight tag''s commit SHA and flag no mismatch when target_commitish is a matching SHA (issue #267)' {
+        $sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = $sha })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $sha; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $sha
+        $result.Releases[0].tagReleaseMismatch | Should -Be $false
+    }
+
+    It 'Should peel an annotated tag to its target commit before comparing (issue #267)' {
+        $tagObjectSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        $commitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = $commitSha })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                # Annotated tag: the ref points at a tag object, not the commit
+                return @{ object = @{ sha = $tagObjectSha; type = "tag" } }
+            }
+            if ($url -like "*/git/tags/*") {
+                # Peeling the tag object resolves to the actual target commit
+                return @{ object = @{ sha = $commitSha } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $commitSha
+        $result.Releases[0].tagReleaseMismatch | Should -Be $false
+    }
+
+    It 'Should flag a mismatch when the resolved commit differs from a full-SHA target_commitish (issue #267)' {
+        $resolvedSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $recordedTarget = "111111111111111111111111111111111111111a"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = $recordedTarget })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $resolvedSha; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $resolvedSha
+        $result.Releases[0].tagReleaseMismatch | Should -Be $true
+    }
+
+    It 'Should leave tagReleaseMismatch unset when target_commitish is a branch name, never guessing a verdict (issue #267)' {
+        $resolvedSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $resolvedSha; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        $result.Releases[0].resolvedCommitSha | Should -Be $resolvedSha
+        $result.Releases[0].tagReleaseMismatch | Should -BeNullOrEmpty
+    }
+
+    It 'Should not resolve a SHA for releases older than the 10 newest, to bound extra API calls (issue #267)' {
+        $releases = @(1..12 | ForEach-Object {
+            @{ id = $_; tag_name = "v$_.0.0"; draft = $false; published_at = (Get-Date "2024-01-01").AddDays($_).ToString("o"); target_commitish = "main" }
+        })
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return $releases
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date)
+
+        # Releases 3..12 (the ten newest by publishedAt) get resolved; 1 and 2 (oldest) do not.
+        $oldest = $result.Releases | Where-Object { $_.releaseId -eq 1 -or $_.releaseId -eq 2 }
+        foreach ($release in $oldest) {
+            $release.resolvedCommitSha | Should -BeNullOrEmpty
+        }
+        $newest = $result.Releases | Where-Object { $_.releaseId -ge 3 }
+        foreach ($release in $newest) {
+            $release.resolvedCommitSha | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    It 'Should not re-resolve a SHA for a release that already has one recorded in existingObservations, to keep the routine 30-day refresh cheap (issue #267 cost concern)' {
+        $shaResolutionCalls = 0
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                $script:shaResolutionCalls++
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        $existingObservations = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "present"; resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+        )
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date) -existingObservations $existingObservations
+
+        $shaResolutionCalls | Should -Be 0
+        $result.Releases[0].resolvedCommitSha | Should -BeNullOrEmpty
+    }
+
+    It 'Should still resolve a SHA for a release whose prior observation has no resolvedCommitSha yet' {
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        # Known before, but never successfully resolved (e.g. a prior attempt failed).
+        $existingObservations = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "present"; resolvedCommitSha = $null }
+        )
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date) -existingObservations $existingObservations
+
+        $result.Releases[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    }
+
+    It 'Should ignore a deleted prior observation''s resolvedCommitSha and still resolve if the release reappears' {
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        $existingObservations = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "deleted"; resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+        )
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date) -existingObservations $existingObservations
+
+        $result.Releases[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    }
+
+    It 'Should resolve a reappeared release even when an older superseded observation for it still has a resolvedCommitSha' {
+        # History: present+resolved (old) -> deleted (newer) -> now reappearing.
+        # Only the LATEST observation (the "deleted" one) should decide whether
+        # to skip resolution - the old, superseded "present+resolved" entry must
+        # not cause the reappearance to be wrongly skipped, since the
+        # reappearance itself carries no SHA context of its own yet.
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        $existingObservations = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "present"; observedAt = (Get-Date).AddDays(-20); resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "deleted"; observedAt = (Get-Date).AddDays(-10); resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+        )
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date) -existingObservations $existingObservations
+
+        $result.Releases[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    }
+}
+
+Describe 'Resolve-ReleaseTagCommitSha' {
+    It 'Should return an error result with missing_owner_repo_or_tag when tagName is null' {
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName $null -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "missing_owner_repo_or_tag"
+    }
+
+    It 'Should return an error result with run_time_budget_exceeded when nearing the 50-minute mark' {
+        $startTime = (Get-Date).AddMinutes(-51)
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime $startTime
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "run_time_budget_exceeded"
+    }
+
+    It 'Should return the ref object SHA directly for a lightweight tag (type "commit")' {
+        $sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall { return @{ object = @{ sha = $sha; type = "commit" } } }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $false
+        $result.Sha | Should -Be $sha
+    }
+
+    It 'Should peel an annotated tag (type "tag") to its target commit SHA' {
+        $tagObjectSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+        $commitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = $tagObjectSha; type = "tag" } }
+            }
+            return @{ object = @{ sha = $commitSha } }
+        }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $false
+        $result.Sha | Should -Be $commitSha
+    }
+
+    It 'Should return tag_ref_not_found on a 404 resolving the tag ref' {
+        Mock ApiCall { return @{ Error = $true; StatusCode = 404 } }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "tag_ref_not_found"
+    }
+
+    It 'Should return forbidden_or_rate_limited on a 403 resolving the tag ref' {
+        Mock ApiCall { return @{ Error = $true; StatusCode = 403 } }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "forbidden_or_rate_limited"
+    }
+
+    It 'Should return transient_error when ApiCall throws' {
+        Mock ApiCall { throw "boom" }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "transient_error"
+    }
+
+    It 'Should return an error when peeling an annotated tag object fails' {
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"; type = "tag" } }
+            }
+            return @{ Error = $true; StatusCode = 404 }
+        }
+
+        $result = Resolve-ReleaseTagCommitSha -owner "test-owner" -repo "test-repo" -tagName "v1.0.0" -accessToken "token" -startTime (Get-Date)
+
+        $result.Error | Should -Be $true
+        $result.Reason | Should -Be "tag_object_not_found"
     }
 }
 
@@ -316,6 +564,164 @@ Describe 'Merge-ImmutableReleaseObservations' {
         (@($merged | Where-Object { $_.status -eq "present" }))[0] | Should -Be $existingEntry
         $existingEntry.status | Should -Be "present"
     }
+
+    It 'Should carry through resolvedCommitSha/releaseTargetCommitish/tagReleaseMismatch on a first observation (issue #267)' {
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "111111111111111111111111111111111111111a"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            tagReleaseMismatch     = $true
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $null -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $merged[0].releaseTargetCommitish | Should -Be "111111111111111111111111111111111111111a"
+        $merged[0].tagReleaseMismatch | Should -Be $true
+    }
+
+    It 'Should leave resolvedCommitSha/tagReleaseMismatch as $null when the caller could not resolve them' {
+        $current = @(@{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z" })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $null -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged[0].resolvedCommitSha | Should -BeNullOrEmpty
+        $merged[0].tagReleaseMismatch | Should -BeNullOrEmpty
+    }
+
+    It 'Should carry through the release-integrity fields on a reappearance after deletion' {
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "deleted"; observedAt = (Get-Date).AddDays(-5); source = "src" }
+        )
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            tagReleaseMismatch     = $false
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $reappeared = $merged | Where-Object { $_.status -eq "present" }
+        $reappeared.resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $reappeared.tagReleaseMismatch | Should -Be $false
+    }
+
+    It 'Should append a metadata-only backfill entry when a still-present release newly gains release-integrity context' {
+        # The release was already known (e.g. from #265, before #267's SHA
+        # resolution existed) with no integrity metadata at all. A later pass
+        # resolves it - that metadata must not be silently discarded just
+        # because the release itself was already known and still present.
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src" }
+        )
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            tagReleaseMismatch     = $false
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        # Append-only: the original entry must still be there, untouched...
+        $merged.Count | Should -Be 2
+        $original = @($merged | Where-Object { $null -eq $_.resolvedCommitSha })
+        $original.Count | Should -Be 1
+        $original[0].immutabilityState | Should -Be "unknown"
+
+        # ...and a new entry carries the newly resolved metadata forward,
+        # preserving (never guessing a different) immutabilityState.
+        $backfilled = @($merged | Where-Object { $null -ne $_.resolvedCommitSha })
+        $backfilled.Count | Should -Be 1
+        $backfilled[0].immutabilityState | Should -Be "unknown"
+        $backfilled[0].status | Should -Be "present"
+        $backfilled[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    }
+
+    It 'Should not append anything for a still-present release when neither side has new integrity metadata' {
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "immutable"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src" }
+        )
+        $current = @(@{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z" })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged.Count | Should -Be 1
+    }
+
+    It 'Should not re-append when the prior entry already has release-integrity metadata' {
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src"; resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; releaseTargetCommitish = "main"; tagReleaseMismatch = $null }
+        )
+        # This pass didn't re-resolve the SHA (e.g. it's already known - see
+        # GetImmutableReleaseObservations bounding), so the current release
+        # carries no integrity fields at all this time.
+        $current = @(@{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z" })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged.Count | Should -Be 1
+    }
+
+    It 'Should append a backfill entry with the newly resolved SHA even when releaseTargetCommitish was already recorded' {
+        # First attempt: releaseTargetCommitish recorded, but the tag could not
+        # be resolved (resolvedCommitSha never set). A combined "any field
+        # present" check would see releaseTargetCommitish alone as "already has
+        # metadata" and discard a resolvedCommitSha that becomes available on a
+        # later, successful attempt - each field must be compared individually.
+        $existing = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src"; resolvedCommitSha = $null; releaseTargetCommitish = "main"; tagReleaseMismatch = $null }
+        )
+        $current = @(@{
+            releaseId              = 1
+            tagName                = "v1.0.0"
+            publishedAt            = "2024-01-01T00:00:00Z"
+            releaseTargetCommitish = "main"
+            resolvedCommitSha      = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        $merged.Count | Should -Be 2
+        $backfilled = @($merged | Where-Object { $null -ne $_.resolvedCommitSha })
+        $backfilled.Count | Should -Be 1
+        $backfilled[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+        $backfilled[0].releaseTargetCommitish | Should -Be "main"
+        $backfilled[0].immutabilityState | Should -Be "unknown"
+    }
+
+    It 'Should NOT append a backfill entry for releaseTargetCommitish alone, even for many pre-#267 releases at once' {
+        # releaseTargetCommitish is supplied by GetImmutableReleaseObservations
+        # for every current release (it comes straight off the releases list,
+        # not from bounded SHA-resolution calls) - unlike resolvedCommitSha,
+        # which is bounded to the newest-10 resolution window. On a pre-#267
+        # migration, every still-present release in a repo's entire history
+        # would otherwise gain releaseTargetCommitish at once and each get a
+        # metadata-only entry appended, ballooning the append-only history far
+        # beyond the bounded newest-10 SHA resolutions and risking the Azure
+        # Table per-property size limit for repos with many releases.
+        $existing = @(1..30 | ForEach-Object {
+            @{ releaseId = $_; tagName = "v$_.0.0"; publishedAt = "2024-01-01T00:00:00Z"; immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date).AddDays(-10); source = "src" }
+        })
+        # Every release now carries releaseTargetCommitish (unbounded), but
+        # none have a resolvedCommitSha this pass (none were in the bounded
+        # newest-10 resolution window, or none resolved successfully).
+        $current = @(1..30 | ForEach-Object {
+            @{ releaseId = $_; tagName = "v$_.0.0"; publishedAt = "2024-01-01T00:00:00Z"; releaseTargetCommitish = "main" }
+        })
+
+        $merged = Merge-ImmutableReleaseObservations -existingObservations $existing -currentReleases $current -observedAt (Get-Date) -source "src"
+
+        # No new entries at all - releaseTargetCommitish alone must never trigger a backfill.
+        $merged.Count | Should -Be 30
+    }
 }
 
 Describe 'Get-RepoPriorityScore for immutableReleaseObservations staleness' {
@@ -369,5 +775,95 @@ Describe 'Get-RepoPriorityScore for immutableReleaseObservations staleness' {
         $staleScore = Get-RepoPriorityScore -action $staleAction
 
         $staleScore | Should -BeGreaterThan $recentScore
+    }
+
+    It 'Should score a repo with fresh policy/observation timestamps but missing immutableReleaseCoverage (issue #266 migration gap)' {
+        # This is the "complete repo" case: everything else is fresh (so no
+        # other staleness signal fires), but coverage was never backfilled -
+        # e.g. the repo was checked by #264/#265 before #266 existed. Without
+        # a dedicated score, this repo would never be selected by
+        # Get-PrioritizedReposToProcess and would never reach GetInfo's local
+        # backfill, even though computing it needs no API call at all.
+        $withoutCoverage = [PSCustomObject]@{
+            owner = "test-owner"
+            name = "test-owner_test-repo"
+            mirrorFound = $true
+            actionType = @{ actionType = "Node" }
+            repoInfo = @{ updated_at = (Get-Date).ToString("o"); lastFetched = (Get-Date) }
+            repoSize = 100
+            dependents = @{ dependents = "1"; dependentsLastUpdated = (Get-Date) }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = (Get-Date)
+            immutableReleaseObservationsCheckedAt = (Get-Date)
+            immutableReleaseObservations = @(
+                @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = (Get-Date); immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date); source = "src" }
+            )
+        }
+
+        $withCoverage = $withoutCoverage | Select-Object *
+        $withCoverage | Add-Member -Name immutableReleaseCoverage -Value @{ releasesConsidered = 1; immutableCount = 0; notImmutableCount = 0; unknownCount = 1; knownCount = 0; latestReleaseImmutable = "unknown"; summary = "0 of 0 known releases immutable (last 1; 1 unknown)" } -MemberType NoteProperty
+
+        $scoreWithout = Get-RepoPriorityScore -action $withoutCoverage
+        $scoreWith = Get-RepoPriorityScore -action $withCoverage
+
+        $scoreWithout | Should -BeGreaterThan $scoreWith
+    }
+
+    It 'Should not score the coverage gap when there is no observation history at all yet' {
+        # A brand-new repo with no immutableReleaseObservations property at all
+        # is already scored via the observationsCheckedAt staleness signal
+        # above - it must not also be double-scored by the coverage-gap check,
+        # which only applies once observation history actually exists.
+        $action = [PSCustomObject]@{
+            owner = "test-owner"
+            name = "test-owner_test-repo"
+            mirrorFound = $true
+            actionType = @{ actionType = "Node" }
+            repoInfo = @{ updated_at = (Get-Date).ToString("o"); lastFetched = (Get-Date) }
+            repoSize = 100
+            dependents = @{ dependents = "1"; dependentsLastUpdated = (Get-Date) }
+        }
+
+        $scoreWithoutHistory = Get-RepoPriorityScore -action $action
+
+        $actionWithEmptyHistory = $action | Select-Object *
+        $actionWithEmptyHistory | Add-Member -Name immutableReleaseObservations -Value @() -MemberType NoteProperty -Force
+        $scoreWithEmptyHistory = Get-RepoPriorityScore -action $actionWithEmptyHistory
+
+        # An empty-but-present history with no coverage should still be flagged
+        # (Get-ImmutableReleaseCoverage handles empty input just fine), so this
+        # score must be at least as high as the no-history-yet case, not lower.
+        $scoreWithEmptyHistory | Should -BeGreaterOrEqual $scoreWithoutHistory
+    }
+
+    It 'Should score the coverage gap for a schema-valid present-but-null immutableReleaseObservations' {
+        # The coverage-gap score must use the same property-presence condition
+        # as the backfill itself (repoInfo.ps1), not require non-null: a
+        # present-but-null immutableReleaseObservations is schema-valid and the
+        # backfill explicitly handles it (Get-ImmutableReleaseCoverage returns
+        # the zero-count summary for null input), so it must still be scored
+        # here or it would never be selected to receive that backfill.
+        $action = [PSCustomObject]@{
+            owner = "test-owner"
+            name = "test-owner_test-repo"
+            mirrorFound = $true
+            actionType = @{ actionType = "Node" }
+            repoInfo = @{ updated_at = (Get-Date).ToString("o"); lastFetched = (Get-Date) }
+            repoSize = 100
+            dependents = @{ dependents = "1"; dependentsLastUpdated = (Get-Date) }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = (Get-Date)
+            immutableReleaseObservationsCheckedAt = (Get-Date)
+        }
+        $action | Add-Member -Name immutableReleaseObservations -Value $null -MemberType NoteProperty -Force
+
+        $withNullCoverage = $action | Select-Object *
+        $withNullCoverage | Add-Member -Name immutableReleaseCoverage -Value $null -MemberType NoteProperty -Force
+
+        $scoreWithNullObservations = Get-RepoPriorityScore -action $action
+        $scoreWithNullCoverageToo = Get-RepoPriorityScore -action $withNullCoverage
+
+        $scoreWithNullObservations | Should -BeGreaterThan 0
+        $scoreWithNullCoverageToo | Should -Be $scoreWithNullObservations
     }
 }

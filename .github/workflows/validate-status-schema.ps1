@@ -97,22 +97,61 @@ class StatusJsonSchema {
     [object] $immutableReleasePolicyCheckedAt  # Can be string (datetime) or null
     [object] $immutableReleasePolicyReason  # Machine-readable reason string or null
     [object] $immutableReleasePolicySource  # String describing the API call used, or null
+    # When the observed immutableReleasePolicy status last actually changed value
+    # (issue #266) - distinct from immutableReleasePolicyCheckedAt, which is bumped
+    # on every check regardless of whether the value changed.
+    [object] $immutableReleasePolicyChangedAt  # Can be string (datetime) or null
 
     # Append-only per-release immutable-release observation history (optional;
     # issue #265). Unlike immutableReleasePolicy above (current policy only),
     # this is an array with one or more entries per release, built by
     # Merge-ImmutableReleaseObservations so existing entries are never rewritten.
     # Each entry is expected to have:
-    #   releaseId         - the GitHub release id (stable key)
-    #   tagName           - the release's tag name
-    #   publishedAt       - the release's published_at timestamp, or null
-    #   immutabilityState - "immutable", "notImmutable" or "unknown"
-    #   status            - "present" or "deleted" (whether the release existed
-    #                        as of this specific observation)
-    #   observedAt        - when this observation entry was recorded
-    #   source            - string describing the API call used, for audit purposes
+    #   releaseId              - the GitHub release id (stable key)
+    #   tagName                - the release's tag name
+    #   publishedAt            - the release's published_at timestamp, or null
+    #   immutabilityState      - "immutable", "notImmutable" or "unknown"
+    #   status                 - "present" or "deleted" (whether the release existed
+    #                             as of this specific observation)
+    #   observedAt             - when this observation entry was recorded
+    #   source                 - string describing the API call used, for audit purposes
+    #   releaseTargetCommitish - the release's recorded target_commitish (branch name
+    #                             or commit SHA), or null (optional; issue #267)
+    #   resolvedCommitSha      - the release's tag resolved/peeled to its target commit
+    #                             SHA (annotated tags are peeled - see
+    #                             Resolve-ReleaseTagCommitSha in repoInfo.ps1), or null
+    #                             when not resolved (bounded to the newest releases
+    #                             only, to limit extra API calls) (optional; issue #267)
+    #   tagReleaseMismatch     - boolean, only set when releaseTargetCommitish is
+    #                             itself a full commit SHA that can be honestly
+    #                             compared against resolvedCommitSha; null/absent
+    #                             otherwise (e.g. target is a branch name) - never
+    #                             guessed (optional; issue #267)
     [object] $immutableReleaseObservations  # Array of observation objects, or null
     [object] $immutableReleaseObservationsCheckedAt  # Can be string (datetime) or null
+
+    # Derived immutable-release coverage summary for the ten newest published,
+    # non-draft releases (optional; issue #266). Pure derivation from
+    # immutableReleaseObservations via Get-ImmutableReleaseCoverage - never
+    # inspects raw release data itself, and never pads the denominator with
+    # unknown/absent releases as if they were known-good or known-bad.
+    #   releasesConsidered     - number of releases actually included (<= 10, never padded)
+    #   immutableCount         - count of considered releases known immutable
+    #   notImmutableCount      - count of considered releases known not immutable
+    #   unknownCount           - count of considered releases with unknown state
+    #   knownCount             - immutableCount + notImmutableCount (the summary's denominator)
+    #   latestReleaseImmutable - "immutable", "notImmutable" or "unknown" for the single newest release
+    #   summary                - human-readable string, e.g. "7 of 8 known releases immutable (last 10; 2 unknown)"
+    [object] $immutableReleaseCoverage  # Object with the fields above, or null
+
+    # Concise human-readable rendering combining the current policy with the
+    # recent-release coverage summary (optional; issue #267), produced by
+    # Get-ImmutableReleaseSummary (library.ps1), e.g.
+    # "Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)". A current
+    # "enabled"/"disabled" policy is always shown *alongside*, never in place of,
+    # the recent-release coverage - an enabled-today policy does not by itself
+    # establish that older releases are immutable.
+    [object] $immutableReleaseSummary  # String, or null
 }
 
 <#
@@ -264,6 +303,26 @@ function Test-ActionSchema {
         }
     }
 
+    # immutableReleasePolicyChangedAt (issue #266) is documented as a datetime
+    # just like immutableReleasePolicyCheckedAt above, so it gets the same
+    # type/format validation - otherwise a value such as "not-a-date" would
+    # silently pass validation despite being invalid. Deliberately validated
+    # independently of immutableReleasePolicy being present: a backwards-
+    # compatible record can carry this field while its policy is absent/null
+    # (e.g. a cleared/legacy record), and nesting this check inside the
+    # policy block above would let it skip validation entirely in that case.
+    if ($null -ne $action.immutableReleasePolicyChangedAt) {
+        if ($action.immutableReleasePolicyChangedAt -isnot [string] -and $action.immutableReleasePolicyChangedAt -isnot [datetime]) {
+            $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt should be a date/string, found: $($action.immutableReleasePolicyChangedAt.GetType().Name)"
+        }
+        elseif ($action.immutableReleasePolicyChangedAt -is [string]) {
+            $parsedChangedAtDate = [datetime]::MinValue
+            if (-not [datetime]::TryParse($action.immutableReleasePolicyChangedAt, [ref]$parsedChangedAtDate)) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleasePolicyChangedAt has unexpected format: $($action.immutableReleasePolicyChangedAt)"
+            }
+        }
+    }
+
     # Validate immutableReleaseObservations append-only history if present (issue #265)
     if ($null -ne $action.immutableReleaseObservations) {
         if ($action.immutableReleaseObservations -isnot [array] -and $action.immutableReleaseObservations -isnot [System.Collections.IEnumerable]) {
@@ -306,6 +365,30 @@ function Test-ActionSchema {
                     }
                 }
 
+                # Release-integrity context is optional (issue #267) - only the
+                # newest releases get it resolved, and resolution itself can fail
+                # - so absence is expected and never a warning by itself. Only
+                # flag a mismatch flag that was set without a resolved SHA to back
+                # it up, since that combination should never happen.
+                #
+                # releaseTargetCommitish and tagReleaseMismatch are documented as
+                # string/null and boolean/null respectively - validate the type of
+                # any present value first, since a malformed value (an object, or a
+                # string like "false" for a boolean field) would otherwise pass
+                # validation and reach the API as malformed integrity data.
+                if ($null -ne $observation.releaseTargetCommitish -and $observation.releaseTargetCommitish -isnot [string]) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].releaseTargetCommitish should be a string or null, found: $($observation.releaseTargetCommitish.GetType().Name)"
+                }
+                if ($null -ne $observation.tagReleaseMismatch -and $observation.tagReleaseMismatch -isnot [bool]) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].tagReleaseMismatch should be a boolean or null, found: $($observation.tagReleaseMismatch.GetType().Name)"
+                }
+                if ($null -ne $observation.tagReleaseMismatch -and $observation.tagReleaseMismatch -is [bool] -and [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha)) {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].tagReleaseMismatch is set without a 'resolvedCommitSha'"
+                }
+                if (-not [string]::IsNullOrWhiteSpace($observation.resolvedCommitSha) -and $observation.resolvedCommitSha -notmatch '^[0-9a-f]{40}$') {
+                    $warnings += "Object ${index} ($($action.name)): immutableReleaseObservations[$observationIndex].resolvedCommitSha has unexpected format: $($observation.resolvedCommitSha)"
+                }
+
                 $observationIndex++
             }
         }
@@ -320,6 +403,95 @@ function Test-ActionSchema {
             $parsedDate = [datetime]::MinValue
             if (-not [datetime]::TryParse($action.immutableReleaseObservationsCheckedAt, [ref]$parsedDate)) {
                 $warnings += "Object ${index} ($($action.name)): immutableReleaseObservationsCheckedAt has unexpected format: $($action.immutableReleaseObservationsCheckedAt)"
+            }
+        }
+    }
+
+    # Validate the derived immutableReleaseCoverage summary if present (issue #266)
+    if ($null -ne $action.immutableReleaseCoverage) {
+        if ($action.immutableReleaseCoverage -isnot [hashtable] -and $action.immutableReleaseCoverage -isnot [PSCustomObject]) {
+            $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage should be an object, found: $($action.immutableReleaseCoverage.GetType().Name)"
+        }
+        else {
+            $coverage = $action.immutableReleaseCoverage
+            $validLatestReleaseStates = @('immutable', 'notImmutable', 'unknown')
+            if ($validLatestReleaseStates -notcontains $coverage.latestReleaseImmutable) {
+                $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.latestReleaseImmutable should be one of 'immutable', 'notImmutable', 'unknown', found: $($coverage.latestReleaseImmutable)"
+            }
+
+            # Validate each counter's presence, type and non-negative range up
+            # front, so a value Get-ImmutableReleaseCoverage could never
+            # actually produce (e.g. releasesConsidered = -1) is always
+            # rejected rather than only checked when convenient. A missing
+            # counter is an error (not just a warning) precisely because it
+            # would otherwise let the consistency checks below be silently
+            # skipped for an incomplete/malformed object.
+            $coverageCounterFields = @('releasesConsidered', 'immutableCount', 'notImmutableCount', 'unknownCount', 'knownCount')
+            $allCoverageCountersValid = $true
+            foreach ($counterField in $coverageCounterFields) {
+                $counterValue = $coverage.$counterField
+                if ($null -eq $counterValue) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage missing '$counterField' field"
+                    $allCoverageCountersValid = $false
+                }
+                elseif ($counterValue -isnot [int] -and $counterValue -isnot [long] -and $counterValue -isnot [double]) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.$counterField should be a non-negative integer, found: $($counterValue.GetType().Name)"
+                    $allCoverageCountersValid = $false
+                }
+                elseif ($counterValue -lt 0 -or $counterValue -ne [Math]::Floor($counterValue)) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.$counterField should be a non-negative integer, found: $counterValue"
+                    $allCoverageCountersValid = $false
+                }
+            }
+
+            if ($allCoverageCountersValid) {
+                if ($coverage.releasesConsidered -gt 10) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.releasesConsidered should never exceed 10, found: $($coverage.releasesConsidered)"
+                }
+
+                if (($coverage.immutableCount + $coverage.notImmutableCount) -ne $coverage.knownCount) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.knownCount should equal immutableCount + notImmutableCount, found: $($coverage.knownCount) vs $($coverage.immutableCount + $coverage.notImmutableCount)"
+                }
+
+                if (($coverage.immutableCount + $coverage.notImmutableCount + $coverage.unknownCount) -ne $coverage.releasesConsidered) {
+                    $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.releasesConsidered should equal immutableCount + notImmutableCount + unknownCount, found: $($coverage.releasesConsidered) vs $($coverage.immutableCount + $coverage.notImmutableCount + $coverage.unknownCount)"
+                }
+            }
+
+            # [string]::IsNullOrWhiteSpace coerces a non-string argument (e.g. a
+            # number or an object) to a string before checking it, so it alone
+            # would let a non-string summary silently pass. Reject the type
+            # explicitly as an error, and keep the existing warning for a
+            # missing/blank string value.
+            if ($null -ne $coverage.summary -and $coverage.summary -isnot [string]) {
+                $errors += "Object ${index} ($($action.name)): immutableReleaseCoverage.summary should be a string, found: $($coverage.summary.GetType().Name)"
+            }
+            elseif ([string]::IsNullOrWhiteSpace($coverage.summary)) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleaseCoverage missing 'summary' field"
+            }
+        }
+    }
+
+    # Validate the composed immutableReleaseSummary rendering if present (issue #267).
+    # This must never collapse the tri-state policy or the unknown/known coverage
+    # counts into a bare pass/fail - it is expected to always start with one of the
+    # three policy labels below, so callers relying on it can still tell "disabled"
+    # and "unknown" apart from "enabled" at a glance.
+    if ($null -ne $action.immutableReleaseSummary) {
+        if ($action.immutableReleaseSummary -isnot [string]) {
+            $errors += "Object ${index} ($($action.name)): immutableReleaseSummary should be a string, found: $($action.immutableReleaseSummary.GetType().Name)"
+        }
+        else {
+            $validSummaryPrefixes = @('Enabled;', 'Disabled;', 'Unknown;')
+            $hasValidPrefix = $false
+            foreach ($prefix in $validSummaryPrefixes) {
+                if ($action.immutableReleaseSummary.StartsWith($prefix)) {
+                    $hasValidPrefix = $true
+                    break
+                }
+            }
+            if (-not $hasValidPrefix) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleaseSummary does not start with a recognized policy label ('Enabled;'/'Disabled;'/'Unknown;'), found: $($action.immutableReleaseSummary)"
             }
         }
     }

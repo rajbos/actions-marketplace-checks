@@ -233,23 +233,140 @@ function immutableReleaseObservationsChanged(existingAction, candidateAction) {
     return true;
   }
 
-  if (existingObservations.length === 0) {
+  if (existingObservations.length > 0) {
+    try {
+      if (JSON.stringify(existingObservations) !== JSON.stringify(candidateObservations)) {
+        return true;
+      }
+    } catch (jsonError) {
+      // If we can't safely compare, assume it changed so the observation history
+      // is never silently left stale.
+      return true;
+    }
+  }
+
+  if (immutableReleaseObservationsCheckedAtChanged(existingAction, candidateAction)) {
+    return true;
+  }
+
+  return immutableReleaseCoverageChanged(existingAction, candidateAction);
+}
+
+/**
+ * Checks whether immutableReleaseObservationsCheckedAt (issue #265) differs
+ * between what the API already has and the current status.json candidate.
+ *
+ * A successful 30-day release scan that finds the exact same releases and
+ * coverage as before only bumps this checked-at timestamp - nothing else
+ * about the action changes. Without this check, that scan would never reach
+ * the API at all (the observations/coverage comparisons above both return
+ * false for identical content), leaving the API's last-checked timestamp
+ * stale indefinitely even though a fresh check genuinely happened.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the checked-at timestamp differs (or could not be compared safely)
+ */
+function immutableReleaseObservationsCheckedAtChanged(existingAction, candidateAction) {
+  const existingCheckedAt = existingAction && existingAction.immutableReleaseObservationsCheckedAt;
+  const candidateCheckedAt = candidateAction && candidateAction.immutableReleaseObservationsCheckedAt;
+
+  if (!existingCheckedAt && !candidateCheckedAt) {
     return false;
   }
 
+  if (!existingCheckedAt || !candidateCheckedAt) {
+    return true;
+  }
+
   try {
-    return JSON.stringify(existingObservations) !== JSON.stringify(candidateObservations);
+    return new Date(existingCheckedAt).toISOString() !== new Date(candidateCheckedAt).toISOString();
+  } catch (dateError) {
+    // If we can't safely compare, assume it changed so the checked-at
+    // timestamp is never silently left stale.
+    return true;
+  }
+}
+
+/**
+ * Checks whether the derived immutableReleaseCoverage summary (issue #266)
+ * differs between what the API already has and the current status.json
+ * candidate.
+ *
+ * This is checked independently of the observation-history comparison above
+ * because coverage is a derived field that can go from absent to present (or
+ * otherwise change) without the underlying observations array itself
+ * changing length or content on this particular pass - e.g. an existing API
+ * record uploaded before this field existed. Without this check, such a
+ * record would never pick up the new field once repoInfo.updated_at and the
+ * observation history both happen to be unchanged.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the coverage summary differs (or could not be compared safely)
+ */
+function immutableReleaseCoverageChanged(existingAction, candidateAction) {
+  const existingCoverage = (existingAction && existingAction.immutableReleaseCoverage) || null;
+  const candidateCoverage = (candidateAction && candidateAction.immutableReleaseCoverage) || null;
+
+  if (!existingCoverage && !candidateCoverage) {
+    return false;
+  }
+
+  if (!existingCoverage || !candidateCoverage) {
+    return true;
+  }
+
+  try {
+    return JSON.stringify(existingCoverage) !== JSON.stringify(candidateCoverage);
   } catch (jsonError) {
-    // If we can't safely compare, assume it changed so the observation history
+    // If we can't safely compare, assume it changed so the coverage summary
     // is never silently left stale.
     return true;
   }
 }
 
 /**
+ * Checks whether any of the immutable-release policy fields (issue #264) or
+ * the derived immutableReleaseSummary (issue #267) differ between what the
+ * API already has and the current status.json candidate.
+ *
+ * These are refreshed on their own 30-day cadence in repoInfo.ps1 and can
+ * therefore change (e.g. a policy flips from "unknown" to "enabled", or the
+ * summary string is recomputed) without repoInfo.updated_at changing at all,
+ * since that field only reflects the upstream repo being pushed to. Without
+ * this check, a policy-only refresh would be silently skipped by needsUpdate.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if any of these fields differ
+ */
+function immutableReleasePolicyChanged(existingAction, candidateAction) {
+  const fields = [
+    'immutableReleasePolicy',
+    'immutableReleasePolicyCheckedAt',
+    'immutableReleasePolicyReason',
+    'immutableReleasePolicySource',
+    'immutableReleasePolicyChangedAt',
+    'immutableReleaseSummary'
+  ];
+
+  for (const field of fields) {
+    const existingValue = (existingAction && existingAction[field]) || null;
+    const candidateValue = (candidateAction && candidateAction[field]) || null;
+    if (existingValue !== candidateValue) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Checks if an action needs to be updated based on repoInfo.updated_at comparison
- * (or, failing that, whether the append-only immutableReleaseObservations history
- * has grown/changed - see immutableReleaseObservationsChanged above).
+ * (or, failing that, whether the append-only immutableReleaseObservations history,
+ * the derived immutableReleaseCoverage, the immutable-release policy fields, or
+ * the immutableReleaseSummary have changed - see the helpers above).
  *
  * @param {object|null} existingAction - The action from API storage (or null if not exists)
  * @param {object} candidateAction - The action from status.json
@@ -269,7 +386,10 @@ function needsUpdate(existingAction, candidateAction) {
       if (existingUpdated !== candidateUpdated) {
         return true;
       }
-      return immutableReleaseObservationsChanged(existingAction, candidateAction);
+      if (immutableReleaseObservationsChanged(existingAction, candidateAction)) {
+        return true;
+      }
+      return immutableReleasePolicyChanged(existingAction, candidateAction);
     } catch (dateError) {
       // If date comparison fails, assume it needs update to be safe
       return true;
@@ -288,6 +408,104 @@ function needsUpdate(existingAction, candidateAction) {
  */
 function isValidAction(action) {
   return !!(action && action.owner && action.name);
+}
+
+/**
+ * Builds the API payload for a single action from the raw status.json entry.
+ * Only fields documented in the status.json schema (validate-status-schema.ps1)
+ * are copied through, and tag/release lists are trimmed to the latest entries
+ * so the payload stays well under the Azure Table Storage per-property limit.
+ *
+ * Extracted from the upload loop so it can be unit tested directly without
+ * mocking the API client (issue #267 added the immutable-release policy/summary
+ * pass-through below and needed a way to verify field-by-field behavior).
+ *
+ * @param {object} action - The raw action entry from status.json
+ * @returns {object} - The actionData payload ready to send to the API
+ */
+function buildActionData(action) {
+  // Only use fields that exist in the status.json schema
+  const actionData = {
+    owner: action.owner,
+    name: action.name
+  };
+
+  // Add optional fields if they exist in the schema
+  // Based on status.json schema documented in validate-status-schema.ps1:
+  // - actionType (object/string)
+  // - description (string)
+  // - repoInfo (object)
+  // - tagInfo, releaseInfo (version information)
+  // - forkFound, mirrorLastUpdated, repoSize
+  // - secretScanningEnabled, dependabotEnabled, dependabot
+  // - vulnerabilityStatus, ossf, ossfScore, ossfDateLastUpdate
+  // - dependents, verified
+
+  if (action.actionType) actionData.actionType = action.actionType;
+  if (action.description) actionData.description = action.description;
+  // AI-generated description (separate field from the real `description`
+  // parsed from action.yml) - generated by ai-description-generation.ps1
+  // from README + action.yml/yaml content via a local language model.
+  if (action.aiDescription) actionData.aiDescription = action.aiDescription;
+  if (action.aiDescriptionGeneratedAt) actionData.aiDescriptionGeneratedAt = action.aiDescriptionGeneratedAt;
+  if (action.aiDescriptionModel) actionData.aiDescriptionModel = action.aiDescriptionModel;
+  if (action.repoInfo) actionData.repoInfo = action.repoInfo;
+  if (action.tagInfo) actionData.tagInfo = action.tagInfo;
+  if (action.releaseInfo) actionData.releaseInfo = action.releaseInfo;
+  if (action.forkFound !== undefined) actionData.forkFound = action.forkFound;
+  if (action.mirrorLastUpdated) actionData.mirrorLastUpdated = action.mirrorLastUpdated;
+  if (action.repoSize !== undefined) actionData.repoSize = action.repoSize;
+  if (action.secretScanningEnabled !== undefined) actionData.secretScanningEnabled = action.secretScanningEnabled;
+  if (action.dependabotEnabled !== undefined) actionData.dependabotEnabled = action.dependabotEnabled;
+  if (action.dependabot) actionData.dependabot = action.dependabot;
+  if (action.vulnerabilityStatus) actionData.vulnerabilityStatus = action.vulnerabilityStatus;
+  if (action.ossf !== undefined) actionData.ossf = action.ossf;
+  if (action.ossfScore !== undefined) actionData.ossfScore = action.ossfScore;
+  if (action.ossfDateLastUpdate) actionData.ossfDateLastUpdate = action.ossfDateLastUpdate;
+  if (action.dependents) actionData.dependents = action.dependents;
+  if (action.verified !== undefined) actionData.verified = action.verified;
+
+  // Current immutable-release policy tri-state (issue #264) - "enabled",
+  // "disabled" or "unknown". A missing/unavailable API result must never be
+  // collapsed into "disabled", so this is passed through exactly as recorded,
+  // together with its provenance (source/reason) and timestamps.
+  if (action.immutableReleasePolicy) actionData.immutableReleasePolicy = action.immutableReleasePolicy;
+  if (action.immutableReleasePolicyCheckedAt) actionData.immutableReleasePolicyCheckedAt = action.immutableReleasePolicyCheckedAt;
+  if (action.immutableReleasePolicyReason) actionData.immutableReleasePolicyReason = action.immutableReleasePolicyReason;
+  if (action.immutableReleasePolicySource) actionData.immutableReleasePolicySource = action.immutableReleasePolicySource;
+  // When the policy was last observed to actually change value (issue #266) -
+  // distinct from immutableReleasePolicyCheckedAt, which is bumped on every
+  // check regardless of whether the value changed.
+  if (action.immutableReleasePolicyChangedAt) actionData.immutableReleasePolicyChangedAt = action.immutableReleasePolicyChangedAt;
+
+  // Append-only per-release immutable-release observation history (issue #265).
+  // Passed through as-is - the API upsert path must not drop or collapse this
+  // history. (Unlike tagInfo/releaseInfo below, this is intentionally not
+  // trimmed here: trimming would mean silently dropping observations for
+  // releases that are no longer "latest", which the append-only/no-erase
+  // acceptance criteria for this history explicitly rules out.)
+  if (action.immutableReleaseObservations) actionData.immutableReleaseObservations = action.immutableReleaseObservations;
+  if (action.immutableReleaseObservationsCheckedAt) actionData.immutableReleaseObservationsCheckedAt = action.immutableReleaseObservationsCheckedAt;
+  // Derived immutable-release coverage summary for the ten newest releases
+  // (issue #266) - a small object, passed through as-is so #267's reports/API
+  // can consume it without recomputing it from the raw observation history.
+  if (action.immutableReleaseCoverage) actionData.immutableReleaseCoverage = action.immutableReleaseCoverage;
+  // Concise human-readable rendering combining the current policy with the
+  // recent-release coverage summary (issue #267), e.g. "Enabled; 7 of 8 known
+  // releases immutable (last 10; 2 unknown)". Computed by
+  // Get-ImmutableReleaseSummary (library.ps1) and persisted alongside the
+  // fields above - never recomputed here, so the API always reflects exactly
+  // what was last observed.
+  if (action.immutableReleaseSummary) actionData.immutableReleaseSummary = action.immutableReleaseSummary;
+
+  // Trim tag list to the latest tags, preferring SemVer ordering and
+  // falling back to alphabetical if SemVer parsing fails.
+  trimTagInfoToLatest(actionData, 10);
+
+  // Trim release list to the latest releases, using same SemVer logic
+  trimReleaseInfoToLatest(actionData, 10);
+
+  return actionData;
 }
 
 async function uploadActions() {
@@ -415,63 +633,9 @@ async function uploadActions() {
     }
 
     const key = action.owner + '/' + action.name;
-    
-    // Build the action data for the API outside try block so it's accessible in catch
-    // Only use fields that exist in the status.json schema
-    const actionData = {
-      owner: action.owner,
-      name: action.name
-    };
-    
-    // Add optional fields if they exist in the schema
-    // Based on status.json schema documented in validate-status-schema.ps1:
-    // - actionType (object/string)
-    // - description (string)
-    // - repoInfo (object)
-    // - tagInfo, releaseInfo (version information)
-    // - forkFound, mirrorLastUpdated, repoSize
-    // - secretScanningEnabled, dependabotEnabled, dependabot
-    // - vulnerabilityStatus, ossf, ossfScore, ossfDateLastUpdate
-    // - dependents, verified
-    
-    if (action.actionType) actionData.actionType = action.actionType;
-    if (action.description) actionData.description = action.description;
-    // AI-generated description (separate field from the real `description`
-    // parsed from action.yml) - generated by ai-description-generation.ps1
-    // from README + action.yml/yaml content via a local language model.
-    if (action.aiDescription) actionData.aiDescription = action.aiDescription;
-    if (action.aiDescriptionGeneratedAt) actionData.aiDescriptionGeneratedAt = action.aiDescriptionGeneratedAt;
-    if (action.aiDescriptionModel) actionData.aiDescriptionModel = action.aiDescriptionModel;
-    if (action.repoInfo) actionData.repoInfo = action.repoInfo;
-    if (action.tagInfo) actionData.tagInfo = action.tagInfo;
-    if (action.releaseInfo) actionData.releaseInfo = action.releaseInfo;
-    if (action.forkFound !== undefined) actionData.forkFound = action.forkFound;
-    if (action.mirrorLastUpdated) actionData.mirrorLastUpdated = action.mirrorLastUpdated;
-    if (action.repoSize !== undefined) actionData.repoSize = action.repoSize;
-    if (action.secretScanningEnabled !== undefined) actionData.secretScanningEnabled = action.secretScanningEnabled;
-    if (action.dependabotEnabled !== undefined) actionData.dependabotEnabled = action.dependabotEnabled;
-    if (action.dependabot) actionData.dependabot = action.dependabot;
-    if (action.vulnerabilityStatus) actionData.vulnerabilityStatus = action.vulnerabilityStatus;
-    if (action.ossf !== undefined) actionData.ossf = action.ossf;
-    if (action.ossfScore !== undefined) actionData.ossfScore = action.ossfScore;
-    if (action.ossfDateLastUpdate) actionData.ossfDateLastUpdate = action.ossfDateLastUpdate;
-    if (action.dependents) actionData.dependents = action.dependents;
-    if (action.verified !== undefined) actionData.verified = action.verified;
-    // Append-only per-release immutable-release observation history (issue #265).
-    // Passed through as-is - the API upsert path must not drop or collapse this
-    // history. (Unlike tagInfo/releaseInfo below, this is intentionally not
-    // trimmed here: trimming would mean silently dropping observations for
-    // releases that are no longer "latest", which the append-only/no-erase
-    // acceptance criteria for this history explicitly rules out.)
-    if (action.immutableReleaseObservations) actionData.immutableReleaseObservations = action.immutableReleaseObservations;
-    if (action.immutableReleaseObservationsCheckedAt) actionData.immutableReleaseObservationsCheckedAt = action.immutableReleaseObservationsCheckedAt;
 
-    // Trim tag list to the latest tags, preferring SemVer ordering and
-    // falling back to alphabetical if SemVer parsing fails.
-    trimTagInfoToLatest(actionData, 10);
-    
-    // Trim release list to the latest releases, using same SemVer logic
-    trimReleaseInfoToLatest(actionData, 10);
+    // Build the action data for the API outside try block so it's accessible in catch
+    const actionData = buildActionData(action);
 
     try {
       console.log('Uploading: [' + key + ']');
@@ -622,8 +786,12 @@ module.exports = {
   parseSemverLike,
   compareTagStringsDesc,
   immutableReleaseObservationsChanged,
+  immutableReleaseObservationsCheckedAtChanged,
+  immutableReleaseCoverageChanged,
+  immutableReleasePolicyChanged,
   trimTagInfoToLatest,
   trimReleaseInfoToLatest,
   needsUpdate,
-  isValidAction
+  isValidAction,
+  buildActionData
 };
