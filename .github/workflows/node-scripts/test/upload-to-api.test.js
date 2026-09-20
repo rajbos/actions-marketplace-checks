@@ -8,6 +8,7 @@ const {
   parseSemverLike,
   needsUpdate,
   immutableReleaseObservationsChanged,
+  immutableReleaseObservationsCheckedAtChanged,
   immutableReleaseCoverageChanged,
   immutableReleasePolicyChanged,
   buildActionData
@@ -169,6 +170,40 @@ test('immutableReleaseObservationsChanged is true when a release is newly marked
   assert.strictEqual(immutableReleaseObservationsChanged(existing, candidate), true);
 });
 
+test('immutableReleaseObservationsChanged is true on a timestamp-only refresh (identical releases, newer checked-at)', () => {
+  // A successful 30-day scan that finds the exact same releases and coverage
+  // must still be treated as a change - otherwise the API's last-checked
+  // timestamp would go stale forever once the content itself stops changing.
+  const observations = [
+    { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+  ];
+  const existing = { immutableReleaseObservations: observations, immutableReleaseObservationsCheckedAt: '2024-01-01T00:00:00Z' };
+  const candidate = { immutableReleaseObservations: JSON.parse(JSON.stringify(observations)), immutableReleaseObservationsCheckedAt: '2024-02-01T00:00:00Z' };
+  assert.strictEqual(immutableReleaseObservationsChanged(existing, candidate), true);
+});
+
+test('immutableReleaseObservationsCheckedAtChanged is false when both sides are absent', () => {
+  assert.strictEqual(immutableReleaseObservationsCheckedAtChanged({}, {}), false);
+});
+
+test('immutableReleaseObservationsCheckedAtChanged is false when the timestamp is identical', () => {
+  const existing = { immutableReleaseObservationsCheckedAt: '2024-01-01T00:00:00Z' };
+  const candidate = { immutableReleaseObservationsCheckedAt: '2024-01-01T00:00:00Z' };
+  assert.strictEqual(immutableReleaseObservationsCheckedAtChanged(existing, candidate), false);
+});
+
+test('immutableReleaseObservationsCheckedAtChanged is true when the timestamp advances', () => {
+  const existing = { immutableReleaseObservationsCheckedAt: '2024-01-01T00:00:00Z' };
+  const candidate = { immutableReleaseObservationsCheckedAt: '2024-02-01T00:00:00Z' };
+  assert.strictEqual(immutableReleaseObservationsCheckedAtChanged(existing, candidate), true);
+});
+
+test('immutableReleaseObservationsCheckedAtChanged is true when it goes from absent to present', () => {
+  const existing = {};
+  const candidate = { immutableReleaseObservationsCheckedAt: '2024-02-01T00:00:00Z' };
+  assert.strictEqual(immutableReleaseObservationsCheckedAtChanged(existing, candidate), true);
+});
+
 test('needsUpdate returns true when repoInfo.updated_at is unchanged but immutableReleaseObservations grew', () => {
   const existing = {
     repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
@@ -198,6 +233,23 @@ test('needsUpdate returns false when repoInfo.updated_at and immutableReleaseObs
 test('needsUpdate still returns true on a repoInfo.updated_at change regardless of observations', () => {
   const existing = { repoInfo: { updated_at: '2024-01-01T00:00:00Z' } };
   const candidate = { repoInfo: { updated_at: '2024-06-01T00:00:00Z' } };
+  assert.strictEqual(needsUpdate(existing, candidate), true);
+});
+
+test('needsUpdate returns true on a timestamp-only 30-day release scan (identical releases, same repoInfo.updated_at)', () => {
+  const observations = [
+    { releaseId: 1, tagName: 'v1.0.0', immutabilityState: 'immutable', status: 'present', observedAt: '2024-01-01T00:00:00Z' }
+  ];
+  const existing = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleaseObservations: observations,
+    immutableReleaseObservationsCheckedAt: '2024-01-01T00:00:00Z'
+  };
+  const candidate = {
+    repoInfo: { updated_at: '2024-01-01T00:00:00Z' },
+    immutableReleaseObservations: JSON.parse(JSON.stringify(observations)),
+    immutableReleaseObservationsCheckedAt: '2024-02-01T00:00:00Z'
+  };
   assert.strictEqual(needsUpdate(existing, candidate), true);
 });
 

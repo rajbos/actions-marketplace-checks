@@ -245,7 +245,47 @@ function immutableReleaseObservationsChanged(existingAction, candidateAction) {
     }
   }
 
+  if (immutableReleaseObservationsCheckedAtChanged(existingAction, candidateAction)) {
+    return true;
+  }
+
   return immutableReleaseCoverageChanged(existingAction, candidateAction);
+}
+
+/**
+ * Checks whether immutableReleaseObservationsCheckedAt (issue #265) differs
+ * between what the API already has and the current status.json candidate.
+ *
+ * A successful 30-day release scan that finds the exact same releases and
+ * coverage as before only bumps this checked-at timestamp - nothing else
+ * about the action changes. Without this check, that scan would never reach
+ * the API at all (the observations/coverage comparisons above both return
+ * false for identical content), leaving the API's last-checked timestamp
+ * stale indefinitely even though a fresh check genuinely happened.
+ *
+ * @param {object|null} existingAction - The action from API storage (or null if not exists)
+ * @param {object} candidateAction - The action from status.json
+ * @returns {boolean} - true if the checked-at timestamp differs (or could not be compared safely)
+ */
+function immutableReleaseObservationsCheckedAtChanged(existingAction, candidateAction) {
+  const existingCheckedAt = existingAction && existingAction.immutableReleaseObservationsCheckedAt;
+  const candidateCheckedAt = candidateAction && candidateAction.immutableReleaseObservationsCheckedAt;
+
+  if (!existingCheckedAt && !candidateCheckedAt) {
+    return false;
+  }
+
+  if (!existingCheckedAt || !candidateCheckedAt) {
+    return true;
+  }
+
+  try {
+    return new Date(existingCheckedAt).toISOString() !== new Date(candidateCheckedAt).toISOString();
+  } catch (dateError) {
+    // If we can't safely compare, assume it changed so the checked-at
+    // timestamp is never silently left stale.
+    return true;
+  }
 }
 
 /**
@@ -746,6 +786,7 @@ module.exports = {
   parseSemverLike,
   compareTagStringsDesc,
   immutableReleaseObservationsChanged,
+  immutableReleaseObservationsCheckedAtChanged,
   immutableReleaseCoverageChanged,
   immutableReleasePolicyChanged,
   trimTagInfoToLatest,
