@@ -78,12 +78,31 @@ BeforeAll {
         # to releases that don't already have a resolvedCommitSha recorded, so the
         # routine #266 30-day refresh doesn't re-resolve already-known tags.
         $releaseTagShaResolutionLimit = 10
-        $releaseIdsWithKnownSha = New-Object System.Collections.Generic.HashSet[object]
+        $latestExistingObservationByReleaseId = @{}
         foreach ($existingObservation in @($existingObservations)) {
             if ($null -eq $existingObservation) { continue }
-            if ($existingObservation.status -eq "deleted") { continue }
-            if (-not [string]::IsNullOrWhiteSpace($existingObservation.resolvedCommitSha)) {
-                [void]$releaseIdsWithKnownSha.Add($existingObservation.releaseId)
+            $existingRid = $existingObservation.releaseId
+            if (-not $latestExistingObservationByReleaseId.ContainsKey($existingRid)) {
+                $latestExistingObservationByReleaseId[$existingRid] = $existingObservation
+            }
+            else {
+                $currentLatest = $latestExistingObservationByReleaseId[$existingRid]
+                $isNewer = $false
+                try {
+                    $isNewer = [datetime]$existingObservation.observedAt -gt [datetime]$currentLatest.observedAt
+                }
+                catch { $isNewer = $false }
+                if ($isNewer) {
+                    $latestExistingObservationByReleaseId[$existingRid] = $existingObservation
+                }
+            }
+        }
+
+        $releaseIdsWithKnownSha = New-Object System.Collections.Generic.HashSet[object]
+        foreach ($latestExistingObservation in $latestExistingObservationByReleaseId.Values) {
+            if ($latestExistingObservation.status -eq "deleted") { continue }
+            if (-not [string]::IsNullOrWhiteSpace($latestExistingObservation.resolvedCommitSha)) {
+                [void]$releaseIdsWithKnownSha.Add($latestExistingObservation.releaseId)
             }
         }
 
@@ -501,6 +520,33 @@ Describe 'GetImmutableReleaseObservations' {
 
         $existingObservations = @(
             @{ releaseId = 1; tagName = "v1.0.0"; status = "deleted"; resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+        )
+
+        $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date) -existingObservations $existingObservations
+
+        $result.Releases[0].resolvedCommitSha | Should -Be "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    }
+
+    It 'Should resolve a reappeared release even when an older superseded observation for it still has a resolvedCommitSha' {
+        # History: present+resolved (old) -> deleted (newer) -> now reappearing.
+        # Only the LATEST observation (the "deleted" one) should decide whether
+        # to skip resolution - the old, superseded "present+resolved" entry must
+        # not cause the reappearance to be wrongly skipped, since the
+        # reappearance itself carries no SHA context of its own yet.
+        Mock ApiCall {
+            Param($method, $url)
+            if ($url -like "*/releases") {
+                return @(@{ id = 1; tag_name = "v1.0.0"; draft = $false; published_at = "2024-01-01T00:00:00Z"; target_commitish = "main" })
+            }
+            if ($url -like "*/git/ref/tags/*") {
+                return @{ object = @{ sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"; type = "commit" } }
+            }
+            return $null
+        }
+
+        $existingObservations = @(
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "present"; observedAt = (Get-Date).AddDays(-20); resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+            @{ releaseId = 1; tagName = "v1.0.0"; status = "deleted"; observedAt = (Get-Date).AddDays(-10); resolvedCommitSha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
         )
 
         $result = GetImmutableReleaseObservations -owner "test-owner" -repo "test-repo" -accessToken "token" -startTime (Get-Date) -existingObservations $existingObservations

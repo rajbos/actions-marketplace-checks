@@ -738,13 +738,39 @@ function GetImmutableReleaseObservations {
     # routine cadence indefinitely, well beyond what #266 needs. A resolved
     # SHA for an immutable tag never changes, so re-resolving it again buys
     # nothing.
+    #
+    # A release's history can be present+resolved -> deleted -> reappeared -
+    # only the LATEST observation per release id can say whether a SHA is
+    # still valid for its current state. Scanning every non-deleted entry
+    # (rather than reducing to latest-per-release first) would find the old,
+    # already-superseded "present+resolved" entry and wrongly skip resolving
+    # the reappearance, which has no SHA context of its own yet.
     $releaseTagShaResolutionLimit = 10
-    $releaseIdsWithKnownSha = New-Object System.Collections.Generic.HashSet[object]
+    $latestExistingObservationByReleaseId = @{}
     foreach ($existingObservation in @($existingObservations)) {
         if ($null -eq $existingObservation) { continue }
-        if ($existingObservation.status -eq "deleted") { continue }
-        if (-not [string]::IsNullOrWhiteSpace($existingObservation.resolvedCommitSha)) {
-            [void]$releaseIdsWithKnownSha.Add($existingObservation.releaseId)
+        $existingRid = $existingObservation.releaseId
+        if (-not $latestExistingObservationByReleaseId.ContainsKey($existingRid)) {
+            $latestExistingObservationByReleaseId[$existingRid] = $existingObservation
+        }
+        else {
+            $currentLatest = $latestExistingObservationByReleaseId[$existingRid]
+            $isNewer = $false
+            try {
+                $isNewer = [datetime]$existingObservation.observedAt -gt [datetime]$currentLatest.observedAt
+            }
+            catch { $isNewer = $false }
+            if ($isNewer) {
+                $latestExistingObservationByReleaseId[$existingRid] = $existingObservation
+            }
+        }
+    }
+
+    $releaseIdsWithKnownSha = New-Object System.Collections.Generic.HashSet[object]
+    foreach ($latestExistingObservation in $latestExistingObservationByReleaseId.Values) {
+        if ($latestExistingObservation.status -eq "deleted") { continue }
+        if (-not [string]::IsNullOrWhiteSpace($latestExistingObservation.resolvedCommitSha)) {
+            [void]$releaseIdsWithKnownSha.Add($latestExistingObservation.releaseId)
         }
     }
 
