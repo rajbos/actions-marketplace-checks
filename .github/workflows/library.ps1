@@ -2111,7 +2111,11 @@ function GetRepoReleases {
     Array of hashtables describing the currently observed *published* releases
     (draft releases must already be filtered out by the caller before this is
     called - see GetImmutableReleaseObservations in repoInfo.ps1). Each entry is
-    expected to have releaseId, tagName and publishedAt.
+    expected to have releaseId, tagName and publishedAt. May optionally also carry
+    resolvedCommitSha/releaseTargetCommitish/tagReleaseMismatch (issue #267) when
+    the caller resolved them - typically bounded to the newest releases only, to
+    limit extra API calls; absent/unresolved values are carried through as $null
+    rather than guessed.
 
     .PARAMETER observedAt
     The datetime this observation batch was made.
@@ -2174,17 +2178,29 @@ function Merge-ImmutableReleaseObservations {
         $rid = $release.releaseId
         [void]$seenReleaseIds.Add($rid)
 
+        # Release/tag integrity context (issue #267) - only populated when the
+        # caller (GetImmutableReleaseObservations) was able to resolve it, e.g.
+        # bounded to the newest releases to limit extra API calls. $null/absent
+        # here is preserved as $null on the appended entry rather than guessed,
+        # keeping the "no overclaiming" guarantee this whole feature relies on.
+        $resolvedCommitSha = $release.resolvedCommitSha
+        $releaseTargetCommitish = $release.releaseTargetCommitish
+        $tagReleaseMismatch = $release.tagReleaseMismatch
+
         if (-not $latestByReleaseId.ContainsKey($rid)) {
             # Never observed before - append a first observation. Always "unknown":
             # no backfill claims are invented from the repo's current policy.
             $newEntries.Add(@{
-                releaseId         = $rid
-                tagName           = $release.tagName
-                publishedAt       = $release.publishedAt
-                immutabilityState = "unknown"
-                status            = "present"
-                observedAt        = $observedAt
-                source            = $source
+                releaseId              = $rid
+                tagName                = $release.tagName
+                publishedAt            = $release.publishedAt
+                immutabilityState      = "unknown"
+                status                 = "present"
+                observedAt             = $observedAt
+                source                 = $source
+                resolvedCommitSha      = $resolvedCommitSha
+                releaseTargetCommitish = $releaseTargetCommitish
+                tagReleaseMismatch     = $tagReleaseMismatch
             })
         }
         else {
@@ -2194,13 +2210,16 @@ function Merge-ImmutableReleaseObservations {
                 # as a new event, carrying forward the last known state rather than
                 # guessing a new one.
                 $newEntries.Add(@{
-                    releaseId         = $rid
-                    tagName           = $release.tagName
-                    publishedAt       = $release.publishedAt
-                    immutabilityState = $prior.immutabilityState
-                    status            = "present"
-                    observedAt        = $observedAt
-                    source            = $source
+                    releaseId              = $rid
+                    tagName                = $release.tagName
+                    publishedAt            = $release.publishedAt
+                    immutabilityState      = $prior.immutabilityState
+                    status                 = "present"
+                    observedAt             = $observedAt
+                    source                 = $source
+                    resolvedCommitSha      = $resolvedCommitSha
+                    releaseTargetCommitish = $releaseTargetCommitish
+                    tagReleaseMismatch     = $tagReleaseMismatch
                 })
             }
             # else: already known and still present - leave history untouched.
@@ -2405,6 +2424,65 @@ function Get-ImmutableReleasePolicyChangedAt {
     }
 
     return $existingChangedAt
+}
+
+<#
+    .SYNOPSIS
+    Composes the concise, marketplace-ready human-readable immutable-release
+    summary string surfaced in reports and the API (issue #267).
+
+    .DESCRIPTION
+    This is a pure presentation layer on top of the tri-state current policy
+    (issue #264) and the derived recent-release coverage summary (issue #266,
+    Get-ImmutableReleaseCoverage) - it does not fetch or compute anything itself
+    and never overclaims: a current "enabled" policy only describes the policy
+    right now, so the coverage half of the string is always about the recent
+    releases actually observed, never inferred from the current policy alone.
+
+    Produces strings like:
+      "Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)"
+      "Disabled; 0 of 3 known releases immutable (last 3; 0 unknown)"
+      "Unknown; no release history available"                (no coverage yet)
+
+    .PARAMETER policyStatus
+    The action's current immutableReleasePolicy value ("enabled", "disabled",
+    "unknown", or $null when it has never been checked).
+
+    .PARAMETER coverage
+    The action's immutableReleaseCoverage object (from Get-ImmutableReleaseCoverage),
+    or $null/absent when no release observations have been recorded yet.
+
+    .OUTPUTS
+    A single human-readable string combining the policy label and the coverage
+    summary (or a placeholder when no coverage is available yet).
+#>
+function Get-ImmutableReleaseSummary {
+    Param (
+        [string] $policyStatus,
+        $coverage
+    )
+
+    $policyLabel = switch ($policyStatus) {
+        "enabled"  { "Enabled" }
+        "disabled" { "Disabled" }
+        default    { "Unknown" }
+    }
+
+    $releasesConsidered = 0
+    if ($null -ne $coverage) {
+        if ($coverage -is [System.Collections.IDictionary]) {
+            if ($coverage.ContainsKey('releasesConsidered')) { $releasesConsidered = $coverage.releasesConsidered }
+        }
+        elseif ($null -ne $coverage.PSObject.Properties['releasesConsidered']) {
+            $releasesConsidered = $coverage.releasesConsidered
+        }
+    }
+
+    if ($null -eq $coverage -or $releasesConsidered -eq 0) {
+        return "$policyLabel; no release history available"
+    }
+
+    return "$policyLabel; $($coverage.summary)"
 }
 
 function Invoke-GraphQLRepoMetadataBatch {
