@@ -190,6 +190,64 @@ Describe 'GetImmutableReleasePolicy' {
     }
 }
 
+Describe 'Test-ImmutableReleasePolicyNeedsRefresh' {
+    It 'Should need a refresh when immutableReleasePolicy is missing entirely' {
+        $action = [PSCustomObject]@{ name = "test-owner_test-repo" }
+
+        Test-ImmutableReleasePolicyNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should need a refresh when immutableReleasePolicyCheckedAt is missing' {
+        $action = [PSCustomObject]@{
+            name = "test-owner_test-repo"
+            immutableReleasePolicy = "unknown"
+        }
+
+        Test-ImmutableReleasePolicyNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should need a refresh when immutableReleasePolicyCheckedAt is null' {
+        $action = [PSCustomObject]@{
+            name = "test-owner_test-repo"
+            immutableReleasePolicy = "unknown"
+            immutableReleasePolicyCheckedAt = $null
+        }
+
+        Test-ImmutableReleasePolicyNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should need a refresh, without throwing, when immutableReleasePolicyCheckedAt is a malformed string' {
+        $action = [PSCustomObject]@{
+            name = "test-owner_test-repo"
+            immutableReleasePolicy = "unknown"
+            immutableReleasePolicyCheckedAt = "not-a-real-date"
+        }
+
+        { Test-ImmutableReleasePolicyNeedsRefresh -action $action } | Should -Not -Throw
+        Test-ImmutableReleasePolicyNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should not need a refresh when immutableReleasePolicyCheckedAt is recent' {
+        $action = [PSCustomObject]@{
+            name = "test-owner_test-repo"
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = (Get-Date).AddDays(-1)
+        }
+
+        Test-ImmutableReleasePolicyNeedsRefresh -action $action | Should -Be $false
+    }
+
+    It 'Should need a refresh when immutableReleasePolicyCheckedAt is older than 30 days' {
+        $action = [PSCustomObject]@{
+            name = "test-owner_test-repo"
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = (Get-Date).AddDays(-31)
+        }
+
+        Test-ImmutableReleasePolicyNeedsRefresh -action $action | Should -Be $true
+    }
+}
+
 Describe 'Get-RepoPriorityScore for immutableReleasePolicy staleness' {
     It 'Should score a repo missing immutableReleasePolicy entirely' {
         $action = [PSCustomObject]@{

@@ -1304,27 +1304,10 @@ function GetInfo {
         # keeps the prioritized collection backlog (Get-RepoPriorityScore)
         # bounded rather than re-checking every repo every run.
         $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
-        $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
-        $needsImmutableReleasePolicyCheck = $false
-        if (!$hasImmutableReleasePolicyField -or !$hasImmutableReleasePolicyCheckedAtField -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
-            $needsImmutableReleasePolicyCheck = $true
-        }
-        else {
-            # A malformed/unparsable persisted timestamp is allowed by the schema (only a
-            # validation warning, not an error) so it must not throw and abort the whole
-            # repo-info run. Mirrors the defensive try/catch used for the same field in
-            # Get-RepoPriorityScore (library.ps1): treat a conversion failure as needing
-            # a refresh, same as a missing/null timestamp.
-            try {
-                $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).Days
-                if ($daysSinceLastCheck -gt 30) {
-                    $needsImmutableReleasePolicyCheck = $true
-                }
-            }
-            catch {
-                $needsImmutableReleasePolicyCheck = $true
-            }
-        }
+        # Test-ImmutableReleasePolicyNeedsRefresh (library.ps1) never throws on a
+        # malformed/unparsable persisted timestamp - see its doc comment - so this
+        # decision cannot abort the whole repo-info run.
+        $needsImmutableReleasePolicyCheck = Test-ImmutableReleasePolicyNeedsRefresh -action $action
 
         if ($needsImmutableReleasePolicyCheck) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
