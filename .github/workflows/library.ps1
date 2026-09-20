@@ -2419,7 +2419,24 @@ function Get-ImmutableReleasePolicyChangedAt {
     # Basing "first observation" on a missing/empty previousStatus instead
     # avoids falsely recording today as a policy transition on that repo's
     # first post-migration check when the status hasn't actually changed.
-    if ([string]::IsNullOrEmpty($previousStatus) -or $previousStatus -ne $newStatus) {
+    if ([string]::IsNullOrEmpty($previousStatus)) {
+        return $checkedAt
+    }
+
+    # GetImmutableReleasePolicy reports "unknown" for a missing field, a
+    # 403/rate-limit response, or any other transient API failure - it is an
+    # availability failure, not a confirmed change to the repo's actual
+    # policy. A transition into or out of "unknown" (e.g. enabled -> unknown
+    # during an outage, then unknown -> enabled once it recovers) must
+    # therefore never update changedAt, or a temporary API blip would
+    # fabricate a transition timestamp that does not represent any real
+    # policy change. Only a confirmed transition between two known states
+    # (enabled <-> disabled) counts.
+    if ($previousStatus -eq "unknown" -or $newStatus -eq "unknown") {
+        return $existingChangedAt
+    }
+
+    if ($previousStatus -ne $newStatus) {
         return $checkedAt
     }
 

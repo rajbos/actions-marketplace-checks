@@ -169,11 +169,14 @@ Describe 'Get-ImmutableReleasePolicyChangedAt' {
         $result | Should -Be $checkedAt
     }
 
-    It 'Should return checkedAt when the status actually changed' {
+    It 'Should return checkedAt when a confirmed transition between two known states occurs' {
+        # Deliberately not involving "unknown" here - that scenario is covered
+        # separately below, since GetImmutableReleasePolicy uses "unknown" for
+        # availability failures rather than confirmed policy changes.
         $checkedAt = Get-Date
         $existingChangedAt = (Get-Date).AddDays(-60)
 
-        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "unknown" -newStatus "enabled" -checkedAt $checkedAt -existingChangedAt $existingChangedAt
+        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "disabled" -newStatus "enabled" -checkedAt $checkedAt -existingChangedAt $existingChangedAt
 
         $result | Should -Be $checkedAt
     }
@@ -217,5 +220,46 @@ Describe 'Get-ImmutableReleasePolicyChangedAt' {
         $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "enabled" -newStatus "enabled" -checkedAt $checkedAt -existingChangedAt $null
 
         $result | Should -Be $null
+    }
+
+    It 'Should preserve changedAt when a known policy state drops to unknown (e.g. a rate-limited check)' {
+        # "unknown" can mean a 403/rate-limit response or any other transient
+        # API failure - not a confirmed policy change. enabled -> unknown must
+        # not fabricate a transition timestamp.
+        $checkedAt = Get-Date
+        $existingChangedAt = (Get-Date).AddDays(-120)
+
+        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "enabled" -newStatus "unknown" -checkedAt $checkedAt -existingChangedAt $existingChangedAt
+
+        $result | Should -Be $existingChangedAt
+    }
+
+    It 'Should preserve changedAt when policy recovers from unknown back to its known state' {
+        # The recovery leg of the same outage (unknown -> enabled) is just as
+        # much a non-event as the drop into unknown - it must not be recorded
+        # as a transition either.
+        $checkedAt = Get-Date
+        $existingChangedAt = (Get-Date).AddDays(-120)
+
+        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "unknown" -newStatus "enabled" -checkedAt $checkedAt -existingChangedAt $existingChangedAt
+
+        $result | Should -Be $existingChangedAt
+    }
+
+    It 'Should still record the first-ever observation even when its initial status is unknown' {
+        $checkedAt = Get-Date
+
+        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus $null -newStatus "unknown" -checkedAt $checkedAt -existingChangedAt $null
+
+        $result | Should -Be $checkedAt
+    }
+
+    It 'Should still record a confirmed transition between two known states (not involving unknown)' {
+        $checkedAt = Get-Date
+        $existingChangedAt = (Get-Date).AddDays(-120)
+
+        $result = Get-ImmutableReleasePolicyChangedAt -previousStatus "disabled" -newStatus "enabled" -checkedAt $checkedAt -existingChangedAt $existingChangedAt
+
+        $result | Should -Be $checkedAt
     }
 }
