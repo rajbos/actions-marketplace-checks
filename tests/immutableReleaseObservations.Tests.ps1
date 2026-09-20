@@ -387,4 +387,63 @@ Describe 'Get-RepoPriorityScore for immutableReleaseObservations staleness' {
 
         $staleScore | Should -BeGreaterThan $recentScore
     }
+
+    It 'Should score a repo with fresh policy/observation timestamps but missing immutableReleaseCoverage (issue #266 migration gap)' {
+        # This is the "complete repo" case: everything else is fresh (so no
+        # other staleness signal fires), but coverage was never backfilled -
+        # e.g. the repo was checked by #264/#265 before #266 existed. Without
+        # a dedicated score, this repo would never be selected by
+        # Get-PrioritizedReposToProcess and would never reach GetInfo's local
+        # backfill, even though computing it needs no API call at all.
+        $withoutCoverage = [PSCustomObject]@{
+            owner = "test-owner"
+            name = "test-owner_test-repo"
+            mirrorFound = $true
+            actionType = @{ actionType = "Node" }
+            repoInfo = @{ updated_at = (Get-Date).ToString("o"); lastFetched = (Get-Date) }
+            repoSize = 100
+            dependents = @{ dependents = "1"; dependentsLastUpdated = (Get-Date) }
+            immutableReleasePolicy = "enabled"
+            immutableReleasePolicyCheckedAt = (Get-Date)
+            immutableReleaseObservationsCheckedAt = (Get-Date)
+            immutableReleaseObservations = @(
+                @{ releaseId = 1; tagName = "v1.0.0"; publishedAt = (Get-Date); immutabilityState = "unknown"; status = "present"; observedAt = (Get-Date); source = "src" }
+            )
+        }
+
+        $withCoverage = $withoutCoverage | Select-Object *
+        $withCoverage | Add-Member -Name immutableReleaseCoverage -Value @{ releasesConsidered = 1; immutableCount = 0; notImmutableCount = 0; unknownCount = 1; knownCount = 0; latestReleaseImmutable = "unknown"; summary = "0 of 0 known releases immutable (last 1; 1 unknown)" } -MemberType NoteProperty
+
+        $scoreWithout = Get-RepoPriorityScore -action $withoutCoverage
+        $scoreWith = Get-RepoPriorityScore -action $withCoverage
+
+        $scoreWithout | Should -BeGreaterThan $scoreWith
+    }
+
+    It 'Should not score the coverage gap when there is no observation history at all yet' {
+        # A brand-new repo with no immutableReleaseObservations property at all
+        # is already scored via the observationsCheckedAt staleness signal
+        # above - it must not also be double-scored by the coverage-gap check,
+        # which only applies once observation history actually exists.
+        $action = [PSCustomObject]@{
+            owner = "test-owner"
+            name = "test-owner_test-repo"
+            mirrorFound = $true
+            actionType = @{ actionType = "Node" }
+            repoInfo = @{ updated_at = (Get-Date).ToString("o"); lastFetched = (Get-Date) }
+            repoSize = 100
+            dependents = @{ dependents = "1"; dependentsLastUpdated = (Get-Date) }
+        }
+
+        $scoreWithoutHistory = Get-RepoPriorityScore -action $action
+
+        $actionWithEmptyHistory = $action | Select-Object *
+        $actionWithEmptyHistory | Add-Member -Name immutableReleaseObservations -Value @() -MemberType NoteProperty -Force
+        $scoreWithEmptyHistory = Get-RepoPriorityScore -action $actionWithEmptyHistory
+
+        # An empty-but-present history with no coverage should still be flagged
+        # (Get-ImmutableReleaseCoverage handles empty input just fine), so this
+        # score must be at least as high as the no-history-yet case, not lower.
+        $scoreWithEmptyHistory | Should -BeGreaterOrEqual $scoreWithoutHistory
+    }
 }

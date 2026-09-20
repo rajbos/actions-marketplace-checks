@@ -3691,6 +3691,26 @@ function Get-RepoPriorityScore {
         catch { $score += 15 }
     }
 
+    # Missing immutableReleaseCoverage (issue #266) despite already having
+    # observation history: GetInfo's local backfill for this case (no network
+    # call needed - see repoInfo.ps1) only runs for repos that actually reach
+    # GetInfo, which the direct Run path restricts to whatever
+    # Get-PrioritizedReposToProcess selects. An action with otherwise-fresh
+    # policy/observation timestamps (e.g. already migrated by #268/#269 before
+    # #266 existed) would score 0 on every signal above and might never be
+    # selected, leaving it without coverage indefinitely even though the
+    # backfill itself needs no API call at all once selected. Score it
+    # whenever observation history is present but coverage is absent/null, so
+    # this migration drains through the normal prioritized backlog instead of
+    # depending on unrelated data going stale first.
+    $hasImmutableReleaseObservationsForCoverageGap = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+    if ($hasImmutableReleaseObservationsForCoverageGap -and ($null -ne $action.immutableReleaseObservations)) {
+        $hasImmutableReleaseCoverageForGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        if (!$hasImmutableReleaseCoverageForGap -or ($null -eq $action.immutableReleaseCoverage)) {
+            $score += 15
+        }
+    }
+
     # Container scan staleness (lower-medium priority): a Dockerfile-based action whose
     # Trivy container scan is missing, previously errored, or older than 7 days is only
     # ever re-scanned by GetMoreInfo's needsContainerScan check if the repo happens to be
