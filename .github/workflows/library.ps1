@@ -3423,7 +3423,7 @@ function Test-ImmutableReleasePolicyNeedsRefresh {
     }
 
     try {
-        $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).Days
+        $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
         return $daysSinceLastCheck -gt 30
     }
     catch {
