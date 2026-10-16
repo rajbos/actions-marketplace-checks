@@ -42,7 +42,20 @@ env:
   APP_ORGANIZATION: actions-marketplace-validations
 
 jobs:
+  # Fail fast: the consolidate job needs this PAT to install the API client, and
+  # refresh-release-info takes ~50 minutes, so find out a bad PAT now, not then.
+  validate-pat:
+    name: Validate package PAT
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/validate-package-pat
+        with:
+          token: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+
   refresh-release-info:
+    needs: validate-pat
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -79,8 +92,8 @@ jobs:
 
   upload-changes:
     name: Consolidate and upload changes to blob storage
-    needs: refresh-release-info
-    if: always()
+    needs: [validate-pat, refresh-release-info]
+    if: always() && needs.validate-pat.result == 'success'
     runs-on: ubuntu-latest
     # Shared with every other workflow that writes status.json to blob storage
     # (analyze, repoInfo, update-mirrors, dependabot-updates, ossf-scan) so

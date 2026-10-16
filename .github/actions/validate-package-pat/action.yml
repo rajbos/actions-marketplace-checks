@@ -1,0 +1,85 @@
+name: "Validate package PAT"
+description: >-
+  Fail fast when the PAT used to install @devops-actions/actions-marketplace-client
+  from GitHub Packages is invalid. Checks that the token authenticates, then that
+  it can read the package metadata (the same request `npm install` makes). Writes a
+  non-secret fingerprint of the token (owner login, scopes, expiry) to the step
+  summary so the PAT can be identified later. The token itself is never printed.
+
+inputs:
+  token:
+    description: "The PAT to validate."
+    required: true
+  package:
+    description: "Scoped package name to check read access for."
+    required: false
+    default: "@devops-actions/actions-marketplace-client"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate PAT and report its identity
+      shell: bash
+      env:
+        PAT: ${{ inputs.token }}
+        PACKAGE: ${{ inputs.package }}
+      run: |
+        set -u
+        if [ -z "$PAT" ]; then
+          echo "::error::The package PAT secret is empty or not available to this workflow."
+          exit 1
+        fi
+
+        # 1. Who does the token authenticate as? Classic PATs report their scopes
+        #    in X-OAuth-Scopes and any expiry in github-authentication-token-expiration.
+        #    The PAT's display name is not exposed by the API.
+        headers=$(mktemp)
+        body=$(mktemp)
+        status=$(curl -sS -o "$body" -D "$headers" -w '%{http_code}' \
+          -H "Authorization: Bearer $PAT" \
+          -H "Accept: application/vnd.github+json" \
+          https://api.github.com/user)
+
+        header() { grep -i "^$1:" "$headers" | head -1 | cut -d: -f2- | tr -d '\r' | sed 's/^ *//'; }
+        login=$(jq -r '.login // "unknown"' "$body" 2>/dev/null || echo unknown)
+        scopes=$(header x-oauth-scopes)
+        expires=$(header github-authentication-token-expiration)
+        # Fine-grained PATs and GitHub App tokens send no X-OAuth-Scopes header.
+        case "$PAT" in
+          ghp_*) kind="classic PAT" ;;
+          github_pat_*) kind="fine-grained PAT (does NOT support GitHub Packages)" ;;
+          ghs_*) kind="GitHub App installation token" ;;
+          gho_*) kind="OAuth token" ;;
+          *) kind="unknown token type" ;;
+        esac
+
+        {
+          echo "### Package PAT check"
+          echo ""
+          echo "| Property | Value |"
+          echo "|----------|-------|"
+          echo "| Token type | $kind |"
+          echo "| Owner (login) | \`$login\` |"
+          echo "| Scopes | \`${scopes:-none reported}\` |"
+          echo "| Expires | ${expires:-not reported / no expiry} |"
+          echo "| GET /user status | $status |"
+        } >> "$GITHUB_STEP_SUMMARY"
+        echo "Token type: $kind | owner: $login | scopes: ${scopes:-none reported} | expires: ${expires:-n/a} | /user status: $status"
+
+        if [ "$status" != "200" ]; then
+          echo "::error::PAT does not authenticate against api.github.com (HTTP $status). It is expired, revoked or invalid."
+          exit 1
+        fi
+
+        # 2. Can it read the package? Same request npm install makes.
+        encoded=$(printf '%s' "$PACKAGE" | sed 's#/#%2f#')
+        pkg_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+          -H "Authorization: Bearer $PAT" \
+          "https://npm.pkg.github.com/$encoded")
+        echo "| Package read ($PACKAGE) | HTTP $pkg_status |" >> "$GITHUB_STEP_SUMMARY"
+        echo "Package read status for $PACKAGE: $pkg_status"
+
+        if [ "$pkg_status" != "200" ]; then
+          echo "::error::PAT authenticates as '$login' but cannot read $PACKAGE from GitHub Packages (HTTP $pkg_status). Needs a classic PAT with read:packages, SSO-authorized for the devops-actions org, owned by a user with access to the package."
+          exit 1
+        fi
