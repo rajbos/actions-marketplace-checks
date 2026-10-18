@@ -277,6 +277,78 @@ Describe "Status JSON Schema Validation" {
             $result.Warnings -join " " | Should -Match "containerScan missing 'lastScanned' field"
         }
     }
+
+    Context "Test-ActionSchema function with immutableReleases field" {
+        It "Should validate object with immutableReleases enabled" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                forkFound = $true
+                immutableReleases = @{
+                    enabled = $true
+                    enforced_by_owner = $false
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+            $result.Warnings.Count | Should -Be 0
+        }
+
+        It "Should validate object with immutableReleases disabled and null enforced_by_owner" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleases = @{
+                    enabled = $false
+                    enforced_by_owner = $null
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+            $result.Warnings.Count | Should -Be 0
+        }
+
+        It "Should validate object without immutableReleases field" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                forkFound = $true
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Valid | Should -Be $true
+            $result.Errors.Count | Should -Be 0
+            $result.Warnings -join " " | Should -Not -Match "immutableReleases"
+        }
+
+        It "Should warn when immutableReleases is not an object" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleases = "invalid"
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "immutableReleases should be object"
+        }
+
+        It "Should warn when immutableReleases missing enabled field" {
+            $action = @{
+                owner = "test-owner"
+                name = "test_repo"
+                immutableReleases = @{
+                    enforced_by_owner = $false
+                }
+            }
+
+            $result = Test-ActionSchema -action $action -index 0
+            $result.Warnings -join " " | Should -Match "immutableReleases missing 'enabled' field"
+        }
+    }
     
     Context "Test-ActionSchema function with errors" {
         It "Should error when vulnerabilityStatus is not an object" {
