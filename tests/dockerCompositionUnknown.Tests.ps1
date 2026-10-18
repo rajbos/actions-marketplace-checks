@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Define Write-Message function for tests
     function Write-Message {

@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Load the functions we need to test from repoInfo.ps1
     # We'll mock ApiCall to avoid actual API calls

@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Mock Write-Message function
     function Write-Message {

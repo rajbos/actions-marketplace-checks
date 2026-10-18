@@ -1,11 +1,12 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
 }
 
 Describe "Blob Storage Change Detection" {
+    BeforeAll {
+        Mock Invoke-WebRequest { throw [System.Net.WebException]::new("No connection available") }
+    }
     Context "Set-JsonToBlobStorage change detection logic" {
         BeforeEach {
             # Create a temporary file for testing
@@ -112,6 +113,9 @@ Describe "Blob Storage Change Detection" {
 }
 
 Describe "Wrapper Functions Logging" {
+    BeforeAll {
+        Mock Invoke-WebRequest { throw [System.Net.WebException]::new("No connection available") }
+    }
     Context "Status wrapper functions" {
         It "Set-StatusToBlobStorage should use enhanced Set-JsonToBlobStorage" {
             # Verify wrapper uses the base function with proper parameters

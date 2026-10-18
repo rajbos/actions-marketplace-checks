@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
@@ -39,6 +37,16 @@ Describe "ApiCall Context Information Tests" {
     }
     
     Context "ApiCall with valid URL" {
+        BeforeAll {
+            Mock GetBasicAuthenticationHeader { return "Basic test" }
+            Mock Invoke-WebRequest {
+                return New-Object PSObject -Property @{
+                    StatusCode = 200
+                    Content    = '{"rate":{"limit":5000,"remaining":5000}}'
+                    Headers    = @{}
+                }
+            }
+        }
         It "Should accept contextInfo parameter without error" {
             # This test verifies that adding the contextInfo parameter doesn't break normal ApiCall usage
             # We're not actually making the API call (would need valid token), just checking the parameter is accepted

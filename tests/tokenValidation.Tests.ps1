@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
@@ -51,6 +49,10 @@ Describe "Token Validation Tests" {
     }
     
     Context "ApiCall hideFailedCall parameter" {
+        BeforeEach {
+            # Prevent real HTTP calls to the GitHub API during these tests
+            Mock Invoke-WebRequest { throw [System.Net.WebException]::new("401 Unauthorized") }
+        }
         It "Should not output 'Log message' when hideFailedCall is true" {
             # Use a fake token that will result in a 401 error but won't throw due to hideFailedCall
             $output = ApiCall -method GET -url "repos/this-owner-does-not-exist-12345/nonexistent-repo" -access_token "fake_token" -hideFailedCall $true *>&1

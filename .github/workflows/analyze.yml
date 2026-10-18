@@ -21,27 +21,51 @@ on:
   workflow_dispatch:
     inputs:
       numberOfReposRepoInfo:
-        description: 'Number of repos for repo info (default: 150)'
+        description: 'Number of repos for repo info (default: 600)'
         required: false
-        default: '150'
+        default: '600'
       numberOfChunks:
-        description: 'Number of parallel chunks (default: 10)'
+        description: 'Number of parallel chunks (default: 6)'
         required: false
-        default: '10'
+        default: '6'
 
-# Prevent concurrent runs of this workflow to reduce rate limit pressure
+# Prevent concurrent runs of this workflow to reduce rate limit pressure.
+#
+# cancel-in-progress stays false on purpose. Each repo-info chunk uploads a partial status
+# artifact that only the consolidate job merges into blob storage, and GitHub does not start
+# a queued job once a run is cancelled - so cancelling in progress would discard every
+# chunk's completed API work rather than saving it. The schedule stays hourly because
+# dropping to 6 chunks shortens the matrix (fewer jobs competing for runners) and 8 of the
+# last 30 runs were cancelled rather than 13 as on repoInfo.yml - the overlap here is milder,
+# so spacing the schedule is not yet warranted. Revisit if cancellations climb.
 concurrency:
   group: analyze-workflow
   cancel-in-progress: false
   
 env:
-  numberOfReposRepoInfo: 150
-  # Reduced from 25 to 10 to decrease rate limit pressure when running concurrently with other workflows
-  numberOfChunks: 10
+  # 600 repos over 6 chunks = 100 repos per chunk, which is exactly two full GraphQL metadata
+  # batches (batch size 50 in repoInfo.ps1) instead of the ~13 repos per chunk that did not
+  # even fill one batch.
+  #
+  # Sizing, measured 2026-08-21 from run 32496518583: marginal cost is ~7 seconds and ~0.7
+  # core REST calls per repo (chunk 0 refreshed 13 repos using 9 REST calls), and repoInfo.ps1
+  # stops its loop at 50 minutes. The binding constraint is NOT the API budget - it is a
+  # per-job startup phase ("Updating actions with split RepoUrl") that measured 23-60 minutes
+  # and runs before that 50-minute clock, leaving each chunk only 0-27 minutes of usable time.
+  # 100 repos (~12 minutes of work) is sized to fill the usable budget of a fast chunk instead
+  # of the ~13 that left ~35 minutes idle. Slow chunks stay preamble-bound - see the PR for
+  # why that startup phase is the next thing to fix.
+  #
+  # Chunk count went 10 -> 6 deliberately: every chunk job downloads the whole ~102 MB
+  # status.json, so fewer, fatter chunks move more repos per run while *reducing* blob
+  # traffic (10 x 102 MB -> 6 x 102 MB per run). See issue #246.
+  numberOfReposRepoInfo: 600
+  numberOfChunks: 6
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
   APP_ORGANIZATION: actions-marketplace-validations
+  TRIVY_VERSION: v0.74.0
 
 jobs:
   prepare:
@@ -51,8 +75,9 @@ jobs:
       contents: read
     outputs:
       matrix-repoinfo: ${{ steps.split-work.outputs.matrix-repoinfo }}
+      has-repoinfo-work: ${{ steps.split-work.outputs.has-repoinfo-work }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Get current actions list
         shell: pwsh
@@ -137,8 +162,26 @@ jobs:
               exit 1
           }
 
-          # Limit existing forks for repo info
-          $forksForRepoInfo = $existingForks | Where-Object { $_.forkFound -eq $true } | Select-Object -First $numberOfReposRepoInfo
+          # Limit existing forks for repo info - use the same staleness/missing-data priority
+          # score as repoInfo.yml's direct run path (Get-PrioritizedReposToProcess in
+          # library.ps1), instead of this job's own sort-by-upstream-push-date. The old sort
+          # used repoInfo.updated_at (GitHub's "when was this upstream repo last pushed to"
+          # timestamp), which has nothing to do with when *we* last refreshed the repo - a
+          # rarely-pushed-upstream repo (or one with no repoInfo at all, sorting to the front
+          # forever) never rotated out of the front of the queue, and none of the
+          # Get-RepoPriorityScore factors (repoSize/dependents/fundingInfo/tagInfo/releaseInfo/
+          # containerScan staleness) had any influence on what this 600-repo/hour path selected.
+          # Get-RepoPriorityScore keys staleness off repoInfo.lastFetched (when we actually
+          # fetched it), so this also fixes that "some repos never get reprocessed" bug, not
+          # just the container-scan backlog.
+          # Candidates are filtered on mirrorFound, not forkFound. Split-ForksIntoChunks and
+          # CheckForInfoUpdateNeeded both refuse to do anything for a repo without a mirror, while
+          # Get-RepoPriorityScore *adds 90 points* when mirrorFound is missing or false. Selecting on
+          # forkFound therefore filled the top-600 with exactly the repos the splitter then discarded,
+          # so every run produced zero chunks (see run 35535875988: "Prioritized top [600] repos" is
+          # immediately followed by "No forks to process (all have mirrorFound = false)").
+          $forkCandidates = $existingForks | Where-Object { $_.mirrorFound -eq $true }
+          $forksForRepoInfo = Get-PrioritizedReposToProcess -existingForks $forkCandidates -numberOfReposToDo $numberOfReposRepoInfo
           
             # Split the work for repo info
             $chunksRepoInfoRaw = Split-ForksIntoChunks -existingForks $forksForRepoInfo -numberOfChunks $numberOfChunks
@@ -149,8 +192,15 @@ jobs:
               $matrixIdsRepoInfo += $chunkId
             }
 
-            # Sort to ensure consistent order
-            $matrixIdsRepoInfo = $matrixIdsRepoInfo | Sort-Object
+            # Sort to ensure consistent order.
+            #
+            # The @() wrapper is load bearing: Sort-Object returns $null for an empty collection and a
+            # bare scalar for a single element, and ConvertTo-Json then emits `null` / `0` instead of a
+            # JSON array. fromJson() hands that straight to strategy.matrix, GitHub rejects it at run
+            # level ("Matrix vector 'chunk-id' does not contain any values"), and because the repo-info
+            # job never starts it does not show up in the jobs API at all - every job reports success
+            # while the run itself is marked failed. Keep the output a real array, always.
+            $matrixIdsRepoInfo = @($matrixIdsRepoInfo | Sort-Object)
 
             # Save chunks to files for each matrix job to pick up
             foreach ($chunkId in $matrixIdsRepoInfo) {
@@ -160,16 +210,27 @@ jobs:
             }
 
             # Output matrix configurations
-            $matrixRepoInfoJson = ConvertTo-Json -InputObject $matrixIdsRepoInfo -Compress
+            $matrixRepoInfoJson = ConvertTo-Json -InputObject @($matrixIdsRepoInfo) -Compress
             Write-Host "RepoInfo matrix configuration: $matrixRepoInfoJson"
+
+            # An empty matrix vector is still a run-level error on GitHub, so the repo-info job is
+            # gated on this flag and gets skipped instead of failing when there is nothing stale to
+            # process. consolidate runs with `if: always()`, so it still executes after a skip.
+            $hasRepoInfoWork = ($matrixIdsRepoInfo.Count -gt 0)
 
             # Set outputs for next jobs
             "matrix-repoinfo=$matrixRepoInfoJson" >> $env:GITHUB_OUTPUT
+            "has-repoinfo-work=$($hasRepoInfoWork.ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
           Write-Message -message "" -logToSummary $true
-          Write-Message -message "✓ Work distribution complete. Starting parallel jobs." -logToSummary $true
+          if ($hasRepoInfoWork) {
+            Write-Message -message "✓ Work distribution complete. Starting parallel jobs." -logToSummary $true
+          } else {
+            Write-Message -message "✓ Nothing to process this run - skipping the repo info jobs." -logToSummary $true
+          }
 
       - name: Upload chunk files
+        if: steps.split-work.outputs.has-repoinfo-work == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: work-chunks
@@ -179,6 +240,10 @@ jobs:
   repo-info:
     name: Get repo info (chunk ${{ matrix.chunk-id }})
     needs: prepare
+    # Without this guard an empty chunk list produces an empty (or null) matrix vector, which GitHub
+    # treats as a run-level configuration error and marks the whole run as failed even though every
+    # job succeeded. Skipping the job instead keeps a "nothing to do" run green.
+    if: needs.prepare.outputs.has-repoinfo-work == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -187,7 +252,7 @@ jobs:
     permissions:
       actions: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download status.json from blob storage
         shell: pwsh
@@ -224,6 +289,23 @@ jobs:
         run: |
           . ./.github/workflows/library.ps1
           Install-ModuleWithRetry -ModuleName "powershell-yaml"
+          Install-ModuleWithRetry -ModuleName "PSGraphQL"
+
+      # Install Trivy once per chunk job rather than once per scanned repo. Pinned
+      # deliberately: Aqua's CDN only serves a rolling window of recent releases, so an old
+      # pin eventually 404s. repoInfo.ps1 falls back to installing it itself if this step is
+      # ever removed.
+      #
+      # continue-on-error is deliberate: if this step fails (dead pin, transient network issue)
+      # we still want this chunk's repos processed - Ensure-TrivyInstalled in repoInfo.ps1
+      # retries the install itself, and if that also fails, repoInfo.ps1 and repoInfo-chunk.ps1
+      # exit non-zero *after* saving this chunk's status-partial file, which fails this chunk
+      # job without losing any collected data (consolidate runs with `if: always()`).
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.3.1
+        continue-on-error: true
+        with:
+          version: ${{ env.TRIVY_VERSION }}
 
       - name: Process repo info chunk ${{ matrix.chunk-id }}
         shell: pwsh
@@ -285,7 +367,7 @@ jobs:
       group: repo-state-updates
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download status.json from blob storage
         shell: pwsh
@@ -539,7 +621,7 @@ jobs:
           Invoke-GitHubAppRateLimitCheckForConfiguredApps
 
       - name: Setup Node.js for API updates
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'

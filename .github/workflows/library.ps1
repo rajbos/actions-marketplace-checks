@@ -377,6 +377,10 @@ function Normalize-ActionDates {
                 $normalized = ConvertTo-NormalizedDateTime -dateValue $action.repoInfo.latest_release_published_at
                 $action.repoInfo.latest_release_published_at = $normalized
             }
+            if ($null -ne $action.repoInfo.lastFetched) {
+                $normalized = ConvertTo-NormalizedDateTime -dateValue $action.repoInfo.lastFetched
+                $action.repoInfo.lastFetched = $normalized
+            }
         }
 
         # Normalize mirrorLastUpdated
@@ -917,6 +921,26 @@ function Get-JsonFromBlobStorageFolder {
     }
 }
 
+function Get-ApiCallSuccessResult {
+    <#
+    .SYNOPSIS
+        Shapes a successful ApiCall response. When the caller opted into
+        conditional-request support (-returnETag), the raw body is wrapped so it can
+        be told apart from a 304-Not-Modified result; otherwise the raw body is
+        returned unchanged for backward compatibility.
+    #>
+    Param (
+        $response,
+        $newEtag,
+        [bool] $returnETag
+    )
+
+    if ($returnETag) {
+        return @{ NotModified = $false; ETag = $newEtag; Data = $response }
+    }
+    return $response
+}
+
 function ApiCall {
     Param (
         $method,
@@ -935,7 +959,18 @@ function ApiCall {
         [int] $maxRetries = 10,
         [int] $appSwitchCount = 0,
         [int] $maxAppSwitchCount = 1,
-        [System.Collections.Generic.HashSet[string]] $triedAppIds = $null
+        [System.Collections.Generic.HashSet[string]] $triedAppIds = $null,
+        # Conditional request support (ETag / If-None-Match). GitHub does not count
+        # 304 Not Modified responses against the core rate limit, so callers that poll
+        # the same resource repeatedly (repo metadata, releases, tags) can pass in the
+        # ETag they stored from the previous successful response to make "check if
+        # anything changed" calls effectively free.
+        #
+        # Only takes effect when $returnETag is true, so existing callers that don't
+        # opt in keep getting the raw response body exactly as before. When opted in,
+        # both the success and 304 paths return a hashtable: @{ NotModified; ETag; Data }
+        [string] $etag = $null,
+        [bool] $returnETag = $false
     )
     
     # Use the script-scoped HashSet to track tried apps across all API calls
@@ -998,7 +1033,7 @@ function ApiCall {
                         $script:ProactiveCheckOverview = $null
                         $script:ProactiveCheckOverviewTime = [DateTime]::MinValue
                         # Retry the API call with the fresh token
-                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $betterToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $betterToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                     } elseif ($null -eq $betterToken) {
                         # All tokens are expiring soon or exhausted - stop gracefully
                         $message = "⚠️ All available GitHub App tokens will expire within 15 minutes. Stopping gracefully to prevent mid-execution failures."
@@ -1018,6 +1053,9 @@ function ApiCall {
     if ($null -ne $body) {
         $headers.Add('Content-Type', 'application/json')
         $headers.Add('User-Agent', 'rajbos')
+    }
+    if ($returnETag -and -not [string]::IsNullOrWhiteSpace($etag)) {
+        $headers.Add('If-None-Match', $etag)
     }
 
     # prevent errors with empty urls
@@ -1058,7 +1096,15 @@ function ApiCall {
             $response = $result.Content
         }
         #Write-Host "Got this response: $($response | ConvertTo-Json)"
-        # todo: check and handle the rate limit headers
+        # Rate limit headers are logged below and enforced further down via the
+        # X-RateLimit-Remaining/Reset handling. ETag is captured here so callers
+        # that opt in via -returnETag can cache it and send it back as
+        # If-None-Match on their next call, turning "check if anything changed"
+        # into a free (non-rate-limited) 304 response.
+        $newEtag = $null
+        if ($result.Headers["ETag"]) {
+            $newEtag = $result.Headers["ETag"][0]
+        }
         Write-Debug "  StatusCode: $($result.StatusCode)"
         Write-Debug "  RateLimit-Limit: $($result.Headers["X-RateLimit-Limit"])"
         Write-Debug "  RateLimit-Remaining: $($result.Headers["X-RateLimit-Remaining"])"
@@ -1085,7 +1131,7 @@ function ApiCall {
                         # check if we need to stop getting more pages
                         if ($currentResultCount -gt $maxResultCount) {
                             Write-Host "Stopping with [$($currentResultCount)] results, which is more then the max result count [$maxResultCount]"
-                            return $response
+                            return (Get-ApiCallSuccessResult -response $response -newEtag $newEtag -returnETag $returnETag)
                         }
                     }
 
@@ -1153,7 +1199,7 @@ function ApiCall {
                                 # GITHUB_TOKEN will immediately use this app instead
                                 # of continuing to hit the exhausted token.
                                 $env:GITHUB_TOKEN = $bestBeforeWait.Token
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             }
 
                             # All untried apps are currently exhausted. Check if ALL configured apps
@@ -1214,7 +1260,7 @@ function ApiCall {
                                         Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                         
                                         # Retry immediately with cleared tried apps - don't wait
-                                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                                     } else {
                                         # False positive - don't clear tried apps, continue with normal flow
                                         Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
@@ -1250,7 +1296,7 @@ function ApiCall {
                                 $triedAppIds.Add($bestAfterWait.AppId) | Out-Null
                                 
                                 Write-Host "After waiting for rate limit reset, selected GitHub App id [$($bestAfterWait.AppId)] with [$($bestAfterWait.Remaining)] remaining requests"
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestAfterWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestAfterWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             }
 
                             $message = "Rate limit did not recover after waiting across all apps; stopping execution"
@@ -1272,7 +1318,7 @@ function ApiCall {
 
                     # When waitForRateLimit is false and remaining is 0, just return
                     # the partial/empty response we already have without waiting.
-                    return $response
+                    return (Get-ApiCallSuccessResult -response $response -newEtag $newEtag -returnETag $returnETag)
                 }
 
                 if ($rateLimitReset.TotalSeconds -gt 1200) {
@@ -1289,7 +1335,7 @@ function ApiCall {
                                 if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
                                     $newToken = $tokenResult.Token
                                     Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
-                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                                 }
                             }
                             catch {
@@ -1309,7 +1355,7 @@ function ApiCall {
                     }
                     # When not waiting for rate limits, just return the response we already have
                     # Don't show error messages or set the flag since we're intentionally not halting
-                    return $response
+                    return (Get-ApiCallSuccessResult -response $response -newEtag $newEtag -returnETag $returnETag)
                 }
                 Format-RateLimitErrorTable -remaining $rateLimitRemaining[0] -used $rateLimitUsed[0] -waitSeconds $rateLimitReset.TotalSeconds -continueAt $oUNIXDate -errorType "Warning"
                 Write-Host ""
@@ -1325,7 +1371,7 @@ function ApiCall {
             else {
                 $backOff = $backOff * 2
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff ($backOff) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff ($backOff) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
         }
 
         if ($null -ne $expected) {
@@ -1338,10 +1384,25 @@ function ApiCall {
             }
         }
 
-        return $response
+        return (Get-ApiCallSuccessResult -response $response -newEtag $newEtag -returnETag $returnETag)
     }
     catch
     {
+        # 304 Not Modified: this only happens when we opted into conditional requests
+        # (If-None-Match was sent above) and the resource hasn't changed since the
+        # ETag we sent was captured. Invoke-WebRequest treats any non-2xx status as a
+        # terminating error, so a 304 lands here rather than in the try block - handle
+        # it first, before any of the retry/rate-limit/error-logging logic below, since
+        # it is not an error and must never trigger a retry or be counted as a failure.
+        $caughtStatusCode = $null
+        if ($null -ne $_.Exception -and $null -ne $_.Exception.Response -and $null -ne $_.Exception.Response.StatusCode) {
+            $caughtStatusCode = [int]$_.Exception.Response.StatusCode
+        }
+        if ($returnETag -and $caughtStatusCode -eq 304) {
+            Write-Debug "ApiCall received 304 Not Modified for [$url] - resource unchanged, not counted against rate limit"
+            return @{ NotModified = $true; ETag = $etag; Data = $null }
+        }
+
         try {
             $messageData = $_.ErrorDetails.Message | ConvertFrom-Json
         }
@@ -1363,7 +1424,7 @@ function ApiCall {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff ($backOff*2) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff ($backOff*2) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
         }
         else {
             if (!$hideFailedCall) {
@@ -1387,7 +1448,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
         }
 
         $isUserRateLimit = $messageData.message -and $messageData.message.StartsWith("API rate limit exceeded for user ID")
@@ -1484,7 +1545,7 @@ function ApiCall {
                                 Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                 
                                 # Retry immediately with cleared tried apps - don't wait
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             } else {
                                 # False positive - don't clear tried apps, continue with normal flow
                                 Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
@@ -1507,7 +1568,7 @@ function ApiCall {
                     # that don't explicitly pass access_token pick up the
                     # rotated app token instead of the exhausted one.
                     $env:GITHUB_TOKEN = $bestBeforeWait.Token
-                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                 } elseif ($null -ne $bestBeforeWait -and $bestBeforeWait.WaitSeconds -gt 0) {
                     # All untried apps are currently exhausted. Check if ALL configured apps
                     # (including tried ones) are exhausted. If so, use the shortest wait across ALL apps.
@@ -1570,7 +1631,7 @@ function ApiCall {
                                 Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                 
                                 # Retry immediately with cleared tried apps - don't wait
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             } else {
                                 # False positive - don't clear tried apps, continue with normal flow
                                 Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
@@ -1606,7 +1667,7 @@ function ApiCall {
                                 # Update the shared environment token so future
                                 # calls use this app id by default.
                                 $env:GITHUB_TOKEN = $newToken
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             }
                         }
                         catch {
@@ -1719,7 +1780,7 @@ function ApiCall {
                 else {
                     $backOff = $backOff * 2
                 }
-                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff ($backOff) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff ($backOff) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
             }
 
             # When not waiting, return null
@@ -1909,6 +1970,766 @@ function GetOrgActionInfo {
     }
 
     return "", ""
+}
+
+function GetRepoTagInfo {
+    # Shared with releaseInfo-refresh.ps1 - keep this the single source of truth
+    # for how tag information is fetched so both callers stay consistent.
+    #
+    # Always returns a hashtable @{ NotModified; ETag; Data }. Pass in the ETag
+    # stored from a previous call to make an unchanged repo's tags come back as a
+    # free 304 (not counted against the core rate limit) instead of a full call.
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime,
+        $etag = $null
+    )
+
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
+    $url = "repos/$owner/$repo/git/matching-refs/tags"
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken -etag $etag -returnETag $true
+
+    if ($response -is [hashtable] -and $response.Error) {
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading tags for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return @{ NotModified = $false; ETag = $null; Data = @() }
+    }
+
+    if ($response -is [hashtable] -and $response.NotModified) {
+        Write-Host "Tags for [$owner/$repo] are unchanged (304 Not Modified) - call was free, not counted against rate limit"
+        return @{ NotModified = $true; ETag = $response.ETag; Data = $null }
+    }
+
+    if ($null -eq $response -or $null -eq $response.Data) {
+        return @{ NotModified = $false; ETag = $null; Data = @() }
+    }
+
+    $newEtag = $response.ETag
+
+    # Return array of objects with tag name and SHA
+    $response = $response.Data | ForEach-Object {
+        @{
+            tag = SplitUrlLastPart($_.ref)
+            sha = $_.object.sha
+        }
+    }
+
+    return @{ NotModified = $false; ETag = $newEtag; Data = $response }
+}
+
+function GetRepoReleases {
+    # Shared with releaseInfo-refresh.ps1 - keep this the single source of truth
+    # for how release information is fetched so both callers stay consistent.
+    #
+    # Always returns a hashtable @{ NotModified; ETag; Data }. Pass in the ETag
+    # stored from a previous call to make an unchanged repo's releases come back as
+    # a free 304 (not counted against the core rate limit) instead of a full call.
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime,
+        $etag = $null
+    )
+
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
+    $url = "repos/$owner/$repo/releases"
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken -etag $etag -returnETag $true
+
+    if ($response -is [hashtable] -and $response.Error) {
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading releases for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return @{ NotModified = $false; ETag = $null; Data = @() }
+    }
+
+    if ($response -is [hashtable] -and $response.NotModified) {
+        Write-Host "Releases for [$owner/$repo] are unchanged (304 Not Modified) - call was free, not counted against rate limit"
+        return @{ NotModified = $true; ETag = $response.ETag; Data = $null }
+    }
+
+    if ($null -eq $response -or $null -eq $response.Data) {
+        return @{ NotModified = $false; ETag = $null; Data = @() }
+    }
+
+    $newEtag = $response.ETag
+
+    # Return array of objects with tag name and target_commitish (SHA)
+    # Note: tag_name from releases API is already a direct string, not a URL path
+    $response = $response.Data | ForEach-Object {
+        @{
+            tag_name = $_.tag_name
+            target_commitish = $_.target_commitish
+        }
+    }
+
+    return @{ NotModified = $false; ETag = $newEtag; Data = $response }
+}
+
+<#
+    .SYNOPSIS
+    Merges freshly observed upstream releases into an append-only per-release
+    immutable-release observation history (issue #265).
+
+    .DESCRIPTION
+    This is the single source of truth for how immutable-release observations are
+    combined with whatever history already exists on an action, so callers never
+    need to (and must not) replace the array wholesale the way releaseInfo/tagInfo
+    are refreshed today.
+
+    Behavior, keyed by GitHub release id:
+      - A release seen for the first time gets exactly one new observation appended
+        with immutabilityState "unknown" - this function does not itself determine
+        true immutability (that is a later collector's job, e.g. issue #266); it
+        never invents "immutable"/"notImmutable" from a repo's current policy.
+      - A release that is already known and still present is left completely alone;
+        no existing entry is ever mutated and no duplicate "still present" entry is
+        appended, so a later policy change cannot silently rewrite history.
+      - A release that was previously observed but is missing from the current
+        fetch gets a new observation appended with status "deleted" - the absence
+        is recorded as its own event rather than erasing or overwriting the prior
+        "present" observation(s).
+      - A release that reappears after being marked "deleted" gets a new "present"
+        observation appended, carrying forward its last known immutabilityState
+        (still never inventing a new state).
+
+    The returned array is always the existing observations plus zero or more new
+    entries - existing elements are never removed or edited in place, satisfying
+    the "append-only" acceptance criterion.
+
+    .PARAMETER existingObservations
+    The action's current immutableReleaseObservations array (or $null/empty when
+    this is the first observation pass for the repo).
+
+    .PARAMETER currentReleases
+    Array of hashtables describing the currently observed *published* releases
+    (draft releases must already be filtered out by the caller before this is
+    called - see GetImmutableReleaseObservations in repoInfo.ps1). Each entry is
+    expected to have releaseId, tagName and publishedAt. May optionally also carry
+    resolvedCommitSha/releaseTargetCommitish/tagReleaseMismatch (issue #267) when
+    the caller resolved them - typically bounded to the newest releases only, to
+    limit extra API calls; absent/unresolved values are carried through as $null
+    rather than guessed.
+
+    .PARAMETER observedAt
+    The datetime this observation batch was made.
+
+    .PARAMETER source
+    Machine-readable description of the API call used to collect this batch, kept
+    per-entry for audit purposes (e.g. "GET /repos/{owner}/{repo}/releases").
+
+    .OUTPUTS
+    The merged array of observation hashtables (existing entries untouched, plus
+    any newly appended entries).
+#>
+function Merge-ImmutableReleaseObservations {
+    Param (
+        $existingObservations,
+        $currentReleases,
+        $observedAt,
+        [string] $source
+    )
+
+    $existing = @()
+    if ($null -ne $existingObservations) {
+        $existing = @($existingObservations)
+    }
+
+    $current = @()
+    if ($null -ne $currentReleases) {
+        $current = @($currentReleases)
+    }
+
+    # Find the most recent observation per release id so we know whether a release
+    # is currently considered "present" or "deleted" and what its last known
+    # immutabilityState was, without ever mutating the history itself.
+    $latestByReleaseId = @{}
+    foreach ($entry in $existing) {
+        if ($null -eq $entry) { continue }
+        $rid = $entry.releaseId
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            $latestByReleaseId[$rid] = $entry
+        }
+        else {
+            $existingLatest = $latestByReleaseId[$rid]
+            try {
+                $isNewer = [datetime]$entry.observedAt -gt [datetime]$existingLatest.observedAt
+            }
+            catch {
+                $isNewer = $false
+            }
+            if ($isNewer) {
+                $latestByReleaseId[$rid] = $entry
+            }
+        }
+    }
+
+    $newEntries = [System.Collections.Generic.List[hashtable]]::new()
+    $seenReleaseIds = New-Object System.Collections.Generic.HashSet[object]
+
+    foreach ($release in $current) {
+        if ($null -eq $release) { continue }
+        $rid = $release.releaseId
+        [void]$seenReleaseIds.Add($rid)
+
+        # Release/tag integrity context (issue #267). releaseTargetCommitish
+        # comes straight off the releases list and is present for every
+        # current release; resolvedCommitSha and tagReleaseMismatch are only
+        # populated when the caller (GetImmutableReleaseObservations) was able
+        # to resolve the tag, bounded to the newest releases not already
+        # resolved, to limit extra API calls. $null/absent here is preserved
+        # as $null on the appended entry rather than guessed, keeping the "no
+        # overclaiming" guarantee this whole feature relies on.
+        $resolvedCommitSha = $release.resolvedCommitSha
+        $releaseTargetCommitish = $release.releaseTargetCommitish
+        $tagReleaseMismatch = $release.tagReleaseMismatch
+
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            # Never observed before - append a first observation. Always "unknown":
+            # no backfill claims are invented from the repo's current policy.
+            $newEntries.Add(@{
+                releaseId              = $rid
+                tagName                = $release.tagName
+                publishedAt            = $release.publishedAt
+                immutabilityState      = "unknown"
+                status                 = "present"
+                observedAt             = $observedAt
+                source                 = $source
+                resolvedCommitSha      = $resolvedCommitSha
+                releaseTargetCommitish = $releaseTargetCommitish
+                tagReleaseMismatch     = $tagReleaseMismatch
+            })
+        }
+        else {
+            $prior = $latestByReleaseId[$rid]
+            if ($prior.status -eq "deleted") {
+                # Reappeared after being observed missing - record the reappearance
+                # as a new event, carrying forward the last known state rather than
+                # guessing a new one.
+                $newEntries.Add(@{
+                    releaseId              = $rid
+                    tagName                = $release.tagName
+                    publishedAt            = $release.publishedAt
+                    immutabilityState      = $prior.immutabilityState
+                    status                 = "present"
+                    observedAt             = $observedAt
+                    source                 = $source
+                    resolvedCommitSha      = $resolvedCommitSha
+                    releaseTargetCommitish = $releaseTargetCommitish
+                    tagReleaseMismatch     = $tagReleaseMismatch
+                })
+            }
+            else {
+                # Already known and still present - normally left completely
+                # untouched (the recorded immutabilityState/status must never be
+                # rewritten). However, if release-integrity metadata (issue #267)
+                # is now available that the prior entry didn't have - specifically
+                # a resolvedCommitSha (and its derived tagReleaseMismatch) that a
+                # bounded, newest-10 resolution attempt just obtained - append a
+                # metadata-only update event carrying forward the prior
+                # immutabilityState unchanged, so that newly resolved context is
+                # not silently discarded forever.
+                #
+                # Deliberately NOT triggered by releaseTargetCommitish alone:
+                # GetImmutableReleaseObservations supplies it unconditionally for
+                # every current release (it comes straight off the releases list,
+                # not from the bounded SHA-resolution calls), so on a pre-#267
+                # migration every still-present release would gain it at once and
+                # this would append a metadata-only entry for every release in
+                # the repo's entire history, not just the bounded newest-10 SHA
+                # resolutions - inflating the append-only history well beyond
+                # what a single 30-day pass should add, and risking the Azure
+                # Table per-property size limit for repos with many releases.
+                # releaseTargetCommitish is still carried through/merged onto the
+                # appended entry below whenever a real gain (SHA or mismatch)
+                # triggers it, just never used to trigger one by itself.
+                $gainedResolvedCommitSha = ($null -eq $prior.resolvedCommitSha) -and ($null -ne $resolvedCommitSha)
+                $gainedTagReleaseMismatch = ($null -eq $prior.tagReleaseMismatch) -and ($null -ne $tagReleaseMismatch)
+                if ($gainedResolvedCommitSha -or $gainedTagReleaseMismatch) {
+                    # Merge rather than overwrite: keep whichever value (new or
+                    # prior) is non-null for each field, so a field already known
+                    # is never regressed back to null just because this pass
+                    # didn't happen to re-resolve it.
+                    $mergedResolvedCommitSha = if ($null -ne $resolvedCommitSha) { $resolvedCommitSha } else { $prior.resolvedCommitSha }
+                    $mergedReleaseTargetCommitish = if ($null -ne $releaseTargetCommitish) { $releaseTargetCommitish } else { $prior.releaseTargetCommitish }
+                    $mergedTagReleaseMismatch = if ($null -ne $tagReleaseMismatch) { $tagReleaseMismatch } else { $prior.tagReleaseMismatch }
+                    $newEntries.Add(@{
+                        releaseId              = $rid
+                        tagName                = $release.tagName
+                        publishedAt            = $release.publishedAt
+                        immutabilityState      = $prior.immutabilityState
+                        status                 = "present"
+                        observedAt             = $observedAt
+                        source                 = $source
+                        resolvedCommitSha      = $mergedResolvedCommitSha
+                        releaseTargetCommitish = $mergedReleaseTargetCommitish
+                        tagReleaseMismatch     = $mergedTagReleaseMismatch
+                    })
+                }
+            }
+        }
+    }
+
+    # Releases that were previously known and present, but are absent from this
+    # observation batch, get a "deleted" event appended rather than having their
+    # prior "present" observation(s) removed or rewritten.
+    foreach ($rid in $latestByReleaseId.Keys) {
+        if ($seenReleaseIds.Contains($rid)) { continue }
+        $prior = $latestByReleaseId[$rid]
+        if ($prior.status -eq "deleted") { continue }
+
+        $newEntries.Add(@{
+            releaseId         = $rid
+            tagName           = $prior.tagName
+            publishedAt       = $prior.publishedAt
+            immutabilityState = $prior.immutabilityState
+            status            = "deleted"
+            observedAt        = $observedAt
+            source            = $source
+        })
+    }
+
+    # The unary comma forces this to always come back as a single array object -
+    # without it, PowerShell unrolls a one-element result into a bare scalar
+    # (e.g. the lone hashtable itself, whose .Count would then mean its number of
+    # keys, not "one observation"), which callers here rely on being an array.
+    return ,@($existing + $newEntries)
+}
+
+<#
+    .SYNOPSIS
+    Derives an honest, marketplace-ready immutable-release coverage summary for
+    the most recent releases from the persisted per-release observation history
+    (issue #266, built on top of #265's Merge-ImmutableReleaseObservations).
+
+    .DESCRIPTION
+    This is a pure calculation/derivation layer: it takes the append-only
+    immutableReleaseObservations array (or $null/empty) and reduces it to the
+    latest known state of the ten newest currently-present releases, without
+    ever inspecting live upstream data itself.
+
+    Rules:
+      - Only the most recent observation per release id is considered (so a
+        release's current immutabilityState/status reflects its latest
+        recorded observation, never an earlier one).
+      - Releases whose latest observation has status "deleted" are excluded -
+        a deleted release is no longer part of "the latest releases" and must
+        not be counted as a known-immutable, known-not-immutable or unknown
+        release, and must not be padded in as a placeholder either.
+      - The remaining "present" releases are ordered by publishedAt
+        descending (newest first) and the ten newest are selected. Fewer than
+        ten available releases is not an error and is never padded - the
+        denominator simply reflects however many releases actually exist.
+      - immutable/notImmutable/unknown are counted independently among the
+        selected releases. The "known" denominator used in the summary string
+        is immutableCount + notImmutableCount only - unknown observations are
+        never counted as failures nor as known-good, and are never silently
+        dropped from the total either (they show up as their own count).
+      - latestReleaseImmutable reflects the immutabilityState of the single
+        newest selected release ("immutable"/"notImmutable"/"unknown"), or
+        "unknown" when there are no known releases at all.
+
+    .PARAMETER observations
+    The action's immutableReleaseObservations array (or $null/empty when no
+    observations have been recorded yet).
+
+    .PARAMETER releaseLimit
+    How many of the newest published, non-draft releases to consider. Defaults
+    to 10, matching the issue #266 "last 10" acceptance criteria.
+
+    .OUTPUTS
+    Hashtable with:
+      releasesConsidered      - number of releases actually included (<= releaseLimit, never padded)
+      immutableCount          - count of considered releases with immutabilityState "immutable"
+      notImmutableCount       - count of considered releases with immutabilityState "notImmutable"
+      unknownCount            - count of considered releases with immutabilityState "unknown"
+      knownCount              - immutableCount + notImmutableCount (the summary's denominator)
+      latestReleaseImmutable  - "immutable", "notImmutable" or "unknown" for the single newest release
+      summary                 - human-readable string, e.g.
+                                 "7 of 8 known releases immutable (last 10; 2 unknown)"
+#>
+function Get-ImmutableReleaseCoverage {
+    Param (
+        $observations,
+        [ValidateRange(0, 10)]
+        [int] $releaseLimit = 10
+    )
+
+    $all = @()
+    if ($null -ne $observations) {
+        $all = @($observations)
+    }
+
+    # Keep only the latest observation per release id, so a release's current
+    # state always reflects its most recently recorded observation.
+    $latestByReleaseId = @{}
+    foreach ($entry in $all) {
+        if ($null -eq $entry) { continue }
+        $rid = $entry.releaseId
+        if (-not $latestByReleaseId.ContainsKey($rid)) {
+            $latestByReleaseId[$rid] = $entry
+        }
+        else {
+            $existingLatest = $latestByReleaseId[$rid]
+            try {
+                $isNewer = [datetime]$entry.observedAt -gt [datetime]$existingLatest.observedAt
+            }
+            catch {
+                $isNewer = $false
+            }
+            if ($isNewer) {
+                $latestByReleaseId[$rid] = $entry
+            }
+        }
+    }
+
+    # A "deleted" release is no longer part of the current release set - it is
+    # excluded entirely rather than counted as unknown/failing, and never used
+    # to pad the denominator back up to releaseLimit.
+    $present = @($latestByReleaseId.Values | Where-Object { $_.status -ne "deleted" })
+
+    # Order newest-first by publishedAt and take at most releaseLimit - fewer
+    # than releaseLimit available releases is handled as-is, with no padding.
+    $ordered = @($present | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
+    $selected = @($ordered | Select-Object -First $releaseLimit)
+
+    $immutableCount = @($selected | Where-Object { $_.immutabilityState -eq "immutable" }).Count
+    $notImmutableCount = @($selected | Where-Object { $_.immutabilityState -eq "notImmutable" }).Count
+    $unknownCount = @($selected | Where-Object { $_.immutabilityState -eq "unknown" }).Count
+    $knownCount = $immutableCount + $notImmutableCount
+
+    $latestReleaseImmutable = "unknown"
+    if ($selected.Count -gt 0) {
+        $latestReleaseImmutable = $selected[0].immutabilityState
+    }
+
+    $summary = "$immutableCount of $knownCount known releases immutable (last $($selected.Count); $unknownCount unknown)"
+
+    return @{
+        releasesConsidered     = $selected.Count
+        immutableCount         = $immutableCount
+        notImmutableCount      = $notImmutableCount
+        unknownCount           = $unknownCount
+        knownCount             = $knownCount
+        latestReleaseImmutable = $latestReleaseImmutable
+        summary                = $summary
+    }
+}
+
+<#
+    .SYNOPSIS
+    Determines the immutableReleasePolicyChangedAt value to persist after a fresh
+    immutable-release policy check (issue #266).
+
+    .DESCRIPTION
+    immutableReleasePolicyCheckedAt (issue #264) is bumped on every check regardless
+    of whether the observed status actually changed, so it cannot answer "when did
+    this repo's policy last change?" - a repo checked every 30 days for a year with
+    a policy that never changed would otherwise look like it just changed on every
+    check. This function captures that transition time separately: it returns the
+    current check's timestamp only when the status is being recorded for the first
+    time or actually differs from the previously stored status, and otherwise
+    returns the existing changed-at value unchanged (so a repeated "still enabled"
+    observation never resets it).
+
+    .PARAMETER previousStatus
+    The immutableReleasePolicy status previously stored on the action ($null if
+    this is the first check ever performed for this repo).
+
+    .PARAMETER newStatus
+    The immutableReleasePolicy status just observed by GetImmutableReleasePolicy.
+
+    .PARAMETER checkedAt
+    The datetime of the just-performed check (GetImmutableReleasePolicy's checkedAt).
+
+    .PARAMETER existingChangedAt
+    The immutableReleasePolicyChangedAt value currently stored on the action, or
+    $null if it has never been set.
+
+    .OUTPUTS
+    The datetime to store as immutableReleasePolicyChangedAt.
+#>
+function Get-ImmutableReleasePolicyChangedAt {
+    Param (
+        [string] $previousStatus,
+        [string] $newStatus,
+        $checkedAt,
+        $existingChangedAt
+    )
+
+    # A missing existingChangedAt does NOT by itself mean this is the first
+    # check ever - a repo migrated from #264 (before this field existed) can
+    # already have a non-null previousStatus with no changedAt recorded yet.
+    # Basing "first observation" on a missing/empty previousStatus instead
+    # avoids falsely recording today as a policy transition on that repo's
+    # first post-migration check when the status hasn't actually changed.
+    if ([string]::IsNullOrEmpty($previousStatus)) {
+        return $checkedAt
+    }
+
+    # GetImmutableReleasePolicy reports "unknown" for a missing field, a
+    # 403/rate-limit response, or any other transient API failure - it is an
+    # availability failure, not a confirmed change to the repo's actual
+    # policy. A transition into or out of "unknown" (e.g. enabled -> unknown
+    # during an outage, then unknown -> enabled once it recovers) must
+    # therefore never update changedAt, or a temporary API blip would
+    # fabricate a transition timestamp that does not represent any real
+    # policy change. Only a confirmed transition between two known states
+    # (enabled <-> disabled) counts.
+    if ($previousStatus -eq "unknown" -or $newStatus -eq "unknown") {
+        return $existingChangedAt
+    }
+
+    if ($previousStatus -ne $newStatus) {
+        return $checkedAt
+    }
+
+    return $existingChangedAt
+}
+
+<#
+    .SYNOPSIS
+    Composes the concise, marketplace-ready human-readable immutable-release
+    summary string surfaced in reports and the API (issue #267).
+
+    .DESCRIPTION
+    This is a pure presentation layer on top of the tri-state current policy
+    (issue #264) and the derived recent-release coverage summary (issue #266,
+    Get-ImmutableReleaseCoverage) - it does not fetch or compute anything itself
+    and never overclaims: a current "enabled" policy only describes the policy
+    right now, so the coverage half of the string is always about the recent
+    releases actually observed, never inferred from the current policy alone.
+
+    Produces strings like:
+      "Enabled; 7 of 8 known releases immutable (last 10; 2 unknown)"
+      "Disabled; 0 of 3 known releases immutable (last 3; 0 unknown)"
+      "Unknown; no release history available"                (no coverage yet)
+
+    .PARAMETER policyStatus
+    The action's current immutableReleasePolicy value ("enabled", "disabled",
+    "unknown", or $null when it has never been checked).
+
+    .PARAMETER coverage
+    The action's immutableReleaseCoverage object (from Get-ImmutableReleaseCoverage),
+    or $null/absent when no release observations have been recorded yet.
+
+    .OUTPUTS
+    A single human-readable string combining the policy label and the coverage
+    summary (or a placeholder when no coverage is available yet).
+#>
+function Get-ImmutableReleaseSummary {
+    Param (
+        [string] $policyStatus,
+        $coverage
+    )
+
+    $policyLabel = switch ($policyStatus) {
+        "enabled"  { "Enabled" }
+        "disabled" { "Disabled" }
+        default    { "Unknown" }
+    }
+
+    $releasesConsidered = 0
+    if ($null -ne $coverage) {
+        if ($coverage -is [System.Collections.IDictionary]) {
+            if ($coverage.ContainsKey('releasesConsidered')) { $releasesConsidered = $coverage.releasesConsidered }
+        }
+        elseif ($null -ne $coverage.PSObject.Properties['releasesConsidered']) {
+            $releasesConsidered = $coverage.releasesConsidered
+        }
+    }
+
+    if ($null -eq $coverage -or $releasesConsidered -eq 0) {
+        return "$policyLabel; no release history available"
+    }
+
+    return "$policyLabel; $($coverage.summary)"
+}
+
+function Invoke-GraphQLRepoMetadataBatch {
+    <#
+    .SYNOPSIS
+        Fetches metadata for a batch of repositories in a single GraphQL query.
+
+    .DESCRIPTION
+        Uses GraphQL aliases to fetch basic metadata (archived/disabled/pushedAt/updatedAt/
+        diskUsage/stargazerCount/defaultBranchRef), fundingLinks, latestRelease and a page of
+        recent tag refs for up to ~50-100 repos in a single request. GraphQL has its own
+        rate-limit pool (points based, separate from REST), so this is used to offload work
+        that would otherwise cost one REST call per repo per field.
+
+        Missing or renamed repos come back with a null repository for their alias and a
+        matching entry in the top-level `errors` array (`path[0]` equal to the alias). Those
+        are surfaced as `NotFound = $true` on the result entry so callers can apply the same
+        handling as a REST 404, without treating the whole batch as failed.
+
+    .PARAMETER RepoPairs
+        Array of objects/hashtables with Owner, Repo and Name properties. Name is the
+        status.json fork name used as the lookup key in the returned Results hashtable.
+
+    .PARAMETER accessToken
+        GitHub token (App installation token) used for the request.
+
+    .PARAMETER tagLimit
+        Number of most-recent tag refs to request per repo. GraphQL's refs connection has no
+        commit-date ordering, so this returns the last N tags in alphabetical order - a
+        best-effort recency signal, not a guaranteed "most recently created" list.
+
+    .OUTPUTS
+        Hashtable with:
+        - Results: hashtable keyed by Name, each value @{ Owner; Repo; Name; Data; NotFound; Errors }
+        - RateLimit: @{ cost; remaining; resetAt; limit } from the query's rateLimit field, or $null
+        - Failed: $true if the whole request failed (network/auth error), in which case callers
+          should fall back to REST for every repo in the batch
+    #>
+    Param (
+        [Parameter(Mandatory=$true)]
+        [AllowEmptyCollection()]
+        [array] $RepoPairs,
+        [Alias('access_token')]
+        $accessToken = $env:GITHUB_TOKEN,
+        [int] $tagLimit = 5
+    )
+
+    $emptyResult = @{ Results = @{}; RateLimit = $null; Failed = $false }
+    if ($null -eq $RepoPairs -or $RepoPairs.Count -eq 0) {
+        return $emptyResult
+    }
+
+    $aliasMap = @{}
+    $variableDefs = @()
+    $queryParts = @()
+    $variables = @{}
+
+    $i = 0
+    foreach ($pair in $RepoPairs) {
+        if ([string]::IsNullOrWhiteSpace($pair.Owner) -or [string]::IsNullOrWhiteSpace($pair.Repo)) {
+            $i++
+            continue
+        }
+
+        $alias = "r$i"
+        $ownerVar = "owner$i"
+        $nameVar = "name$i"
+        $aliasMap[$alias] = $pair
+
+        $variableDefs += ('${0}: String!, ${1}: String!' -f $ownerVar, $nameVar)
+        $variables[$ownerVar] = $pair.Owner
+        $variables[$nameVar] = $pair.Repo
+
+        $queryParts += (@'
+  {0}: repository(owner: ${1}, name: ${2}) {{
+    isArchived
+    isDisabled
+    pushedAt
+    updatedAt
+    diskUsage
+    stargazerCount
+    defaultBranchRef {{ name target {{ oid }} }}
+    fundingLinks {{ platform url }}
+    latestRelease {{ tagName publishedAt }}
+    refs(refPrefix: "refs/tags/", last: {3}) {{
+      nodes {{ name target {{ oid }} }}
+    }}
+  }}
+'@ -f $alias, $ownerVar, $nameVar, $tagLimit)
+
+        $i++
+    }
+
+    if ($aliasMap.Count -eq 0) {
+        return $emptyResult
+    }
+
+    $query = "query(" + ($variableDefs -join ", ") + ") {`n" + ($queryParts -join "`n") + "`n  rateLimit { cost remaining resetAt limit }`n}"
+    $variablesJson = $variables | ConvertTo-Json -Compress
+
+    $uri = "https://api.github.com/graphql"
+    $requestHeaders = @{
+        Authorization = GetBasicAuthenticationHeader -access_token $accessToken
+    }
+
+    try {
+        $response = (Invoke-GraphQLQuery -Query $query -Variables $variablesJson -Uri $uri -Headers $requestHeaders -Raw | ConvertFrom-Json)
+    }
+    catch {
+        Write-Host "GraphQL batch request failed for [$($aliasMap.Count)] repos: $($_.Exception.Message)"
+        return @{ Results = @{}; RateLimit = $null; Failed = $true }
+    }
+
+    $rateLimitInfo = $null
+    if ($null -ne $response.data -and $null -ne $response.data.rateLimit) {
+        $rateLimitInfo = @{
+            cost = $response.data.rateLimit.cost
+            remaining = $response.data.rateLimit.remaining
+            resetAt = $response.data.rateLimit.resetAt
+            limit = $response.data.rateLimit.limit
+        }
+
+        if ($rateLimitInfo.remaining -lt 500) {
+            Write-Warning "GraphQL rate limit is low: [$($rateLimitInfo.remaining)] points remaining, resets at [$($rateLimitInfo.resetAt)]"
+        }
+    }
+
+    # Map per-alias errors (missing/renamed repos come back as data.<alias> = null with a
+    # matching entry in the top-level errors array whose path[0] is the alias)
+    $errorsByAlias = @{}
+    if ($null -ne $response.errors) {
+        foreach ($err in $response.errors) {
+            if ($null -ne $err.path -and $err.path.Count -gt 0) {
+                $errAlias = "$($err.path[0])"
+                if (-not $errorsByAlias.ContainsKey($errAlias)) {
+                    $errorsByAlias[$errAlias] = @()
+                }
+                $errorsByAlias[$errAlias] += $err
+            }
+        }
+    }
+
+    $results = @{}
+    foreach ($alias in $aliasMap.Keys) {
+        $pair = $aliasMap[$alias]
+        $repoData = $null
+        if ($null -ne $response.data) {
+            $repoData = $response.data.$alias
+        }
+
+        $results[$pair.Name] = @{
+            Owner = $pair.Owner
+            Repo = $pair.Repo
+            Name = $pair.Name
+            Data = $repoData
+            NotFound = ($null -eq $repoData)
+            Errors = if ($errorsByAlias.ContainsKey($alias)) { $errorsByAlias[$alias] } else { @() }
+        }
+    }
+
+    return @{ Results = $results; RateLimit = $rateLimitInfo; Failed = $false }
 }
 
 function SplitUrlLastPart {
@@ -2277,8 +3098,8 @@ function Get-GitHubAppRateLimitOverview {
     $secondaryKey = $env:APPLICATION_PRIVATE_KEY_2
     $tertiaryKey = $env:APPLICATION_PRIVATE_KEY_3
 
-    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $appPrivateKeys = @($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @(@($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $appPrivateKeys = @(@($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
     if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
         return @()
@@ -2650,8 +3471,8 @@ function Invoke-GitHubAppRateLimitCheckForConfiguredApps {
         throw "APP_ORGANIZATION (or explicit organization parameter) must be provided to perform the rate limit check"
     }
 
-    $appIds = @($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    $appPrivateKeys = @($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    $appIds = @(@($env:APP_ID, $env:APP_ID_2, $env:APP_ID_3) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $appPrivateKeys = @(@($primaryKey, $secondaryKey, $tertiaryKey) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
     if ($appIds.Count -eq 0 -or $appPrivateKeys.Count -eq 0) {
         throw "At least one APP_ID and APPLICATION_PRIVATE_KEY must be provided to perform the rate limit check"
@@ -2776,6 +3597,427 @@ function SaveStatus {
         [System.IO.File]::WriteAllText($failedStatusFile, $json, [System.Text.Encoding]::UTF8)
         Write-Host "Saved"
     }
+}
+
+<#
+    .SYNOPSIS
+    Removes a stale actionType.containerScan record from a single action entry when
+    the action is no longer a Dockerfile-based Docker action.
+
+    .DESCRIPTION
+    Trivy container scans (repoInfo.ps1 -> Invoke-TrivyScan) only ever run for Docker
+    actions that build from a repo-local Dockerfile, i.e. actionType.actionDockerType
+    -eq "Dockerfile". When an action later switches to a remote image
+    (actionDockerType "Image"), becomes a Node/Composite action, or its action
+    definition can no longer be found ("No file found"), any previously stored
+    containerScan result describes a container that is no longer built for this
+    action and is misleading.
+
+    containerScan is an optional field in the status.json schema, so removing it
+    keeps the file backward compatible. If the action is ever detected as a
+    Dockerfile-based Docker action again, repoInfo.ps1 re-adds a fresh scan on the
+    next run (missing containerScan -> needsContainerScan).
+
+    .PARAMETER action
+    A single action entry (PSCustomObject or hashtable) from status.json.
+
+    .OUTPUTS
+    Boolean - $true when a stale containerScan was removed, $false otherwise.
+#>
+function Clear-StaleContainerScan {
+    Param (
+        [Parameter(Mandatory = $true)]
+        $action
+    )
+
+    if ($null -eq $action -or $null -eq $action.actionType) {
+        return $false
+    }
+
+    $actionType = $action.actionType
+
+    # Only act when a containerScan record is actually present.
+    $hasContainerScan = $false
+    if ($actionType -is [hashtable]) {
+        $hasContainerScan = $actionType.ContainsKey('containerScan') -and $null -ne $actionType['containerScan']
+    }
+    else {
+        $prop = $actionType.PSObject.Properties['containerScan']
+        $hasContainerScan = $null -ne $prop -and $null -ne $prop.Value
+    }
+    if (-not $hasContainerScan) {
+        return $false
+    }
+
+    # Keep the scan only for Dockerfile-based Docker actions - the one shape
+    # repoInfo.ps1 ever scans. Anything else is stale and gets cleared.
+    if ($actionType.actionDockerType -eq 'Dockerfile') {
+        return $false
+    }
+
+    if ($actionType -is [hashtable]) {
+        $actionType.Remove('containerScan') | Out-Null
+    }
+    else {
+        $actionType.PSObject.Properties.Remove('containerScan')
+    }
+
+    return $true
+}
+
+<#
+    .SYNOPSIS
+    Sweeps a collection of action entries and clears every stale
+    actionType.containerScan record (see Clear-StaleContainerScan).
+
+    .DESCRIPTION
+    Pure in-memory pass with no GitHub API calls. Intended to be run once per
+    repoInfo.ps1 run so records that switched away from a Dockerfile source get
+    their orphaned scan cleared without waiting to be re-selected for processing.
+
+    .PARAMETER existingForks
+    The full array of action entries from status.json.
+
+    .PARAMETER logToSummary
+    When $true, writes a one-line summary to the GitHub Actions step summary.
+
+    .OUTPUTS
+    Hashtable with Cleared (count) and ByActionType (breakdown) keys.
+#>
+function Remove-StaleContainerScans {
+    Param (
+        $existingForks,
+        [bool] $logToSummary = $false
+    )
+
+    $cleared = 0
+    $byActionType = @{}
+
+    if ($null -ne $existingForks) {
+        foreach ($action in $existingForks) {
+            # Capture the type label before we clear, for reporting.
+            $typeLabel = "$($action.actionType.actionType)"
+            if ([string]::IsNullOrWhiteSpace($typeLabel)) { $typeLabel = "(empty)" }
+
+            if (Clear-StaleContainerScan -action $action) {
+                $cleared++
+                if ($byActionType.ContainsKey($typeLabel)) {
+                    $byActionType[$typeLabel]++
+                }
+                else {
+                    $byActionType[$typeLabel] = 1
+                }
+            }
+        }
+    }
+
+    if ($cleared -gt 0) {
+        $breakdown = ($byActionType.GetEnumerator() | Sort-Object -Property Value -Descending | ForEach-Object { "$($_.Key): $($_.Value)" }) -join ", "
+        Write-Host "Cleared [$cleared] stale containerScan record(s) from entries no longer using a Dockerfile ($breakdown)"
+        if ($logToSummary) {
+            Write-Message -message "Cleared [$(DisplayIntWithDots $cleared)] stale ``containerScan`` record(s) from entries whose ``actionDockerType`` is no longer ``Dockerfile`` ($breakdown)" -logToSummary $true
+        }
+    }
+    else {
+        Write-Host "No stale containerScan records found to clear"
+    }
+
+    return @{
+        Cleared = $cleared
+        ByActionType = $byActionType
+    }
+}
+
+# Helper function to calculate priority score for a repo
+function Test-ImmutableReleasePolicyNeedsRefresh {
+    <#
+    .SYNOPSIS
+    Decides whether an action's immutable-release policy (issue #264) needs
+    to be (re)checked, given its persisted immutableReleasePolicy/
+    immutableReleasePolicyCheckedAt fields.
+
+    .DESCRIPTION
+    Refresh is needed when the policy or checked-at field is missing/null, or
+    when the checked-at timestamp is older than 30 days. A malformed/unparsable
+    persisted timestamp is allowed by the schema (only a validation warning,
+    not an error), so parsing it must never throw and abort the caller - a
+    conversion failure is treated the same as a missing/null timestamp, same
+    as the mirrored logic in Get-RepoPriorityScore below.
+
+    .PARAMETER action
+    The action object to inspect.
+
+    .OUTPUTS
+    Boolean - $true when the policy needs to be (re)checked.
+    #>
+    Param (
+        $action
+    )
+
+    $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleasePolicyField -or !$hasImmutableReleasePolicyCheckedAtField -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+        return $true
+    }
+
+    try {
+        $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
+        return $daysSinceLastCheck -gt 30
+    }
+    catch {
+        return $true
+    }
+}
+
+function Get-RepoPriorityScore {
+    Param (
+        $action
+    )
+
+    $score = 0
+
+    # Critical missing fields (highest priority)
+    $hasOwner = Get-Member -inputobject $action -name "owner" -Membertype Properties
+    if (!$hasOwner) {
+        $score += 100
+    }
+
+    $hasMirrorFound = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
+    if (!$hasMirrorFound -or !$action.mirrorFound) {
+        $score += 90
+    }
+
+    $hasActionType = Get-Member -inputobject $action -name "actionType" -Membertype Properties
+    if (!$hasActionType -or ($null -eq $action.actionType.actionType)) {
+        $score += 80
+    }
+
+    # Important fields (medium priority)
+    $hasRepoInfo = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+    if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
+        $score += 50
+    }
+    elseif ($action.repoInfo) {
+        # Stale repoInfo: lastFetched missing or older than 14 days
+        $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+        if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+            $score += 20
+        }
+        else {
+            try {
+                $daysSince = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                if ($daysSince -gt 14) { $score += 20 }
+            }
+            catch { $score += 20 }
+        }
+    }
+
+    $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
+    if (!$hasRepoSize) {
+        $score += 40
+    }
+
+    $hasDependents = Get-Member -inputobject $action -name "dependents" -Membertype Properties
+    if (!$hasDependents) {
+        $score += 30
+    }
+
+    # Stale data checks (lower priority)
+    if ($hasDependents -and $action.dependents.dependentsLastUpdated) {
+        $daysSinceLastUpdate = ((Get-Date) - $action.dependents.dependentsLastUpdated).Days
+        if ($daysSinceLastUpdate -gt 7) {
+            $score += 20
+        }
+    }
+
+    $hasFundingInfo = Get-Member -inputobject $action -name "fundingInfo" -Membertype Properties
+    if ($hasFundingInfo -and $action.fundingInfo.lastChecked) {
+        $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
+        if ($daysSinceLastCheck -gt 30) {
+            $score += 10
+        }
+    }
+
+    $hasTagInfoCheckedAt = Get-Member -inputobject $action -name "tagInfoCheckedAt" -Membertype Properties
+    $hasTagInfo = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
+    if ($hasTagInfo -and $action.tagInfo) {
+        if (!$hasTagInfoCheckedAt -or !$action.tagInfoCheckedAt) {
+            $score += 15
+        } else {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.tagInfoCheckedAt).Days
+            if ($daysSinceCheck -gt 30) {
+                $score += 15
+            }
+        }
+    }
+
+    $hasReleaseInfoCheckedAt = Get-Member -inputobject $action -name "releaseInfoCheckedAt" -Membertype Properties
+    $hasReleaseInfo = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
+    if ($hasReleaseInfo -and $action.releaseInfo) {
+        if (!$hasReleaseInfoCheckedAt -or !$action.releaseInfoCheckedAt) {
+            $score += 15
+        } else {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.releaseInfoCheckedAt).Days
+            if ($daysSinceCheck -gt 30) {
+                $score += 15
+            }
+        }
+    }
+
+    # Immutable-release policy staleness (issue #264): bounded 30-day refresh
+    # cadence, same pattern/threshold as fundingInfo/tagInfo/releaseInfo above,
+    # so this backlog drains alongside the others instead of needing a
+    # dedicated full pass. Scored whenever the field is missing entirely (so
+    # new repos get collected) or the last check is stale/unparsable.
+    $hasImmutableReleasePolicy = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleasePolicyCheckedAt = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleasePolicy -or !$hasImmutableReleasePolicyCheckedAt -or ($null -eq $action.immutableReleasePolicyCheckedAt)) {
+        $score += 20
+    }
+    else {
+        try {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.immutableReleasePolicyCheckedAt).TotalDays
+            if ($daysSinceCheck -gt 30) { $score += 20 }
+        }
+        catch { $score += 20 }
+    }
+
+    # Immutable-release per-release observation staleness (issue #265): same bounded
+    # 30-day refresh cadence as immutableReleasePolicy above, so the append-only
+    # release-history backlog also drains alongside the others. Scored whenever
+    # immutableReleaseObservationsCheckedAt is missing entirely (so new repos get an
+    # initial pass) or the last check is stale/unparsable. This only controls how often
+    # we re-scan the upstream releases list for newly-published/removed releases - it
+    # never rewrites an already-recorded observation (see Merge-ImmutableReleaseObservations).
+    $hasImmutableReleaseObservationsCheckedAt = Get-Member -inputobject $action -name "immutableReleaseObservationsCheckedAt" -Membertype Properties
+    if (!$hasImmutableReleaseObservationsCheckedAt -or ($null -eq $action.immutableReleaseObservationsCheckedAt)) {
+        $score += 15
+    }
+    else {
+        try {
+            $daysSinceCheck = ((Get-Date) - [datetime]$action.immutableReleaseObservationsCheckedAt).TotalDays
+            if ($daysSinceCheck -gt 30) { $score += 15 }
+        }
+        catch { $score += 15 }
+    }
+
+    # Missing immutableReleaseCoverage (issue #266) despite already having
+    # observation history: GetInfo's local backfill for this case (no network
+    # call needed - see repoInfo.ps1) only runs for repos that actually reach
+    # GetInfo, which the direct Run path restricts to whatever
+    # Get-PrioritizedReposToProcess selects. An action with otherwise-fresh
+    # policy/observation timestamps (e.g. already migrated by #268/#269 before
+    # #266 existed) would score 0 on every signal above and might never be
+    # selected, leaving it without coverage indefinitely even though the
+    # backfill itself needs no API call at all once selected. Score it
+    # whenever observation history is present but coverage is absent/null, so
+    # this migration drains through the normal prioritized backlog instead of
+    # depending on unrelated data going stale first.
+    #
+    # Gate on the observations *property being present* only - the same
+    # condition the backfill itself uses in repoInfo.ps1 - not on it being
+    # non-null. A schema-valid present-but-null immutableReleaseObservations
+    # still needs backfilling (Get-ImmutableReleaseCoverage explicitly
+    # supports null input and returns the zero-count summary), so requiring
+    # non-null here would leave that repo unscored and therefore never
+    # selected to receive that backfill at all.
+    $hasImmutableReleaseObservationsForCoverageGap = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+    if ($hasImmutableReleaseObservationsForCoverageGap) {
+        $hasImmutableReleaseCoverageForGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        if (!$hasImmutableReleaseCoverageForGap -or ($null -eq $action.immutableReleaseCoverage)) {
+            $score += 15
+        }
+    }
+
+    # Missing immutableReleaseSummary (issue #267) despite already having
+    # policy and/or coverage: like the coverage-gap signal above, GetInfo's
+    # summary backfill is not gated behind any refresh cadence, but it still
+    # only runs for repos that reach GetInfo, which the direct Run path
+    # restricts via Get-PrioritizedReposToProcess. An action with policy
+    # and/or coverage already populated but no summary (e.g. migrated before
+    # #267 existed) would otherwise score 0 on every signal above and never
+    # be selected, leaving it without a summary indefinitely even though
+    # composing it needs no API call at all once selected.
+    $hasImmutableReleasePolicyForSummaryGap = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+    $hasImmutableReleaseCoverageForSummaryGap = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+    if (($hasImmutableReleasePolicyForSummaryGap -and ($null -ne $action.immutableReleasePolicy)) -or
+        ($hasImmutableReleaseCoverageForSummaryGap -and ($null -ne $action.immutableReleaseCoverage))) {
+        $hasImmutableReleaseSummaryForGap = Get-Member -inputobject $action -name "immutableReleaseSummary" -Membertype Properties
+        if (!$hasImmutableReleaseSummaryForGap -or ($null -eq $action.immutableReleaseSummary)) {
+            $score += 15
+        }
+    }
+
+    # Container scan staleness (lower-medium priority): a Dockerfile-based action whose
+    # Trivy container scan is missing, previously errored, or older than 7 days is only
+    # ever re-scanned by GetMoreInfo's needsContainerScan check if the repo happens to be
+    # selected for some other reason first. Scoring it here lets the container-scan backlog
+    # drain on its own. Gated on actionDockerType -eq "Dockerfile" to match the
+    # needsContainerScan gate - non-Dockerfile actions are never container-scanned and must
+    # not be scored. Uses ConvertTo-SafeUtcDateTime + TotalDays and the same 7-day threshold
+    # as GetMoreInfo so the timezone/off-by-one bug fixed in #258/#260 is not reintroduced.
+    if ($hasActionType -and $action.actionType -and $action.actionType.actionDockerType -eq "Dockerfile") {
+        $hasContainerScan = Get-Member -inputobject $action.actionType -name "containerScan" -Membertype Properties
+        if (!$hasContainerScan -or ($null -eq $action.actionType.containerScan)) {
+            $score += 25
+        }
+        elseif ($action.actionType.containerScan.scanError) {
+            # A previous scan attempt failed (e.g. the now-fixed "Trivy installation failed"
+            # errors that may still be sitting in status.json) - retry it.
+            $score += 25
+        }
+        else {
+            $lastScanned = $null
+            $hasLastScanned = Get-Member -inputobject $action.actionType.containerScan -name "lastScanned" -Membertype Properties
+            if ($hasLastScanned -and $action.actionType.containerScan.lastScanned) {
+                try {
+                    $lastScanned = ConvertTo-SafeUtcDateTime $action.actionType.containerScan.lastScanned
+                }
+                catch {
+                    $lastScanned = $null
+                }
+            }
+            if (($null -eq $lastScanned) -or (([DateTime]::UtcNow - $lastScanned).TotalDays -gt 7)) {
+                $score += 25
+            }
+        }
+    }
+
+    return $score
+}
+
+# Helper function to filter and prioritize repos that need processing
+function Get-PrioritizedReposToProcess {
+    Param (
+        $existingForks,
+        $numberOfReposToDo
+    )
+
+    Write-Host "Prioritizing repos for processing..."
+
+    # Calculate priority scores for all repos. Uses a List rather than array += - the latter
+    # reallocates and copies the whole array on every append, which is O(n^2) over a status.json
+    # that already holds 36k+ entries.
+    $scoredRepos = [System.Collections.Generic.List[hashtable]]::new()
+    foreach ($action in $existingForks) {
+        $score = Get-RepoPriorityScore -action $action
+        if ($score -gt 0) {
+            $scoredRepos.Add(@{
+                Action = $action
+                Score = $score
+            })
+        }
+    }
+
+    Write-Host "Found [$($scoredRepos.Count)] repos that need processing out of [$($existingForks.Count)] total"
+
+    # Sort by score (highest first) and take top N
+    $prioritizedRepos = $scoredRepos | Sort-Object -Property Score -Descending | Select-Object -First $numberOfReposToDo
+
+    Write-Host "Prioritized top [$($prioritizedRepos.Count)] repos for processing"
+
+    # Return just the actions
+    return $prioritizedRepos | ForEach-Object { $_.Action }
 }
 
 function FilterActionsToProcess {
@@ -3636,46 +4878,60 @@ function Get-RepositoryDefaultBranchCommit {
     Param (
         [string] $owner,
         [string] $repo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        # Optional: if the default branch is already known (e.g. from a prior repo-info
+        # call), pass it here to skip the initial GET /repos/{owner}/{repo} call.
+        [string] $knownDefaultBranch = $null
     )
-    
+
     # Get the latest commit SHA from the default branch of a repository using the GitHub API
-    # Returns a hashtable with success status, commit SHA, and branch name
+    # Returns a hashtable with success status, commit SHA, branch name, and (when the repo-info
+    # call is made) the repository's pushed_at timestamp - a single GET gives existence,
+    # pushed_at and default_branch together, so callers don't need a separate exists check.
     # This is more efficient than cloning the repo just to check if it's up to date
-    
+
     if ([string]::IsNullOrWhiteSpace($owner) -or [string]::IsNullOrWhiteSpace($repo)) {
         return @{
             success = $false
             sha = $null
             branch = $null
+            pushed_at = $null
             error = "Invalid owner or repo"
         }
     }
-    
+
     try {
-        # First get the repository info to find the default branch
-        $repoUrl = "repos/$owner/$repo"
-        $repoInfo = ApiCall -method GET -url $repoUrl -access_token $access_token -hideFailedCall $true
-        
-        if ($null -eq $repoInfo -or $repoInfo -eq $false) {
-            return @{
-                success = $false
-                sha = $null
-                branch = $null
-                error = "Repository not found"
-            }
-        }
-        
-        $defaultBranch = $repoInfo.default_branch
+        $defaultBranch = $knownDefaultBranch
+        $pushedAt = $null
+
         if ([string]::IsNullOrWhiteSpace($defaultBranch)) {
-            # Repository metadata may not have default_branch set; default to main
-            $defaultBranch = "main"
+            # First get the repository info to find the default branch (this same call also
+            # proves existence and returns pushed_at, so no separate exists check is needed)
+            $repoUrl = "repos/$owner/$repo"
+            $repoInfo = ApiCall -method GET -url $repoUrl -access_token $access_token -hideFailedCall $true
+
+            if ($null -eq $repoInfo -or $repoInfo -eq $false) {
+                return @{
+                    success = $false
+                    sha = $null
+                    branch = $null
+                    pushed_at = $null
+                    error = "Repository not found"
+                }
+            }
+
+            $defaultBranch = $repoInfo.default_branch
+            if ([string]::IsNullOrWhiteSpace($defaultBranch)) {
+                # Repository metadata may not have default_branch set; default to main
+                $defaultBranch = "main"
+            }
+            $pushedAt = $repoInfo.pushed_at
         }
-        
+
         # Get the latest commit from the default branch
         $branchUrl = "repos/$owner/$repo/branches/$defaultBranch"
         $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
-        
+
         if ($null -eq $branchInfo -or $branchInfo -eq $false) {
             # If the default branch is 'main' and wasn't found, try 'master' as some repos use it
             # This fallback only applies to 'main' since it's our default assumption
@@ -3685,20 +4941,22 @@ function Get-RepositoryDefaultBranchCommit {
                 $branchInfo = ApiCall -method GET -url $branchUrl -access_token $access_token -hideFailedCall $true
             }
         }
-        
+
         if ($null -eq $branchInfo -or $branchInfo -eq $false) {
             return @{
                 success = $false
                 sha = $null
                 branch = $defaultBranch
+                pushed_at = $pushedAt
                 error = "Branch not found"
             }
         }
-        
+
         return @{
             success = $true
             sha = $branchInfo.commit.sha
             branch = $defaultBranch
+            pushed_at = $pushedAt
             error = $null
         }
     }
@@ -3707,6 +4965,7 @@ function Get-RepositoryDefaultBranchCommit {
             success = $false
             sha = $null
             branch = $null
+            pushed_at = $null
             error = $_.Exception.Message
         }
     }
@@ -3718,16 +4977,22 @@ function Compare-RepositoryCommitHashes {
         [string] $sourceRepo,
         [string] $mirrorOwner,
         [string] $mirrorRepo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        # Optional: a previously stored HEAD SHA for the mirror (e.g. status.json's
+        # mirrorCommitSha, captured after the last successful sync). When provided, the
+        # mirror-side existence check and commit lookup are skipped entirely, since we own
+        # all writes to the mirrors and can trust the last SHA we recorded there.
+        [string] $knownMirrorSha = $null
     )
-    
+
     # Compare the latest commit hashes of source and mirror repositories
     # Returns a hashtable indicating if they are in sync and the commit details
     # This allows early exit before expensive git clone/fetch operations
-    
+
     Write-Debug "Comparing commits: source [$sourceOwner/$sourceRepo] vs mirror [$mirrorOwner/$mirrorRepo]"
-    
-    # Get source repository commit
+
+    # Get source repository commit (this single call also proves the upstream repo exists
+    # and returns its pushed_at, so no separate upstream-exists call is needed)
     $sourceCommit = Get-RepositoryDefaultBranchCommit -owner $sourceOwner -repo $sourceRepo -access_token $access_token
     if (-not $sourceCommit.success) {
         return @{
@@ -3735,11 +5000,31 @@ function Compare-RepositoryCommitHashes {
             can_compare = $false
             source_sha = $null
             mirror_sha = $null
+            source_not_found = ($sourceCommit.error -eq "Repository not found")
+            mirror_not_found = $false
             error = "Could not get source commit: $($sourceCommit.error)"
         }
     }
-    
-    # Get mirror repository commit  
+
+    # Fast path: compare against a previously recorded mirror SHA without touching the
+    # mirror repo's API at all
+    if (-not [string]::IsNullOrWhiteSpace($knownMirrorSha)) {
+        $inSync = $sourceCommit.sha -eq $knownMirrorSha
+        return @{
+            in_sync = $inSync
+            can_compare = $true
+            source_sha = $sourceCommit.sha
+            mirror_sha = $knownMirrorSha
+            source_branch = $sourceCommit.branch
+            mirror_branch = $null
+            used_cached_mirror_sha = $true
+            source_not_found = $false
+            mirror_not_found = $false
+            error = $null
+        }
+    }
+
+    # No cached mirror SHA available - fall back to the full API-based comparison
     $mirrorCommit = Get-RepositoryDefaultBranchCommit -owner $mirrorOwner -repo $mirrorRepo -access_token $access_token
     if (-not $mirrorCommit.success) {
         return @{
@@ -3747,13 +5032,15 @@ function Compare-RepositoryCommitHashes {
             can_compare = $false
             source_sha = $sourceCommit.sha
             mirror_sha = $null
+            source_not_found = $false
+            mirror_not_found = ($mirrorCommit.error -eq "Repository not found")
             error = "Could not get mirror commit: $($mirrorCommit.error)"
         }
     }
-    
+
     # Compare the commit SHAs
     $inSync = $sourceCommit.sha -eq $mirrorCommit.sha
-    
+
     return @{
         in_sync = $inSync
         can_compare = $true
@@ -3761,6 +5048,9 @@ function Compare-RepositoryCommitHashes {
         mirror_sha = $mirrorCommit.sha
         source_branch = $sourceCommit.branch
         mirror_branch = $mirrorCommit.branch
+        used_cached_mirror_sha = $false
+        source_not_found = $false
+        mirror_not_found = $false
         error = $null
     }
 }
@@ -3918,7 +5208,12 @@ function SyncMirrorWithUpstream {
         $repo,
         $upstreamOwner,
         $upstreamRepo,
-        $access_token = $env:GITHUB_TOKEN
+        $access_token = $env:GITHUB_TOKEN,
+        # Optional: the mirror's HEAD SHA as recorded after the last successful sync
+        # (status.json's mirrorCommitSha). When present, it lets us skip the mirror-side
+        # existence check and commit lookup entirely - we own all writes to the mirrors,
+        # so a cached SHA is trustworthy. Falls back to the full API comparison when absent.
+        [string] $storedMirrorSha = $null
     )
     
     # Sync a mirror repository by pulling from upstream and pushing to mirror
@@ -3944,33 +5239,40 @@ function SyncMirrorWithUpstream {
         }
     }
     
-    # Check if upstream repository exists before attempting sync
-    $upstreamExists = Test-RepositoryExists -owner $upstreamOwner -repo $upstreamRepo -access_token $access_token
-    if (-not $upstreamExists) {
-        Write-Debug "Upstream repository [$upstreamOwner/$upstreamRepo] does not exist or is not accessible"
-        return @{
-            success = $false
-            message = "Upstream repository not found"
-            error_type = "upstream_not_found"
+    # Single API-based comparison collapses what used to be up to 4 separate calls
+    # (upstream exists, mirror exists, upstream commit, mirror commit) into as few as 2:
+    # - Get-RepositoryDefaultBranchCommit(upstream) proves existence + gives pushed_at +
+    #   default_branch + HEAD sha in one GET plus one branch GET
+    # - when a trustworthy cached mirror SHA is available, the mirror-side existence check
+    #   and commit lookup are skipped entirely (see Compare-RepositoryCommitHashes)
+    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token -knownMirrorSha $storedMirrorSha
+
+    if (-not $comparison.can_compare) {
+        if ($comparison.source_not_found) {
+            Write-Debug "Upstream repository [$upstreamOwner/$upstreamRepo] does not exist or is not accessible"
+            return @{
+                success = $false
+                message = "Upstream repository not found"
+                error_type = "upstream_not_found"
+            }
         }
-    }
-    
-    # Check if mirror repository exists
-    $mirrorExists = Test-RepositoryExists -owner $owner -repo $repo -access_token $access_token
-    if (-not $mirrorExists) {
-        Write-Debug "Mirror repository [$owner/$repo] does not exist"
-        return @{
-            success = $false
-            message = "Mirror repository not found"
-            error_type = "mirror_not_found"
+
+        if ($comparison.mirror_not_found) {
+            Write-Debug "Mirror repository [$owner/$repo] does not exist"
+            return @{
+                success = $false
+                message = "Mirror repository not found"
+                error_type = "mirror_not_found"
+            }
         }
+
+        # If comparison failed for another reason, continue with normal sync process
+        # (clone/fetch/merge). This handles cases where API comparison might fail but git
+        # operations could succeed, and covers the "trust the cached SHA, skip the mirror
+        # exists check" case where a deleted mirror is only discovered when git clone fails.
+        Write-Debug "Could not compare commits via API, proceeding with git-based sync: $($comparison.error)"
     }
-    
-    # Early sync detection: Compare commit hashes before cloning
-    # This avoids expensive git clone/fetch operations when repos are already in sync
-    $comparison = Compare-RepositoryCommitHashes -sourceOwner $upstreamOwner -sourceRepo $upstreamRepo -mirrorOwner $owner -mirrorRepo $repo -access_token $access_token
-    
-    if ($comparison.can_compare -and $comparison.in_sync) {
+    elseif ($comparison.in_sync) {
         Write-Debug "Mirror [$owner/$repo] is already in sync with upstream (SHA: $($comparison.source_sha))"
         return @{
             success = $true
@@ -3979,12 +5281,6 @@ function SyncMirrorWithUpstream {
             source_sha = $comparison.source_sha
             mirror_sha = $comparison.mirror_sha
         }
-    }
-    
-    # If comparison failed, continue with normal sync process (clone/fetch/merge)
-    # This handles cases where API comparison might fail but git operations could succeed
-    if (-not $comparison.can_compare) {
-        Write-Debug "Could not compare commits via API, proceeding with git-based sync: $($comparison.error)"
     }
     
     # Create temp directory if it doesn't exist
@@ -4242,6 +5538,7 @@ function SyncMirrorWithUpstream {
                     success = $true
                     message = "Already up to date"
                     merge_type = "none"
+                    mirror_sha = "$afterHash"
                 }
             }
         }
@@ -4301,6 +5598,7 @@ function SyncMirrorWithUpstream {
             success = $true
             message = $message
             merge_type = $mergeType
+            mirror_sha = "$afterHash"
         }
     }
     catch {
@@ -4548,6 +5846,8 @@ function Split-ActionsIntoChunks {
     - Forks that haven't been synced recently are prioritized
     - Failed sync attempts respect a cool-off period before retry
     - Upstream unavailable repos are skipped
+    - Forks whose upstream repoInfo.updated_at is not newer than lastSynced are skipped
+      with zero API calls, since there is nothing to sync
     
     .PARAMETER existingForks
     The complete array of fork objects from status.json
@@ -4561,14 +5861,34 @@ function Split-ActionsIntoChunks {
     .EXAMPLE
     $selectedForks = Select-ForksToProcess -existingForks $allForks -numberOfRepos 300 -coolOffHoursForFailedSync 24
 #>
+function ConvertTo-SafeUtcDateTime {
+    <#
+    .SYNOPSIS
+    Parses a stored timestamp (written with a trailing "Z") as true UTC.
+
+    .DESCRIPTION
+    A bare [DateTime]::Parse() on a "Z"-suffixed string can be reinterpreted
+    according to the runner's culture/timezone settings, which silently skews
+    the result on any non-UTC machine. Parsing explicitly with
+    AssumeUniversal|AdjustToUniversal guarantees the returned DateTime is a
+    precise UTC instant regardless of the local timezone, so it can be safely
+    compared against [DateTime]::UtcNow.
+    #>
+    Param (
+        [string] $value
+    )
+
+    return [DateTime]::Parse($value, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+}
+
 function Select-ForksToProcess {
     Param (
         $existingForks,
         [int] $numberOfRepos = 300,
         [int] $coolOffHoursForFailedSync = 24
     )
-    
-    $now = Get-Date
+
+    $now = [DateTime]::UtcNow
     $coolOffThreshold = $now.AddHours(-$coolOffHoursForFailedSync)
     
     Write-Message -message "Selecting up to [$(DisplayIntWithDots $numberOfRepos)] forks to process" -logToSummary $true
@@ -4579,6 +5899,7 @@ function Select-ForksToProcess {
     $filteredNoMirror = 0
     $filteredUpstreamUnavailable = 0
     $filteredCoolOff = 0
+    $filteredAlreadyUpToDate = 0
     
     # First pass: count each filter reason and collect eligible forks
     # Use generic List for better performance and type safety with large datasets
@@ -4599,7 +5920,7 @@ function Select-ForksToProcess {
         # Check cool-off period for failed syncs
         if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttempt = [DateTime]::Parse($fork.lastSyncAttempt)
+                $lastAttempt = ConvertTo-SafeUtcDateTime $fork.lastSyncAttempt
                 if ($lastAttempt -gt $coolOffThreshold) {
                     # Still in cool-off period
                     $filteredCoolOff++
@@ -4611,10 +5932,29 @@ function Select-ForksToProcess {
             }
         }
         
+        # Zero-API-call skip: if we already know (from repoInfo.ps1's periodic upstream
+        # check) that the upstream repo hasn't been updated since our last successful
+        # sync, there is nothing to sync - skip without spending any API calls on it.
+        # Only trust this when both timestamps are present and parseable; otherwise fall
+        # through and let the normal sync path (which re-checks via the API) decide.
+        if ($fork.lastSynced -and $fork.repoInfo -and $fork.repoInfo.updated_at) {
+            try {
+                $upstreamUpdatedAt = ConvertTo-SafeUtcDateTime $fork.repoInfo.updated_at
+                $lastSyncedDate = ConvertTo-SafeUtcDateTime $fork.lastSynced
+                if ($upstreamUpdatedAt -le $lastSyncedDate) {
+                    $filteredAlreadyUpToDate++
+                    continue
+                }
+            } catch {
+                # Unparseable dates - do not skip, let the sync path re-check via the API
+                Write-Debug "Failed to parse repoInfo.updated_at/lastSynced for [$($fork.name)]"
+            }
+        }
+
         # This fork passed all filters
         [void]$eligibleForks.Add($fork)
     }
-    
+
     # Display filtering statistics
     Write-Message -message "" -logToSummary $true
     Write-Message -message "### Fork Selection Filtering Results" -logToSummary $true
@@ -4625,6 +5965,7 @@ function Select-ForksToProcess {
     Write-Message -message "| Filtered: No mirror found | $(DisplayIntWithDots $filteredNoMirror) |" -logToSummary $true
     Write-Message -message "| Filtered: Upstream unavailable | $(DisplayIntWithDots $filteredUpstreamUnavailable) |" -logToSummary $true
     Write-Message -message "| Filtered: In cool-off period (failed < ${coolOffHoursForFailedSync}h ago) | $(DisplayIntWithDots $filteredCoolOff) |" -logToSummary $true
+    Write-Message -message "| Filtered: Already up to date (0 API calls) | $(DisplayIntWithDots $filteredAlreadyUpToDate) |" -logToSummary $true
     Write-Message -message "| **Eligible forks after filtering** | **$(DisplayIntWithDots $eligibleForks.Count)** |" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
@@ -4636,7 +5977,7 @@ function Select-ForksToProcess {
         @{ Expression = {
             if ($_.lastSynced) {
                 try {
-                    return [DateTime]::Parse($_.lastSynced).Ticks
+                    return (ConvertTo-SafeUtcDateTime $_.lastSynced).Ticks
                 } catch {
                     return [int64]::MaxValue
                 }
@@ -4661,14 +6002,14 @@ function Select-ForksToProcess {
         # Check if this fork has a recent failure that should deprioritize it
         if ($fork.lastSyncError -and $fork.lastSyncAttempt) {
             try {
-                $lastAttemptDate = [DateTime]::Parse($fork.lastSyncAttempt)
+                $lastAttemptDate = ConvertTo-SafeUtcDateTime $fork.lastSyncAttempt
                 $hoursSinceAttempt = ($now - $lastAttemptDate).TotalHours
-                
+
                 # Determine if this is a repeated failure
                 $isRepeatedFailure = $false
                 if ($fork.lastSynced) {
                     try {
-                        $lastSyncDate = [DateTime]::Parse($fork.lastSynced)
+                        $lastSyncDate = ConvertTo-SafeUtcDateTime $fork.lastSynced
                         if ($lastAttemptDate -gt $lastSyncDate) {
                             $isRepeatedFailure = $true
                         }
@@ -4706,8 +6047,8 @@ function Select-ForksToProcess {
     $reposWithRecentFailures = ($eligibleForks | Where-Object { 
         if ($_.lastSyncError -and $_.lastSyncAttempt -and $_.lastSynced) {
             try {
-                $lastAttemptDate = [DateTime]::Parse($_.lastSyncAttempt)
-                $lastSyncDate = [DateTime]::Parse($_.lastSynced)
+                $lastAttemptDate = ConvertTo-SafeUtcDateTime $_.lastSyncAttempt
+                $lastSyncDate = ConvertTo-SafeUtcDateTime $_.lastSynced
                 # Has a recent failure (attempt is more recent than last success)
                 return $lastAttemptDate -gt $lastSyncDate
             } catch {
@@ -4729,6 +6070,7 @@ function Select-ForksToProcess {
     }
     
     Write-Message -message "- Eligible forks with recent failures: [$(DisplayIntWithDots $reposWithRecentFailures)] (deprioritized by smart sorting)" -logToSummary $true
+    Write-Message -message "- Skipped as already up to date (0 API calls): [$(DisplayIntWithDots $filteredAlreadyUpToDate)]" -logToSummary $true
     Write-Message -message "" -logToSummary $true
     
     return $selectedForks

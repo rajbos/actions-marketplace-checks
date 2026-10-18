@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Define test function that mirrors the cleanup logic
     # Note: We duplicate the logic here to keep tests isolated and avoid dependencies on the main script

@@ -158,96 +158,11 @@ function Format-RepoInfoSummaryTable {
     return $table
 }
 
-# Helper function to calculate priority score for a repo
-function Get-RepoPriorityScore {
-    Param (
-        $action
-    )
-    
-    $score = 0
-    
-    # Critical missing fields (highest priority)
-    $hasOwner = Get-Member -inputobject $action -name "owner" -Membertype Properties
-    if (!$hasOwner) {
-        $score += 100
-    }
-    
-    $hasMirrorFound = Get-Member -inputobject $action -name "mirrorFound" -Membertype Properties
-    if (!$hasMirrorFound -or !$action.mirrorFound) {
-        $score += 90
-    }
-    
-    $hasActionType = Get-Member -inputobject $action -name "actionType" -Membertype Properties
-    if (!$hasActionType -or ($null -eq $action.actionType.actionType)) {
-        $score += 80
-    }
-    
-    # Important fields (medium priority)
-    $hasRepoInfo = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-    if (!$hasRepoInfo -or ($null -eq $action.repoInfo.updated_at)) {
-        $score += 50
-    }
-    
-    $hasRepoSize = Get-Member -inputobject $action -name "repoSize" -Membertype Properties
-    if (!$hasRepoSize) {
-        $score += 40
-    }
-    
-    $hasDependents = Get-Member -inputobject $action -name "dependents" -Membertype Properties
-    if (!$hasDependents) {
-        $score += 30
-    }
-    
-    # Stale data checks (lower priority)
-    if ($hasDependents -and $action.dependents.dependentsLastUpdated) {
-        $daysSinceLastUpdate = ((Get-Date) - $action.dependents.dependentsLastUpdated).Days
-        if ($daysSinceLastUpdate -gt 7) {
-            $score += 20
-        }
-    }
-    
-    $hasFundingInfo = Get-Member -inputobject $action -name "fundingInfo" -Membertype Properties
-    if ($hasFundingInfo -and $action.fundingInfo.lastChecked) {
-        $daysSinceLastCheck = ((Get-Date) - $action.fundingInfo.lastChecked).Days
-        if ($daysSinceLastCheck -gt 30) {
-            $score += 10
-        }
-    }
-    
-    return $score
-}
-
-# Helper function to filter and prioritize repos that need processing
-function Get-PrioritizedReposToProcess {
-    Param (
-        $existingForks,
-        $numberOfReposToDo
-    )
-    
-    Write-Host "Prioritizing repos for processing..."
-    
-    # Calculate priority scores for all repos
-    $scoredRepos = @()
-    foreach ($action in $existingForks) {
-        $score = Get-RepoPriorityScore -action $action
-        if ($score -gt 0) {
-            $scoredRepos += @{
-                Action = $action
-                Score = $score
-            }
-        }
-    }
-    
-    Write-Host "Found [$($scoredRepos.Count)] repos that need processing out of [$($existingForks.Count)] total"
-    
-    # Sort by score (highest first) and take top N
-    $prioritizedRepos = $scoredRepos | Sort-Object -Property Score -Descending | Select-Object -First $numberOfReposToDo
-    
-    Write-Host "Prioritized top [$($prioritizedRepos.Count)] repos for processing"
-    
-    # Return just the actions
-    return $prioritizedRepos | ForEach-Object { $_.Action }
-}
+# Get-RepoPriorityScore and Get-PrioritizedReposToProcess live in library.ps1 (dot-sourced
+# above) rather than here, so analyze.yml's "prepare" job - which already dot-sources
+# library.ps1 but does not set up API tokens like this script's top level does - can call
+# them too, instead of duplicating the scoring logic inline. See PR that wired analyze.yml's
+# candidate selection through this same scoring function.
 
 # Helper function to format error summary as a table with clickable links
 function Format-ErrorSummaryTable {
@@ -356,11 +271,16 @@ function GetRepoInfo {
         [Parameter(Mandatory=$true)]
         [Alias('access_token')]
         $accessToken,
-        $startTime
+        $startTime,
+        # Previously stored ETag for this repo's metadata, if any. When provided, an
+        # unchanged repo comes back as a 304 Not Modified, which GitHub does not count
+        # against the core rate limit - so repeatedly re-checking already-known repos
+        # here is effectively free instead of costing a full API call each time.
+        $etag = $null
     )
 
     if ($null -eq $owner -or $owner.Length -eq 0) {
-        return ($null, $null, $null, $null, $null)
+        return ($null, $null, $null, $null, $null, $null, $false)
     }
 
     # Check if we are nearing the 50-minute mark
@@ -374,7 +294,7 @@ function GetRepoInfo {
     Write-Host "Loading repository info for [$owner/$repo]"
 
     # Treat 404s as expected (repo deleted or private) without flooding logs
-    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    $repoResponse = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken -etag $etag -returnETag $true
     if ($repoResponse -is [hashtable] -and $repoResponse.Error) {
         $statusCode = $null
         if ($repoResponse.StatusCode) {
@@ -396,12 +316,20 @@ function GetRepoInfo {
             Write-Host "Error loading repository info for [$owner/$repo]: StatusCode [$statusCode]"
         }
 
-        return ($null, $null, $null, $null, $statusCode)
+        return ($null, $null, $null, $null, $statusCode, $null, $false)
     }
 
-    if ($null -eq $repoResponse) {
-        return ($null, $null, $null, $null, $null)
+    if ($repoResponse -is [hashtable] -and $repoResponse.NotModified) {
+        Write-Host "Repository info for [$owner/$repo] is unchanged (304 Not Modified) - call was free, not counted against rate limit"
+        return ($null, $null, $null, $null, $null, $repoResponse.ETag, $true)
     }
+
+    if ($null -eq $repoResponse -or $null -eq $repoResponse.Data) {
+        return ($null, $null, $null, $null, $null, $null, $false)
+    }
+
+    $repoData = $repoResponse.Data
+    $newEtag = $repoResponse.ETag
 
     $releaseUrl = "/repos/$owner/$repo/releases/latest"
     $releaseResponse = ApiCall -method GET -url $releaseUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
@@ -410,99 +338,11 @@ function GetRepoInfo {
         $latestReleaseDate = $releaseResponse.published_at
     }
 
-    return ($repoResponse.archived, $repoResponse.disabled, $repoResponse.updated_at, $latestReleaseDate, $null)
+    return ($repoData.archived, $repoData.disabled, $repoData.updated_at, $latestReleaseDate, $null, $newEtag, $false)
 }
 
-function GetRepoTagInfo {
-    Param (
-        $owner,
-        $repo,
-        [Alias('access_token')]
-        $accessToken,
-        $startTime
-    )
-
-    if ($null -eq $owner -or $owner.Length -eq 0) {
-        return $null
-    }
-
-    # Check if we are nearing the 50-minute mark
-    $timeSpan = (Get-Date) - $startTime
-    if ($timeSpan.TotalMinutes -gt 50) {
-        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
-        return
-    }
-
-    $url = "repos/$owner/$repo/git/matching-refs/tags"
-    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
-
-    if ($response -is [hashtable] -and $response.Error) {
-        if ($response.StatusCode -ne 404) {
-            Write-Host "Error loading tags for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
-        }
-        return @()
-    }
-
-    if ($null -eq $response) {
-        return @()
-    }
-
-    # Return array of objects with tag name and SHA
-    $response = $response | ForEach-Object { 
-        @{
-            tag = SplitUrlLastPart($_.ref)
-            sha = $_.object.sha
-        }
-    }
-
-    return $response
-}
-
-function GetRepoReleases {
-    Param (
-        $owner,
-        $repo,
-        [Alias('access_token')]
-        $accessToken,
-        $startTime
-    )
-
-    if ($null -eq $owner -or $owner.Length -eq 0) {
-        return $null
-    }
-
-    # Check if we are nearing the 50-minute mark
-    $timeSpan = (Get-Date) - $startTime
-    if ($timeSpan.TotalMinutes -gt 50) {
-        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
-        return
-    }
-
-    $url = "repos/$owner/$repo/releases"
-    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
-
-    if ($response -is [hashtable] -and $response.Error) {
-        if ($response.StatusCode -ne 404) {
-            Write-Host "Error loading releases for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
-        }
-        return @()
-    }
-
-    if ($null -eq $response) {
-        return @()
-    }
-
-    # Return array of objects with tag name and target_commitish (SHA)
-    # Note: tag_name from releases API is already a direct string, not a URL path
-    $response = $response | ForEach-Object { 
-        @{
-            tag_name = $_.tag_name
-            target_commitish = $_.target_commitish
-        }
-    }
-
-    return $response
-}
+# GetRepoTagInfo and GetRepoReleases moved to library.ps1 so releaseInfo-refresh.ps1
+# can share the exact same GitHub API fetch logic without duplicating it.
 
 function GetImmutableReleasesInfo {
     Param (
@@ -645,6 +485,517 @@ function GetFundingInfo {
     }
 }
 
+<#
+    .SYNOPSIS
+    Collects the current GitHub "immutable releases" policy for an upstream
+    action repository, returning an explicit tri-state result.
+
+    .DESCRIPTION
+    Calls the GitHub repos API for the upstream owner/repo (not the fork) via
+    the shared ApiCall helper, so retries/rate-limit handling/App token
+    rotation is reused as-is. The result always distinguishes a confirmed
+    "enabled"/"disabled" policy from an "unknown" one - a missing field,
+    an API error, a rate limit, or running out of time budget are all
+    reported as "unknown" with a machine-readable reason, never as "disabled".
+
+    GitHub's immutable-release policy only affects releases published after
+    the policy was turned on for a repository; this function only reports the
+    *current* policy value, it does not infer anything about past releases.
+
+    .PARAMETER owner
+    The upstream repository owner (organization or user login).
+
+    .PARAMETER repo
+    The upstream repository name.
+
+    .PARAMETER accessToken
+    GitHub access token (App token) to use for the API call.
+
+    .PARAMETER startTime
+    Start time of the overall run, used for the shared 50-minute time budget
+    check other collectors in this file also use.
+
+    .OUTPUTS
+    Hashtable with:
+      status    - "enabled", "disabled" or "unknown"
+      checkedAt - the datetime this check was performed
+      reason    - machine-readable reason string when status is "unknown", otherwise $null
+      source    - the API call used to collect the value, for audit purposes
+#>
+function GetImmutableReleasePolicy {
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    $checkedAt = Get-Date
+    $source = "GET /repos/{owner}/{repo}"
+
+    function New-UnknownImmutableReleasePolicyResult {
+        Param ([string] $reason)
+        return @{
+            status    = "unknown"
+            checkedAt = $checkedAt
+            reason    = $reason
+            source    = $source
+        }
+    }
+
+    if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0) {
+        return New-UnknownImmutableReleasePolicyResult -reason "missing_owner_or_repo"
+    }
+
+    # Check if we are nearing the 50-minute mark, same time budget every other
+    # per-repo collector in this file respects.
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return New-UnknownImmutableReleasePolicyResult -reason "run_time_budget_exceeded"
+    }
+
+    $url = "/repos/$owner/$repo"
+    $response = $null
+    try {
+        # -returnErrorInfo means failures (404, 403, rate limits, etc.) come back
+        # as a hashtable with Error=$true rather than throwing, so ApiCall's
+        # existing retry/backoff/rate-limit/app-switch handling still runs, and
+        # we simply map whatever comes back into our own "unknown" reasons.
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to check immutable release policy for [$owner/$repo]: $($_.Exception.Message)"
+        return New-UnknownImmutableReleasePolicyResult -reason "transient_error"
+    }
+
+    $isErrorResult = ($response -is [hashtable] -and $response.ContainsKey('Error') -and $response.Error)
+    if ($isErrorResult) {
+        $reason = "api_error"
+        if ($response.ContainsKey('StatusCode')) {
+            switch ($response.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "repo_not_found" }
+                default { $reason = "api_error_status_$($response.StatusCode)" }
+            }
+        }
+        return New-UnknownImmutableReleasePolicyResult -reason $reason
+    }
+
+    if ($null -eq $response) {
+        return New-UnknownImmutableReleasePolicyResult -reason "no_response"
+    }
+
+    # GitHub does not (yet, as of this writing) expose the immutable-release
+    # policy under a stable, generally-available field name on every API
+    # version/plan. Rather than guess wrong and silently report a wrong
+    # enabled/disabled value, we look for the documented field and fall back
+    # to an explicit "unknown" with a reason when it is not present, so this
+    # never turns a missing/unsupported result into "disabled".
+    #
+    # $response can be either a Hashtable (test mocks, and some ApiCall
+    # helper paths) or a PSCustomObject (real JSON deserialized by
+    # Invoke-RestMethod), and .PSObject.Properties does not see Hashtable
+    # keys - so check both shapes rather than assuming one.
+    $hasPolicyField = $false
+    if ($response -is [System.Collections.IDictionary]) {
+        $hasPolicyField = $response.ContainsKey('immutable_releases_enabled')
+    }
+    else {
+        $hasPolicyField = $null -ne $response.PSObject.Properties['immutable_releases_enabled']
+    }
+    if (!$hasPolicyField) {
+        return New-UnknownImmutableReleasePolicyResult -reason "field_not_present_in_api_response"
+    }
+
+    $policyValue = $response.immutable_releases_enabled
+    if ($null -eq $policyValue) {
+        return New-UnknownImmutableReleasePolicyResult -reason "field_null_in_api_response"
+    }
+
+    $status = if ($policyValue) { "enabled" } else { "disabled" }
+    return @{
+        status    = $status
+        checkedAt = $checkedAt
+        reason    = $null
+        source    = $source
+    }
+}
+
+<#
+    .SYNOPSIS
+    Collects the current set of published releases for an upstream action
+    repository, for use as input to the append-only per-release immutable-release
+    observation history (issue #265).
+
+    .DESCRIPTION
+    Calls the GitHub releases API for the upstream owner/repo via the shared
+    ApiCall helper, following the same conventions as GetImmutableReleasePolicy
+    (explicit unknown/error reasons, never throwing, respecting the shared
+    50-minute run time budget). Draft releases are excluded here so they are
+    never counted as published releases, per the issue #265 acceptance criteria.
+
+    This function only reports what releases currently exist (id, tag name,
+    published timestamp) - it does NOT determine per-release immutability itself.
+    Merge-ImmutableReleaseObservations (library.ps1) is responsible for turning
+    this snapshot into (or reconciling it against) the append-only observation
+    history; actually determining whether a given release is immutable is left to
+    a future collector (issue #266).
+
+    .PARAMETER owner
+    The upstream repository owner (organization or user login).
+
+    .PARAMETER repo
+    The upstream repository name.
+
+    .PARAMETER accessToken
+    GitHub access token (App token) to use for the API call.
+
+    .PARAMETER startTime
+    Start time of the overall run, used for the shared 50-minute time budget
+    check other collectors in this file also use.
+
+    .PARAMETER existingObservations
+    The action's current immutableReleaseObservations array (or $null/empty),
+    used only to skip re-resolving a release-tag SHA (issue #267) that a
+    previous pass already resolved successfully - see the SHA-resolution
+    bounding note below. Never used to invent or carry forward an
+    immutabilityState here; that remains Merge-ImmutableReleaseObservations's
+    job.
+
+    .OUTPUTS
+    Hashtable with:
+      Releases  - array of hashtables (releaseId, tagName, publishedAt,
+                  releaseTargetCommitish) for every non-draft release found;
+                  empty array when none/on error. Among the newest releases
+                  (up to 10) that do NOT already have a resolvedCommitSha
+                  recorded in existingObservations, each entry also carries
+                  resolvedCommitSha (the tag's peeled commit SHA, via
+                  Resolve-ReleaseTagCommitSha below) and tagReleaseMismatch
+                  (boolean, only set when releaseTargetCommitish is itself a
+                  full commit SHA that can be honestly compared against it -
+                  $null/unset otherwise, e.g. when the target is a branch
+                  name, never guessed). Bounding resolution to only the
+                  not-yet-resolved releases in that window keeps this
+                  collector's steady-state API cost close to its #266
+                  baseline (a single releases-list call) once a repo's recent
+                  releases have already been resolved once, instead of
+                  spending up to 10-20 extra calls on every 30-day pass.
+      CheckedAt - the datetime this check was performed
+      Source    - the API call used to collect the value, for audit purposes
+      Error     - $true when the fetch failed/was skipped, otherwise $false
+      Reason    - machine-readable reason string when Error is $true, otherwise $null
+#>
+function GetImmutableReleaseObservations {
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime,
+        $existingObservations
+    )
+
+    $checkedAt = Get-Date
+    $source = "GET /repos/{owner}/{repo}/releases"
+
+    function New-ImmutableReleaseObservationsErrorResult {
+        Param ([string] $reason)
+        return @{
+            Releases  = @()
+            CheckedAt = $checkedAt
+            Source    = $source
+            Error     = $true
+            Reason    = $reason
+        }
+    }
+
+    if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0) {
+        return New-ImmutableReleaseObservationsErrorResult -reason "missing_owner_or_repo"
+    }
+
+    # Check if we are nearing the 50-minute mark, same time budget every other
+    # per-repo collector in this file respects.
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return New-ImmutableReleaseObservationsErrorResult -reason "run_time_budget_exceeded"
+    }
+
+    $url = "/repos/$owner/$repo/releases"
+    $response = $null
+    try {
+        $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to fetch releases for immutable-release observations for [$owner/$repo]: $($_.Exception.Message)"
+        return New-ImmutableReleaseObservationsErrorResult -reason "transient_error"
+    }
+
+    $isErrorResult = ($response -is [hashtable] -and $response.ContainsKey('Error') -and $response.Error)
+    if ($isErrorResult) {
+        $reason = "api_error"
+        if ($response.ContainsKey('StatusCode')) {
+            switch ($response.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "repo_not_found" }
+                default { $reason = "api_error_status_$($response.StatusCode)" }
+            }
+        }
+        return New-ImmutableReleaseObservationsErrorResult -reason $reason
+    }
+
+    # The releases API returns an array directly (not wrapped in a Data property
+    # like the ETag-aware helpers in this file). A repo with zero releases comes
+    # back as an empty array, which PowerShell unwraps to $null once it passes
+    # through ApiCall - so, like GetRepoReleases above, treat a null/empty
+    # response as "no releases" (success), not as an error.
+    $rawReleases = @($response)
+
+    # Exclude drafts: draft releases are not published and must never be counted
+    # as published releases (issue #265 acceptance criteria).
+    $publishedReleases = $rawReleases | Where-Object { $null -ne $_ -and $_.draft -ne $true }
+
+    $releases = @($publishedReleases | ForEach-Object {
+        @{
+            releaseId              = $_.id
+            tagName                = $_.tag_name
+            publishedAt            = $_.published_at
+            releaseTargetCommitish = $_.target_commitish
+        }
+    })
+
+    # Resolve the peeled commit SHA for the tag of only the newest releases
+    # (bounded to the same "last 10" window Get-ImmutableReleaseCoverage uses in
+    # library.ps1), so this doesn't add an unbounded number of extra API calls
+    # per repo per run. Annotated tags are peeled to their target commit before
+    # any release/tag comparison is made, per the issue #267 acceptance
+    # criteria - see Resolve-ReleaseTagCommitSha below for the lightweight vs
+    # annotated distinction.
+    #
+    # Further bounded to releases that do NOT already have a resolvedCommitSha
+    # recorded from a previous pass: this collector also drives the #266
+    # 30-day observation refresh, and re-resolving up to 10 already-resolved
+    # tags on every single pass would add 10-20 extra API calls to that
+    # routine cadence indefinitely, well beyond what #266 needs. A resolved
+    # SHA for an immutable tag never changes, so re-resolving it again buys
+    # nothing.
+    #
+    # A release's history can be present+resolved -> deleted -> reappeared -
+    # only the LATEST observation per release id can say whether a SHA is
+    # still valid for its current state. Scanning every non-deleted entry
+    # (rather than reducing to latest-per-release first) would find the old,
+    # already-superseded "present+resolved" entry and wrongly skip resolving
+    # the reappearance, which has no SHA context of its own yet.
+    $releaseTagShaResolutionLimit = 10
+    $latestExistingObservationByReleaseId = @{}
+    foreach ($existingObservation in @($existingObservations)) {
+        if ($null -eq $existingObservation) { continue }
+        $existingRid = $existingObservation.releaseId
+        if (-not $latestExistingObservationByReleaseId.ContainsKey($existingRid)) {
+            $latestExistingObservationByReleaseId[$existingRid] = $existingObservation
+        }
+        else {
+            $currentLatest = $latestExistingObservationByReleaseId[$existingRid]
+            $isNewer = $false
+            try {
+                $isNewer = [datetime]$existingObservation.observedAt -gt [datetime]$currentLatest.observedAt
+            }
+            catch { $isNewer = $false }
+            if ($isNewer) {
+                $latestExistingObservationByReleaseId[$existingRid] = $existingObservation
+            }
+        }
+    }
+
+    $releaseIdsWithKnownSha = New-Object System.Collections.Generic.HashSet[object]
+    foreach ($latestExistingObservation in $latestExistingObservationByReleaseId.Values) {
+        if ($latestExistingObservation.status -eq "deleted") { continue }
+        if (-not [string]::IsNullOrWhiteSpace($latestExistingObservation.resolvedCommitSha)) {
+            [void]$releaseIdsWithKnownSha.Add($latestExistingObservation.releaseId)
+        }
+    }
+
+    $releasesNewestFirst = @($releases | Sort-Object -Property { try { [datetime]$_.publishedAt } catch { [datetime]::MinValue } } -Descending)
+    $releaseIdsToResolve = New-Object System.Collections.Generic.HashSet[object]
+    foreach ($r in ($releasesNewestFirst | Select-Object -First $releaseTagShaResolutionLimit)) {
+        if ($releaseIdsWithKnownSha.Contains($r.releaseId)) { continue }
+        [void]$releaseIdsToResolve.Add($r.releaseId)
+    }
+
+    foreach ($release in $releases) {
+        if (-not $releaseIdsToResolve.Contains($release.releaseId)) { continue }
+        if ($null -eq $release.tagName -or $release.tagName.Length -eq 0) { continue }
+
+        $shaResult = Resolve-ReleaseTagCommitSha -owner $owner -repo $repo -tagName $release.tagName -accessToken $accessToken -startTime $startTime
+        if ($shaResult.Error) {
+            # Leave resolvedCommitSha/tagReleaseMismatch unset on failure - never
+            # guess a resolved SHA or a mismatch verdict we couldn't verify.
+            continue
+        }
+
+        $release.resolvedCommitSha = $shaResult.Sha
+
+        # Only compare when the release's recorded target actually looks like a
+        # full commit SHA - target_commitish is very often a branch name instead
+        # (e.g. "main"), which cannot honestly be compared against a commit SHA.
+        # In that case tagReleaseMismatch is left unset ($null / unknown) rather
+        # than reporting a mismatch (or a match) that isn't actually verified.
+        if ($release.releaseTargetCommitish -match '^[0-9a-f]{40}$') {
+            $release.tagReleaseMismatch = ($release.releaseTargetCommitish -ne $shaResult.Sha)
+        }
+    }
+
+    return @{
+        Releases  = $releases
+        CheckedAt = $checkedAt
+        Source    = $source
+        Error     = $false
+        Reason    = $null
+    }
+}
+
+<#
+    .SYNOPSIS
+    Resolves a release's tag to its underlying commit SHA, peeling annotated
+    tags to their target commit (issue #267).
+
+    .DESCRIPTION
+    GitHub's git ref API returns the tag ref's immediate target object, which
+    for a lightweight tag IS the commit, but for an annotated tag is the
+    annotated tag object itself - a distinct Git object with its own SHA, not
+    the commit it ultimately points to. Comparing an annotated tag's ref SHA
+    directly against a release's recorded target would misreport nearly every
+    annotated-tag release as changed/mismatched. This function distinguishes
+    the two ref types via the "type" field GitHub returns on the ref's object
+    ("commit" for lightweight tags, "tag" for annotated tags) and, only for
+    annotated tags, makes one further call to peel the tag object down to the
+    commit SHA it actually targets.
+
+    Follows the same ApiCall/error-mapping/time-budget conventions as
+    GetImmutableReleasePolicy and GetImmutableReleaseObservations above -
+    failures come back as an explicit Error/Reason rather than throwing or
+    guessing a SHA.
+
+    .PARAMETER owner
+    The upstream repository owner (organization or user login).
+
+    .PARAMETER repo
+    The upstream repository name.
+
+    .PARAMETER tagName
+    The release's tag name to resolve.
+
+    .PARAMETER accessToken
+    GitHub access token (App token) to use for the API call.
+
+    .PARAMETER startTime
+    Start time of the overall run, used for the shared 50-minute time budget
+    check other collectors in this file also use.
+
+    .OUTPUTS
+    Hashtable with:
+      Sha    - the resolved commit SHA, or $null when resolution failed
+      Error  - $true when resolution failed, otherwise $false
+      Reason - machine-readable reason string when Error is $true, otherwise $null
+#>
+function Resolve-ReleaseTagCommitSha {
+    Param (
+        $owner,
+        $repo,
+        $tagName,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    function New-ResolveReleaseTagCommitShaErrorResult {
+        Param ([string] $reason)
+        return @{ Sha = $null; Error = $true; Reason = $reason }
+    }
+
+    if ($null -eq $owner -or $owner.Length -eq 0 -or $null -eq $repo -or $repo.Length -eq 0 -or $null -eq $tagName -or $tagName.Length -eq 0) {
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "missing_owner_repo_or_tag"
+    }
+
+    # Check if we are nearing the 50-minute mark, same time budget every other
+    # per-repo collector in this file respects.
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "run_time_budget_exceeded"
+    }
+
+    $encodedTag = [uri]::EscapeDataString($tagName)
+    $refUrl = "/repos/$owner/$repo/git/ref/tags/$encodedTag"
+    $refResponse = $null
+    try {
+        $refResponse = ApiCall -method GET -url $refUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to resolve tag ref for [$owner/$repo] tag [$tagName]: $($_.Exception.Message)"
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "transient_error"
+    }
+
+    $isRefError = ($refResponse -is [hashtable] -and $refResponse.ContainsKey('Error') -and $refResponse.Error)
+    if ($isRefError) {
+        $reason = "api_error"
+        if ($refResponse.ContainsKey('StatusCode')) {
+            switch ($refResponse.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "tag_ref_not_found" }
+                default { $reason = "api_error_status_$($refResponse.StatusCode)" }
+            }
+        }
+        return New-ResolveReleaseTagCommitShaErrorResult -reason $reason
+    }
+
+    if ($null -eq $refResponse -or $null -eq $refResponse.object) {
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "no_response"
+    }
+
+    $objectType = $refResponse.object.type
+    $objectSha = $refResponse.object.sha
+
+    if ($objectType -ne "tag") {
+        # Lightweight tag (or already a commit ref) - the ref's object SHA is
+        # already the commit SHA, no peeling required.
+        return @{ Sha = $objectSha; Error = $false; Reason = $null }
+    }
+
+    # Annotated tag - the ref points at a tag object, not a commit, so peel it
+    # one level further to find the commit it actually targets.
+    $tagObjectUrl = "/repos/$owner/$repo/git/tags/$objectSha"
+    $tagObjectResponse = $null
+    try {
+        $tagObjectResponse = ApiCall -method GET -url $tagObjectUrl -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+    }
+    catch {
+        Write-Debug "Failed to peel annotated tag [$tagName] for [$owner/$repo]: $($_.Exception.Message)"
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "transient_error"
+    }
+
+    $isTagObjectError = ($tagObjectResponse -is [hashtable] -and $tagObjectResponse.ContainsKey('Error') -and $tagObjectResponse.Error)
+    if ($isTagObjectError) {
+        $reason = "api_error"
+        if ($tagObjectResponse.ContainsKey('StatusCode')) {
+            switch ($tagObjectResponse.StatusCode) {
+                403 { $reason = "forbidden_or_rate_limited" }
+                404 { $reason = "tag_object_not_found" }
+                default { $reason = "api_error_status_$($tagObjectResponse.StatusCode)" }
+            }
+        }
+        return New-ResolveReleaseTagCommitShaErrorResult -reason $reason
+    }
+
+    if ($null -eq $tagObjectResponse -or $null -eq $tagObjectResponse.object) {
+        return New-ResolveReleaseTagCommitShaErrorResult -reason "no_response"
+    }
+
+    return @{ Sha = $tagObjectResponse.object.sha; Error = $false; Reason = $null }
+}
+
 function GetActionType {
     Param (
         $owner,
@@ -655,11 +1006,11 @@ function GetActionType {
     )
 
     if ($null -eq $owner) {
-        return ("No owner found", "No owner found", "No owner found", $null)
+        return ("No owner found", "No owner found", "No owner found", $null, "", $null)
     }
 
     if ($null -eq $repo) {
-        return ("No repo found", "No repo found", "No repo found", $null)
+        return ("No repo found", "No repo found", "No repo found", $null, "", $null)
     }
 
     # Check if we are nearing the 50-minute mark
@@ -673,6 +1024,7 @@ function GetActionType {
     $response = ""
     $fileFound = ""
     $actionType = ""
+    $dockerImageReference = ""
     try {
         $url = "/repos/$owner/$repo/contents/action.yml"
         $response = ApiCall -method GET -url $url -hideFailedCall $true -access_token $accessToken
@@ -693,7 +1045,7 @@ function GetActionType {
                 $actionDockerType = "Dockerfile"
                 $actionType = "Docker"
 
-                return ($actionType, $fileFound, $actionDockerType)
+                return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference, $null)
             }
             catch {
                 try {
@@ -703,11 +1055,11 @@ function GetActionType {
                     $actionDockerType = "Dockerfile"
                     $actionType = "Docker"
 
-                    return ($actionType, $fileFound, $actionDockerType)
+                    return ($actionType, $fileFound, $actionDockerType, $null, $dockerImageReference, $null)
                 }
                 catch {
                     Write-Debug "No action.yml or action.yaml or Dockerfile or dockerfile found in repo [$owner/$repo]"
-                    return ("No file found", "No file found", "No file found")
+                    return ("No file found", "No file found", "No file found", $null, $dockerImageReference, $null)
                 }
             }
         }
@@ -715,7 +1067,7 @@ function GetActionType {
 
     if ($response.Length -eq 0 -or $response.download_url.Length -eq 0) {
         Write-Debug "No action definition found in repo [$owner/$repo]"
-        return ("No file found", "No file found", "No file found")
+        return ("No file found", "No file found", "No file found", $null, "", $null)
     }
 
     # load the file
@@ -738,9 +1090,9 @@ function GetActionType {
             }
         }
         
-        return ("Error downloading file", "No file found", "No file found")
+        return ("Error downloading file", "No file found", "No file found", $null, "", $null)
     }
-    
+
     Write-Debug "response: $($fileContent)"
     try {
         $yaml = ConvertFrom-Yaml $fileContent
@@ -749,7 +1101,14 @@ function GetActionType {
         Write-Host "Error converting to yaml: $($_.Exception.Message)"
         Write-Host "Yaml content repo [$owner/$repo]:"
         Write-Host $fileContent
-        return "Unknown"
+        return ("Unknown", "No file found", "No file found", $null, "", $null)
+    }
+
+    # The marketplace's free-text search matches on this, so it's worth
+    # carrying even though nothing else in this repo reads it today.
+    $description = $null
+    if ($yaml.description -is [string] -and $yaml.description.Trim().Length -gt 0) {
+        $description = $yaml.description.Trim()
     }
 
     # find line that says "
@@ -763,11 +1122,13 @@ function GetActionType {
     $actionDockerType = ""
     if ($using -eq "docker") {
         $actionType = "Docker"
-        if ($yaml.runs.image -eq "Dockerfile" -or $yaml.runs.image -eq "./Dockerfile" -or $yaml.runs.image -eq ".\Dockerfile") {
+        $image = $yaml.runs.image
+        if ($image -eq "Dockerfile" -or $image -eq "./Dockerfile" -or $image -eq ".\Dockerfile") {
             $actionDockerType = "Dockerfile"
         }
         else {
             $actionDockerType = "Image"
+            $dockerImageReference = $image
         }
     }
     else {
@@ -783,7 +1144,7 @@ function GetActionType {
         }
     }
 
-    return ($actionType, $fileFound, $actionDockerType, $nodeVersion)
+    return ($actionType, $fileFound, $actionDockerType, $nodeVersion, $dockerImageReference, $description)
 }
 
 function CheckForInfoUpdateNeeded {
@@ -791,6 +1152,7 @@ function CheckForInfoUpdateNeeded {
         $action,
         $hasActionTypeField,
         $hasNodeVersionField,
+        $hasDescriptionField,
         $startTime
     )
 
@@ -811,6 +1173,49 @@ function CheckForInfoUpdateNeeded {
     # check nodeVersion field missing for Node actionType
     if (("Node" -eq $action.actionType.actionType) -and !$hasNodeVersionField) {
         return $true
+    }
+
+    # check description field missing entirely - backfill once, the same way
+    # nodeVersion was backfilled above. Records parsed before this field
+    # existed never got a `description` property (not even a null one), so
+    # this only fires once per record: the parse below always adds the
+    # property, even when the action.yml has no description to report.
+    if (!$hasDescriptionField) {
+        return $true
+    }
+
+    # Tie re-parsing of the action definition (action.yml/action.yaml) to the
+    # repository's change date. When the repo has changed since we last parsed
+    # it, the stored properties (actionType, fileFound, actionDockerType,
+    # nodeVersion) may be stale - for example a node version bump like
+    # node16 -> node24 - so we re-parse and refresh everything we can read.
+    $storedRepoUpdatedAt = $action.actionType.repoUpdatedAt
+    if ($null -eq $storedRepoUpdatedAt) {
+        # Legacy record parsed before we tracked the repo change date: refresh
+        # once to capture the current state and establish the baseline.
+        return $true
+    }
+
+    $currentRepoUpdatedAt = $action.mirrorLastUpdated
+    if ($null -ne $currentRepoUpdatedAt) {
+        $repoChanged = $false
+        try {
+            $storedDate = [datetime]$storedRepoUpdatedAt
+            $currentDate = [datetime]$currentRepoUpdatedAt
+            if ($currentDate -gt $storedDate) {
+                $repoChanged = $true
+            }
+        }
+        catch {
+            # Fall back to a string comparison if either value is not a
+            # parseable date; refresh when they differ.
+            if ("$currentRepoUpdatedAt" -ne "$storedRepoUpdatedAt") {
+                $repoChanged = $true
+            }
+        }
+        if ($repoChanged) {
+            return $true
+        }
     }
 
     # Check if we are nearing the 50-minute mark
@@ -905,6 +1310,8 @@ function GetInfo {
         ActionFile404 = @()
         OtherErrors = @()
     }
+    $script:trivyScanFailures = @()
+    $script:trivyScansSkipped = 0
 
     # Initialize tracking for summary
     $script:processMetrics = @{
@@ -998,7 +1405,15 @@ function GetInfo {
             }
         }
         else {
-            $action.mirrorLastUpdated = $response.updated_at
+            if ($null -eq $response) {
+                $response = MakeRepoInfoCall -action $action -forkOrg $forkOrg -accessToken $accessToken -startTime $startTime
+            }
+            # only refresh the change date when we actually retrieved one; do
+            # not overwrite a known value with null when the call failed. This
+            # keeps the repo change date reliable for action re-parsing.
+            if ($response -and $response.updated_at) {
+                $action.mirrorLastUpdated = $response.updated_at
+            }
         }
 
         # store repo size (only set when we have a valid value)
@@ -1082,11 +1497,12 @@ function GetInfo {
 
         $hasActionTypeField = Get-Member -inputobject $action -name "actionType" -Membertype Properties
         $hasNodeVersionField = $null -ne $action.actionType.nodeVersion
-        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField -startTime $startTime
+        $hasDescriptionField = $null -ne (Get-Member -inputobject $action -name "description" -Membertype Properties)
+        $updateNeeded = CheckForInfoUpdateNeeded -action $action -hasActionTypeField $hasActionTypeField -hasNodeVersionField $hasNodeVersionField -hasDescriptionField $hasDescriptionField -startTime $startTime
         if ($updateNeeded) {
             ($owner, $repo) = GetOrgActionInfo($action.name)
             Write-Host "$i/$max - Checking action information for [$($owner)/$($repo)]"
-            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+            ($actionTypeResult, $fileFoundResult, $actionDockerTypeResult, $nodeVersion, $dockerImageReference, $descriptionResult) = GetActionType -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
 
             If (!$hasActionTypeField) {
                 $actionType = @{
@@ -1094,6 +1510,9 @@ function GetInfo {
                     fileFound = $fileFoundResult
                     actionDockerType = $actionDockerTypeResult
                     nodeVersion = $nodeVersion
+                    dockerImageReference = $dockerImageReference
+                    repoUpdatedAt = $action.mirrorLastUpdated
+                    actionTypeLastUpdated = Get-Date
                 }
 
                 $action | Add-Member -Name actionType -Value $actionType -MemberType NoteProperty
@@ -1110,10 +1529,25 @@ function GetInfo {
                 else {
                     $action.actionType.nodeVersion = $nodeVersion
                 }
+                $action.actionType | Add-Member -Name dockerImageReference -Value $dockerImageReference -MemberType NoteProperty -Force
+                # Record the repo change date we parsed against and when we
+                # parsed, so re-parsing is tied to the repo actually changing.
+                $action.actionType | Add-Member -Name repoUpdatedAt -Value $action.mirrorLastUpdated -MemberType NoteProperty -Force
+                $action.actionType | Add-Member -Name actionTypeLastUpdated -Value (Get-Date) -MemberType NoteProperty -Force
                 $i++ | Out-Null
                 $repoHadUpdates = $true
             }
 
+            # description is a top-level field (matching the marketplace API's
+            # schema), not nested under actionType. Always (re)written, even to
+            # $null, so hasDescriptionField is true afterward and this record
+            # is not re-parsed on every future run just to re-check it.
+            if (!$hasDescriptionField) {
+                $action | Add-Member -Name description -Value $descriptionResult -MemberType NoteProperty
+            }
+            else {
+                $action.description = $descriptionResult
+            }
         }
 
         # store funding information
@@ -1150,7 +1584,217 @@ function GetInfo {
                 }
             }
         }
-        
+
+        # store the current immutable-release policy (issue #264). Tri-state:
+        # enabled/disabled/unknown - never collapse a missing/unavailable
+        # result into "disabled". Refreshed on the same 30-day cadence as
+        # fundingInfo, since it is similarly unlikely to change often and this
+        # keeps the prioritized collection backlog (Get-RepoPriorityScore)
+        # bounded rather than re-checking every repo every run.
+        $hasImmutableReleasePolicyField = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+        $hasImmutableReleasePolicyCheckedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyCheckedAt" -Membertype Properties
+        # Test-ImmutableReleasePolicyNeedsRefresh (library.ps1) never throws on a
+        # malformed/unparsable persisted timestamp - see its doc comment - so this
+        # decision cannot abort the whole repo-info run.
+        $needsImmutableReleasePolicyCheck = Test-ImmutableReleasePolicyNeedsRefresh -action $action
+
+        if ($needsImmutableReleasePolicyCheck) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            if ($repo -ne "" -and $owner -ne "") {
+                Write-Debug "Checking immutable release policy for [$($owner)/$($repo)]"
+                $immutableReleasePolicyResult = GetImmutableReleasePolicy -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+
+                # Capture the observed policy *transition* time separately from
+                # immutableReleasePolicyCheckedAt (issue #266): CheckedAt is bumped on
+                # every check regardless of whether the value changed, so it cannot be
+                # used to answer "when did this repo's policy last change?" -
+                # Get-ImmutableReleasePolicyChangedAt (library.ps1) is the single source
+                # of truth for that decision, computed here where the previous and
+                # newly observed status are both in hand.
+                $previousImmutableReleasePolicy = if ($hasImmutableReleasePolicyField) { $action.immutableReleasePolicy } else { $null }
+                $hasImmutableReleasePolicyChangedAtField = Get-Member -inputobject $action -name "immutableReleasePolicyChangedAt" -Membertype Properties
+                $existingImmutableReleasePolicyChangedAt = if ($hasImmutableReleasePolicyChangedAtField) { $action.immutableReleasePolicyChangedAt } else { $null }
+                $immutableReleasePolicyChangedAt = Get-ImmutableReleasePolicyChangedAt -previousStatus $previousImmutableReleasePolicy -newStatus $immutableReleasePolicyResult.status -checkedAt $immutableReleasePolicyResult.checkedAt -existingChangedAt $existingImmutableReleasePolicyChangedAt
+
+                if (!$hasImmutableReleasePolicyField) {
+                    $action | Add-Member -Name immutableReleasePolicy -Value $immutableReleasePolicyResult.status -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicy = $immutableReleasePolicyResult.status
+                }
+
+                if (!$hasImmutableReleasePolicyChangedAtField) {
+                    $action | Add-Member -Name immutableReleasePolicyChangedAt -Value $immutableReleasePolicyChangedAt -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicyChangedAt = $immutableReleasePolicyChangedAt
+                }
+
+                if (!$hasImmutableReleasePolicyCheckedAtField) {
+                    $action | Add-Member -Name immutableReleasePolicyCheckedAt -Value $immutableReleasePolicyResult.checkedAt -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicyCheckedAt = $immutableReleasePolicyResult.checkedAt
+                }
+
+                $hasImmutableReleasePolicyReasonField = Get-Member -inputobject $action -name "immutableReleasePolicyReason" -Membertype Properties
+                if (!$hasImmutableReleasePolicyReasonField) {
+                    $action | Add-Member -Name immutableReleasePolicyReason -Value $immutableReleasePolicyResult.reason -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicyReason = $immutableReleasePolicyResult.reason
+                }
+
+                $hasImmutableReleasePolicySourceField = Get-Member -inputobject $action -name "immutableReleasePolicySource" -Membertype Properties
+                if (!$hasImmutableReleasePolicySourceField) {
+                    $action | Add-Member -Name immutableReleasePolicySource -Value $immutableReleasePolicyResult.source -MemberType NoteProperty
+                }
+                else {
+                    $action.immutableReleasePolicySource = $immutableReleasePolicyResult.source
+                }
+
+                $i++ | Out-Null
+                $repoHadUpdates = $true
+            }
+        }
+
+        # Store append-only per-release immutable-release observations (issue #265).
+        # This only records which releases currently exist (draft releases excluded);
+        # it never determines or backfills whether a release is actually immutable,
+        # and never rewrites a previously recorded observation - see
+        # Merge-ImmutableReleaseObservations in library.ps1 for the append-only merge
+        # rules. Refreshed on the same 30-day cadence as immutableReleasePolicy above.
+        $hasImmutableReleaseObservationsCheckedAtField = Get-Member -inputobject $action -name "immutableReleaseObservationsCheckedAt" -Membertype Properties
+        $needsImmutableReleaseObservationsCheck = $false
+        if (!$hasImmutableReleaseObservationsCheckedAtField -or ($null -eq $action.immutableReleaseObservationsCheckedAt)) {
+            $needsImmutableReleaseObservationsCheck = $true
+        }
+        else {
+            $daysSinceLastCheck = (Get-Date) - $action.immutableReleaseObservationsCheckedAt
+            if ($daysSinceLastCheck.Days -gt 30) {
+                $needsImmutableReleaseObservationsCheck = $true
+            }
+        }
+
+        if ($needsImmutableReleaseObservationsCheck) {
+            ($owner, $repo) = GetOrgActionInfo($action.name)
+            if ($repo -ne "" -and $owner -ne "") {
+                Write-Debug "Checking immutable release observations for [$($owner)/$($repo)]"
+                $hasImmutableReleaseObservationsField = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+                $existingObservations = if ($hasImmutableReleaseObservationsField) { $action.immutableReleaseObservations } else { $null }
+
+                # Existing observations are passed through so the collector can skip
+                # re-resolving a release-tag SHA (issue #267) it already resolved on
+                # a previous pass, keeping this routine 30-day refresh close to its
+                # #266 baseline cost once a repo's recent releases are resolved.
+                $releaseObservationsResult = GetImmutableReleaseObservations -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -existingObservations $existingObservations
+
+                if (!$releaseObservationsResult.Error) {
+                    $mergedObservations = Merge-ImmutableReleaseObservations -existingObservations $existingObservations -currentReleases $releaseObservationsResult.Releases -observedAt $releaseObservationsResult.CheckedAt -source $releaseObservationsResult.Source
+
+                    if (!$hasImmutableReleaseObservationsField) {
+                        $action | Add-Member -Name immutableReleaseObservations -Value $mergedObservations -MemberType NoteProperty
+                    }
+                    else {
+                        $action.immutableReleaseObservations = $mergedObservations
+                    }
+
+                    # Derive the marketplace-ready recent-release coverage summary
+                    # (issue #266) from the freshly merged observation history, so
+                    # #267's reports/API can consume a clean summary object instead
+                    # of having to walk the raw observations array themselves.
+                    $immutableReleaseCoverageResult = Get-ImmutableReleaseCoverage -observations $mergedObservations
+                    $hasImmutableReleaseCoverageField = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+                    if (!$hasImmutableReleaseCoverageField) {
+                        $action | Add-Member -Name immutableReleaseCoverage -Value $immutableReleaseCoverageResult -MemberType NoteProperty
+                    }
+                    else {
+                        $action.immutableReleaseCoverage = $immutableReleaseCoverageResult
+                    }
+
+                    # Only bump the checked-at timestamp when the fetch actually
+                    # succeeded, so a transient failure gets retried on the next run
+                    # instead of being treated as up-to-date for another 30 days.
+                    if (!$hasImmutableReleaseObservationsCheckedAtField) {
+                        $action | Add-Member -Name immutableReleaseObservationsCheckedAt -Value $releaseObservationsResult.CheckedAt -MemberType NoteProperty
+                    }
+                    else {
+                        $action.immutableReleaseObservationsCheckedAt = $releaseObservationsResult.CheckedAt
+                    }
+
+                    $i++ | Out-Null
+                    $repoHadUpdates = $true
+                }
+                # When $releaseObservationsResult.Error is true (or owner/repo could
+                # not be resolved), fall through to the local backfill below instead
+                # of leaving immutableReleaseCoverage untouched - a transient API
+                # failure should not also block a purely local derivation over
+                # whatever history is already persisted.
+            }
+        }
+
+        # Backfill the derived immutableReleaseCoverage summary (issue #266)
+        # whenever it is still missing, regardless of why: the history may already
+        # be fresh (the check above was skipped entirely), or a refresh was just
+        # attempted and failed (GetImmutableReleaseObservations returned an error,
+        # or owner/repo could not be resolved) - in both cases no network call is
+        # needed here, since Get-ImmutableReleaseCoverage is a pure derivation over
+        # whatever observation history is already persisted on the action. Without
+        # this, a transient API failure could leave immutableReleaseCoverage absent
+        # for another full 30-day cadence even though the existing history already
+        # has everything needed to compute it.
+        #
+        # Gate only on the observations *property* being present, not on it being
+        # non-null/non-empty: Get-ImmutableReleaseCoverage explicitly supports
+        # $null/empty input and returns a valid zero-count summary, so a migrated
+        # action with no releases at all must still get a summary rather than being
+        # skipped here. Likewise, treat a present-but-null immutableReleaseCoverage
+        # (the schema documents null as an allowed value, e.g. a migration
+        # placeholder) as missing, not as "already backfilled".
+        $hasImmutableReleaseObservationsFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseObservations" -Membertype Properties
+        $hasImmutableReleaseCoverageFieldForBackfill = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        $immutableReleaseCoverageIsMissing = !$hasImmutableReleaseCoverageFieldForBackfill -or ($null -eq $action.immutableReleaseCoverage)
+        if ($hasImmutableReleaseObservationsFieldForBackfill -and $immutableReleaseCoverageIsMissing) {
+            $backfilledCoverageResult = Get-ImmutableReleaseCoverage -observations $action.immutableReleaseObservations
+            if (!$hasImmutableReleaseCoverageFieldForBackfill) {
+                $action | Add-Member -Name immutableReleaseCoverage -Value $backfilledCoverageResult -MemberType NoteProperty
+            }
+            else {
+                $action.immutableReleaseCoverage = $backfilledCoverageResult
+            }
+            $i++ | Out-Null
+            $repoHadUpdates = $true
+        }
+
+        # Compose the concise, marketplace-ready immutable-release summary
+        # string (issue #267) from whatever policy/coverage values are
+        # currently stored on this action - not gated behind the 30-day
+        # refresh cadence above, so it always reflects the latest known
+        # policy and coverage even on runs where neither was refreshed.
+        # A current "enabled" policy never gets combined into a pass/fail
+        # verdict here - it is always shown alongside (never instead of)
+        # the recent-release coverage summary, so an enabled-today policy
+        # does not overclaim the immutability of older releases.
+        $hasImmutableReleasePolicyFieldForSummary = Get-Member -inputobject $action -name "immutableReleasePolicy" -Membertype Properties
+        $currentImmutableReleasePolicy = if ($hasImmutableReleasePolicyFieldForSummary) { $action.immutableReleasePolicy } else { $null }
+        $hasImmutableReleaseCoverageFieldForSummary = Get-Member -inputobject $action -name "immutableReleaseCoverage" -Membertype Properties
+        $currentImmutableReleaseCoverage = if ($hasImmutableReleaseCoverageFieldForSummary) { $action.immutableReleaseCoverage } else { $null }
+
+        if ($null -ne $currentImmutableReleasePolicy -or $null -ne $currentImmutableReleaseCoverage) {
+            $immutableReleaseSummaryValue = Get-ImmutableReleaseSummary -policyStatus $currentImmutableReleasePolicy -coverage $currentImmutableReleaseCoverage
+            $hasImmutableReleaseSummaryField = Get-Member -inputobject $action -name "immutableReleaseSummary" -Membertype Properties
+            if (!$hasImmutableReleaseSummaryField) {
+                $action | Add-Member -Name immutableReleaseSummary -Value $immutableReleaseSummaryValue -MemberType NoteProperty
+                $i++ | Out-Null
+                $repoHadUpdates = $true
+            }
+            elseif ($action.immutableReleaseSummary -ne $immutableReleaseSummaryValue) {
+                $action.immutableReleaseSummary = $immutableReleaseSummaryValue
+                $i++ | Out-Null
+                $repoHadUpdates = $true
+            }
+        }
+
         # Track if this repo had any updates
         if ($repoHadUpdates) {
             $script:processMetrics.ReposWithUpdates++
@@ -1276,6 +1920,11 @@ function GetRepoDockerBaseImage {
         hasCustomCode = $false
     }
     
+    if ($actionType.actionDockerType -eq "Image") {
+        # Remote image actions reference an image in action.yml; there is no repo-local Dockerfile to analyze here.
+        return $result
+    }
+
     if ($actionType.actionDockerType -eq "Dockerfile") {
         $url = "/repos/$owner/$repo/contents/Dockerfile"
         $repoUrl = "https://github.com/$owner/$repo"
@@ -1338,6 +1987,151 @@ function EnableSecretScanning {
     return $patchResult
 }
 
+# Default Trivy version used when the workflow does not pin one via $env:TRIVY_VERSION.
+# Deliberately pinned for reproducibility. NOTE: Aqua's install script downloads through the
+# get.trivy.dev CDN, which only serves a rolling window of recent releases - old pins stop
+# resolving (HTTP 404) and the install silently breaks. That is exactly how v0.48.0 rotted.
+# When bumping, verify the version is still served before merging.
+$script:trivyDefaultVersion = "v0.74.0"
+
+# Tri-state cache so the install is attempted at most once per process instead of once per repo.
+#   $null          - not attempted yet
+#   'available'    - trivy is on PATH and usable
+#   'unavailable'  - install failed; skip all further scans in this run
+$script:trivyState = $null
+$script:trivyUnavailableReason = $null
+
+function Ensure-TrivyInstalled {
+    <#
+    .SYNOPSIS
+        Makes sure the trivy binary is available, installing it at most once per process.
+
+    .DESCRIPTION
+        Returns $true when trivy can be invoked, $false otherwise. The result is cached in
+        $script:trivyState so a failed install is not retried for every Docker action.
+
+        Unlike the previous implementation this captures stdout, stderr and the exit code of
+        the install and logs them, so a failure is diagnosable instead of silent. The install
+        script is run with -d (debug logging) because it logs HTTP failures at debug priority
+        and otherwise exits 1 with no output at all.
+
+        Installs into a user-writable directory so no sudo (and no sudo stdin handling) is
+        involved.
+    #>
+
+    if ($script:trivyState -eq 'available') { return $true }
+    if ($script:trivyState -eq 'unavailable') { return $false }
+
+    # A failed install leaves $LASTEXITCODE non-zero. The surrounding workflow step exits with
+    # whatever $LASTEXITCODE holds, so leaving it set would fail the whole chunk job and throw
+    # away every repo already processed. Trivy being unavailable is reported loudly in the step
+    # summary instead; it must not abort data collection.
+    $entryExitCode = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+
+    # Already on PATH (e.g. installed by the aquasecurity/setup-trivy workflow step)?
+    $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+    if ($trivyPath) {
+        $versionOutput = (& trivy --version 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Trivy already available at [$($trivyPath.Source)]: $versionOutput"
+            $script:trivyState = 'available'
+            $global:LASTEXITCODE = $entryExitCode
+            return $true
+        }
+
+        Write-Host "WARNING: A [trivy] command is on PATH at [$($trivyPath.Source)] but is not runnable (trivy --version exit code [$LASTEXITCODE]): $versionOutput"
+        Write-Host "WARNING: Will attempt a fresh install to a temp directory instead."
+    }
+
+    $requestedVersion = if ($null -ne $env:TRIVY_VERSION -and $env:TRIVY_VERSION.Trim().Length -gt 0) {
+        $env:TRIVY_VERSION.Trim()
+    } else {
+        $script:trivyDefaultVersion
+    }
+
+    Write-Host "Trivy not found on PATH; installing [$requestedVersion] (once for this run)..."
+
+    $installDir = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-bin"
+    $scriptPath = Join-Path $([System.IO.Path]::GetTempPath()) "trivy-install.sh"
+    # Pinned to a reviewed commit rather than the mutable `main` branch: this process runs with
+    # GitHub App private key env vars, so fetching-and-executing an unpinned branch would be
+    # arbitrary code execution in a credentialed job on any future change (malicious or
+    # accidental) to that file. Pinned to the same commit aquasecurity/setup-trivy@v0.3.1 itself
+    # checks out (see its action.yaml) so this fallback tracks a version Aqua already ships.
+    $installScriptCommit = "75c4dc0f45c5d7ffd05ae26df1e0c666787bdf2a"
+    $installUrl = "https://raw.githubusercontent.com/aquasecurity/trivy/$installScriptCommit/contrib/install.sh"
+
+    try {
+        # Step 1: download the install script to a file (no shell pipe involved).
+        $downloadOutput = (& curl -sSfL -o $scriptPath $installUrl 2>&1 | Out-String).Trim()
+        $downloadExit = $LASTEXITCODE
+        if ($downloadExit -ne 0 -or -not (Test-Path $scriptPath)) {
+            $reason = "Could not download the Trivy install script from [$installUrl] (curl exit code [$downloadExit]): $downloadOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        $scriptLength = (Get-Item $scriptPath).Length
+        Write-Host "Downloaded Trivy install script [$scriptLength] bytes to [$scriptPath]"
+
+        # Step 2: run it via bash with -d so download failures are actually reported.
+        $installOutput = (& bash $scriptPath -d -b $installDir $requestedVersion 2>&1 | Out-String).Trim()
+        $installExit = $LASTEXITCODE
+
+        Write-Host "Trivy install script exit code: [$installExit]"
+        Write-Host "Trivy install script output:"
+        Write-Host $installOutput
+
+        $installedBinary = Join-Path $installDir "trivy"
+        if ($installExit -ne 0 -or -not (Test-Path $installedBinary)) {
+            $reason = "Trivy install script failed for version [$requestedVersion] with exit code [$installExit]. Output: $installOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        # Step 3: put it on PATH for the rest of this process and verify.
+        $env:PATH = "$installDir$([System.IO.Path]::PathSeparator)$env:PATH"
+        $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
+        if (-not $trivyPath) {
+            $reason = "Trivy install script reported success but [trivy] is still not resolvable on PATH (expected [$installedBinary])"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        $versionOutput = (& trivy --version 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            $reason = "Installed Trivy binary is not runnable (trivy --version exit code [$LASTEXITCODE]): $versionOutput"
+            Write-Host "ERROR: $reason"
+            $script:trivyState = 'unavailable'
+            $script:trivyUnavailableReason = $reason
+            $global:LASTEXITCODE = $entryExitCode
+            return $false
+        }
+
+        Write-Host "Trivy installed successfully at [$($trivyPath.Source)]: $versionOutput"
+        $script:trivyState = 'available'
+        $global:LASTEXITCODE = $entryExitCode
+        return $true
+    }
+    catch {
+        $reason = "Unexpected error while installing Trivy: $($_.Exception.Message)"
+        Write-Host "ERROR: $reason"
+        $script:trivyState = 'unavailable'
+        $script:trivyUnavailableReason = $reason
+        $global:LASTEXITCODE = $entryExitCode
+        return $false
+    }
+}
+
 function Invoke-TrivyScan {
     <#
     .SYNOPSIS
@@ -1365,7 +2159,7 @@ function Invoke-TrivyScan {
     $result = @{
         critical = 0
         high = 0
-        lastScanned = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss.fffZ")
+        lastScanned = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
         scanError = $null
     }
 
@@ -1378,21 +2172,11 @@ function Invoke-TrivyScan {
     Write-Host "Running Trivy scan for Docker action [$owner/$repo]"
 
     try {
-        # Check if Trivy is installed
-        $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
-        if (-not $trivyPath) {
-            Write-Host "Installing Trivy..."
-            # Install Trivy on Ubuntu using the install script method (faster and more reliable)
-            $installCmd = "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.48.0"
-            Invoke-Expression $installCmd 2>&1 | Out-Null
-            
-            # Verify installation
-            $trivyPath = Get-Command trivy -ErrorAction SilentlyContinue
-            if (-not $trivyPath) {
-                Write-Host "Failed to install Trivy for [$owner/$repo]"
-                $result.scanError = "Trivy installation failed"
-                return $result
-            }
+        # Make sure Trivy is available. This installs at most once per process; if it failed
+        # earlier in this run we bail out immediately instead of re-attempting per repo.
+        if (-not (Ensure-TrivyInstalled)) {
+            $result.scanError = "Trivy unavailable: $($script:trivyUnavailableReason)"
+            return $result
         }
 
         # Create a temporary directory for the scan
@@ -1536,6 +2320,91 @@ function GetMoreInfo {
     $originalRepoDoesNotExists = New-Object System.Collections.ArrayList
     # store the timestamp
     $startTime = Get-Date
+
+    # --- GraphQL batch pre-fetch for plain repoInfo metadata refresh ---
+    # Batches repos whose repoInfo is missing/stale through the GraphQL API (a separate
+    # rate-limit pool from REST) instead of one REST call per repo via GetRepoInfo. The main
+    # loop below falls back to the existing per-repo REST path for anything not covered here
+    # (GraphQL request failure for a whole batch, or repos with no parseable owner/repo).
+    $graphqlResultsByName = @{}
+    $graphqlStats = @{
+        BatchCount = 0
+        ReposRequested = 0
+        ReposRefreshed = 0
+        ReposNotFound = 0
+        TotalCost = 0
+        RestCallsAvoided = 0
+    }
+
+    $graphqlCandidates = @()
+    foreach ($action in $forksToProcess) {
+        if (!$action.upstreamFound) {
+            continue
+        }
+
+        $hasRepoInfoFieldForBatch = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
+        $repoInfoIsStaleForBatch = $false
+        if ($hasRepoInfoFieldForBatch -and $action.repoInfo) {
+            $hasLastFetchedForBatch = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+            if (!$hasLastFetchedForBatch -or ($null -eq $action.repoInfo.lastFetched)) {
+                $repoInfoIsStaleForBatch = $true
+            }
+            else {
+                try {
+                    $daysSinceLastFetchForBatch = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                    if ($daysSinceLastFetchForBatch -gt 14) { $repoInfoIsStaleForBatch = $true }
+                }
+                catch { $repoInfoIsStaleForBatch = $true }
+            }
+        }
+
+        $needsGraphQLRefresh = !$hasRepoInfoFieldForBatch -or ($hasRepoInfoFieldForBatch -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoIsStaleForBatch
+        if ($needsGraphQLRefresh) {
+            ($ownerForBatch, $repoForBatch) = GetOrgActionInfo($action.name)
+            if ($ownerForBatch -ne "" -and $repoForBatch -ne "") {
+                $graphqlCandidates += @{ Owner = $ownerForBatch; Repo = $repoForBatch; Name = $action.name }
+            }
+        }
+    }
+
+    if ($graphqlCandidates.Count -gt 0) {
+        Write-Host "Batching [$($graphqlCandidates.Count)] repos with missing/stale repoInfo through GraphQL"
+        $graphqlBatchSize = 50
+        for ($batchStart = 0; $batchStart -lt $graphqlCandidates.Count; $batchStart += $graphqlBatchSize) {
+            $batchEnd = [Math]::Min($batchStart + $graphqlBatchSize, $graphqlCandidates.Count) - 1
+            $batch = $graphqlCandidates[$batchStart..$batchEnd]
+
+            $batchResult = Invoke-GraphQLRepoMetadataBatch -RepoPairs $batch -accessToken $accessToken
+            $graphqlStats.BatchCount++
+            $graphqlStats.ReposRequested += $batch.Count
+
+            if ($batchResult.Failed) {
+                Write-Host "GraphQL batch [$($graphqlStats.BatchCount)] failed; those [$($batch.Count)] repos will fall back to REST"
+                continue
+            }
+
+            if ($null -ne $batchResult.RateLimit) {
+                Write-Host "GraphQL batch [$($graphqlStats.BatchCount)]: cost [$($batchResult.RateLimit.cost)] point(s), [$($batchResult.RateLimit.remaining)] remaining"
+                $graphqlStats.TotalCost += $batchResult.RateLimit.cost
+            }
+
+            foreach ($name in $batchResult.Results.Keys) {
+                $graphqlResultsByName[$name] = $batchResult.Results[$name]
+                if ($batchResult.Results[$name].NotFound) {
+                    $graphqlStats.ReposNotFound++
+                }
+                else {
+                    $graphqlStats.ReposRefreshed++
+                }
+            }
+        }
+
+        # Each repo refreshed via GraphQL replaces 2 REST calls that GetRepoInfo would have
+        # made (repo info + latest release).
+        $graphqlStats.RestCallsAvoided = $graphqlStats.ReposRefreshed * 2
+    }
+    # --- end GraphQL batch pre-fetch ---
+
     try {
         foreach ($action in $forksToProcess) {
             $script:moreInfoMetrics.TotalReposExamined++
@@ -1570,11 +2439,40 @@ function GetMoreInfo {
             ($owner, $repo) = GetOrgActionInfo($action.name)
 
             $hasField = Get-Member -inputobject $action -name "repoInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at))) {
-                Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)]. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
-                try {
-                    ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-                    if ($statusCode -and ($statusCode -eq "NotFound")) {
+            
+            $repoInfoStale = $false
+            if ($hasField -and $action.repoInfo) {
+                $hasLastFetched = Get-Member -inputobject $action.repoInfo -name "lastFetched" -Membertype Properties
+                if (!$hasLastFetched -or ($null -eq $action.repoInfo.lastFetched)) {
+                    $repoInfoStale = $true
+                }
+                else {
+                    try {
+                        $daysSinceLastFetch = ((Get-Date) - [datetime]$action.repoInfo.lastFetched).TotalDays
+                        if ($daysSinceLastFetch -gt 14) { $repoInfoStale = $true }
+                    }
+                    catch { $repoInfoStale = $true }
+                }
+            }
+            
+            if (!$hasField -or ($null -eq $action.actionType.actionType) -or ($hasField -and ($null -eq $action.repoInfo.updated_at)) -or $repoInfoStale) {
+                $repo_archived = $null
+                $repo_disabled = $null
+                $repo_updated_at = $null
+                $latest_release_published_at = $null
+                # Only ever set by the REST fallback path below (GraphQL has no ETag/304 concept here)
+                $repoNotModified = $false
+                $newRepoEtag = $null
+
+                $graphqlEntry = $null
+                if ($graphqlResultsByName.ContainsKey($action.name)) {
+                    $graphqlEntry = $graphqlResultsByName[$action.name]
+                }
+
+                if ($null -ne $graphqlEntry) {
+                    Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)] via GraphQL batch"
+
+                    if ($graphqlEntry.NotFound) {
                         $action.upstreamFound = $false
                         # todo: remove this repo from the list (and push it back into the original actions list!)
                         $actionNoLongerExists = @{
@@ -1586,83 +2484,163 @@ function GetMoreInfo {
                         continue
                     }
 
-                    if ($repo_updated_at) {
-                        if (!$hasField) {
-                            Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
-                            $repoInfo = @{
-                                archived = $repo_archived
-                                disabled = $repo_disabled
-                                updated_at = $repo_updated_at
-                                latest_release_published_at = $latest_release_published_at
-                            }
-
-                            $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
-                            $memberAdded++ | Out-Null
-                            $i++ | Out-Null
-                        }
-                        else {
-                            Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
-                            $action.repoInfo.archived = $repo_archived
-                            $action.repoInfo.disabled = $repo_disabled
-                            $action.repoInfo.updated_at = $repo_updated_at
-                            $action.repoInfo.latest_release_published_at = $latest_release_published_at
-                            $memberUpdate++ | Out-Null
-                        }
+                    $repoData = $graphqlEntry.Data
+                    $repo_archived = $repoData.isArchived
+                    $repo_disabled = $repoData.isDisabled
+                    $repo_updated_at = $repoData.updatedAt
+                    if ($repoData.latestRelease) {
+                        $latest_release_published_at = $repoData.latestRelease.publishedAt
                     }
                 }
-                catch {
-                    $errorMsg = $_.Exception.Message
-                    Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $errorMsg"
-                    
-                    # Track upstream repo 404 errors
-                    if (Is404Error -errorMessage $errorMsg) {
-                        $script:errorCounts.UpstreamRepo404++
-                        $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
+                else {
+                    Write-Host "$i/$max - Checking extended action information for [$forkOrg/$($action.name)] via REST fallback. hasField: [$($null -ne $hasField)], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                    $existingRepoEtag = $null
+                    if ($hasField -and $action.repoInfo -and (Get-Member -InputObject $action.repoInfo -Name "etag" -MemberType Properties)) {
+                        $existingRepoEtag = $action.repoInfo.etag
                     }
-                    else {
-                        $script:errorCounts.OtherErrors++
-                        $script:errorDetails.OtherErrors += "$owner/$repo : $errorMsg"
-                    }
-                    
-                    # Check if our forked copy exists
                     try {
-                        $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
-                        $forkResponse = ApiCall -method GET -url $forkCheckUrl -hideFailedCall $true -access_token $accessToken
-                        if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
-                            Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
-                        }
-                        else {
-                            Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
+                        ($repo_archived, $repo_disabled, $repo_updated_at, $latest_release_published_at, $statusCode, $newRepoEtag, $repoNotModified) = GetRepoInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingRepoEtag
+                        if ($statusCode -and ($statusCode -eq "NotFound")) {
+                            $action.upstreamFound = $false
+                            # todo: remove this repo from the list (and push it back into the original actions list!)
+                            $actionNoLongerExists = @{
+                                action = $($action.name)
+                                owner = $owner
+                                repo = $repo
+                            }
+                            $originalRepoDoesNotExists.Add($actionNoLongerExists) | Out-Null
+                            continue
                         }
                     }
                     catch {
-                        $forkErrorMsg = $_.Exception.Message
-                        Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $forkErrorMsg"
-                        
-                        # Track fork 404 errors
-                        if (Is404Error -errorMessage $forkErrorMsg) {
-                            $script:errorCounts.ForkRepo404++
-                            $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+                        $errorMsg = $_.Exception.Message
+                        Write-Host "Error calling GetRepoInfo for [$owner/$repo]: $errorMsg"
+
+                        # Track upstream repo 404 errors
+                        if (Is404Error -errorMessage $errorMsg) {
+                            $script:errorCounts.UpstreamRepo404++
+                            $script:errorDetails.UpstreamRepo404 += "$owner/$repo"
                         }
+                        else {
+                            $script:errorCounts.OtherErrors++
+                            $script:errorDetails.OtherErrors += "$owner/$repo : $errorMsg"
+                        }
+
+                        # Check if our forked copy exists
+                        try {
+                            $forkCheckUrl = "/repos/$forkOrg/$($action.name)"
+                            $forkResponse = ApiCall -method GET -url $forkCheckUrl -hideFailedCall $true -access_token $accessToken
+                            if ($null -ne $forkResponse -and $forkResponse.id -gt 0) {
+                                Write-Host "Our forked copy exists at [$forkOrg/$($action.name)] (id: $($forkResponse.id)), but upstream repo [$owner/$repo] may not exist or is inaccessible"
+                            }
+                            else {
+                                Write-Host "Fork check returned unexpected response for [$forkOrg/$($action.name)]"
+                            }
+                        }
+                        catch {
+                            $forkErrorMsg = $_.Exception.Message
+                            Write-Host "Our forked copy does not exist at [$forkOrg/$($action.name)]: $forkErrorMsg"
+
+                            # Track fork 404 errors
+                            if (Is404Error -errorMessage $forkErrorMsg) {
+                                $script:errorCounts.ForkRepo404++
+                                $script:errorDetails.ForkRepo404 += "$forkOrg/$($action.name)"
+                            }
+                        }
+                        # continue with next one, repo_updated_at stays $null so the block below is skipped
                     }
-                    # continue with next one
+                }
+
+                if ($repoNotModified -and $hasField) {
+                    # 304 from the REST fallback: the repo hasn't changed since we last saw it, so
+                    # this call was free (not counted against the core rate limit). Only bump
+                    # lastFetched (and the ETag, in case GitHub rotated it) so priority scoring
+                    # doesn't keep reselecting this entry every run - don't touch the actual data.
+                    Write-Host "Repo information for [$($action.owner)/$($action.name)] is unchanged (304 Not Modified) - refreshing lastFetched only"
+                    $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
+                    if ($newRepoEtag) {
+                        $action.repoInfo | Add-Member -Name etag -Value $newRepoEtag -MemberType NoteProperty -Force
+                    }
+                    $memberUpdate++ | Out-Null
+                }
+                elseif ($repo_updated_at) {
+                    if (!$hasField) {
+                        Write-Host "Adding repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)] for [$($action.owner)/$($action.name)]"
+                        $repoInfo = @{
+                            archived = $repo_archived
+                            disabled = $repo_disabled
+                            updated_at = $repo_updated_at
+                            latest_release_published_at = $latest_release_published_at
+                            lastFetched = (Get-Date -Format 'o')
+                        }
+                        if ($newRepoEtag) {
+                            $repoInfo.etag = $newRepoEtag
+                        }
+
+                        $action | Add-Member -Name repoInfo -Value $repoInfo -MemberType NoteProperty
+                        $memberAdded++ | Out-Null
+                        $i++ | Out-Null
+                    }
+                    else {
+                        Write-Host "Updating repo information object with archived:[$($repo_archived)], disabled:[$($repo_disabled)], updated_at:[$($repo_updated_at)], latest_release_published_at:[$($latest_release_published_at)]"
+                        $action.repoInfo.archived = $repo_archived
+                        $action.repoInfo.disabled = $repo_disabled
+                        $action.repoInfo.updated_at = $repo_updated_at
+                        $action.repoInfo.latest_release_published_at = $latest_release_published_at
+                        $action.repoInfo | Add-Member -Name lastFetched -Value (Get-Date -Format 'o') -MemberType NoteProperty -Force
+                        if ($newRepoEtag) {
+                            $action.repoInfo | Add-Member -Name etag -Value $newRepoEtag -MemberType NoteProperty -Force
+                        }
+                        $memberUpdate++ | Out-Null
+                    }
                 }
             }
 
             $hasField = Get-Member -inputobject $action -name "tagInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.tagInfo)) {
+            $tagInfoCheckedAtField = Get-Member -inputobject $action -name "tagInfoCheckedAt" -Membertype Properties
+            $tagInfoStale = $false
+            if ($hasField -and $action.tagInfo) {
+                if (!$tagInfoCheckedAtField -or !$action.tagInfoCheckedAt) {
+                    $tagInfoStale = $true  # existing data with no timestamp — treat as stale
+                } else {
+                    $tagInfoStale = ((Get-Date) - [datetime]$action.tagInfoCheckedAt).Days -gt 30
+                }
+            }
+            if (!$hasField -or ($null -eq $action.tagInfo) -or $tagInfoStale) {
                 #Write-Host "$i/$max - Checking tag information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                $existingTagEtagField = Get-Member -inputobject $action -name "tagInfoEtag" -Membertype Properties
+                $existingTagEtag = if ($existingTagEtagField) { $action.tagInfoEtag } else { $null }
                 try {
-                    $tagInfo = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-                    if (!$hasField) {
-                        Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
-
-                        $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
-                        $i++ | Out-Null
+                    $tagResult = GetRepoTagInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingTagEtag
+                    if ($tagResult.NotModified) {
+                        # Free call (304) - tags haven't changed, only refresh the checked-at timestamp
+                        # so staleness scoring doesn't keep reselecting this entry every run.
+                        Write-Host "Tags for [$owner/$repo] are unchanged (304 Not Modified)"
                     }
                     else {
-                        #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
-                        $action.tagInfo = $tagInfo
+                        $tagInfo = $tagResult.Data
+                        if (!$hasField) {
+                            Write-Host "Adding tag information object with tags:[$($tagInfo.Length)] for [$($owner)/$($repo)]"
+
+                            $action | Add-Member -Name tagInfo -Value $tagInfo -MemberType NoteProperty
+                            $i++ | Out-Null
+                        }
+                        else {
+                            #Write-Host "Updating tag information object with tags:[$($tagInfo.Length)]"
+                            $action.tagInfo = $tagInfo
+                        }
+                    }
+                    if ($tagResult.ETag) {
+                        if (!$existingTagEtagField) {
+                            $action | Add-Member -Name tagInfoEtag -Value $tagResult.ETag -MemberType NoteProperty
+                        } else {
+                            $action.tagInfoEtag = $tagResult.ETag
+                        }
+                    }
+                    if (!$tagInfoCheckedAtField) {
+                        $action | Add-Member -Name tagInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty
+                    } else {
+                        $action.tagInfoCheckedAt = Get-Date
                     }
                 }
                 catch {
@@ -1692,19 +2670,50 @@ function GetMoreInfo {
             }
 
             $hasField = Get-Member -inputobject $action -name "releaseInfo" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.releaseInfo)) {
+            $releaseInfoCheckedAtField = Get-Member -inputobject $action -name "releaseInfoCheckedAt" -Membertype Properties
+            $releaseInfoStale = $false
+            if ($hasField -and $action.releaseInfo) {
+                if (!$releaseInfoCheckedAtField -or !$action.releaseInfoCheckedAt) {
+                    $releaseInfoStale = $true  # existing data with no timestamp — treat as stale
+                } else {
+                    $releaseInfoStale = ((Get-Date) - [datetime]$action.releaseInfoCheckedAt).Days -gt 30
+                }
+            }
+            if (!$hasField -or ($null -eq $action.releaseInfo) -or $releaseInfoStale) {
                 #Write-Host "$i/$max - Checking release information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                $existingReleaseEtagField = Get-Member -inputobject $action -name "releaseInfoEtag" -Membertype Properties
+                $existingReleaseEtag = if ($existingReleaseEtagField) { $action.releaseInfoEtag } else { $null }
                 try {
-                    $releaseInfo = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
-                    if (!$hasField) {
-                        Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
-
-                        $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
-                        $i++ | Out-Null
+                    $releaseResult = GetRepoReleases -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime -etag $existingReleaseEtag
+                    if ($releaseResult.NotModified) {
+                        # Free call (304) - releases haven't changed, only refresh the checked-at timestamp
+                        # so staleness scoring doesn't keep reselecting this entry every run.
+                        Write-Host "Releases for [$owner/$repo] are unchanged (304 Not Modified)"
                     }
                     else {
-                        #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
-                        $action.releaseInfo = $releaseInfo
+                        $releaseInfo = $releaseResult.Data
+                        if (!$hasField) {
+                            Write-Host "Adding release information object with releases:[$($releaseInfo.Length)] for [$($owner)/$($repo))]"
+
+                            $action | Add-Member -Name releaseInfo -Value $releaseInfo -MemberType NoteProperty
+                            $i++ | Out-Null
+                        }
+                        else {
+                            #Write-Host "Updating release information object with releases:[$($releaseInfo.Length)]"
+                            $action.releaseInfo = $releaseInfo
+                        }
+                    }
+                    if ($releaseResult.ETag) {
+                        if (!$existingReleaseEtagField) {
+                            $action | Add-Member -Name releaseInfoEtag -Value $releaseResult.ETag -MemberType NoteProperty
+                        } else {
+                            $action.releaseInfoEtag = $releaseResult.ETag
+                        }
+                    }
+                    if (!$releaseInfoCheckedAtField) {
+                        $action | Add-Member -Name releaseInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty
+                    } else {
+                        $action.releaseInfoCheckedAt = Get-Date
                     }
                 }
                 catch {
@@ -1737,38 +2746,61 @@ function GetMoreInfo {
                 $hasBaseImageField = Get-Member -inputobject $action.actionType -name "dockerBaseImage" -Membertype Properties
                 $hasCustomCodeField = Get-Member -inputobject $action.actionType -name "dockerfileHasCustomCode" -Membertype Properties
                 
-                # Check if we need to get or update Docker info
-                $needsDockerInfo = (!$hasBaseImageField -or ($null -eq $action.actionType.dockerBaseImage) -And $action.actionType.actionDockerType -ne "Image") -or !$hasCustomCodeField
-                
-                if ($needsDockerInfo) {
-                    Write-Host "$i/$max - Checking Docker information for [$($owner)/$($repo)]. hasBaseImageField: [$hasBaseImageField], hasCustomCodeField: [$hasCustomCodeField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
-                    try {
-                        # search for the docker file in the fork organization, since the original repo might already have seen updates
-                        $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
-                        
-                        if ($dockerInfo.dockerBaseImage -ne "") {
-                            if (!$hasBaseImageField) {
-                                Write-Host "Adding Docker base image information with image:[$($dockerInfo.dockerBaseImage)], hasCustomCode:[$($dockerInfo.hasCustomCode)] for [$($action.owner)/$($action.name))]"
-                                $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerInfo.dockerBaseImage -MemberType NoteProperty
-                                $i++ | Out-Null
-                                $dockerBaseImageInfoAdded++ | Out-Null
-                            }
-                            else {
-                                Write-Host "Updating Docker base image information with image:[$($dockerInfo.dockerBaseImage)] for [$($owner)/$($repo))]"
-                                $action.actionType.dockerBaseImage = $dockerInfo.dockerBaseImage
-                            }
+                if ($action.actionType.actionDockerType -eq "Image") {
+                    # Remote Docker image actions do not have a repo-local Dockerfile to analyze.
+                    # Annotate the image reference and record that there is no base image/custom-code info.
+                    $imageRef = $action.actionType.dockerImageReference
+                    Write-Host "$i/$max - Docker action [$($owner)/$($repo)] uses remote image [$imageRef]; skipping Dockerfile analysis"
+
+                    if (!$hasBaseImageField) {
+                        $action.actionType | Add-Member -Name dockerBaseImage -Value $null -MemberType NoteProperty
+                        $i++ | Out-Null
+                    }
+                    else {
+                        $action.actionType.dockerBaseImage = $null
+                    }
+
+                    if (!$hasCustomCodeField) {
+                        $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $null -MemberType NoteProperty
+                    }
+                    else {
+                        $action.actionType.dockerfileHasCustomCode = $null
+                    }
+                }
+                elseif ($action.actionType.actionDockerType -eq "Dockerfile") {
+                    # Check if we need to get or update Dockerfile-based Docker info
+                    $needsDockerInfo = !$hasBaseImageField -or ($null -eq $action.actionType.dockerBaseImage) -or !$hasCustomCodeField
+                    
+                    if ($needsDockerInfo) {
+                        Write-Host "$i/$max - Checking Docker information for [$($owner)/$($repo)]. hasBaseImageField: [$hasBaseImageField], hasCustomCodeField: [$hasCustomCodeField], actionType: [$($action.actionType.actionType)], actionDockerType: [$($action.actionType.actionDockerType)]"
+                        try {
+                            # search for the docker file in the fork organization, since the original repo might already have seen updates
+                            $dockerInfo = GetRepoDockerBaseImage -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
                             
-                            # Add or update hasCustomCode field
-                            if (!$hasCustomCodeField) {
-                                $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $dockerInfo.hasCustomCode -MemberType NoteProperty
-                            }
-                            else {
-                                $action.actionType.dockerfileHasCustomCode = $dockerInfo.hasCustomCode
+                            if ($dockerInfo.dockerBaseImage -ne "") {
+                                if (!$hasBaseImageField) {
+                                    Write-Host "Adding Docker base image information with image:[$($dockerInfo.dockerBaseImage)], hasCustomCode:[$($dockerInfo.hasCustomCode)] for [$($action.owner)/$($action.name))]"
+                                    $action.actionType | Add-Member -Name dockerBaseImage -Value $dockerInfo.dockerBaseImage -MemberType NoteProperty
+                                    $i++ | Out-Null
+                                    $dockerBaseImageInfoAdded++ | Out-Null
+                                }
+                                else {
+                                    Write-Host "Updating Docker base image information with image:[$($dockerInfo.dockerBaseImage)] for [$($owner)/$($repo))]"
+                                    $action.actionType.dockerBaseImage = $dockerInfo.dockerBaseImage
+                                }
+                                
+                                # Add or update hasCustomCode field
+                                if (!$hasCustomCodeField) {
+                                    $action.actionType | Add-Member -Name dockerfileHasCustomCode -Value $dockerInfo.hasCustomCode -MemberType NoteProperty
+                                }
+                                else {
+                                    $action.actionType.dockerfileHasCustomCode = $dockerInfo.hasCustomCode
+                                }
                             }
                         }
-                    }
-                    catch {
-                        # continue with next one
+                        catch {
+                            # continue with next one
+                        }
                     }
                 }
 
@@ -1782,8 +2814,12 @@ function GetMoreInfo {
                 }
                 elseif ($null -ne $action.actionType.containerScan.lastScanned) {
                     try {
-                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned)
-                        $daysSinceLastScan = ((Get-Date) - $lastScanned).Days
+                        # Parse the stored timestamp as UTC (it is written with a trailing "Z").
+                        # Use AssumeUniversal/AdjustToUniversal so culture settings on the runner
+                        # cannot reinterpret it as local time, and compare with TotalDays so the
+                        # 7-day threshold is honored precisely instead of being truncated by .Days.
+                        $lastScanned = [DateTime]::Parse($action.actionType.containerScan.lastScanned, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+                        $daysSinceLastScan = ([DateTime]::UtcNow - $lastScanned).TotalDays
                         if ($daysSinceLastScan -gt 7) {
                             $needsContainerScan = $true
                         }
@@ -1794,12 +2830,26 @@ function GetMoreInfo {
                     }
                 }
                 
+                # If Trivy could not be installed earlier in this run, stop trying: the install
+                # is process-wide, so retrying it for every Docker action just burns time and
+                # floods the failure list with thousands of identical entries.
+                #
+                # Gated on actionDockerType -eq "Dockerfile" (not just $needsContainerScan) so
+                # this only counts actions that would actually have been scanned - $needsContainerScan
+                # alone is also true for Node/composite/remote-image actions that simply lack a
+                # containerScan field, which are never scannable and would otherwise inflate the
+                # "skipped" count reported in the step summary.
+                if ($needsContainerScan -and $action.actionType.actionDockerType -eq "Dockerfile" -and $script:trivyState -eq 'unavailable') {
+                    $script:trivyScansSkipped++
+                    $needsContainerScan = $false
+                }
+
                 if ($needsContainerScan -and $action.actionType.actionDockerType -eq "Dockerfile") {
                     Write-Host "$i/$max - Running Trivy container scan for [$($owner)/$($repo)]"
                     try {
                         $scanResult = Invoke-TrivyScan -owner $owner -repo $repo -actionType $action.actionType -accessToken $accessToken
                         
-                        if ($null -ne $scanResult) {
+                        if ($null -ne $scanResult -and $null -eq $scanResult.scanError) {
                             if (!$hasContainerScanField) {
                                 Write-Host "Adding container scan information with critical:[$($scanResult.critical)], high:[$($scanResult.high)] for [$($action.owner)/$($action.name))]"
                                 $action.actionType | Add-Member -Name containerScan -Value $scanResult -MemberType NoteProperty
@@ -1809,9 +2859,26 @@ function GetMoreInfo {
                                 $action.actionType.containerScan = $scanResult
                             }
                         }
+                        elseif ($null -ne $scanResult -and $null -ne $scanResult.scanError) {
+                            Write-Host "Trivy scan failed for [$($owner)/$($repo)]: $($scanResult.scanError); result will not be stored and will be retried"
+                            $dockerSource = if ($action.actionType.fileFound) { $action.actionType.fileFound } else { $action.actionType.actionDockerType }
+                            $script:trivyScanFailures += @{
+                                ownerRepo = "$owner/$repo"
+                                dockerSource = $dockerSource
+                                error = $scanResult.scanError
+                                timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
+                            }
+                        }
                     }
                     catch {
                         Write-Host "Error running Trivy scan for [$owner/$repo]: $($_.Exception.Message)"
+                        $dockerSource = if ($action.actionType.fileFound) { $action.actionType.fileFound } else { $action.actionType.actionDockerType }
+                        $script:trivyScanFailures += @{
+                            ownerRepo = "$owner/$repo"
+                            dockerSource = $dockerSource
+                            error = $_.Exception.Message
+                            timestamp = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff'Z'"))
+                        }
                         # continue with next one
                     }
                 }
@@ -1877,6 +2944,27 @@ function GetMoreInfo {
     if ($dockerBaseImageInfoAdded -gt 0) {
         $summaryOutput += "`nDocker base image information added for [$(DisplayIntWithDots $dockerBaseImageInfoAdded)] actions"
     }
+
+    # GraphQL batch stats: repos refreshed per GraphQL point spent vs the REST-call
+    # equivalent that would have been made through GetRepoInfo (1 call for repo info +
+    # 1 call for latest release, per repo).
+    if ($graphqlStats.ReposRequested -gt 0) {
+        $graphqlSummary = "`n`n## GraphQL Batch Metadata Refresh`n`n"
+        $graphqlSummary += "| Metric | Count |`n"
+        $graphqlSummary += "| --- | --- |`n"
+        $graphqlSummary += "| Batch queries executed | $(DisplayIntWithDots $graphqlStats.BatchCount) |`n"
+        $graphqlSummary += "| Repos requested | $(DisplayIntWithDots $graphqlStats.ReposRequested) |`n"
+        $graphqlSummary += "| Repos refreshed | $(DisplayIntWithDots $graphqlStats.ReposRefreshed) |`n"
+        $graphqlSummary += "| Repos not found (deleted/renamed) | $(DisplayIntWithDots $graphqlStats.ReposNotFound) |`n"
+        $graphqlSummary += "| GraphQL points spent | $(DisplayIntWithDots $graphqlStats.TotalCost) |`n"
+        $graphqlSummary += "| Equivalent REST calls avoided | $(DisplayIntWithDots $graphqlStats.RestCallsAvoided) |`n"
+        if ($graphqlStats.TotalCost -gt 0) {
+            $reposPerPoint = [math]::Round($graphqlStats.ReposRefreshed / $graphqlStats.TotalCost, 2)
+            $graphqlSummary += "| Repos refreshed per GraphQL point | $reposPerPoint |`n"
+        }
+        $summaryOutput += $graphqlSummary
+    }
+
     Write-Message -message $summaryOutput -logToSummary $true
 
     Write-Host "Starting the cleanup with [$($existingForks.Count)] actions and [$($originalRepoDoesNotExists.Count)] original repos that do not exist"
@@ -1937,6 +3025,43 @@ function GetMoreInfo {
         Write-Message -message $stepSummaryOutput -logToSummary $true
     }
 
+    # Surface a Trivy install failure loudly. This is infrastructure rot, not a per-repo
+    # problem: when it happens every Docker action goes unscanned and container CVE data
+    # silently goes stale, which is exactly how this went unnoticed for months.
+    if ($script:trivyState -eq 'unavailable') {
+        $trivyAlert = "`n## :rotating_light: Trivy unavailable - container scanning did not run`n`n"
+        $trivyAlert += "Trivy could not be installed, so **no container vulnerability scans ran in this job**.`n`n"
+        $trivyAlert += "Skipped Docker actions that needed a scan: **$($script:trivyScansSkipped)**`n`n"
+        $trivyAlert += "Reason:`n`n" + '```' + "`n$($script:trivyUnavailableReason)`n" + '```' + "`n`n"
+        $trivyAlert += "Container scan data is now going stale. Fix the Trivy install before relying on ``actionType.containerScan``.`n"
+        Write-Message -message $trivyAlert -logToSummary $true
+    }
+    elseif ($script:trivyState -eq 'available') {
+        Write-Host "Trivy was available for this run; container scanning ran normally."
+    }
+
+    # Write Trivy scan failures to a file for artifact upload
+    $trivyFailuresFile = "trivy-scan-failures.json"
+    if ($null -ne $script:trivyScanFailures -and $script:trivyScanFailures.Count -gt 0) {
+        try {
+            $script:trivyScanFailures | ConvertTo-Json -Depth 5 | Out-File -FilePath $trivyFailuresFile -Encoding UTF8
+            Write-Host "Wrote [$($script:trivyScanFailures.Count)] Trivy scan failures to [$trivyFailuresFile]"
+        }
+        catch {
+            Write-Host "Error writing Trivy scan failures to [$trivyFailuresFile]: $($_.Exception.Message)"
+        }
+    }
+    else {
+        # Ensure an empty file exists so the artifact upload step has a predictable file
+        try {
+            "[]" | Out-File -FilePath $trivyFailuresFile -Encoding UTF8
+            Write-Host "No Trivy scan failures; wrote empty array to [$trivyFailuresFile]"
+        }
+        catch {
+            Write-Host "Error writing empty Trivy scan failures file [$trivyFailuresFile]: $($_.Exception.Message)"
+        }
+    }
+
     #return ($actions, $existingForks) ? where does this $actions come from?
     return ($null, $existingForks)
 }
@@ -1966,7 +3091,34 @@ function Run {
 
     ($existingForks, $failedForks) = GetForkedActionRepos -actions $actions -access_token $accessTokenDestination
 
+    # When Run is invoked without an explicit chunk selection (i.e. directly from repoInfo.yml,
+    # not via repoInfo-chunk.ps1), pick which repos to process by staleness/missing-data score
+    # instead of iterating $existingForks in whatever order it happens to hold. Chunk callers
+    # already receive a pre-selected, staleness-sorted name list from analyze.yml's "prepare"
+    # job, so this only changes the direct, un-chunked repoInfo.yml path.
+    if ($null -eq $filterActionNames -or $filterActionNames.Count -eq 0) {
+        $prioritizedRepos = Get-PrioritizedReposToProcess -existingForks $existingForks -numberOfReposToDo $numberOfReposToDo
+        if ($prioritizedRepos.Count -gt 0) {
+            $filterActionNames = $prioritizedRepos | ForEach-Object { $_.name }
+            Write-Host "Prioritized [$($filterActionNames.Count)] repos to process out of [$($existingForks.Count)] total"
+        }
+        else {
+            # Nothing scored above 0 - every repo is fully up to date. Point the filter at a name
+            # that cannot match so GetInfo/GetMoreInfo process nothing, rather than falling back to
+            # their "no filter" behavior and re-scanning the entire multi-thousand-entry list.
+            $filterActionNames = @("__no_repos_need_processing__")
+            Write-Host "No repos scored above 0 for prioritization; nothing needs processing"
+        }
+    }
+
     $existingForks = GetInfo -existingForks $existingForks -accessToken $accessToken -startTime $startTime -filterActionNames $filterActionNames
+
+    # Clear orphaned Trivy scan records: entries that were Dockerfile-based Docker
+    # actions when last scanned but have since switched to a remote image, become
+    # Node/Composite, or lost their action definition. This is a pure in-memory
+    # sweep over every entry (no API calls), so a single run cleans the whole file.
+    Remove-StaleContainerScans -existingForks $existingForks -logToSummary $true | Out-Null
+
     # save status in case the next part goes wrong, then we did not do all these calls for nothing
     SaveStatus -existingForks $existingForks
 
@@ -1987,5 +3139,16 @@ function Run {
 # main call
 Run -actions $actions -accessToken $accessToken -accessTokenDestination $accessTokenDestination -filterActionNames $actionNamesToProcess
 
-# Explicitly exit with success code to prevent PowerShell from inheriting exit codes from previous commands
+# Explicitly control the exit code rather than let PowerShell inherit whatever $LASTEXITCODE a
+# native command (curl, bash, trivy) happened to leave behind.
+#
+# All repo-info work has already been saved to status.json by Run/GetMoreInfo/SaveStatus above,
+# so failing here for a Trivy install problem does not lose any collected data - the downstream
+# consolidate/upload-changes jobs run with `if: always()` regardless of this exit code. Failing
+# on purpose is what makes a rotted/unreachable Trivy pin show up as a failed workflow run
+# instead of only a step-summary note that nobody reads - see Ensure-TrivyInstalled.
+if ($script:trivyState -eq 'unavailable') {
+    Write-Host "##[error]Trivy could not be installed this run: $script:trivyUnavailableReason"
+    exit 1
+}
 exit 0

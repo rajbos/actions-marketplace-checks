@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Define the function to test
     function RemoveReposFromStatus {

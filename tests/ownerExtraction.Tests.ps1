@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Mock the necessary functions and load the cleanup script
     . $PSScriptRoot/../.github/workflows/library.ps1

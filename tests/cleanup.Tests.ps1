@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import the cleanup script functions by dot-sourcing it
     # We'll need to define the functions separately for testing

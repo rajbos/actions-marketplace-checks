@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Copy the function definition for testing
     function Test-DockerfileHasCustomCode {

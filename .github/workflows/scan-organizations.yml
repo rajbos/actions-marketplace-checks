@@ -87,7 +87,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Get App Token
         id: get_workflow_token
@@ -102,9 +102,15 @@ jobs:
           $tokenResult = $manager.GetTokenForOrganization($env:APP_ORGANIZATION)
           "token=$($tokenResult.Token)" >> $env:GITHUB_OUTPUT
 
+      # Monitor GitHub API usage during this job - version 1.2.0
+      # Note: this action has a pre: step that runs before ALL workflow steps,
+      # so we cannot pass the app token here (it's not available yet).
+      # The action defaults to github.token which is sufficient for rate-limit monitoring.
+      - uses: rajbos-actions/github-api-usage-monitor@c4fab8d4f1b8cc81801ef3322a4c30ee124f7eb2
+
       - name: Load available actions for ${{ matrix.org }}
         id: load-actions
-        uses: devops-actions/load-available-actions@v2.2.1
+        uses: devops-actions/load-available-actions@v3.1.1
         with:
           organization: ${{ matrix.org }}
           PAT: ${{ steps.get_workflow_token.outputs.token }}
@@ -170,7 +176,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download all organization scans
         uses: actions/download-artifact@v8

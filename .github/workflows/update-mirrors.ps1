@@ -60,13 +60,15 @@ function UpdateForkedRepos {
 
         Write-Host "$($i+1)/$max Syncing mirror [actions-marketplace-validations/$($existingFork.name)] with upstream [$upstreamOwner/$upstreamRepo]"
         
-        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
-        
+        $storedMirrorSha = if ($existingFork -is [hashtable]) { $existingFork["mirrorCommitSha"] } else { $existingFork.mirrorCommitSha }
+        $result = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -storedMirrorSha $storedMirrorSha
+
         # Normalize result for hashtable or object
         $resultSuccess = if ($result -is [hashtable]) { $result["success"] } else { $result.success }
         $resultMessage = if ($result -is [hashtable]) { $result["message"] } else { $result.message }
         $resultErrorType = if ($result -is [hashtable]) { $result["error_type"] } else { $result.error_type }
         $resultMergeType = if ($result -is [hashtable]) { $result["merge_type"] } else { $result.merge_type }
+        $resultMirrorSha = if ($result -is [hashtable]) { $result["mirror_sha"] } else { $result.mirror_sha }
 
         if ($resultSuccess) {
             if ($resultMessage -like "*Already up to date*") {
@@ -75,9 +77,9 @@ function UpdateForkedRepos {
             }
             else {
                 # Update the sync timestamp for any successful sync (merge or force update)
-                if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
-                else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
-                
+                if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) }
+                else { $existingFork | Add-Member -Name lastSynced -Value ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) -MemberType NoteProperty -Force }
+
                 if ($resultMergeType -eq "force_update") {
                     Write-Host "$i/$max Force updated mirror [$($existingFork.name)] (resolved merge conflict)"
                     $synced++
@@ -86,6 +88,11 @@ function UpdateForkedRepos {
                     Write-Host "$i/$max Successfully synced mirror [$($existingFork.name)]"
                     $synced++
                 }
+            }
+            # Persist the mirror's HEAD SHA so future runs can skip the mirror-side API checks
+            if ($resultMirrorSha) {
+                if ($existingFork -is [hashtable]) { $existingFork["mirrorCommitSha"] = $resultMirrorSha }
+                else { $existingFork | Add-Member -Name mirrorCommitSha -Value $resultMirrorSha -MemberType NoteProperty -Force }
             }
             # Clear any previous sync errors on success
             if (Get-Member -InputObject $existingFork -Name "lastSyncError" -MemberType Properties) {
@@ -144,14 +151,19 @@ function UpdateForkedRepos {
                     # Mark mirrorFound true and retry one sync
                     if ($existingFork -is [hashtable]) { $existingFork["mirrorFound"] = $true } else { $existingFork.mirrorFound = $true }
                     Write-Host "Created mirror [$forkOrg/$($existingFork.name)], retrying sync"
-                    $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+                    # A freshly created mirror has no cached SHA to trust yet
+                    $retry = SyncMirrorWithUpstream -owner $forkOrg -repo $existingFork.name -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -storedMirrorSha $null
                     # Normalize retry result
                     $retrySuccess = if ($retry -is [hashtable]) { $retry["success"] } else { $retry.success }
                     $retryMessage = if ($retry -is [hashtable]) { $retry["message"] } else { $retry.message }
                     $retryErrorType = if ($retry -is [hashtable]) { $retry["error_type"] } else { $retry.error_type }
+                    $retryMirrorSha = if ($retry -is [hashtable]) { $retry["mirror_sha"] } else { $retry.mirror_sha }
                     if ($retrySuccess) {
                         if ($retryMessage -like "*Already up to date*") { $upToDate++ } else { $synced++ }
-                        if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") } else { $existingFork | Add-Member -Name lastSynced -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force }
+                        if ($existingFork -is [hashtable]) { $existingFork["lastSynced"] = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) } else { $existingFork | Add-Member -Name lastSynced -Value ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) -MemberType NoteProperty -Force }
+                        if ($retryMirrorSha) {
+                            if ($existingFork -is [hashtable]) { $existingFork["mirrorCommitSha"] = $retryMirrorSha } else { $existingFork | Add-Member -Name mirrorCommitSha -Value $retryMirrorSha -MemberType NoteProperty -Force }
+                        }
                         if (Get-Member -InputObject $existingFork -Name "lastSyncError" -MemberType Properties) { if ($existingFork -is [hashtable]) { $existingFork["lastSyncError"] = $null } else { $existingFork.lastSyncError = $null } }
                     }
                     else {
@@ -160,12 +172,12 @@ function UpdateForkedRepos {
                         if ($existingFork -is [hashtable]) {
                             $existingFork["lastSyncError"] = $retryMessage
                             $existingFork["lastSyncErrorType"] = $retryErrorType
-                            $existingFork["lastSyncAttempt"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+                            $existingFork["lastSyncAttempt"] = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'"))
                         }
                         else {
                             $existingFork | Add-Member -Name lastSyncError -Value $retryMessage -MemberType NoteProperty -Force
                             $existingFork | Add-Member -Name lastSyncErrorType -Value $retryErrorType -MemberType NoteProperty -Force
-                            $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+                            $existingFork | Add-Member -Name lastSyncAttempt -Value ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) -MemberType NoteProperty -Force
                         }
                     }
                 }
@@ -177,12 +189,12 @@ function UpdateForkedRepos {
                     if ($existingFork -is [hashtable]) {
                         $existingFork["lastSyncError"] = $createErrorMessage
                         $existingFork["lastSyncErrorType"] = "mirror_create_failed"
-                        $existingFork["lastSyncAttempt"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+                        $existingFork["lastSyncAttempt"] = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'"))
                     }
                     else {
                         $existingFork | Add-Member -Name lastSyncError -Value $createErrorMessage -MemberType NoteProperty -Force
                         $existingFork | Add-Member -Name lastSyncErrorType -Value "mirror_create_failed" -MemberType NoteProperty -Force
-                        $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+                        $existingFork | Add-Member -Name lastSyncAttempt -Value ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) -MemberType NoteProperty -Force
                     }
                     # Enqueue for automated retry processing
                     Enqueue-MirrorRetry -MirrorName $existingFork.name -ErrorMessage $createErrorMessage -ErrorType "mirror_create_failed"
@@ -210,12 +222,12 @@ function UpdateForkedRepos {
             if ($existingFork -is [hashtable]) {
                 $existingFork["lastSyncError"] = $resultMessage
                 $existingFork["lastSyncErrorType"] = $errorType
-                $existingFork["lastSyncAttempt"] = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+                $existingFork["lastSyncAttempt"] = ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'"))
             }
             else {
                 $existingFork | Add-Member -Name lastSyncError -Value $resultMessage -MemberType NoteProperty -Force
                 $existingFork | Add-Member -Name lastSyncErrorType -Value $errorType -MemberType NoteProperty -Force
-                $existingFork | Add-Member -Name lastSyncAttempt -Value (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") -MemberType NoteProperty -Force
+                $existingFork | Add-Member -Name lastSyncAttempt -Value ([DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss'Z'")) -MemberType NoteProperty -Force
             }
         }
         

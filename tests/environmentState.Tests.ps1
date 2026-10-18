@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Mock Write-Message function to avoid Step Summary issues during testing
     function Write-Message {

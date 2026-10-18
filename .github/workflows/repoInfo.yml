@@ -11,9 +11,24 @@ on:
       - .github/workflows/repoInfo.ps1
 
   schedule:
-     #- cron: '*/60 * * * *'
-     # Run at minute 50 to avoid overlap with Analyze (minute 5) and Update Mirrors (minute 35)
-     - cron: '50 */1 * * *'
+     # Every 2 hours, not hourly. The full workflow (process-repo-info + upload-changes)
+     # measured 98-129 minutes end to end across 2026-08-21, so against an hourly cron it was
+     # still running when the next run fired. A concurrency group holds only one pending run,
+     # so the queued run was cancelled by the run after it: 13 of the last 30 runs (43%) never
+     # executed at all.
+     #
+     # Flipping cancel-in-progress to true would be worse, not better. The partial results are
+     # only written to blob storage by the separate upload-changes job, and GitHub does not
+     # start queued jobs once a run is cancelled - so cancelling mid-run would throw away up
+     # to two hours of completed API work, and could interrupt upload-changes while it is
+     # writing the ~102 MB status.json.
+     #
+     # 120 minutes is not a hard upper bound on job duration, so a run occasionally still
+     # active past its 2-hour mark is possible - it does not reintroduce the cancellation
+     # problem though: the next tick queues behind it and starts as soon as it finishes, and
+     # would only itself be cancelled if the *first* run somehow ran past 240 minutes, roughly
+     # double anything observed. Worth revisiting if measured durations drift that high.
+     - cron: '50 */2 * * *'
 
   workflow_dispatch:
 
@@ -23,17 +38,35 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  numberOfReposToDo: 100 
+  # 100 -> 150. This workflow now runs half as often, so 150 keeps its nominal contribution at
+  # 75 repos/hour versus a *measured* effective 57/hour before (100 repos x the 57% of runs
+  # that actually completed) - a small net gain, with every run now actually finishing.
+  #
+  # NOTE: numberOfReposToDo is not a hard repo-count cap inside repoInfo.ps1 - GetInfo/GetMoreInfo
+  # use it as a budget of newly-added-field events, incremented per field rather than per repo, so
+  # a chunk with mostly-complete data can process more than 150 before the counter trips, and one
+  # with lots of missing fields can stop short of 150. This PR does not change that counting
+  # scheme (pre-existing, and out of scope for a tuning-only change) - it does add prioritization
+  # in Run() (repoInfo.ps1) so this workflow actually selects the ~150 stalest/most-incomplete
+  # repos first, same as analyze.yml's chunks already do, instead of iterating status.json in
+  # whatever order it happens to hold.
+  #
+  # Deliberately not raised further: this workflow and analyze.yml's chunks both prioritize by
+  # the same staleness/missing-data score, so their selections overlap. The throughput increase
+  # belongs on analyze.yml, which parallelises across chunks; widening both would mostly
+  # duplicate work.
+  numberOfReposToDo: 150
   APP_ID: ${{ vars.APPLICATION_ID }}
   APP_ID_2: ${{ vars.APPLICATION_ID_2 }}
   APP_ID_3: ${{ vars.APPLICATION_ID_3 }}
   APP_ORGANIZATION: actions-marketplace-validations
+  TRIVY_VERSION: v0.74.0
 
 jobs:
   process-repo-info:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Get current actions list
         shell: pwsh
@@ -78,6 +111,21 @@ jobs:
             Write-Error "Failed to download failedForks.json from blob storage"
             exit 1
           }
+
+      # Install Trivy once per job rather than once per scanned repo. Pinned deliberately:
+      # Aqua's CDN only serves a rolling window of recent releases, so an old pin eventually
+      # 404s. repoInfo.ps1 falls back to installing it itself if this step is ever removed.
+      #
+      # continue-on-error is deliberate: if this step fails (dead pin, transient network issue)
+      # we still want the run below to happen so its own repos get processed - Ensure-
+      # TrivyInstalled in repoInfo.ps1 retries the install itself, and if that also fails, the
+      # script exits non-zero *after* saving status.json, which fails this job without losing
+      # any collected data (see the exit-code handling at the end of repoInfo.ps1).
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.3.1
+        continue-on-error: true
+        with:
+          version: ${{ env.TRIVY_VERSION }}
 
       - shell: pwsh
         name: Gotta check 'em all
@@ -125,6 +173,47 @@ jobs:
           retention-days: 1
           if-no-files-found: ignore
 
+      - name: Summarize Trivy scan failures
+        if: always()
+        shell: pwsh
+        run: |
+          $failuresFile = "trivy-scan-failures.json"
+          if (-not (Test-Path $failuresFile)) {
+            Write-Host "No Trivy scan failures file found at [$failuresFile]"
+            exit 0
+          }
+
+          $content = Get-Content $failuresFile -Raw
+          $failures = $content | ConvertFrom-Json
+          $count = if ($failures -is [array]) { $failures.Count } else { 0 }
+
+          $summary = "## Trivy scan failures`n`n"
+          $summary += "Total failures: $count`n`n"
+          if ($count -gt 0) {
+            $summary += "| owner/repo | docker source | error |`n"
+            $summary += "|------------|---------------|-------|`n"
+            $failures | Select-Object -First 5 | ForEach-Object {
+              $summary += "| $($_.ownerRepo) | $($_.dockerSource) | $($_.error) |`n"
+            }
+            if ($count -gt 5) {
+              $summary += "`n... and $($count - 5) more. See the `trivy-scan-failures` artifact for the full list.`n"
+            }
+          }
+          else {
+            $summary += "No Trivy scan failures recorded in this run.`n"
+          }
+
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Upload Trivy scan failures as artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trivy-scan-failures
+          path: trivy-scan-failures.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   upload-changes:
     name: Consolidate and upload changes to blob storage
     needs: process-repo-info
@@ -134,7 +223,7 @@ jobs:
       group: repo-state-updates
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download latest status.json from blob storage
         shell: pwsh
@@ -270,7 +359,7 @@ jobs:
           Write-Message -message "✓ Consolidation complete" -logToSummary $true
 
       - name: Setup Node.js for API updates
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'

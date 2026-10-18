@@ -8,6 +8,9 @@ Param (
 
 . $PSScriptRoot/library.ps1
 
+$appIds = @($appIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$appPrivateKeys = @($appPrivateKeys | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+
 if ($appPrivateKeys.Count -gt 0 -and $appIds.Count -gt 0) {
     if ([string]::IsNullOrWhiteSpace($appOrganization)) {
         throw "APP_ORGANIZATION must be provided when using GitHub App credentials"
@@ -75,7 +78,8 @@ foreach ($item in $ready) {
 
     if ($createResult) {
         Write-Host "Mirror created for [$mirrorName], attempting sync"
-        $sync = SyncMirrorWithUpstream -owner $forkOrg -repo $mirrorName -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination
+        # A freshly created mirror has no cached SHA to trust yet
+        $sync = SyncMirrorWithUpstream -owner $forkOrg -repo $mirrorName -upstreamOwner $upstreamOwner -upstreamRepo $upstreamRepo -access_token $access_token_destination -storedMirrorSha $null
         $syncSuccess = if ($sync -is [hashtable]) { $sync.success } else { $sync.success }
         if ($syncSuccess) {
             Write-Host "Successfully synced [$mirrorName]; removing from queue"

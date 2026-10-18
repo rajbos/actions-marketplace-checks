@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Test to verify the display count logic
     

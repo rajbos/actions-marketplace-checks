@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Import library functions
     . $PSScriptRoot/../.github/workflows/library.ps1
@@ -65,7 +63,7 @@ Describe "Select-ForksToProcess" {
         }
         
         It "Should deprioritize forks with recent repeated failures" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             # Fork1: Never synced successfully, failed recently (high penalty)
             # Fork2: Old successful sync, no failures (high priority due to age)
             # Fork3: Recent successful sync (lower priority due to recency)
@@ -100,7 +98,7 @@ Describe "Select-ForksToProcess" {
         }
         
         It "Should prioritize successfully synced repos over repeatedly failing ones" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             # Create scenario where a repo keeps failing and monopolizing the queue
             $forks = @(
                 [PSCustomObject]@{ 
@@ -128,7 +126,7 @@ Describe "Select-ForksToProcess" {
     
     Context "Cool-off period for failed syncs" {
         It "Should skip forks with recent failed sync attempts" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             $recentFailure = $now.AddHours(-12).ToString("yyyy-MM-ddTHH:mm:ssZ")
             $oldFailure = $now.AddHours(-36).ToString("yyyy-MM-ddTHH:mm:ssZ")
             
@@ -159,6 +157,120 @@ Describe "Select-ForksToProcess" {
         }
     }
     
+    Context "Zero-API-call skip when upstream has not changed" {
+        It "Should skip a fork when repoInfo.updated_at is older than lastSynced" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "upToDateFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                    repoInfo = [PSCustomObject]@{ updated_at = "2025-12-10T00:00:00Z" }
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 0
+        }
+
+        It "Should skip a fork when repoInfo.updated_at equals lastSynced" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "upToDateFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                    repoInfo = [PSCustomObject]@{ updated_at = "2025-12-15T12:00:00Z" }
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 0
+        }
+
+        It "Should still select a fork when repoInfo.updated_at is newer than lastSynced" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "staleFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                    repoInfo = [PSCustomObject]@{ updated_at = "2025-12-16T00:00:00Z" }
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 1
+            $result[0].name | Should -Be "staleFork"
+        }
+
+        It "Should still select a fork that has never been synced, even with repoInfo present" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "neverSyncedFork"
+                    mirrorFound = $true
+                    lastSynced = $null
+                    repoInfo = [PSCustomObject]@{ updated_at = "2020-01-01T00:00:00Z" }
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 1
+        }
+
+        It "Should still select a fork with no repoInfo at all" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "noRepoInfoFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 1
+        }
+
+        It "Should not skip when repoInfo.updated_at is unparseable" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "badDateFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                    repoInfo = [PSCustomObject]@{ updated_at = "not-a-date" }
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 1
+        }
+
+        It "Should mix skipped up-to-date forks with forks that still need syncing" {
+            $forks = @(
+                [PSCustomObject]@{
+                    name = "upToDateFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                    repoInfo = [PSCustomObject]@{ updated_at = "2025-12-10T00:00:00Z" }
+                }
+                [PSCustomObject]@{
+                    name = "needsSyncFork"
+                    mirrorFound = $true
+                    lastSynced = "2025-12-15T12:00:00Z"
+                    repoInfo = [PSCustomObject]@{ updated_at = "2025-12-20T00:00:00Z" }
+                }
+            )
+
+            $result = Select-ForksToProcess -existingForks $forks -numberOfRepos 10
+
+            $result.Count | Should -Be 1
+            $result[0].name | Should -Be "needsSyncFork"
+        }
+    }
+
     Context "Limit enforcement" {
         It "Should respect the numberOfRepos limit" {
             $forks = @()
@@ -174,7 +286,7 @@ Describe "Select-ForksToProcess" {
     
     Context "Filtering statistics" {
         It "Should report detailed filtering statistics for all filter types" {
-            $now = Get-Date
+            $now = [DateTime]::UtcNow
             $forks = @(
                 # 3 forks with mirrorFound = false
                 [PSCustomObject]@{ name = "noMirror1"; mirrorFound = $false }

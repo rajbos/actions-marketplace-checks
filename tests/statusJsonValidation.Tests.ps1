@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Create temp directory for test files
     $script:testDir = Join-Path $TestDrive "statusValidation"

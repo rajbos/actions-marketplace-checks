@@ -30,6 +30,7 @@ $global:localDockerFile = 0
 $global:remoteDockerfile = 0
 $global:localDockerfileWithCustomCode = 0
 $global:localDockerfileWithoutCustomCode = 0
+$global:remoteDockerfileWithReference = 0
 $global:actionYmlFile = 0
 $global:actionYamlFile = 0
 $global:actionDockerFile = 0
@@ -49,6 +50,8 @@ $global:sumDaysOld = 0
 $global:archived = 0
 # string array to hold all used docker base images:
 $global:dockerBaseImages = @()
+# string array to hold all remote docker image references:
+$global:dockerRemoteImageReferences = @()
 $global:nodeVersions = @()
 $global:maxRepoSize = 0
 $global:sumRepoSize = 0
@@ -118,6 +121,10 @@ function AnalyzeActionInformation {
                 }
                 elseif ($action.actionType.actionDockerType -eq "Image") {
                     $global:remoteDockerfile++
+                    if ($action.actionType.dockerImageReference) {
+                        $global:remoteDockerfileWithReference++
+                        $global:dockerRemoteImageReferences += $action.actionType.dockerImageReference
+                    }
                 }
 
                 if ($action.actionType.dockerBaseImage) {
@@ -489,13 +496,13 @@ function ReportInsightsInMarkdown {
             # Use $localDockerFile as denominator for percentages (as per requirement: "update the percentages for D and E to use the number from B")
             $withCodePercentage = [math]::Round($localDockerfileWithCustomCode/$localDockerFile * 100 , 1)
             $withoutCodePercentage = [math]::Round($localDockerfileWithoutCustomCode/$localDockerFile * 100 , 1)
-            LogMessage "  B-->D[$DisplayIntWithDots($localDockerfileWithCustomCode) With custom code - $withCodePercentage%]"
-            LogMessage "  B-->E[$DisplayIntWithDots($localDockerfileWithoutCustomCode) Base image only - $withoutCodePercentage%]"
+            LogMessage "  B-->D[$(DisplayIntWithDots($localDockerfileWithCustomCode)) With custom code - $withCodePercentage%]"
+            LogMessage "  B-->E[$(DisplayIntWithDots($localDockerfileWithoutCustomCode)) Base image only - $withoutCodePercentage%]"
             
             # Add unknown category if there are actions without custom code information
             if ($localDockerfileUnknown -gt 0) {
                 $unknownPercentage = [math]::Round($localDockerfileUnknown/$localDockerFile * 100 , 1)
-                LogMessage "  B-->F[$DisplayIntWithDots($localDockerfileUnknown) Unknown - $unknownPercentage%]"
+                LogMessage "  B-->F[$(DisplayIntWithDots($localDockerfileUnknown)) Unknown - $unknownPercentage%]"
             }
         }
     } else {
@@ -512,18 +519,18 @@ function ReportInsightsInMarkdown {
     $totalActionsWithDefinition = $global:actionYmlFile + $global:actionYamlFile + $global:actionDockerFile + $global:actiondDockerFile
     if ($totalActionsWithDefinition -gt 0) {
         $ymlPercentage = [math]::Round($global:actionYmlFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A[$DisplayIntWithDots($totalActionsWithDefinition) actions]-->B[$DisplayIntWithDots($global:actionYmlFile) action.yml - $ymlPercentage%]"
+        LogMessage "  A[$(DisplayIntWithDots($totalActionsWithDefinition)) actions]-->B[$(DisplayIntWithDots($global:actionYmlFile)) action.yml - $ymlPercentage%]"
         $yamlPercentage = [math]::Round($global:actionYamlFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->C[$DisplayIntWithDots($global:actionYamlFile) action.yaml - $yamlPercentage%]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($global:actionYamlFile)) action.yaml - $yamlPercentage%]"
         $DockerPercentage = [math]::Round($global:actionDockerFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->D[$DisplayIntWithDots($global:actionDockerFile) Dockerfile - $DockerPercentage%]"
+        LogMessage "  A-->D[$(DisplayIntWithDots($global:actionDockerFile)) Dockerfile - $DockerPercentage%]"
         $dDockerPercentage = [math]::Round($global:actiondDockerFile/$totalActionsWithDefinition * 100 , 1)
-        LogMessage "  A-->E[$DisplayIntWithDots($global:actiondDockerFile) dockerfile - $dDockerPercentage%]"
+        LogMessage "  A-->E[$(DisplayIntWithDots($global:actiondDockerFile)) dockerfile - $dDockerPercentage%]"
     } else {
-        LogMessage "  A[$DisplayIntWithDots($totalActionsWithDefinition) actions]-->B[$DisplayIntWithDots($global:actionYmlFile) action.yml]"
-        LogMessage "  A-->C[$DisplayIntWithDots($global:actionYamlFile) action.yaml]"
-        LogMessage "  A-->D[$DisplayIntWithDots($global:actionDockerFile) Dockerfile]"
-        LogMessage "  A-->E[$DisplayIntWithDots($global:actiondDockerFile) dockerfile]"
+        LogMessage "  A[$(DisplayIntWithDots($totalActionsWithDefinition)) actions]-->B[$(DisplayIntWithDots($global:actionYmlFile)) action.yml]"
+        LogMessage "  A-->C[$(DisplayIntWithDots($global:actionYamlFile)) action.yaml]"
+        LogMessage "  A-->D[$(DisplayIntWithDots($global:actionDockerFile)) Dockerfile]"
+        LogMessage "  A-->E[$(DisplayIntWithDots($global:actiondDockerFile)) dockerfile]"
     }
     LogMessage "``````"
     LogMessage ""
@@ -534,6 +541,15 @@ function ReportInsightsInMarkdown {
     # summarize the string list dockerBaseImages to count each item
     $dockerBaseImagesGrouped = $global:dockerBaseImages | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
     $dockerBaseImagesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
+        LogMessage "- $($_.Name): $($_.Count)"
+    }
+    LogMessage ""
+
+    LogMessage "## Docker based actions, remote image references: "
+    $dockerRemoteImageReferencesUnique = $dockerRemoteImageReferences | Sort-Object | Get-Unique
+    LogMessage "Found $(DisplayIntWithDots($global:remoteDockerfileWithReference)) remote image actions with $(DisplayIntWithDots($dockerRemoteImageReferencesUnique.Length)) unique image references. The top 10 are listed below."
+    $dockerRemoteImageReferencesGrouped = $global:dockerRemoteImageReferences | Group-Object | Sort-Object -Descending -Property Count | Select-Object -Property Name, Count
+    $dockerRemoteImageReferencesGrouped | Sort-Object -Property Count -Descending | Select-Object -First 10 | ForEach-Object {
         LogMessage "- $($_.Name): $($_.Count)"
     }
     LogMessage ""
@@ -702,6 +718,81 @@ function ReportFundingInsights {
     LogMessage "*To improve this coverage, run this workflow: [Analyze]($(Get-WorkflowUrl 'analyze.yml'))*"
 }
 
+function ReportImmutableReleaseInsights {
+    # Surfaces the immutable-release signals computed by issues #264-#266
+    # (immutableReleasePolicy, immutableReleaseCoverage, immutableReleaseSummary)
+    # with clear provenance and no overclaiming: a current "enabled" policy is
+    # reported alongside, never instead of, the recent-release coverage - it
+    # never establishes on its own that older releases are immutable, and
+    # unknown counts are always shown as their own bucket, never folded into
+    # pass/fail.
+    LogMessage "## Immutable Release Information"
+    LogMessage "Analysis of the immutable-release policy and recent-release integrity for repositories where this has been checked."
+    LogMessage ""
+
+    $policyCounts = @{ enabled = 0; disabled = 0; unknown = 0 }
+    $actionsWithPolicy = 0
+    $actionsWithCoverage = 0
+    $latestReleaseImmutableCounts = @{ immutable = 0; notImmutable = 0; unknown = 0 }
+    $totalKnownReleases = 0
+    $totalImmutableReleases = 0
+    $totalUnknownReleases = 0
+
+    foreach ($action in $actions) {
+        if ($action.immutableReleasePolicy) {
+            $actionsWithPolicy++
+            if ($policyCounts.ContainsKey($action.immutableReleasePolicy)) {
+                $policyCounts[$action.immutableReleasePolicy]++
+            }
+        }
+
+        if ($action.immutableReleaseCoverage -and $action.immutableReleaseCoverage.releasesConsidered -gt 0) {
+            $actionsWithCoverage++
+            $coverage = $action.immutableReleaseCoverage
+            if ($latestReleaseImmutableCounts.ContainsKey($coverage.latestReleaseImmutable)) {
+                $latestReleaseImmutableCounts[$coverage.latestReleaseImmutable]++
+            }
+            $totalKnownReleases += $coverage.knownCount
+            $totalImmutableReleases += $coverage.immutableCount
+            $totalUnknownReleases += $coverage.unknownCount
+        }
+    }
+
+    if ($actionsWithPolicy -eq 0 -and $actionsWithCoverage -eq 0) {
+        LogMessage "No actions have immutable-release information available yet."
+        LogMessage ""
+        LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
+        return
+    }
+
+    LogMessage "### Current Immutable-Release Policy"
+    LogMessage "|Description|Count|"
+    LogMessage "|---|---:|"
+    LogMessage "|Actions with a policy state (enabled, disabled, or unknown)|$(DisplayIntWithDots($actionsWithPolicy))|"
+    LogMessage "|Policy enabled|$(DisplayIntWithDots($policyCounts.enabled))|"
+    LogMessage "|Policy disabled|$(DisplayIntWithDots($policyCounts.disabled))|"
+    LogMessage "|Policy unknown (never collapsed into disabled)|$(DisplayIntWithDots($policyCounts.unknown))|"
+    LogMessage ""
+
+    if ($actionsWithCoverage -gt 0) {
+        LogMessage "### Recent-Release Immutability Coverage (last 10 releases per action)"
+        LogMessage "*A current 'enabled' policy above does not by itself establish that these historical releases were immutable - this table reflects only what was actually observed per release.*"
+        LogMessage ""
+        LogMessage "|Description|Count|"
+        LogMessage "|---|---:|"
+        LogMessage "|Actions with recent-release coverage|$(DisplayIntWithDots($actionsWithCoverage))|"
+        LogMessage "|Latest release known immutable|$(DisplayIntWithDots($latestReleaseImmutableCounts.immutable))|"
+        LogMessage "|Latest release known not immutable|$(DisplayIntWithDots($latestReleaseImmutableCounts.notImmutable))|"
+        LogMessage "|Latest release immutability unknown|$(DisplayIntWithDots($latestReleaseImmutableCounts.unknown))|"
+        LogMessage "|Total known releases considered|$(DisplayIntWithDots($totalKnownReleases))|"
+        LogMessage "|Total immutable releases considered|$(DisplayIntWithDots($totalImmutableReleases))|"
+        LogMessage "|Total unknown releases considered (excluded from pass/fail)|$(DisplayIntWithDots($totalUnknownReleases))|"
+        LogMessage ""
+    }
+
+    LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"
+}
+
 function GetOSSFInfo {
     $ossfInfoCount = 0
     $total = 0
@@ -792,6 +883,9 @@ ReportAgeInsights
 LogMessage ""
 
 ReportFundingInsights
+LogMessage ""
+
+ReportImmutableReleaseInsights
 LogMessage ""
 
 ReportInsightsInMarkdown -repoInformation $repoInformation

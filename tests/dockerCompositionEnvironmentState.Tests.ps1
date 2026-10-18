@@ -1,5 +1,3 @@
-Import-Module Pester
-
 BeforeAll {
     # Source the environment-state script functions needed for testing
     # We'll create minimal versions of the functions to test the logic

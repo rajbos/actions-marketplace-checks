@@ -28,6 +28,8 @@ Scans are performed:
 - When the last scan is older than 7 days
 - Only for actions with Dockerfiles (not remote Docker images)
 
+If an action later stops being a Dockerfile-based Docker action (it switches to a remote image, becomes a Node/Composite action, or its action definition can no longer be found), the now-stale `actionType.containerScan` record is removed automatically on the next `repoInfo.yml` run. The field is optional, so its removal is backward compatible; a fresh scan is added again if the action ever returns to using a Dockerfile. A one-off bulk cleanup can be run with `.github/workflows/cleanup-stale-container-scans.ps1` (dry-run by default).
+
 The scanning uses Trivy's config/filesystem mode to analyze the Dockerfile without building the image, making it lightweight and efficient for processing thousands of actions.
 
 ## Cleanup of Invalid Repos
@@ -64,6 +66,17 @@ Tests for the cleanup functionality are located in `tests/cleanup.Tests.ps1` and
 ```powershell
 Invoke-Pester -Path ./tests/cleanup.Tests.ps1
 ```
+## DB State Overviews
+
+These two daily workflows generate a step summary you can view directly to see the current state of the database:
+
+| Workflow | What it shows | Latest runs |
+|----------|--------------|-------------|
+| **Environment State Documentation** | Coverage %, freshness, delta marketplace vs tracked, mirror & sync health | [📊 View runs](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/environment-state.yml) |
+| **Generate Report** | Action type breakdown, vulnerability counts, Node/Docker versions | [📊 View runs](https://github.com/rajbos/actions-marketplace-checks/actions/workflows/report.yml) |
+
+> Click a "View runs" link → open the most recent run → scroll to the **Summary** tab to see the latest stats.
+
 ## Workflows
 
 This repository includes several automated workflows:
