@@ -3818,7 +3818,11 @@ function Test-ImmutableReleasesNeedsRefresh {
 
     $hasImmutableReleasesField = Get-Member -inputobject $action -name "immutableReleases" -Membertype Properties
     $hasImmutableReleasesCheckedAtField = Get-Member -inputobject $action -name "immutableReleasesCheckedAt" -Membertype Properties
-    if (!$hasImmutableReleasesField -or !$hasImmutableReleasesCheckedAtField -or ($null -eq $action.immutableReleasesCheckedAt)) {
+    # A null setting is not a collected setting: treat it as needing a refresh even
+    # when immutableReleasesCheckedAt is recent, so a null value never delays
+    # collection for up to 30 days. An object with enabled = $false is a valid,
+    # collected setting and does not trigger a refresh.
+    if (!$hasImmutableReleasesField -or !$hasImmutableReleasesCheckedAtField -or ($null -eq $action.immutableReleases) -or ($null -eq $action.immutableReleasesCheckedAt)) {
         return $true
     }
 

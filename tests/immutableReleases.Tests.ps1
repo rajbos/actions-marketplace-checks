@@ -144,6 +144,27 @@ Describe 'Test-ImmutableReleasesNeedsRefresh' {
         Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
     }
 
+    It 'Should need a refresh when the setting is null even with a recent checked-at timestamp' {
+        # Regression test: a null setting is not a collected setting - it must not be
+        # treated as fresh for up to 30 days just because immutableReleasesCheckedAt
+        # happens to be recent.
+        $action = [pscustomobject]@{
+            immutableReleases = $null
+            immutableReleasesCheckedAt = Get-Date
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should keep a collected disabled setting (enabled = $false) valid without refresh' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $false }
+            immutableReleasesCheckedAt = (Get-Date).AddDays(-1)
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $false
+    }
+
     It 'Should not need a refresh when the last check is within 30 days' {
         $action = [pscustomobject]@{
             immutableReleases = @{ enabled = $false }
