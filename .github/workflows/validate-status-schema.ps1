@@ -72,6 +72,7 @@ class StatusJsonSchema {
 
     # Immutable releases setting from the upstream repo (optional, only present when the API returns it)
     [object] $immutableReleases  # Hashtable with enabled, enforced_by_owner
+    [object] $immutableReleasesCheckedAt  # Can be string (datetime) or null; bumped on every successful check (30-day refresh cadence)
     
     # Security features (typically present)
     [object] $secretScanningEnabled  # Can be boolean or null

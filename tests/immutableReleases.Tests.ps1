@@ -1,110 +1,35 @@
-Import-Module Pester
-
 BeforeAll {
-    # Mock ApiCall to avoid actual API calls
-    function ApiCall {
-        Param (
-            [string]$method,
-            [string]$url,
-            [switch]$hideFailedCall,
-            [switch]$returnErrorInfo,
-            $access_token
-        )
+    . $PSScriptRoot/../.github/workflows/library.ps1
 
-        # Return mock data based on the URL
-        if ($url -like "*/immutable-releases") {
-            switch ($script:mockScenario) {
-                "success" {
-                    return @{
-                        enabled = $true
-                        enforced_by_owner = $false
-                    }
-                }
-                "successDisabled" {
-                    return @{
-                        enabled = $false
-                        enforced_by_owner = $null
-                    }
-                }
-                "notFound" {
-                    return @{
-                        Error = $true
-                        StatusCode = 404
-                    }
-                }
-                "serverError" {
-                    return @{
-                        Error = $true
-                        StatusCode = 500
-                    }
-                }
-                "empty" {
-                    return $null
-                }
-                default {
-                    return @{
-                        enabled = $true
-                        enforced_by_owner = $false
-                    }
-                }
-            }
-        }
-
-        return @()
-    }
-
-    # Load GetImmutableReleasesInfo function
-    function GetImmutableReleasesInfo {
-        Param (
-            $owner,
-            $repo,
-            [Alias('access_token')]
-            $accessToken,
-            $startTime
-        )
-
-        if ($null -eq $owner -or $owner.Length -eq 0) {
-            return $null
-        }
-
-        # Check if we are nearing the 50-minute mark
-        $timeSpan = (Get-Date) - $startTime
-        if ($timeSpan.TotalMinutes -gt 50) {
-            Write-Host "Stopping the run, since we are nearing the 50-minute mark"
-            return
-        }
-
-        $url = "repos/$owner/$repo/immutable-releases"
-        $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
-
-        if ($response -is [hashtable] -and $response.Error) {
-            # 404 means the repo does not have immutable releases configured (or the endpoint is not available yet)
-            # Leave the field absent so we retry on a future run, instead of caching a false negative
-            if ($response.StatusCode -ne 404) {
-                Write-Host "Error loading immutable releases info for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
-            }
-            return $null
-        }
-
-        if ($null -eq $response) {
-            return $null
-        }
-
-        return @{
-            enabled = $response.enabled
-            enforced_by_owner = $response.enforced_by_owner
-        }
-    }
+    # Extract and execute the real GetImmutableReleasesInfo function body from
+    # repoInfo.ps1 via its AST (mirrors the GetImmutableReleasePolicy pattern in
+    # tests/immutableReleasePolicy.Tests.ps1), rather than redefining a local test
+    # double. A test double can drift from, or keep passing despite a regression in,
+    # the actual production collector - extracting the real function's text and
+    # Invoke-Expression'ing it here means these tests exercise the same code that
+    # repoInfo.ps1 runs. Only ApiCall is mocked.
+    $repoInfoPath = "$PSScriptRoot/../.github/workflows/repoInfo.ps1"
+    $src = Get-Content $repoInfoPath -Raw
+    $ast = [System.Management.Automation.Language.Parser]::ParseInput($src, [ref]$null, [ref]$null)
+    $fnAst = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'GetImmutableReleasesInfo' }, $true)
+    if ($fnAst.Count -ne 1) { throw "Expected exactly 1 GetImmutableReleasesInfo function in repoInfo.ps1, found $($fnAst.Count)" }
+    Invoke-Expression $fnAst[0].Extent.Text
 }
 
-Describe "GetImmutableReleasesInfo - immutable releases endpoint" {
+Describe 'GetImmutableReleasesInfo' {
     BeforeEach {
-        $script:startTime = Get-Date
-        $script:mockScenario = "success"
+        Mock ApiCall { }
     }
 
-    It "Should return object with enabled and enforced_by_owner properties" {
-        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime
+    It 'Should return object with enabled and enforced_by_owner properties' {
+        Mock ApiCall {
+            return @{
+                enabled = $true
+                enforced_by_owner = $false
+            }
+        }
+
+        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date)
 
         $result | Should -Not -BeNullOrEmpty
         $result | Should -BeOfType [hashtable]
@@ -114,69 +39,185 @@ Describe "GetImmutableReleasesInfo - immutable releases endpoint" {
         $result.ContainsKey("enforced_by_owner") | Should -Be $true
     }
 
-    It "Should query the upstream owner/repo endpoint" {
-        Mock ApiCall -MockWith {
+    It 'Should query the upstream owner/repo endpoint' {
+        Mock ApiCall {
             Param ($method, $url)
             $url | Should -Be "repos/actions/checkout/immutable-releases"
             return @{ enabled = $true; enforced_by_owner = $false }
         }
 
-        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime
+        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date)
 
         $result.enabled | Should -Be $true
         Should -Invoke ApiCall -Times 1 -Exactly
     }
 
-    It "Should return null when owner is null or empty" {
-        GetImmutableReleasesInfo -owner $null -repo "checkout" -access_token "token" -startTime $script:startTime | Should -BeNullOrEmpty
-        GetImmutableReleasesInfo -owner "" -repo "checkout" -access_token "token" -startTime $script:startTime | Should -BeNullOrEmpty
+    It 'Should return null when owner is null or empty' {
+        GetImmutableReleasesInfo -owner $null -repo "checkout" -accessToken "token" -startTime (Get-Date) | Should -BeNullOrEmpty
+        GetImmutableReleasesInfo -owner "" -repo "checkout" -accessToken "token" -startTime (Get-Date) | Should -BeNullOrEmpty
     }
 
-    It "Should return null on 404 so the field stays absent and is retried next run" {
-        $script:mockScenario = "notFound"
+    It 'Should return null on 404 so the field stays absent and is retried next run' {
+        Mock ApiCall {
+            return @{
+                Error = $true
+                StatusCode = 404
+            }
+        }
 
-        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime | Should -BeNullOrEmpty
+        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date) | Should -BeNullOrEmpty
     }
 
-    It "Should return null on other error status codes" {
-        $script:mockScenario = "serverError"
+    It 'Should return null on other error status codes' {
+        Mock ApiCall {
+            return @{
+                Error = $true
+                StatusCode = 500
+            }
+        }
 
-        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime | Should -BeNullOrEmpty
+        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date) | Should -BeNullOrEmpty
     }
 
-    It "Should return null when the API returns no response" {
-        $script:mockScenario = "empty"
+    It 'Should return null when the API returns no response' {
+        Mock ApiCall { return $null }
 
-        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime | Should -BeNullOrEmpty
+        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date) | Should -BeNullOrEmpty
     }
 
-    It "Should preserve enabled being false" {
-        $script:mockScenario = "successDisabled"
+    It 'Should preserve enabled being false' {
+        Mock ApiCall {
+            return @{
+                enabled = $false
+                enforced_by_owner = $null
+            }
+        }
 
-        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime
+        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date)
 
         $result | Should -Not -BeNullOrEmpty
         $result.enabled | Should -Be $false
     }
 
-    It "Should return null when we are nearing the 50-minute mark" {
-        $script:startTime = (Get-Date).AddMinutes(-51)
+    It 'Should return null when we are nearing the 50-minute mark' {
+        $startTime = (Get-Date).AddMinutes(-51)
 
-        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime | Should -BeNullOrEmpty
+        GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime $startTime | Should -BeNullOrEmpty
     }
 
-    It "Should still run when we are just below the 50-minute mark" {
-        $script:startTime = (Get-Date).AddMinutes(-49)
+    It 'Should still run when we are just below the 50-minute mark' {
+        Mock ApiCall { return @{ enabled = $true; enforced_by_owner = $false } }
 
-        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -access_token "token" -startTime $script:startTime
+        $startTime = (Get-Date).AddMinutes(-49)
+
+        $result = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime $startTime
 
         $result | Should -Not -BeNullOrEmpty
         $result.enabled | Should -Be $true
     }
 }
 
-Describe "Immutable releases - data structure in status.json" {
-    It "Should store immutable releases with enabled and enforced_by_owner" {
+Describe 'Test-ImmutableReleasesNeedsRefresh' {
+    It 'Should need a refresh when the field is missing entirely' {
+        $action = [pscustomobject]@{
+            owner = "actions"
+            name = "checkout"
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should need a refresh when immutableReleasesCheckedAt is missing' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $true }
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should need a refresh when immutableReleasesCheckedAt is null' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $true }
+            immutableReleasesCheckedAt = $null
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should not need a refresh when the last check is within 30 days' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $false }
+            immutableReleasesCheckedAt = (Get-Date).AddDays(-29)
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $false
+    }
+
+    It 'Should need a refresh when the last check is older than 30 days' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $false }
+            immutableReleasesCheckedAt = (Get-Date).AddDays(-31)
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+    }
+
+    It 'Should need a refresh when the checked-at timestamp is malformed' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $true }
+            immutableReleasesCheckedAt = "not-a-date"
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+    }
+}
+
+Describe 'Immutable releases refresh picks up upstream changes' {
+    # Regression test for the review comment: after the first successful fetch the
+    # collector must not be guarded off forever (including when enabled is false) -
+    # once immutableReleasesCheckedAt is stale, the next check must re-fetch and
+    # replace the stored value with the changed upstream response.
+    It 'Should re-fetch and replace a stale stored setting with the changed upstream response' {
+        $action = [pscustomobject]@{
+            owner = "actions"
+            name = "checkout"
+            immutableReleases = @{ enabled = $true; enforced_by_owner = $false }
+            immutableReleasesCheckedAt = (Get-Date).AddDays(-31)
+        }
+
+        # The stored setting is stale, so the collector runs again
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $true
+
+        # The upstream response changed between checks: enabled flipped to false
+        Mock ApiCall {
+            return @{
+                enabled = $false
+                enforced_by_owner = $null
+            }
+        }
+        $freshInfo = GetImmutableReleasesInfo -owner "actions" -repo "checkout" -accessToken "token" -startTime (Get-Date)
+
+        # Mirrors the loop's update path: an existing field is overwritten, and the
+        # checked-at timestamp is bumped so the new value holds for the next 30 days
+        $action.immutableReleases = $freshInfo
+        $action.immutableReleasesCheckedAt = Get-Date
+
+        $action.immutableReleases.enabled | Should -Be $false
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $false
+    }
+
+    It 'Should not re-fetch a fresh stored setting' {
+        $action = [pscustomobject]@{
+            immutableReleases = @{ enabled = $true; enforced_by_owner = $false }
+            immutableReleasesCheckedAt = (Get-Date).AddDays(-1)
+        }
+
+        Test-ImmutableReleasesNeedsRefresh -action $action | Should -Be $false
+    }
+}
+
+Describe 'Immutable releases - data structure in status.json' {
+    It 'Should store immutable releases with enabled and enforced_by_owner' {
         $immutableReleases = @{
             enabled = $true
             enforced_by_owner = $false
@@ -188,7 +229,7 @@ Describe "Immutable releases - data structure in status.json" {
         $immutableReleases.ContainsKey("enforced_by_owner") | Should -Be $true
     }
 
-    It "Should support enabled with a null enforced_by_owner" {
+    It 'Should support enabled with a null enforced_by_owner' {
         $immutableReleases = @{
             enabled = $false
             enforced_by_owner = $null
@@ -198,7 +239,7 @@ Describe "Immutable releases - data structure in status.json" {
         $null | Should -Be $immutableReleases.enforced_by_owner
     }
 
-    It "Should distinguish absent field from disabled setting" {
+    It 'Should distinguish absent field from disabled setting' {
         # The field is absent (never fetched or endpoint not available) when the action has no immutableReleases property
         $actionWithoutField = [pscustomobject]@{
             owner = "actions"

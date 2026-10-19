@@ -2721,12 +2721,20 @@ function GetMoreInfo {
                 }
             }
 
-            $hasField = Get-Member -inputobject $action -name "immutableReleases" -Membertype Properties
-            if (!$hasField -or ($null -eq $action.immutableReleases)) {
-                #Write-Host "$i/$max - Checking immutable releases information for [$forkOrg/$($action.name)]. hasField: [$hasField], actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+            # Test-ImmutableReleasesNeedsRefresh (library.ps1) never throws on a
+            # malformed/unparsable persisted timestamp - see its doc comment - so this
+            # decision cannot abort the whole repo-info run. Bounded 30-day cadence,
+            # same as the immutableReleasePolicy collector above, so a previously
+            # stored setting (including enabled = $false) is refreshed instead of
+            # staying stale forever after the first successful fetch.
+            $needsImmutableReleasesCheck = Test-ImmutableReleasesNeedsRefresh -action $action
+
+            if ($needsImmutableReleasesCheck) {
+                #Write-Host "$i/$max - Checking immutable releases information for [$forkOrg/$($action.name)]. actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
                 try {
                     $immutableReleasesInfo = GetImmutableReleasesInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
                     if ($null -ne $immutableReleasesInfo) {
+                        $hasField = Get-Member -inputobject $action -name "immutableReleases" -Membertype Properties
                         if (!$hasField) {
                             Write-Host "Adding immutable releases information with enabled:[$($immutableReleasesInfo.enabled)] for [$($owner)/$($repo))]"
                             $action | Add-Member -Name immutableReleases -Value $immutableReleasesInfo -MemberType NoteProperty
@@ -2734,6 +2742,18 @@ function GetMoreInfo {
                         }
                         else {
                             $action.immutableReleases = $immutableReleasesInfo
+                        }
+
+                        # Record when the setting was last checked. Only bumped on a
+                        # successful fetch - a 404 (endpoint not rolled out / not configured)
+                        # returns $null and leaves the field absent so it is retried on a
+                        # future run, instead of caching a false negative for 30 days.
+                        $hasCheckedAtField = Get-Member -inputobject $action -name "immutableReleasesCheckedAt" -Membertype Properties
+                        if (!$hasCheckedAtField) {
+                            $action | Add-Member -Name immutableReleasesCheckedAt -Value (Get-Date) -MemberType NoteProperty
+                        }
+                        else {
+                            $action.immutableReleasesCheckedAt = Get-Date
                         }
                     }
                 }
