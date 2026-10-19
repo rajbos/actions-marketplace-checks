@@ -1,0 +1,28 @@
+name: Validate npm install
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/validate-npm-install.yml
+
+jobs:
+  validate-npm-install:
+    name: Validate npm install for API client
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devops-actions'
+
+      - name: Install npm package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PACKAGE_DOWNLOAD }}
+        run: |
+          npm install @devops-actions/actions-marketplace-client
+          echo "✅ npm install succeeded"

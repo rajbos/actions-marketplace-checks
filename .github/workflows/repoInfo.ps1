@@ -344,6 +344,49 @@ function GetRepoInfo {
 # GetRepoTagInfo and GetRepoReleases moved to library.ps1 so releaseInfo-refresh.ps1
 # can share the exact same GitHub API fetch logic without duplicating it.
 
+function GetImmutableReleasesInfo {
+    Param (
+        $owner,
+        $repo,
+        [Alias('access_token')]
+        $accessToken,
+        $startTime
+    )
+
+    if ($null -eq $owner -or $owner.Length -eq 0) {
+        return $null
+    }
+
+    # Check if we are nearing the 50-minute mark
+    $timeSpan = (Get-Date) - $startTime
+    if ($timeSpan.TotalMinutes -gt 50) {
+        Write-Host "Stopping the run, since we are nearing the 50-minute mark"
+        return
+    }
+
+    # Query the upstream repo (not the mirror), since the setting lives on the original repository
+    $url = "repos/$owner/$repo/immutable-releases"
+    $response = ApiCall -method GET -url $url -hideFailedCall $true -returnErrorInfo $true -access_token $accessToken
+
+    if ($response -is [hashtable] -and $response.Error) {
+        # 404 means the repo does not have immutable releases configured (or the endpoint is not available yet)
+        # Leave the field absent so we retry on a future run, instead of caching a false negative
+        if ($response.StatusCode -ne 404) {
+            Write-Host "Error loading immutable releases info for [$owner/$repo]: StatusCode [$($response.StatusCode)]"
+        }
+        return $null
+    }
+
+    if ($null -eq $response) {
+        return $null
+    }
+
+    return @{
+        enabled = $response.enabled
+        enforced_by_owner = $response.enforced_by_owner
+    }
+}
+
 function GetFundingInfo {
     Param (
         $owner,
@@ -2671,6 +2714,47 @@ function GetMoreInfo {
                         $action | Add-Member -Name releaseInfoCheckedAt -Value (Get-Date) -MemberType NoteProperty
                     } else {
                         $action.releaseInfoCheckedAt = Get-Date
+                    }
+                }
+                catch {
+                    # continue with next one
+                }
+            }
+
+            # Test-ImmutableReleasesNeedsRefresh (library.ps1) never throws on a
+            # malformed/unparsable persisted timestamp - see its doc comment - so this
+            # decision cannot abort the whole repo-info run. Bounded 30-day cadence,
+            # same as the immutableReleasePolicy collector above, so a previously
+            # stored setting (including enabled = $false) is refreshed instead of
+            # staying stale forever after the first successful fetch.
+            $needsImmutableReleasesCheck = Test-ImmutableReleasesNeedsRefresh -action $action
+
+            if ($needsImmutableReleasesCheck) {
+                #Write-Host "$i/$max - Checking immutable releases information for [$forkOrg/$($action.name)]. actionType: [$($action.actionType.actionType)], updated_at: [$($action.repoInfo.updated_at)]"
+                try {
+                    $immutableReleasesInfo = GetImmutableReleasesInfo -owner $owner -repo $repo -accessToken $accessToken -startTime $startTime
+                    if ($null -ne $immutableReleasesInfo) {
+                        $hasField = Get-Member -inputobject $action -name "immutableReleases" -Membertype Properties
+                        if (!$hasField) {
+                            Write-Host "Adding immutable releases information with enabled:[$($immutableReleasesInfo.enabled)] for [$($owner)/$($repo))]"
+                            $action | Add-Member -Name immutableReleases -Value $immutableReleasesInfo -MemberType NoteProperty
+                            $i++ | Out-Null
+                        }
+                        else {
+                            $action.immutableReleases = $immutableReleasesInfo
+                        }
+
+                        # Record when the setting was last checked. Only bumped on a
+                        # successful fetch - a 404 (endpoint not rolled out / not configured)
+                        # returns $null and leaves the field absent so it is retried on a
+                        # future run, instead of caching a false negative for 30 days.
+                        $hasCheckedAtField = Get-Member -inputobject $action -name "immutableReleasesCheckedAt" -Membertype Properties
+                        if (!$hasCheckedAtField) {
+                            $action | Add-Member -Name immutableReleasesCheckedAt -Value (Get-Date) -MemberType NoteProperty
+                        }
+                        else {
+                            $action.immutableReleasesCheckedAt = Get-Date
+                        }
                     }
                 }
                 catch {

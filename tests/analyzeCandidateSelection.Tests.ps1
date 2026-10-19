@@ -22,8 +22,11 @@ Describe "analyze.yml candidate selection uses the shared priority score" {
         $script:analyzeWorkflowContent | Should -Match 'Get-PrioritizedReposToProcess\s+-existingForks\s+\$forkCandidates\s+-numberOfReposToDo\s+\$numberOfReposRepoInfo'
     }
 
-    It "Should still restrict candidates to forkFound -eq `$true before scoring" {
-        $script:analyzeWorkflowContent | Should -Match '\$forkCandidates\s*=\s*\$existingForks\s*\|\s*Where-Object\s*\{\s*\$_\.forkFound\s+-eq\s+\$true\s*\}'
+    It "Should still restrict candidates to mirrorFound -eq `$true before scoring" {
+        # analyze.yml pre-filters on mirrorFound (not forkFound): forkFound candidates whose
+        # mirror no longer exists would be scored, selected, and then discarded by the chunk
+        # splitter - see the comment in analyze.yml's prepare job.
+        $script:analyzeWorkflowContent | Should -Match '\$forkCandidates\s*=\s*\$existingForks\s*\|\s*Where-Object\s*\{\s*\$_\.mirrorFound\s+-eq\s+\$true\s*\}'
     }
 
     It "Should no longer sort candidates by repoInfo.updated_at ticks" {
@@ -88,6 +91,8 @@ Describe "Get-PrioritizedReposToProcess selection matches analyze.yml's fork-fil
                 fundingInfo = [PSCustomObject]@{ lastChecked = Get-Date }
                 immutableReleasePolicy = "enabled"
                 immutableReleasePolicyCheckedAt = Get-Date
+                immutableReleases = @{ enabled = $true }
+                immutableReleasesCheckedAt = Get-Date
                 immutableReleaseObservationsCheckedAt = Get-Date
                 immutableReleaseSummary = "Enabled; no recent-release coverage available"
             }

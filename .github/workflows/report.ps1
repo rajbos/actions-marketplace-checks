@@ -235,6 +235,8 @@ function GetTagReleaseInfo {
     $tagInfo = 0
     $releaseInfo = 0
     $countMismatch = 0
+    $immutableReleasesKnown = 0
+    $immutableReleasesEnabled = 0
     foreach ($action in $actions) {
         if ($action.tagInfo) {
             $tagInfo++
@@ -267,12 +269,19 @@ function GetTagReleaseInfo {
                 }
             }
         }
+        if ($null -ne $action.immutableReleases) {
+            $immutableReleasesKnown++
+            if ($action.immutableReleases.enabled) {
+                $immutableReleasesEnabled++
+            }
+        }
     }
 
     Write-Host ""
     Write-Host "Total actions: $($actions.Count) with $tagInfo tags and $releaseInfo release information"
     Write-Host "Repos with tag info but no releases: $tagButNoRelease"
     Write-Host "Repos with mismatches between tag and release count: $countMismatch"
+    Write-Host "Repos with immutable releases known: $immutableReleasesKnown, enabled: $immutableReleasesEnabled"
     
     LogMessage ""
     LogMessage "*To improve this coverage, run this workflow: [Get repo info]($(Get-WorkflowUrl 'repoInfo.yml'))*"

@@ -19,6 +19,14 @@ $script:LastAttemptedAppId = $null
 # Track consecutive rate limit reset detections to prevent infinite loops
 $script:ConsecutiveResetDetections = 0
 
+# Cache for the proactive token expiration check inside ApiCall.
+# Without this, Get-GitHubAppRateLimitOverview creates 3 new installation tokens on every
+# single ApiCall invocation, rapidly exhausting the ~1000/hour installation token creation
+# rate limit and causing the cycling loop seen in failing workflow runs.
+$script:ProactiveCheckOverview = $null
+$script:ProactiveCheckOverviewTime = [DateTime]::MinValue
+$script:ProactiveCheckOverviewTtlSeconds = 120  # refresh at most once per 2 minutes
+
 # default variables
 $forkOrg = "actions-marketplace-validations"
 $tempDir = "$((Get-Item $PSScriptRoot).parent.parent.FullName)/mirroredRepos"
@@ -968,7 +976,14 @@ function ApiCall {
     # Use the script-scoped HashSet to track tried apps across all API calls
     # This ensures we don't cycle through the same apps repeatedly across different sync operations
     $triedAppIds = $script:TriedGitHubAppIds
-    
+
+    # Counter as supplied to this invocation. The pagination handling below advances
+    # $currentResultCount with each fetched page, but same-URL retries (rate limit waits,
+    # app switches, backoff) re-fetch the current page and must replay with the counter
+    # they were given - forwarding the advanced value would count this page twice and
+    # stop pagination early when maxResultCount is set.
+    $currentResultCountAtEntry = $currentResultCount
+
     # Check if we've exceeded the maximum number of retries
     if ($retryCount -gt $maxRetries) {
         $message = "Maximum retry limit ($maxRetries) exceeded for API call to [$url]. Stopping to prevent infinite loop."
@@ -990,7 +1005,15 @@ function ApiCall {
     # This prevents failures when tokens expire during long rate limit waits
     $organization = $env:APP_ORGANIZATION
     if (-not [string]::IsNullOrWhiteSpace($organization)) {
-        $overview = Get-GitHubAppRateLimitOverview -organization $organization
+        # Use a cached overview to avoid creating new installation tokens on every ApiCall invocation.
+        # Calling Get-GitHubAppRateLimitOverview uncached would create 3 new tokens per call, rapidly
+        # exhausting the installation token creation rate limit (~1000/hour) during long runs.
+        $proactiveCheckNow = [DateTime]::UtcNow
+        if ($null -eq $script:ProactiveCheckOverview -or ($proactiveCheckNow - $script:ProactiveCheckOverviewTime).TotalSeconds -ge $script:ProactiveCheckOverviewTtlSeconds) {
+            $script:ProactiveCheckOverview = Get-GitHubAppRateLimitOverview -organization $organization
+            $script:ProactiveCheckOverviewTime = $proactiveCheckNow
+        }
+        $overview = $script:ProactiveCheckOverview
         if ($null -ne $overview -and $overview.Count -gt 0) {
             # Find the token that matches our current access_token (if it's a GitHub App token)
             $currentTokenInfo = $overview | Where-Object { $_.Token -eq $access_token } | Select-Object -First 1
@@ -1013,8 +1036,11 @@ function ApiCall {
                         
                         Write-Host "✓ Switched to GitHub App id [$($betterToken.AppId)] with $($betterToken.MinutesUntilExpiration) minutes until expiration"
                         $env:GITHUB_TOKEN = $betterToken.Token
+                        # Invalidate cache so the next call sees the new token
+                        $script:ProactiveCheckOverview = $null
+                        $script:ProactiveCheckOverviewTime = [DateTime]::MinValue
                         # Retry the API call with the fresh token
-                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $betterToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $betterToken.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                     } elseif ($null -eq $betterToken) {
                         # All tokens are expiring soon or exhausted - stop gracefully
                         $message = "⚠️ All available GitHub App tokens will expire within 15 minutes. Stopping gracefully to prevent mid-execution failures."
@@ -1097,6 +1123,11 @@ function ApiCall {
             #Write-Host "Found pagination link: $($result.Headers["Link"])"
             # load next link from header
 
+            # A failed page fetch returns an error hashtable when -returnErrorInfo is set.
+            # Appending it to the successful records would make consumers that only check
+            # the top-level result treat the error as a (null-fielded) record and report
+            # incomplete results as success - so capture it and return it as the whole result.
+            $pageErrorResult = $null
             $result.Headers["Link"].Split(',') | ForEach-Object {
                 # search for the 'next' link in this list
                 $link = $_.Split(';')[0].Trim()
@@ -1117,9 +1148,21 @@ function ApiCall {
                     }
 
                     # continue fetching next page
-                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo
-                    $response += $nextResult
+                    $nextResult = ApiCall -method $method -url $nextUrl -body $body -expected $expected -backOff $backOff -maxResultCount $maxResultCount -currentResultCount $currentResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds
+                    if ($nextResult -is [hashtable] -and $nextResult.Error) {
+                        # Return outside the ForEach-Object block (a return inside it only
+                        # exits the script block, not the function).
+                        $pageErrorResult = $nextResult
+                    }
+                    else {
+                        $response += $nextResult
+                    }
                 }
+            }
+
+            # Propagate a failed page as the whole result instead of concatenating it
+            if ($null -ne $pageErrorResult) {
+                return $pageErrorResult
             }
         }
 
@@ -1180,7 +1223,7 @@ function ApiCall {
                                 # GITHUB_TOKEN will immediately use this app instead
                                 # of continuing to hit the exhausted token.
                                 $env:GITHUB_TOKEN = $bestBeforeWait.Token
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             }
 
                             # All untried apps are currently exhausted. Check if ALL configured apps
@@ -1241,7 +1284,7 @@ function ApiCall {
                                         Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                         
                                         # Retry immediately with cleared tried apps - don't wait
-                                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                        return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                                     } else {
                                         # False positive - don't clear tried apps, continue with normal flow
                                         Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
@@ -1277,7 +1320,7 @@ function ApiCall {
                                 $triedAppIds.Add($bestAfterWait.AppId) | Out-Null
                                 
                                 Write-Host "After waiting for rate limit reset, selected GitHub App id [$($bestAfterWait.AppId)] with [$($bestAfterWait.Remaining)] remaining requests"
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestAfterWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestAfterWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             }
 
                             $message = "Rate limit did not recover after waiting across all apps; stopping execution"
@@ -1316,7 +1359,7 @@ function ApiCall {
                                 if ($null -ne $tokenResult -and -not [string]::IsNullOrWhiteSpace($tokenResult.Token)) {
                                     $newToken = $tokenResult.Token
                                     Write-Host "Switched to GitHub App id [$($tokenResult.AppId)] after rate limit; retrying API call"
-                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                                 }
                             }
                             catch {
@@ -1352,7 +1395,7 @@ function ApiCall {
             else {
                 $backOff = $backOff * 2
             }
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount -etag $etag -returnETag $returnETag
+            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff ($backOff) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
         }
 
         if ($null -ne $expected) {
@@ -1405,7 +1448,7 @@ function ApiCall {
             Write-Host "Rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
             GetRateLimitInfo -access_token $access_token -access_token_destination $access_token
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff*2) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount -etag $etag -returnETag $returnETag
+            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff ($backOff*2) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
         }
         else {
             if (!$hideFailedCall) {
@@ -1429,7 +1472,7 @@ function ApiCall {
             Write-Host "Secondary rate limit exceeded, waiting for [$backOff] seconds before continuing"
             Start-Sleep -Seconds $backOff
 
-            return ApiCall -method $method -url $url -body $body -expected $expected -backOff $backOff -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount -etag $etag -returnETag $returnETag
+            return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
         }
 
         $isUserRateLimit = $messageData.message -and $messageData.message.StartsWith("API rate limit exceeded for user ID")
@@ -1526,7 +1569,7 @@ function ApiCall {
                                 Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                 
                                 # Retry immediately with cleared tried apps - don't wait
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             } else {
                                 # False positive - don't clear tried apps, continue with normal flow
                                 Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
@@ -1549,7 +1592,7 @@ function ApiCall {
                     # that don't explicitly pass access_token pick up the
                     # rotated app token instead of the exhausted one.
                     $env:GITHUB_TOKEN = $bestBeforeWait.Token
-                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                    return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $bestBeforeWait.Token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                 } elseif ($null -ne $bestBeforeWait -and $bestBeforeWait.WaitSeconds -gt 0) {
                     # All untried apps are currently exhausted. Check if ALL configured apps
                     # (including tried ones) are exhausted. If so, use the shortest wait across ALL apps.
@@ -1612,7 +1655,7 @@ function ApiCall {
                                 Write-Host "Cleared tried apps tracking after detecting rate limit reset (reset cycle count: $($script:ConsecutiveResetDetections))"
                                 
                                 # Retry immediately with cleared tried apps - don't wait
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             } else {
                                 # False positive - don't clear tried apps, continue with normal flow
                                 Write-Host "Continuing with normal rate limit handling (not clearing tried apps)"
@@ -1648,7 +1691,7 @@ function ApiCall {
                                 # Update the shared environment token so future
                                 # calls use this app id by default.
                                 $env:GITHUB_TOKEN = $newToken
-                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCount -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
+                                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff $backOff -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $newToken -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount $retryCount -maxRetries $maxRetries -appSwitchCount ($appSwitchCount + 1) -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
                             }
                         }
                         catch {
@@ -1761,7 +1804,7 @@ function ApiCall {
                 else {
                     $backOff = $backOff * 2
                 }
-                return ApiCall -method $method -url $url -body $body -expected $expected -backOff ($backOff) -access_token $access_token -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -contextInfo $contextInfo -maxResultCount $maxResultCount -currentResultCount $currentResultCount -etag $etag -returnETag $returnETag
+                return ApiCall -method $method -url $url -body $body -expected $expected -currentResultCount $currentResultCountAtEntry -backOff ($backOff) -maxResultCount $maxResultCount -hideFailedCall $hideFailedCall -returnErrorInfo $returnErrorInfo -access_token $access_token -contextInfo $contextInfo -waitForRateLimit $waitForRateLimit -retryCount ($retryCount + 1) -maxRetries $maxRetries -appSwitchCount $appSwitchCount -maxAppSwitchCount $maxAppSwitchCount -triedAppIds $triedAppIds -etag $etag -returnETag $returnETag
             }
 
             # When not waiting, return null
@@ -3750,6 +3793,48 @@ function Test-ImmutableReleasePolicyNeedsRefresh {
     }
 }
 
+function Test-ImmutableReleasesNeedsRefresh {
+    <#
+    .SYNOPSIS
+    Decides whether an action's immutableReleases setting needs to be (re)checked,
+    given its persisted immutableReleases/immutableReleasesCheckedAt fields.
+
+    .DESCRIPTION
+    Same bounded 30-day refresh cadence as Test-ImmutableReleasePolicyNeedsRefresh
+    above: refresh is needed when the setting or the checked-at field is
+    missing/null, or when the checked-at timestamp is older than 30 days. A
+    malformed/unparsable persisted timestamp must never throw and abort the
+    caller - a conversion failure is treated the same as a missing/null timestamp.
+
+    .PARAMETER action
+    The action object to inspect.
+
+    .OUTPUTS
+    Boolean - $true when the immutable releases setting needs to be (re)checked.
+    #>
+    Param (
+        $action
+    )
+
+    $hasImmutableReleasesField = Get-Member -inputobject $action -name "immutableReleases" -Membertype Properties
+    $hasImmutableReleasesCheckedAtField = Get-Member -inputobject $action -name "immutableReleasesCheckedAt" -Membertype Properties
+    # A null setting is not a collected setting: treat it as needing a refresh even
+    # when immutableReleasesCheckedAt is recent, so a null value never delays
+    # collection for up to 30 days. An object with enabled = $false is a valid,
+    # collected setting and does not trigger a refresh.
+    if (!$hasImmutableReleasesField -or !$hasImmutableReleasesCheckedAtField -or ($null -eq $action.immutableReleases) -or ($null -eq $action.immutableReleasesCheckedAt)) {
+        return $true
+    }
+
+    try {
+        $daysSinceLastCheck = ((Get-Date) - [datetime]$action.immutableReleasesCheckedAt).TotalDays
+        return $daysSinceLastCheck -gt 30
+    }
+    catch {
+        return $true
+    }
+}
+
 function Get-RepoPriorityScore {
     Param (
         $action
@@ -3861,6 +3946,16 @@ function Get-RepoPriorityScore {
             if ($daysSinceCheck -gt 30) { $score += 20 }
         }
         catch { $score += 20 }
+    }
+
+    # Immutable releases setting staleness: same bounded 30-day refresh cadence as
+    # immutableReleasePolicy above (Test-ImmutableReleasesNeedsRefresh is the mirror
+    # of Test-ImmutableReleasePolicyNeedsRefresh), so the enabled/enforced_by_owner
+    # data does not go stale forever after the first successful fetch. Scored whenever
+    # the field is missing entirely (so new repos get collected) or the last check is
+    # stale/unparsable.
+    if (Test-ImmutableReleasesNeedsRefresh -action $action) {
+        $score += 20
     }
 
     # Immutable-release per-release observation staleness (issue #265): same bounded

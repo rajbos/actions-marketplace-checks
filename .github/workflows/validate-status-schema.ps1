@@ -69,6 +69,10 @@ class StatusJsonSchema {
     # Version information (can be string, array, or null)
     [object] $tagInfo
     [object] $releaseInfo
+
+    # Immutable releases setting from the upstream repo (optional, only present when the API returns it)
+    [object] $immutableReleases  # Hashtable with enabled, enforced_by_owner
+    [object] $immutableReleasesCheckedAt  # Can be string (datetime) or null; bumped on every successful check (30-day refresh cadence)
     
     # Security features (typically present)
     [object] $secretScanningEnabled  # Can be boolean or null
@@ -244,6 +248,19 @@ function Test-ActionSchema {
         }
     }
     
+    # Validate immutableReleases structure if present
+    if ($null -ne $action.immutableReleases) {
+        if ($action.immutableReleases -is [hashtable] -or $action.immutableReleases -is [PSCustomObject]) {
+            # Expected fields: enabled, enforced_by_owner (enabled is always present, enforced_by_owner can be null)
+            if ($null -eq $action.immutableReleases.enabled) {
+                $warnings += "Object ${index} ($($action.name)): immutableReleases missing 'enabled' field"
+            }
+        }
+        else {
+            $warnings += "Object ${index} ($($action.name)): immutableReleases should be object, found: $($action.immutableReleases.GetType().Name)"
+        }
+    }
+
     # Validate vulnerabilityStatus structure if present
     if ($null -ne $action.vulnerabilityStatus) {
         if ($action.vulnerabilityStatus -is [hashtable] -or $action.vulnerabilityStatus -is [PSCustomObject]) {
