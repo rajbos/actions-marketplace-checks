@@ -1,4 +1,6 @@
-# Custom Instructions for actions-marketplace-checks
+# Project Reference: actions-marketplace-checks
+
+Repository-wide agent guidance is maintained in [AGENTS.md](AGENTS.md); this file is supplemental storage and workflow reference.
 
 ## Project Overview
 
@@ -7,7 +9,7 @@ This repository contains PowerShell scripts that run checks on GitHub Actions in
 - Identify the type of action (Docker, Node, or Composite)
 - Analyze action declarations (action.yml, action.yaml, Dockerfile)
 - Check Docker image setup
-- Fork actions and enable GitHub Dependabot to detect security alerts (Node actions only)
+- Create clone-based mirrors of action repositories and enable GitHub Dependabot to detect security alerts (Node actions only)
 
 ## Data Storage Architecture
 
@@ -25,11 +27,11 @@ This repository contains PowerShell scripts that run checks on GitHub Actions in
 The blob storage structure uses two different patterns:
 
 1. **Root-level file** (legacy pattern):
-   - `Actions-Full-Overview.Json` - Marketplace actions list downloaded directly from the blob storage base URL
+   - `Actions-Full-Overview.Json` - Marketplace actions snapshot consumed by workflows; workflows save it locally as `actions.json`
 
 2. **Status subfolder files** (current pattern):
-   - `status/status.json` - Main status tracking file (~29MB, 29,000+ actions)
-   - `status/failedForks.json` - List of repos that failed to fork
+   - `status/status.json` - Main processing state for tracked actions and repository metadata
+   - `status/failedForks.json` - Helper state for repository mirror failures
    - `status/secretScanningAlerts.json` - Secret scanning alerts data
 
 #### SAS Token Structure and URL Construction
@@ -37,16 +39,16 @@ The blob storage structure uses two different patterns:
 The `BLOB_SAS_TOKEN` secret contains a **blob storage level SAS URL** with the following structure:
 
 ```
-https://{storage-account}.blob.core.windows.net/{container}/{base-path}?{sas-query-string}
+https://{storage-account}.blob.core.windows.net/{container}/data?{sas-query-string}
 ```
 
 **Example:**
 ```
-https://intostorage.blob.core.windows.net/intostorage/actions.json?sp=racwdl&st=2024-01-01T00:00:00Z&se=...
+https://{storage-account}.blob.core.windows.net/{container}/data?{sas-query-string}
 ```
 
 **Key Components:**
-- **Base URL**: `https://intostorage.blob.core.windows.net/intostorage/actions.json` (points to the base blob path)
+- **Base URL**: `https://{storage-account}.blob.core.windows.net/{container}/data` (the storage container's data path)
 - **SAS Query**: `?sp=racwdl&st=...&se=...` (permissions, start time, expiry, etc.)
 
 #### How File URLs Are Constructed
@@ -65,18 +67,18 @@ Files are accessed by constructing URLs from the SAS token:
    ```powershell
    # Append file name to base URL, then add SAS query
    $blobUrl = "${baseUrl}/${actionsBlobFileName}${sasQuery}"
-   # Result: https://.../intostorage/actions.json/Actions-Full-Overview.Json?sp=...
+   # Result: https://.../{container}/data/Actions-Full-Overview.Json?{sas-query-string}
    ```
 
 3. **For status subfolder files** (like `status.json`):
    ```powershell
    # Append /status/{filename} to base URL, then add SAS query
    $blobUrl = "${baseUrl}/status/${blobFileName}${sasQuery}"
-   # Result: https://.../intostorage/actions.json/status/status.json?sp=...
+   # Result: https://.../{container}/data/status/status.json?{sas-query-string}
    ```
 
 **Important Notes:**
-- The base URL ends with `/actions.json`, so appending paths like `/status/status.json` creates the full path
+- The base URL ends with `/data`; appending the blob name or `/status/{filename}` creates the full path.
 - The SAS query string is always appended AFTER the complete file path
 - All status files are in the `status/` subfolder relative to the base path
 
@@ -143,7 +145,7 @@ All workflows that use blob storage follow this pattern:
 
 #### Validation: validate-blob-token.yml Workflow
 
-This workflow runs daily (and on every PR/push) to validate blob storage access. It tests:
+This workflow validates blob storage access. It tests:
 
 1. **SAS Token Format Validation:**
    - Checks if `BLOB_SAS_TOKEN` is set and non-empty
@@ -152,9 +154,9 @@ This workflow runs daily (and on every PR/push) to validate blob storage access.
 2. **File Download Tests:**
    - Downloads `Actions-Full-Overview.Json` and validates it's valid JSON
    - Downloads `status.json` and validates:
-     - File size is at least 1MB (validates it's not corrupted/empty)
+     - File size exceeds the workflow's corruption guard
      - Content is valid JSON (handles UTF-8 BOM)
-     - Contains expected number of items (29,000+)
+     - The parsed array is non-empty
    - Downloads `failedForks.json` and validates it's valid JSON
 
 3. **URL Construction Verification:**
@@ -168,9 +170,8 @@ This workflow runs daily (and on every PR/push) to validate blob storage access.
 ✅ BLOB_SAS_TOKEN format looks valid
 ✅ Successfully downloaded Actions-Full-Overview.Json (X bytes)
 ✅ Actions-Full-Overview.Json is valid JSON
-✅ Successfully downloaded status.json (29MB)
-✅ status.json size check passed (29000000 bytes >= 1048576 bytes)
-✅ status.json contains 29279 items
+✅ Successfully downloaded status.json
+✅ status.json size and JSON checks passed
 ```
 
 #### Required Secrets
@@ -188,7 +189,7 @@ For local testing, set environment variables before running scripts:
 
 ```powershell
 # Set the SAS token for blob storage (blob storage level URL)
-$env:BLOB_SAS_TOKEN = "https://intostorage.blob.core.windows.net/intostorage/actions.json?sv=..."
+$env:BLOB_SAS_TOKEN = "https://{storage-account}.blob.core.windows.net/{container}/data?{sas-query-string}"
 ```
 
 Use the helper script `blob-helper.ps1` for manual operations:
@@ -246,12 +247,12 @@ Use the helper script `blob-helper.ps1` for manual operations:
 ### Key Functions and Patterns
 
 - **API Calls**: Use the `ApiCall` function from `library.ps1` for all GitHub API interactions
-- **Authentication**: Uses `$env:GITHUB_TOKEN` for GitHub API authentication
+- **Authentication**: Use the shared GitHub App token manager and pass the token through `ApiCall` for GitHub REST API requests.
 - **Blob Storage**: Use `Get-StatusFromBlobStorage` and `Set-StatusToBlobStorage` for status.json operations
 - **Data Files**: 
-  - `actions.json` - List of marketplace actions (from blob storage)
-  - `status.json` - Current status of processed actions (from blob storage)
-  - `failedForks.json` - Actions that failed to fork (in Git)
+  - Local `actions.json` - Full marketplace input snapshot downloaded from the `Actions-Full-Overview.Json` blob
+  - `status.json` - Current processing state synchronized with the `status/` blob-storage path
+  - `failedForks.json` - Helper state for repository mirror failures
 
 ### Testing
 
@@ -259,7 +260,7 @@ Use the helper script `blob-helper.ps1` for manual operations:
 - Test files should end with `.Tests.ps1`
 - Import required modules and functions in `BeforeAll` block
 - Use `Describe` blocks for test suites and `It` blocks for individual tests
-- Run tests with: `Invoke-Pester -Output Detailed`
+- Run tests with: `Invoke-Pester -Output Normal`
 
 Example test structure:
 ```powershell
@@ -281,7 +282,7 @@ Describe "FunctionName" {
 
 - Use `pwsh` shell for all PowerShell jobs
 - Set defaults at the workflow level when appropriate
-- Use secrets for sensitive data (e.g., `${{ secrets.GITHUB_TOKEN }}`)
+- Use GitHub secrets for sensitive values; use the shared GitHub App token manager for API authentication.
 - Add appropriate triggers (push, schedule, workflow_dispatch)
 - **Always download status.json at the start of jobs that need it**
 - **Always upload status.json at the end of jobs that modify it**
@@ -305,18 +306,17 @@ Invoke-Pester -Output Detailed
 ```
 
 #### Testing Workflows
-- Use workflow_dispatch triggers for manual testing
+- Treat workflow dispatches as live operations unless confirmed otherwise; follow [AGENTS.md](AGENTS.md) before triggering workflows.
 - Check workflow runs in the GitHub Actions tab
 - Review job logs for debugging
 
 ### Important Notes
 
-- The project processes a large dataset of GitHub Actions (~29,000 actions)
+- The project processes a large, changing marketplace dataset; avoid hard-coded size and record-count assumptions
 - API rate limiting is a concern - use backoff strategies
-- Fork operations use the organization `actions-marketplace-validations` (dedicated org for validation forks)
+- Clone-based mirrors use the `actions-marketplace-validations` organization; legacy "fork" names in code do not mean these are native GitHub forks
 - Temporary repositories are stored in `mirroredRepos` directory
 - **status.json is stored in Azure Blob Storage, not in Git**
-- Only `failedForks.json` is committed to the repository
 
 ## Security Considerations
 
